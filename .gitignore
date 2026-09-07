@@ -1,0 +1,17 @@
+node_modules/
+.DS_Store
+
+# Build output
+.svelte-kit/
+build/
+dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Test / tooling caches
+coverage/
+*.tsbuildinfo
+.eslintcache

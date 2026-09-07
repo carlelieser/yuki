@@ -1,0 +1,6 @@
+node_modules/
+.svelte-kit/
+build/
+dist/
+bun.lock
+packages/db/drizzle/
