@@ -41,6 +41,20 @@ services:
       timeout: 5s
       retries: 10
 
+  scraper:
+    profiles: ['scrape']
+    image: oven/bun:1.4-alpine
+    working_dir: /app
+    command: ['bun', 'run', 'packages/scraper/src/main.ts']
+    environment:
+      DATABASE_URL: postgres://yuki:yuki@postgres:5432/yuki
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
   redis-data:
