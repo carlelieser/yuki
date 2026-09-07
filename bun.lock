@@ -21,6 +21,7 @@
       "name": "@yuki/web",
       "version": "0.0.0",
       "dependencies": {
+        "@lucide/svelte": "1.41.0",
         "@yuki/db": "workspace:*",
         "@yuki/redis": "workspace:*",
         "@yuki/ui": "workspace:*",

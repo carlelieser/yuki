@@ -1,9 +1,33 @@
 <script lang="ts">
-	import { Button } from '@yuki/ui';
+	import type { ResolvedPathname } from '$app/types';
+	import {
+		ProductCard,
+		ProductCarousel,
+		ProductGrid,
+		Section
+	} from '$lib/components/storefront/index.ts';
+
+	type StorefrontItem = { id: string; title: string; href: ResolvedPathname; badge?: string };
+
+	const featured: StorefrontItem[] = [];
+	const newArrivals: StorefrontItem[] = [];
+	const browse: StorefrontItem[] = [];
 </script>
 
-<main class="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 p-8">
-	<h1 class="text-3xl font-semibold tracking-tight">Yuki</h1>
-	<p class="text-muted-foreground text-center text-sm">SvelteKit, Drizzle, and Redis on Bun.</p>
-	<Button href="/api/health" variant="outline">Check service health</Button>
+{#snippet card(entry: StorefrontItem)}
+	<ProductCard title={entry.title} href={entry.href} badge={entry.badge} />
+{/snippet}
+
+<main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
+	<Section title="Featured">
+		<ProductCarousel items={featured} item={card} />
+	</Section>
+
+	<Section title="New">
+		<ProductGrid items={newArrivals} item={card} />
+	</Section>
+
+	<Section title="Browse">
+		<ProductGrid items={browse} item={card} />
+	</Section>
 </main>
