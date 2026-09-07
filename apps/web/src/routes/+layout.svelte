@@ -2,10 +2,10 @@
 	import '../app.css';
 	import SiteHeader from '$lib/components/storefront/site-header.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<SiteHeader />
+	<SiteHeader user={data.user} />
 	{@render children?.()}
 </div>

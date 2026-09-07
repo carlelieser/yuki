@@ -1,0 +1,22 @@
+{
+	"name": "@yuki/auth",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"check": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@yuki/db": "workspace:*",
+		"@yuki/redis": "workspace:*",
+		"better-auth": "1.7.3",
+		"drizzle-orm": "0.45.2",
+		"nodemailer": "10.0.0"
+	},
+	"devDependencies": {
+		"@types/nodemailer": "8.0.1"
+	}
+}
