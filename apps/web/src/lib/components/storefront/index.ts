@@ -1,4 +1,5 @@
 export { default as CollectionEmpty } from './collection-empty.svelte';
+export { default as SearchDialog } from './search-dialog.svelte';
 export { default as ProductCard } from './product-card.svelte';
 export { default as ProductCardSkeleton } from './product-card-skeleton.svelte';
 export { default as ProductCarousel } from './product-carousel.svelte';
