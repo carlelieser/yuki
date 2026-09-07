@@ -18,7 +18,8 @@
 		"@yuki/redis": "workspace:*",
 		"@yuki/ui": "workspace:*",
 		"better-auth": "1.7.3",
-		"drizzle-orm": "0.45.2"
+		"drizzle-orm": "0.45.2",
+		"mode-watcher": "1.1.0"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "5.5.7",
