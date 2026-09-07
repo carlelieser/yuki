@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '@yuki/ui';
+	import ModeToggle from './mode-toggle.svelte';
 	import SiteSearch from './site-search.svelte';
 	import UserMenu from './user-menu.svelte';
 
@@ -15,6 +16,8 @@
 	<div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
 		<a href={resolve('/')} class="text-lg font-semibold tracking-tight">Yuki</a>
 		<SiteSearch class="ms-auto w-full max-w-xs" />
+
+		<ModeToggle />
 
 		{#if user}
 			<UserMenu {user} />
