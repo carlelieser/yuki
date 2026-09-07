@@ -28,7 +28,7 @@ export type ListingDetail = ListingSummary & {
 	}[];
 };
 
-const summaryColumns = {
+export const summaryColumns = {
 	id: schema.listings.id,
 	slug: schema.listings.slug,
 	title: schema.listings.title,
