@@ -2,6 +2,7 @@
 	import {
 		Badge,
 		Button,
+		GithubIcon,
 		Item,
 		ItemActions,
 		ItemContent,
@@ -12,6 +13,7 @@
 	} from '@yuki/ui';
 	import { Section } from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
+	import DownloadIcon from '@lucide/svelte/icons/download';
 
 	let { data }: { data: PageData } = $props();
 
@@ -53,9 +55,15 @@
 
 		<div class="flex items-center gap-2">
 			{#if latestVersion?.downloadUrl}
-				<Button href={latestVersion.downloadUrl}>Download {latestVersion.tag}</Button>
+				<Button href={latestVersion.downloadUrl}>
+					<DownloadIcon />
+					Download {latestVersion.tag}
+				</Button>
 			{/if}
-			<Button href={listing.repositoryUrl} variant="outline">Source</Button>
+			<Button href={listing.repositoryUrl} variant="outline">
+				<GithubIcon />
+				Source
+			</Button>
 		</div>
 	</header>
 
@@ -107,6 +115,7 @@
 						{#if version.downloadUrl}
 							<ItemActions>
 								<Button href={version.downloadUrl} variant="outline" size="sm">
+									<DownloadIcon />
 									Download
 								</Button>
 							</ItemActions>
