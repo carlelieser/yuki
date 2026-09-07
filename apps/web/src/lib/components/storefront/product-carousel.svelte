@@ -24,7 +24,7 @@
 		empty?: Snippet;
 	} = $props();
 
-	const itemClass = 'basis-1/2 sm:basis-1/3 lg:basis-1/4';
+	const itemClass = 'basis-1/2 sm:basis-1/3 lg:basis-1/4 ps-2';
 </script>
 
 {#if !isLoading && items.length === 0}
@@ -34,19 +34,23 @@
 		<CollectionEmpty />
 	{/if}
 {:else}
-	<Carousel opts={{ align: 'start' }}>
-		<CarouselContent class="py-1">
+	<Carousel opts={{ align: 'start' }} class="-ml-1">
+		<CarouselContent class="-ms-2">
 			{#if isLoading}
 				{#each { length: skeletonCount }, index (index)}
-					<CarouselItem class={itemClass}><ProductCardSkeleton /></CarouselItem>
+					<CarouselItem class={itemClass}>
+						<div class="p-1"><ProductCardSkeleton /></div>
+					</CarouselItem>
 				{/each}
 			{:else}
 				{#each items as entry, index (index)}
-					<CarouselItem class={itemClass}>{@render item(entry)}</CarouselItem>
+					<CarouselItem class={itemClass}>
+						<div class="p-1">{@render item(entry)}</div>
+					</CarouselItem>
 				{/each}
 			{/if}
 		</CarouselContent>
-		<CarouselPrevious class="hidden sm:flex" />
-		<CarouselNext class="hidden sm:flex" />
+		<CarouselPrevious class="start-6 hidden disabled:invisible sm:flex" />
+		<CarouselNext class="end-6 hidden disabled:invisible sm:flex" />
 	</Carousel>
 {/if}
