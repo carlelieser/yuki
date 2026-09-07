@@ -1,3 +1,4 @@
+import { parseTimestamp } from './listing.ts';
 import type { GithubRelease, GithubReleaseAsset } from '../github/types.ts';
 
 export type MappedVersion = {
@@ -48,7 +49,7 @@ export function mapReleases(releases: GithubRelease[]): MappedVersion[] {
 				assetSize: asset?.size ?? null,
 				downloadCount: asset?.download_count ?? 0,
 				isPrerelease: release.prerelease,
-				publishedAt: release.published_at === null ? null : new Date(release.published_at)
+				publishedAt: parseTimestamp(release.published_at)
 			};
 		});
 }

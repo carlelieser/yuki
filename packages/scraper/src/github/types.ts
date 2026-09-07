@@ -18,10 +18,17 @@ export type GithubRepository = {
 	owner: { login: string; html_url: string };
 };
 
+export type GithubMinimalRepository = {
+	id: number;
+	name: string;
+	full_name: string;
+	owner: { login: string; html_url: string };
+};
+
 export type GithubCodeSearchItem = {
 	name: string;
 	path: string;
-	repository: GithubRepository;
+	repository: GithubMinimalRepository;
 };
 
 export type GithubCodeSearchResult = {

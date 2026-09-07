@@ -50,6 +50,12 @@ describe('mapReleases', () => {
 		expect(mapped[1]?.publishedAt).toBeNull();
 	});
 
+	it('nulls an unparseable published_at instead of producing an Invalid Date', () => {
+		const mapped = mapReleases([release({ published_at: 'not a date' })]);
+
+		expect(mapped[0]?.publishedAt).toBeNull();
+	});
+
 	it('leaves download fields null when a release ships no apk', () => {
 		const mapped = mapReleases([release({ assets: [asset({ name: 'sources.zip' })] })]);
 

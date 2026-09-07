@@ -9,10 +9,13 @@ import {
 } from '../detection/queries.ts';
 import type { DetectedEvidence } from '../detection/evidence.ts';
 import type { GithubClient } from '../github/client.ts';
-import type { GithubRepository } from '../github/types.ts';
+import type { GithubMinimalRepository, GithubRepository } from '../github/types.ts';
 
 export type DiscoveredRepo = {
-	repo: GithubRepository;
+	owner: string;
+	name: string;
+	githubRepoId: number;
+	repo: GithubRepository | null;
 	evidence: DetectedEvidence[];
 };
 
@@ -23,15 +26,24 @@ export type DiscoveryResult = {
 
 function record(
 	found: Map<number, DiscoveredRepo>,
-	repo: GithubRepository,
-	evidence: DetectedEvidence
+	repo: GithubMinimalRepository,
+	evidence: DetectedEvidence,
+	full: GithubRepository | null = null
 ): void {
 	const existing = found.get(repo.id);
 	if (existing === undefined) {
-		found.set(repo.id, { repo, evidence: [evidence] });
+		found.set(repo.id, {
+			owner: repo.owner.login,
+			name: repo.name,
+			githubRepoId: repo.id,
+			repo: full,
+			evidence: [evidence]
+		});
 		return;
 	}
+
 	existing.evidence.push(evidence);
+	existing.repo ??= full;
 }
 
 export async function discover(client: GithubClient, maxRepos: number): Promise<DiscoveryResult> {
@@ -76,7 +88,7 @@ export async function discover(client: GithubClient, maxRepos: number): Promise<
 			if (!response.isModified) break;
 
 			for (const repo of response.body.items) {
-				record(found, repo, { kind: query.evidence, detail: query.detail });
+				record(found, repo, { kind: query.evidence, detail: query.detail }, repo);
 			}
 
 			if (response.body.items.length < RESULTS_PER_PAGE) break;

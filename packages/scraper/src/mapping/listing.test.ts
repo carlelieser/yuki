@@ -4,7 +4,8 @@ import {
 	buildTitle,
 	extractReadmeHeading,
 	humanizeRepoName,
-	mapRepository
+	mapRepository,
+	parseTimestamp
 } from './listing.ts';
 import type { GithubRepository } from '../github/types.ts';
 
@@ -111,7 +112,29 @@ describe('mapRepository', () => {
 		expect(mapped.homepageUrl).toBe('https://acme.dev');
 	});
 
+	it('survives a repository that omits pushed_at, as code search embeds it', () => {
+		const partial = repository();
+		delete (partial as { pushed_at?: unknown }).pushed_at;
+
+		expect(mapRepository(partial, 'strong', null).repoPushedAt).toBeNull();
+	});
+
 	it('handles a missing license', () => {
 		expect(mapRepository(repository({ license: null }), 'weak', null).license).toBeNull();
+	});
+});
+
+describe('parseTimestamp', () => {
+	it('parses a GitHub timestamp', () => {
+		expect(parseTimestamp('2026-02-01T00:00:00Z')).toEqual(new Date('2026-02-01T00:00:00Z'));
+	});
+
+	it('treats null and undefined alike, since search results omit fields', () => {
+		expect(parseTimestamp(null)).toBeNull();
+		expect(parseTimestamp(undefined)).toBeNull();
+	});
+
+	it('returns null rather than an Invalid Date the database would reject', () => {
+		expect(parseTimestamp('not a date')).toBeNull();
 	});
 });

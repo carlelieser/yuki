@@ -135,6 +135,20 @@ describe('runNightly', () => {
 		expect(summary.notModifiedCount).toBe(1);
 	});
 
+	it('names the listing when a persist fails, instead of a bare database error', async () => {
+		const runPorts = ports({
+			listTargets: async () => [knownListing],
+			persist: async () => {
+				throw new Error('invalid input syntax for type timestamp');
+			}
+		});
+
+		const summary = await runNightly(runPorts, options);
+
+		expect(summary.warnings[0]).toContain('acme/app');
+		expect(summary.warnings[0]).toContain('invalid input syntax for type timestamp');
+	});
+
 	it('propagates a failure from listing the targets so the run closes as failed', async () => {
 		const runPorts = ports({
 			listTargets: async () => {

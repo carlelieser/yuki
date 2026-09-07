@@ -38,12 +38,12 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		log(`Discovered ${discoveredCount} candidate repositories`);
 
 		for (const found of discovery.repos) {
-			seenRepoIds.add(found.repo.id);
+			seenRepoIds.add(found.githubRepoId);
 			targets.push({
-				owner: found.repo.owner.login,
-				name: found.repo.name,
+				owner: found.owner,
+				name: found.name,
 				evidence: found.evidence,
-				repo: found.repo
+				repo: found.repo ?? undefined
 			});
 		}
 	}
@@ -67,7 +67,13 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 				continue;
 			}
 
-			await ports.persist(outcome.input);
+			try {
+				await ports.persist(outcome.input);
+			} catch (cause) {
+				const reason = cause instanceof Error ? cause.message : String(cause);
+				throw new Error(`persisting ${label} failed: ${reason}`, { cause });
+			}
+
 			updatedCount += 1;
 			log(`Updated ${label}`);
 		} catch (cause) {

@@ -22,6 +22,13 @@ export type MappedListing = {
 
 const MAX_TITLE_LENGTH = 60;
 
+export function parseTimestamp(value: string | null | undefined): Date | null {
+	if (value === null || value === undefined) return null;
+
+	const parsed = new Date(value);
+	return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function slugify(value: string): string {
 	return value
 		.normalize('NFKD')
@@ -97,6 +104,6 @@ export function mapRepository(
 		confidence,
 		isFork: repo.fork,
 		isArchived: repo.archived,
-		repoPushedAt: repo.pushed_at === null ? null : new Date(repo.pushed_at)
+		repoPushedAt: parseTimestamp(repo.pushed_at)
 	};
 }
