@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { Input } from '@yuki/ui';
+	import { cn } from '@yuki/ui';
 	import SearchIcon from '@lucide/svelte/icons/search';
+	import { Button } from '@yuki/ui/components/button';
+	import { Shortcut } from '@yuki/ui/components/dropdown-menu';
 
-	let { class: className }: { class?: string } = $props();
+	let { class: className, onopen }: { class?: string; onopen: () => void } = $props();
 </script>
 
-<form role="search" class={className}>
-	<div class="relative">
-		<SearchIcon
-			class="pointer-events-none absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-			aria-hidden="true"
-		/>
-		<Input type="search" name="q" placeholder="Search" aria-label="Search products" class="ps-8" />
-	</div>
-</form>
+<Button variant="secondary" class={cn(className)} onclick={onopen}>
+	<SearchIcon class="size-4 shrink-0" aria-hidden="true" />
+	<Shortcut>⌘K</Shortcut>
+</Button>

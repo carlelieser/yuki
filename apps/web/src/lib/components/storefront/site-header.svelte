@@ -6,15 +6,16 @@
 
 	type Props = {
 		user?: { name: string; email: string; image: string | null } | null;
+		onopensearch: () => void;
 	};
 
-	let { user = null }: Props = $props();
+	let { user = null, onopensearch }: Props = $props();
 </script>
 
 <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
 	<div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
 		<a href={resolve('/')} class="text-lg font-semibold tracking-tight">Yuki</a>
-		<SiteSearch class="ms-auto w-full max-w-xs" />
+		<SiteSearch class="ms-auto" onopen={onopensearch} />
 
 		{#if user}
 			<UserMenu {user} />
