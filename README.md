@@ -46,6 +46,7 @@ collide with services already running on the host defaults.
 | `bun run db:migrate`  | Apply pending migrations                     |
 | `bun run db:studio`   | Open Drizzle Studio                          |
 | `bun run scrape`      | Refresh listings from GitHub                 |
+| `bun run listings`    | Review, publish, and unpublish listings      |
 
 ## Scraper
 
@@ -66,7 +67,17 @@ not count against the limit.
 
 New listings are stored with `is_published = false`. Detection has measured
 false positives (wikis and awesome-lists that merely mention Shizuku), so
-nothing reaches the storefront until it is reviewed and published.
+nothing reaches the storefront until it is reviewed and published:
+
+```sh
+bun run listings pending              # candidates, with the evidence behind each
+bun run listings publish <slug>...    # put them on the storefront
+bun run listings unpublish <slug>...  # take them back off
+bun run listings published            # what is live right now
+```
+
+Refreshing a listing never changes `is_published`, so a nightly run cannot
+unpublish something you approved or resurrect something you rejected.
 
 Each run records its counters in `scrape_runs` — including `request_count`
 versus `not_modified_count`, which is how you tell the conditional requests are

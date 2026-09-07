@@ -8,6 +8,7 @@
 	},
 	"scripts": {
 		"start": "bun run src/main.ts",
+		"review": "bun run src/review.ts",
 		"check": "tsc --noEmit",
 		"test": "vitest run"
 	},

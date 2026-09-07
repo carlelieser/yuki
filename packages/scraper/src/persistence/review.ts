@@ -1,0 +1,82 @@
+import { desc, eq } from 'drizzle-orm';
+import { schema, type Database } from '@yuki/db';
+import type { EvidenceKind, ListingConfidence } from '@yuki/db/schema';
+
+export type ReviewCandidate = {
+	slug: string;
+	title: string;
+	owner: string;
+	name: string;
+	description: string | null;
+	stars: number;
+	confidence: ListingConfidence;
+	license: string | null;
+	repositoryUrl: string;
+	isArchived: boolean;
+	isFork: boolean;
+	iconUrl: string | null;
+	evidence: { kind: EvidenceKind; detail: string | null }[];
+	screenshotCount: number;
+	versionCount: number;
+};
+
+const CONFIDENCE_ORDER: Record<ListingConfidence, number> = {
+	strong: 0,
+	probable: 1,
+	weak: 2
+};
+
+export async function listCandidates(
+	db: Database,
+	isPublished: boolean,
+	limit: number
+): Promise<ReviewCandidate[]> {
+	const rows = await db.query.listings.findMany({
+		where: eq(schema.listings.isPublished, isPublished),
+		orderBy: [desc(schema.listings.stars)],
+		limit,
+		with: {
+			evidence: true,
+			screenshots: { columns: { id: true } },
+			versions: { columns: { id: true } }
+		}
+	});
+
+	return rows
+		.map((row) => ({
+			slug: row.slug,
+			title: row.title,
+			owner: row.owner,
+			name: row.name,
+			description: row.description,
+			stars: row.stars,
+			confidence: row.confidence,
+			license: row.license,
+			repositoryUrl: row.repositoryUrl,
+			isArchived: row.isArchived,
+			isFork: row.isFork,
+			iconUrl: row.iconUrl,
+			evidence: row.evidence.map((entry) => ({ kind: entry.kind, detail: entry.detail })),
+			screenshotCount: row.screenshots.length,
+			versionCount: row.versions.length
+		}))
+		.sort(
+			(left, right) =>
+				CONFIDENCE_ORDER[left.confidence] - CONFIDENCE_ORDER[right.confidence] ||
+				right.stars - left.stars
+		);
+}
+
+export async function setPublished(
+	db: Database,
+	slug: string,
+	isPublished: boolean
+): Promise<boolean> {
+	const updated = await db
+		.update(schema.listings)
+		.set({ isPublished, updatedAt: new Date() })
+		.where(eq(schema.listings.slug, slug))
+		.returning({ slug: schema.listings.slug });
+
+	return updated.length > 0;
+}
