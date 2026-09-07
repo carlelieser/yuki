@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { Badge, Button, Separator } from '@yuki/ui';
+	import {
+		Badge,
+		Button,
+		Item,
+		ItemActions,
+		ItemContent,
+		ItemDescription,
+		ItemGroup,
+		ItemTitle,
+		Separator
+	} from '@yuki/ui';
 	import { Section } from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 
@@ -80,30 +90,30 @@
 
 	{#if listing.versions.length > 0}
 		<Section title="Releases">
-			<ul class="divide-y rounded-lg border">
+			<ItemGroup>
 				{#each listing.versions as version (version.tag)}
-					<li class="flex flex-wrap items-center justify-between gap-2 p-3">
-						<div class="min-w-0">
-							<p class="text-sm font-medium">
+					<Item variant="outline">
+						<ItemContent>
+							<ItemTitle>
 								{version.name ?? version.tag}
 								{#if version.isPrerelease}
-									<Badge variant="outline" class="ms-2">Prerelease</Badge>
+									<Badge variant="outline">Prerelease</Badge>
 								{/if}
-							</p>
+							</ItemTitle>
 							{#if version.publishedAt}
-								<p class="text-xs text-muted-foreground">
-									{version.publishedAt.toLocaleDateString()}
-								</p>
+								<ItemDescription>{version.publishedAt.toLocaleDateString()}</ItemDescription>
 							{/if}
-						</div>
+						</ItemContent>
 						{#if version.downloadUrl}
-							<Button href={version.downloadUrl} variant="outline" size="sm">
-								{version.assetName ?? 'Download'}
-							</Button>
+							<ItemActions>
+								<Button href={version.downloadUrl} variant="outline" size="sm">
+									Download
+								</Button>
+							</ItemActions>
 						{/if}
-					</li>
+					</Item>
 				{/each}
-			</ul>
+			</ItemGroup>
 		</Section>
 	{/if}
 </main>

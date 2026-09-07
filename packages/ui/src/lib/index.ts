@@ -35,6 +35,18 @@ export {
 	EmptyMedia,
 	EmptyTitle
 } from './components/ui/empty/index.ts';
+export {
+	Item,
+	ItemActions,
+	ItemContent,
+	ItemDescription,
+	ItemFooter,
+	ItemGroup,
+	ItemHeader,
+	ItemMedia,
+	ItemSeparator,
+	ItemTitle
+} from './components/ui/item/index.ts';
 export { Label } from './components/ui/label/index.ts';
 export { Alert, AlertAction, AlertDescription, AlertTitle } from './components/ui/alert/index.ts';
 export {
