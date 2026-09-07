@@ -1,0 +1,21 @@
+{
+	"name": "@yuki/scraper",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"start": "bun run src/main.ts",
+		"check": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@yuki/db": "workspace:*",
+		"drizzle-orm": "0.45.2"
+	},
+	"devDependencies": {
+		"vitest": "5.0.0"
+	}
+}

@@ -5,12 +5,13 @@ Postgres for persistence, and Redis for caching.
 
 ## Layout
 
-| Path             | Package       | Purpose                                    |
-| ---------------- | ------------- | ------------------------------------------ |
-| `apps/web`       | `@yuki/web`   | SvelteKit application (Vite, adapter-node) |
-| `packages/db`    | `@yuki/db`    | Drizzle schema, client, and migrations     |
-| `packages/redis` | `@yuki/redis` | Redis client factory                       |
-| `packages/ui`    | `@yuki/ui`    | shadcn-svelte components and theme tokens  |
+| Path               | Package         | Purpose                                      |
+| ------------------ | --------------- | -------------------------------------------- |
+| `apps/web`         | `@yuki/web`     | SvelteKit application (Vite, adapter-node)   |
+| `packages/db`      | `@yuki/db`      | Drizzle schema, client, and migrations       |
+| `packages/redis`   | `@yuki/redis`   | Redis client factory                         |
+| `packages/scraper` | `@yuki/scraper` | GitHub discovery and nightly listing refresh |
+| `packages/ui`      | `@yuki/ui`      | shadcn-svelte components and theme tokens    |
 
 ## Getting started
 
@@ -44,6 +45,37 @@ collide with services already running on the host defaults.
 | `bun run db:generate` | Generate a migration from the Drizzle schema |
 | `bun run db:migrate`  | Apply pending migrations                     |
 | `bun run db:studio`   | Open Drizzle Studio                          |
+| `bun run scrape`      | Refresh listings from GitHub                 |
+
+## Scraper
+
+`packages/scraper` discovers Shizuku-based Android projects on GitHub and keeps
+existing listings current. It needs `GITHUB_TOKEN` in `.env` (a classic or
+fine-grained token with public read access is enough).
+
+```sh
+bun run scrape              # nightly refresh of known listings
+bun run scrape --discover   # weekly, also searches for new repositories
+```
+
+Discovery is deliberately separate: code search is capped at 10 requests per
+minute, so the full query set takes roughly 18 minutes and re-finds the same
+repositories every night. The nightly refresh instead issues conditional
+requests against the 5000/hour core quota, where `304 Not Modified` responses do
+not count against the limit.
+
+New listings are stored with `is_published = false`. Detection has measured
+false positives (wikis and awesome-lists that merely mention Shizuku), so
+nothing reaches the storefront until it is reviewed and published.
+
+Each run records its counters in `scrape_runs` — including `request_count`
+versus `not_modified_count`, which is how you tell the conditional requests are
+working. The exit code is the health signal for an external scheduler:
+
+```sh
+docker compose --profile scrape run --rm scraper                          # nightly
+docker compose --profile scrape run --rm scraper bun run packages/scraper/src/main.ts --discover   # weekly
+```
 
 ## Database
 

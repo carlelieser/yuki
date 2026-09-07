@@ -1,33 +1,38 @@
 <script lang="ts">
-	import type { ResolvedPathname } from '$app/types';
+	import { resolve } from '$app/paths';
 	import {
 		ProductCard,
 		ProductCarousel,
 		ProductGrid,
 		Section
 	} from '$lib/components/storefront/index.ts';
+	import type { PageData } from './$types';
+	import type { ListingSummary } from '$lib/server/listings.ts';
 
-	type StorefrontItem = { id: string; title: string; href: ResolvedPathname; badge?: string };
-
-	const featured: StorefrontItem[] = [];
-	const newArrivals: StorefrontItem[] = [];
-	const browse: StorefrontItem[] = [];
+	let { data }: { data: PageData } = $props();
 </script>
 
-{#snippet card(entry: StorefrontItem)}
-	<ProductCard title={entry.title} href={entry.href} badge={entry.badge} />
+{#snippet card(entry: ListingSummary)}
+	<ProductCard
+		title={entry.title}
+		href={resolve('/listings/[slug]', { slug: entry.slug })}
+		image={entry.iconUrl ? icon : undefined}
+		{meta}
+	/>
+	{#snippet icon()}
+		<img src={entry.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
+	{/snippet}
+	{#snippet meta()}
+		<p class="text-xs text-muted-foreground">{entry.author}</p>
+	{/snippet}
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
 	<Section title="Featured">
-		<ProductCarousel items={featured} item={card} />
+		<ProductCarousel items={data.featured} item={card} />
 	</Section>
 
 	<Section title="New">
-		<ProductGrid items={newArrivals} item={card} />
-	</Section>
-
-	<Section title="Browse">
-		<ProductGrid items={browse} item={card} />
+		<ProductGrid items={data.recent} item={card} />
 	</Section>
 </main>

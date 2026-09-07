@@ -15,7 +15,8 @@
 		"test": "bun run --filter '*' test",
 		"db:generate": "bun run --filter '@yuki/db' generate",
 		"db:migrate": "bun run --filter '@yuki/db' migrate",
-		"db:studio": "bun run --filter '@yuki/db' studio"
+		"db:studio": "bun run --filter '@yuki/db' studio",
+		"scrape": "bun run --filter '@yuki/scraper' start"
 	},
 	"devDependencies": {
 		"@eslint/js": "10.0.1",
