@@ -66,7 +66,7 @@
 		bind:ref={contentRef}
 		hasCloseButton={false}
 		hasZoomAnimation={false}
-		overlayClass="bg-black/90"
+		overlayClass="bg-background/90"
 		onkeydown={handleKeyDown}
 		onOpenAutoFocus={focusViewer}
 		class="start-0 top-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 items-center justify-center rounded-none border-none bg-transparent p-0 shadow-none"
@@ -96,26 +96,26 @@
 
 		{#if hasMultiple}
 			<Button
-				variant="ghost"
+				variant="secondary"
 				size="icon-lg"
 				onclick={goPrevious}
-				class="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white sm:start-6"
+				class="absolute start-2 top-1/2 -translate-y-1/2 rounded-full sm:start-6"
 			>
 				<ChevronLeftIcon />
 				<span class="sr-only">Previous screenshot</span>
 			</Button>
 			<Button
-				variant="ghost"
+				variant="secondary"
 				size="icon-lg"
 				onclick={goNext}
-				class="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white sm:end-6"
+				class="absolute end-2 top-1/2 -translate-y-1/2 rounded-full sm:end-6"
 			>
 				<ChevronRightIcon />
 				<span class="sr-only">Next screenshot</span>
 			</Button>
 			<p
 				aria-live="polite"
-				class="absolute bottom-6 start-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-sm text-white"
+				class="absolute bottom-6 start-1/2 -translate-x-1/2 rounded-full bg-secondary px-3 py-1 text-sm text-secondary-foreground"
 			>
 				{activeIndex + 1} / {images.length}
 			</p>
@@ -125,9 +125,9 @@
 			{#snippet child({ props })}
 				<Button
 					{...props}
-					variant="ghost"
+					variant="secondary"
 					size="icon"
-					class="absolute end-4 top-4 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
+					class="absolute end-4 top-4 rounded-full"
 				>
 					<XIcon />
 					<span class="sr-only">Close viewer</span>
