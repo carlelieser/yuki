@@ -11,6 +11,9 @@ dist/
 .env.*
 !.env.example
 
+# Agent tooling
+.claude/
+
 # Test / tooling caches
 coverage/
 *.tsbuildinfo
