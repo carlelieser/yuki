@@ -1,0 +1,35 @@
+{
+	"name": "yuki",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "bun run --filter '@yuki/web' dev",
+		"build": "bun run --filter '*' build",
+		"check": "bun run --filter '*' check",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test": "bun run --filter '*' test",
+		"db:generate": "bun run --filter '@yuki/db' generate",
+		"db:migrate": "bun run --filter '@yuki/db' migrate",
+		"db:studio": "bun run --filter '@yuki/db' studio"
+	},
+	"devDependencies": {
+		"@eslint/js": "10.0.1",
+		"@types/node": "26.4.1",
+		"eslint": "10.10.0",
+		"eslint-plugin-svelte": "3.23.0",
+		"globals": "17.12.0",
+		"jiti": "2.7.0",
+		"prettier": "3.9.6",
+		"prettier-plugin-svelte": "4.1.1",
+		"typescript": "6.0.3",
+		"typescript-eslint": "8.69.0"
+	},
+	"engines": {
+		"bun": ">=1.4.0"
+	}
+}
