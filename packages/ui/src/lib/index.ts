@@ -77,3 +77,38 @@ export {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger
 } from './components/ui/dropdown-menu/index.ts';
+export {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogOverlay,
+	DialogPortal,
+	DialogTitle,
+	DialogTrigger
+} from './components/ui/dialog/index.ts';
+export {
+	Command,
+	CommandDialog,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandLinkItem,
+	CommandList,
+	CommandLoading,
+	CommandSeparator,
+	CommandShortcut
+} from './components/ui/command/index.ts';
+export { Kbd, KbdGroup } from './components/ui/kbd/index.ts';
+export {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupInput,
+	InputGroupText,
+	InputGroupTextarea
+} from './components/ui/input-group/index.ts';
+export { Textarea } from './components/ui/textarea/index.ts';
