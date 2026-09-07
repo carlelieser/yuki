@@ -7,6 +7,7 @@ export {
 } from './components/ui/button/index.ts';
 export { Badge, badgeVariants, type BadgeVariant } from './components/ui/badge/index.ts';
 export { AspectRatio } from './components/ui/aspect-ratio/index.ts';
+export { Input } from './components/ui/input/index.ts';
 export { Skeleton } from './components/ui/skeleton/index.ts';
 export { Separator } from './components/ui/separator/index.ts';
 export { ScrollArea, ScrollAreaScrollbar } from './components/ui/scroll-area/index.ts';
