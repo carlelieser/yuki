@@ -11,7 +11,7 @@
 		ItemTitle,
 		Separator
 	} from '@yuki/ui';
-	import { Section } from '$lib/components/storefront/index.ts';
+	import { ImageCarousel, Section } from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import DownloadIcon from '@lucide/svelte/icons/download';
 
@@ -81,18 +81,7 @@
 
 	{#if listing.screenshots.length > 0}
 		<Section title="Screenshots">
-			<ul class="flex snap-x gap-4 overflow-x-auto pb-2">
-				{#each listing.screenshots as screenshot (screenshot.url)}
-					<li class="snap-start">
-						<img
-							src={screenshot.url}
-							alt={screenshot.alt ?? ''}
-							class="h-80 w-auto rounded-lg border object-cover"
-							loading="lazy"
-						/>
-					</li>
-				{/each}
-			</ul>
+			<ImageCarousel images={listing.screenshots} title={listing.title} />
 		</Section>
 	{/if}
 

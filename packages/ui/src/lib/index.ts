@@ -25,8 +25,22 @@ export {
 	CarouselContent,
 	CarouselItem,
 	CarouselNext,
-	CarouselPrevious
+	CarouselPrevious,
+	type CarouselAPI,
+	type CarouselOptions,
+	type CarouselPlugins,
+	type CarouselProps
 } from './components/ui/carousel/index.ts';
+export {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogOverlay,
+	DialogPortal,
+	DialogTitle,
+	DialogTrigger
+} from './components/ui/dialog/index.ts';
 export {
 	Empty,
 	EmptyContent,

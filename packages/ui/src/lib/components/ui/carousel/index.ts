@@ -17,3 +17,5 @@ export {
 	Previous as CarouselPrevious,
 	Next as CarouselNext
 };
+
+export type { CarouselAPI, CarouselOptions, CarouselPlugins, CarouselProps } from './context.ts';
