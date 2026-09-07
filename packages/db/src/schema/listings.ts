@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql, type SQL } from 'drizzle-orm';
 import {
 	boolean,
+	customType,
 	index,
 	integer,
 	pgEnum,
@@ -10,6 +11,12 @@ import {
 	uniqueIndex,
 	uuid
 } from 'drizzle-orm/pg-core';
+
+const tsvector = customType<{ data: string; driverData: string }>({
+	dataType() {
+		return 'tsvector';
+	}
+});
 
 export const listingConfidence = pgEnum('listing_confidence', ['strong', 'probable', 'weak']);
 
@@ -45,13 +52,19 @@ export const listings = pgTable(
 		repoPushedAt: timestamp('repo_pushed_at', { withTimezone: true }),
 		lastScrapedAt: timestamp('last_scraped_at', { withTimezone: true }),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+		searchVector: tsvector('search_vector').generatedAlwaysAs(
+			(): SQL =>
+				sql`setweight(to_tsvector('english', ${listings.title}), 'A') || setweight(to_tsvector('english', ${listings.author}), 'B') || setweight(to_tsvector('english', coalesce(${listings.description}, '')), 'C')`
+		)
 	},
 	(table) => [
 		uniqueIndex('listings_github_repo_id_key').on(table.githubRepoId),
 		uniqueIndex('listings_slug_key').on(table.slug),
 		index('listings_published_stars_idx').on(table.isPublished, table.stars),
-		index('listings_published_created_idx').on(table.isPublished, table.createdAt)
+		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
+		index('listings_search_vector_idx').using('gin', table.searchVector),
+		index('listings_search_title_trgm_idx').using('gin', sql`${table.title} gin_trgm_ops`)
 	]
 );
 
