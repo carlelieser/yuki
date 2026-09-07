@@ -15,7 +15,7 @@
 {#snippet card(entry: ListingSummary)}
 	<ProductCard
 		title={entry.title}
-		href={resolve('/listings/[slug]', { slug: entry.slug })}
+		href={resolve('/(app)/listings/[slug]', { slug: entry.slug })}
 		image={entry.iconUrl ? icon : undefined}
 		{meta}
 	/>

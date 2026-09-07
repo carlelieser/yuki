@@ -8,7 +8,6 @@
 		Button,
 		Card,
 		CardContent,
-		CardDescription,
 		CardFooter,
 		CardHeader,
 		CardTitle,
@@ -29,7 +28,6 @@
 	<Card>
 		<CardHeader>
 			<CardTitle>Sign in</CardTitle>
-			<CardDescription>Sign in to review and publish apps.</CardDescription>
 		</CardHeader>
 
 		<form method="POST" use:enhance>
@@ -85,7 +83,7 @@
 				</div>
 			</CardContent>
 
-			<CardFooter class="flex flex-col items-stretch gap-3">
+			<CardFooter class="flex flex-col items-stretch gap-3 mt-4">
 				<Button type="submit" class="w-full">Sign in</Button>
 				<p class="text-center text-sm text-muted-foreground">
 					New to Yuki?

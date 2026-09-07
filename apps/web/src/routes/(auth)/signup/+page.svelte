@@ -43,7 +43,6 @@
 		<Card>
 			<CardHeader>
 				<CardTitle>Create an account</CardTitle>
-				<CardDescription>Sign up to review apps and publish your own.</CardDescription>
 			</CardHeader>
 
 			<form method="POST" use:enhance>
@@ -105,7 +104,7 @@
 					</div>
 				</CardContent>
 
-				<CardFooter class="flex flex-col items-stretch gap-3">
+				<CardFooter class="flex flex-col items-stretch gap-3 mt-4">
 					<Button type="submit" class="w-full">Create account</Button>
 					<p class="text-center text-sm text-muted-foreground">
 						Already have an account?
