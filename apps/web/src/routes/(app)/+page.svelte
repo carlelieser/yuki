@@ -13,8 +13,17 @@
 	import { toBrowseQueryString } from '$lib/browse.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
+	import Autoplay from 'embla-carousel-autoplay';
+
+	const FEATURED_AUTOPLAY_DELAY = 5000;
 
 	let { data }: { data: PageData } = $props();
+
+	const autoplay = Autoplay({
+		delay: FEATURED_AUTOPLAY_DELAY,
+		stopOnInteraction: false,
+		stopOnMouseEnter: true
+	});
 
 	const browseHref = $derived(
 		resolve(`/(app)/browse?${toBrowseQueryString({ sort: data.sort, order: data.order })}`)
@@ -51,12 +60,15 @@
 			items={data.featured}
 			item={wideCard}
 			variant="wide"
-			itemClass="basis-4/5 sm:basis-1/2 lg:basis-1/3 ps-2"
+			itemClass="basis-full ps-2"
+			opts={{ loop: true }}
+			plugins={[autoplay]}
+			hasDots
 		/>
 	</Section>
 
 	<Section title="New">
-		<ProductCarousel items={data.recent} item={card} itemClass="basis-1/4 ps-2" />
+		<ProductCarousel items={data.recent} item={card} />
 	</Section>
 
 	<Section title="Apps" isHeaderSticky>

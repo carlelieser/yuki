@@ -19,6 +19,7 @@
 		"@yuki/ui": "workspace:*",
 		"better-auth": "1.7.3",
 		"drizzle-orm": "0.45.2",
+		"embla-carousel-autoplay": "8.6.0",
 		"mode-watcher": "1.1.0",
 		"sveltekit-superforms": "2.30.2",
 		"zod": "4.5.4"
