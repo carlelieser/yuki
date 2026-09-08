@@ -58,7 +58,7 @@
 			<img
 				src={listing.iconUrl}
 				alt=""
-				class="size-16 shrink-0 rounded-xl border object-cover"
+				class="size-16 shrink-0 rounded-xl object-cover"
 				loading="lazy"
 			/>
 		{:else}
