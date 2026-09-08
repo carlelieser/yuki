@@ -1,5 +1,11 @@
-import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, sql, type AnyColumn, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
+import {
+	DEFAULT_BROWSE_SORT,
+	defaultOrderFor,
+	type BrowseOrder,
+	type BrowseSort
+} from '../browse.ts';
 
 export type ListingSummary = {
 	id: string;
@@ -109,15 +115,35 @@ export type ListingPage = {
 	hasMore: boolean;
 };
 
+const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
+	stars: schema.listings.stars,
+	newest: schema.listings.createdAt,
+	updated: schema.listings.repoPushedAt,
+	name: sql`lower(${schema.listings.title})`
+};
+
+const NULLABLE_SORTS = new Set<BrowseSort>(['updated']);
+
+function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
+	const column = SORT_COLUMNS[sort];
+	const direction = order === 'asc' ? asc(column) : desc(column);
+	const clause = NULLABLE_SORTS.has(sort) ? sql`${direction} nulls last` : direction;
+
+	return [clause, asc(schema.listings.id)];
+}
+
 export async function getListingsPage(
 	db: Database,
-	page: { limit: number; offset: number }
+	page: { limit: number; offset: number; sort?: BrowseSort; order?: BrowseOrder }
 ): Promise<ListingPage> {
+	const sort = page.sort ?? DEFAULT_BROWSE_SORT;
+	const order = page.order ?? defaultOrderFor(sort);
+
 	const rows = await db
 		.select(summaryColumns)
 		.from(schema.listings)
 		.where(eq(schema.listings.isPublished, true))
-		.orderBy(desc(schema.listings.stars), asc(schema.listings.id))
+		.orderBy(...orderByFor(sort, order))
 		.limit(page.limit + 1)
 		.offset(page.offset);
 

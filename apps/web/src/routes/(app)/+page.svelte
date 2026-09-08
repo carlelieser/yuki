@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import {
+		BrowseSort,
 		ListingCard,
 		ListingFeed,
 		ProductCard,
@@ -53,6 +54,11 @@
 	</Section>
 
 	<Section title="Browse">
-		<ListingFeed />
+		{#snippet action()}
+			<BrowseSort sort={data.sort} order={data.order} />
+		{/snippet}
+		{#key `${data.sort}-${data.order}`}
+			<ListingFeed sort={data.sort} order={data.order} initialPage={data.browse} />
+		{/key}
 	</Section>
 </main>

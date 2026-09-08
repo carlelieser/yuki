@@ -1,3 +1,4 @@
+export { default as BrowseSort } from './browse-sort.svelte';
 export { default as CollectionEmpty } from './collection-empty.svelte';
 export { default as ImageCarousel } from './image-carousel.svelte';
 export { default as ListingCard } from './listing-card.svelte';

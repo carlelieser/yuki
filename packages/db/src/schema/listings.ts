@@ -64,6 +64,8 @@ export const listings = pgTable(
 		uniqueIndex('listings_slug_key').on(table.slug),
 		index('listings_published_stars_idx').on(table.isPublished, table.stars),
 		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
+		index('listings_published_pushed_idx').on(table.isPublished, table.repoPushedAt),
+		index('listings_published_title_idx').on(table.isPublished, sql`lower(${table.title})`),
 		index('listings_search_vector_idx').using('gin', table.searchVector),
 		index('listings_search_title_trgm_idx').using('gin', sql`${table.title} gin_trgm_ops`)
 	]

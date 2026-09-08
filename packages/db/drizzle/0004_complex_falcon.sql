@@ -1,0 +1,2 @@
+CREATE INDEX "listings_published_pushed_idx" ON "listings" USING btree ("is_published","repo_pushed_at");--> statement-breakpoint
+CREATE INDEX "listings_published_title_idx" ON "listings" USING btree ("is_published",lower("title"));

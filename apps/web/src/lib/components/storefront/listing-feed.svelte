@@ -4,34 +4,63 @@
 	import ListingCard from './listing-card.svelte';
 	import ProductGrid from './product-grid.svelte';
 	import type { ListingPage, ListingSummary } from '$lib/server/listings.ts';
+	import type { BrowseOrder, BrowseSort } from '$lib/browse.ts';
 
-	let { skeletonCount = 8 }: { skeletonCount?: number } = $props();
+	let {
+		sort,
+		order,
+		initialPage,
+		skeletonCount = 8
+	}: {
+		sort: BrowseSort;
+		order: BrowseOrder;
+		initialPage?: ListingPage;
+		skeletonCount?: number;
+	} = $props();
 
-	let results = $state<ListingSummary[]>([]);
-	let hasMore = $state(true);
+	// svelte-ignore state_referenced_locally
+	const seed = initialPage;
+
+	let results = $state<ListingSummary[]>([...(seed?.results ?? [])]);
+	let hasMore = $state(seed?.hasMore ?? true);
 	let isLoading = $state(false);
-	let hasLoadedOnce = $state(false);
+	let hasLoadedOnce = $state(seed !== undefined);
 	let sentinel = $state<HTMLDivElement | null>(null);
+
+	let requestId = 0;
 
 	async function loadMore(): Promise<void> {
 		if (isLoading || !hasMore) return;
 		isLoading = true;
 
+		const currentRequest = ++requestId;
+		const params = new URLSearchParams({
+			offset: String(results.length),
+			sort,
+			order
+		});
+
 		try {
-			const response = await fetch(`${resolve('/api/listings')}?offset=${results.length}`);
+			const response = await fetch(`${resolve('/api/listings')}?${params.toString()}`);
+			if (currentRequest !== requestId) return;
+
 			if (!response.ok) {
 				hasMore = false;
 				return;
 			}
 
 			const page: ListingPage = await response.json();
+			if (currentRequest !== requestId) return;
+
 			results = [...results, ...page.results];
 			hasMore = page.hasMore;
 		} catch {
-			hasMore = false;
+			if (currentRequest === requestId) hasMore = false;
 		} finally {
-			isLoading = false;
-			hasLoadedOnce = true;
+			if (currentRequest === requestId) {
+				isLoading = false;
+				hasLoadedOnce = true;
+			}
 		}
 	}
 
