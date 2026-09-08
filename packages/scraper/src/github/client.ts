@@ -137,6 +137,25 @@ export function createGithubClient(
 			return request<GithubTree>(`/repos/${owner}/${name}/git/trees/${branch}?recursive=1`, {
 				etag
 			});
+		},
+
+		getBlob(owner: string, name: string, sha: string) {
+			return request<string>(`/repos/${owner}/${name}/git/blobs/${sha}`, {
+				accept: 'application/vnd.github.raw',
+				asText: true
+			});
+		},
+
+		getRawFile(owner: string, name: string, path: string, ref: string) {
+			const encoded = path
+				.split('/')
+				.map((segment) => encodeURIComponent(segment))
+				.join('/');
+
+			return request<string>(`/repos/${owner}/${name}/contents/${encoded}?ref=${ref}`, {
+				accept: 'application/vnd.github.raw',
+				asText: true
+			});
 		}
 	};
 }

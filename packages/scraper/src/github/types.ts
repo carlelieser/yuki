@@ -64,6 +64,8 @@ export type GithubRelease = {
 export type GithubTreeEntry = {
 	path: string;
 	type: string;
+	mode?: string;
+	sha?: string;
 	size?: number;
 };
 
