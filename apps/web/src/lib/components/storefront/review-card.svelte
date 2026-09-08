@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage, Item, ItemContent, StarRating } from '@yuki/ui';
+	import { Item, ItemContent, StarRating, UserAvatar } from '@yuki/ui';
 	import { initialsOf } from '$lib/initials.ts';
 	import type { Review } from '$lib/server/reviews.ts';
 
@@ -8,17 +8,14 @@
 	const postedAt = $derived(new Date(review.createdAt));
 </script>
 
-<Item variant="outline" class="items-start">
-	<Avatar class="size-9 shrink-0">
-		{#if review.author.image}
-			<AvatarImage src={review.author.image} alt="" />
-		{/if}
-		<AvatarFallback>{initialsOf(review.author.name)}</AvatarFallback>
-	</Avatar>
+<Item variant="outline" class="flex-col items-start">
+	<div class="flex flex-row items-center gap-2">
+		<UserAvatar initials={initialsOf(review.author.name)} image={review.author.image} />
+		<span class="text-sm font-medium">{review.author.name}</span>
+	</div>
 
-	<ItemContent class="gap-1">
+	<ItemContent class="gap-2">
 		<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-			<span class="text-sm font-medium">{review.author.name}</span>
 			<StarRating value={review.rating} size="sm" />
 			<time datetime={postedAt.toISOString()} class="text-xs text-muted-foreground">
 				{postedAt.toLocaleDateString()}

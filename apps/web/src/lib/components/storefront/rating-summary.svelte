@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Number, Progress, StarRating } from '@yuki/ui';
+	import { Number, Progress, StarRating, Item } from '@yuki/ui';
 	import type { RatingSummary } from '$lib/server/reviews.ts';
 
 	let { summary }: { summary: RatingSummary } = $props();
@@ -9,9 +9,9 @@
 	}
 </script>
 
-<div class="flex flex-col gap-6 rounded-xl border p-4 sm:flex-row sm:items-center sm:gap-8">
-	<div class="flex shrink-0 flex-col items-center gap-1 sm:w-32">
-		<span class="text-4xl font-semibold tracking-tight">
+<Item class="items-end">
+	<div class="flex shrink-0 flex-col gap-1 sm:w-32">
+		<span class="text-6xl font-semibold tracking-tight">
 			<Number value={summary.average} maximumFractionDigits={1} />
 		</span>
 		<StarRating value={summary.average} />
@@ -21,7 +21,7 @@
 		</span>
 	</div>
 
-	<div class="w-full max-w-md flex-1 space-y-1.5">
+	<div class="w-full flex-1 space-y-1.5">
 		{#each summary.distribution as bucket (bucket.rating)}
 			<div class="flex items-center gap-3">
 				<span class="w-3 shrink-0 text-sm tabular-nums text-muted-foreground">{bucket.rating}</span>
@@ -32,4 +32,4 @@
 			</div>
 		{/each}
 	</div>
-</div>
+</Item>
