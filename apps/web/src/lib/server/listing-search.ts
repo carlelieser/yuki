@@ -1,7 +1,14 @@
 import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
-import { summaryColumns, type ListingSummary } from './listings.ts';
-import { hasEnoughLengthForTrigram, MAX_SEARCH_OFFSET, toPrefixTsQuery } from '../search-query.ts';
+import { orderByFor, summaryColumns, type ListingSummary } from './listings.ts';
+import {
+	DEFAULT_SEARCH_SORTING,
+	hasEnoughLengthForTrigram,
+	isRelevanceSort,
+	MAX_SEARCH_OFFSET,
+	toPrefixTsQuery,
+	type SearchSorting
+} from '../search-query.ts';
 
 export type SearchPage = {
 	results: ListingSummary[];
@@ -9,7 +16,7 @@ export type SearchPage = {
 	hasMore: boolean;
 };
 
-type SearchPageRequest = { limit: number; offset: number };
+type SearchPageRequest = { limit: number; offset: number; sorting?: SearchSorting };
 
 function fullTextMatch(tsQuery: SQL): SQL {
 	return sql`${schema.listings.searchVector} @@ ${tsQuery}`;
@@ -59,6 +66,15 @@ function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
 	};
 }
 
+function relevanceOrderBy(rank: SQL): SQL[] {
+	return [desc(rank), desc(schema.listings.stars), asc(schema.listings.id)];
+}
+
+function searchOrderBy(sorting: SearchSorting, rank: SQL): SQL[] {
+	if (isRelevanceSort(sorting.sort)) return relevanceOrderBy(rank);
+	return [...orderByFor(sorting.sort, sorting.order), desc(rank)];
+}
+
 export async function searchListingsTypeahead(
 	db: Database,
 	query: string,
@@ -71,7 +87,7 @@ export async function searchListingsTypeahead(
 		.select(summaryColumns)
 		.from(schema.listings)
 		.where(publishedAnd(match.condition))
-		.orderBy(desc(match.rank), desc(schema.listings.stars), asc(schema.listings.id))
+		.orderBy(...relevanceOrderBy(match.rank))
 		.limit(limit);
 }
 
@@ -83,12 +99,13 @@ export async function searchListingsPage(
 	const match = buildFullSearchMatch(query);
 	if (match === null) return { results: [], total: 0, hasMore: false };
 
+	const sorting = page.sorting ?? DEFAULT_SEARCH_SORTING;
 	const offset = Math.min(page.offset, MAX_SEARCH_OFFSET);
 	const rows = await db
 		.select({ ...summaryColumns, total: sql<number>`count(*) over ()`.mapWith(Number) })
 		.from(schema.listings)
 		.where(publishedAnd(match.condition))
-		.orderBy(desc(match.rank), desc(schema.listings.stars), asc(schema.listings.id))
+		.orderBy(...searchOrderBy(sorting, match.rank))
 		.limit(page.limit)
 		.offset(offset);
 

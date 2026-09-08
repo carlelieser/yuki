@@ -124,7 +124,7 @@ const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
 
 const NULLABLE_SORTS = new Set<BrowseSort>(['updated']);
 
-function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
+export function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
 	const column = SORT_COLUMNS[sort];
 	const direction = order === 'asc' ? asc(column) : desc(column);
 	const clause = NULLABLE_SORTS.has(sort) ? sql`${direction} nulls last` : direction;

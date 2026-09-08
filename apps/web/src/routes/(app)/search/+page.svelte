@@ -4,8 +4,10 @@
 		CollectionEmpty,
 		ListingCard,
 		ProductGrid,
+		SearchSort,
 		Section
 	} from '$lib/components/storefront/index.ts';
+	import { toSearchQueryString } from '$lib/search-query.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
@@ -15,6 +17,9 @@
 		`${data.total} ${data.total === 1 ? 'result' : 'results'} for “${data.query}”`
 	);
 	const nextOffset = $derived(data.results.length);
+	const nextPageHref = $derived(
+		resolve(`/(app)/search?${toSearchQueryString(data.query, data.sorting, nextOffset)}`)
+	);
 </script>
 
 {#snippet card(entry: ListingSummary)}
@@ -29,6 +34,9 @@
 		/>
 	{:else}
 		<Section title={heading}>
+			{#snippet action()}
+				<SearchSort query={data.query} sorting={data.sorting} />
+			{/snippet}
 			<ProductGrid items={data.results} item={card}>
 				{#snippet empty()}
 					<CollectionEmpty
@@ -42,7 +50,7 @@
 		{#if data.hasMore}
 			<div class="flex justify-center">
 				<a
-					href="{resolve('/(app)/search')}?q={encodeURIComponent(data.query)}&offset={nextOffset}"
+					href={nextPageHref}
 					class="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
 				>
 					Load more

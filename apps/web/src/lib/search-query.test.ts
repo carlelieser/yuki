@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { BROWSE_SORT_OPTIONS, defaultOrderFor } from './browse.ts';
 import {
+	DEFAULT_SEARCH_SORTING,
+	fromSearchSortValue,
 	hasEnoughLengthForTrigram,
+	isRelevanceSort,
 	MAX_QUERY_LENGTH,
 	MAX_SEARCH_OFFSET,
 	normalizeSearchQuery,
 	readOffset,
-	toPrefixTsQuery
+	readSearchSorting,
+	SEARCH_RELEVANCE_SORT,
+	SEARCH_SORT_OPTIONS,
+	toPrefixTsQuery,
+	toSearchQueryString,
+	toSearchSortValue
 } from './search-query.ts';
 
 const WELL_FORMED_TSQUERY = /^[a-zA-Z0-9._-]+(?: & [a-zA-Z0-9._-]+)*(?::\*)?$/;
@@ -98,5 +107,129 @@ describe('readOffset', () => {
 
 	it('floors fractional offsets', () => {
 		expect(readOffset('24.9')).toBe(24);
+	});
+});
+
+describe('SEARCH_SORT_OPTIONS', () => {
+	it('leads with relevance and reuses the browse options', () => {
+		expect(SEARCH_SORT_OPTIONS[0]?.value).toBe(SEARCH_RELEVANCE_SORT);
+		expect(SEARCH_SORT_OPTIONS.length).toBe(BROWSE_SORT_OPTIONS.length + 1);
+		expect(SEARCH_SORT_OPTIONS.slice(1)).toEqual(BROWSE_SORT_OPTIONS);
+	});
+
+	it('exposes unique values', () => {
+		const values = SEARCH_SORT_OPTIONS.map((option) => option.value);
+		expect(new Set(values).size).toBe(values.length);
+	});
+});
+
+describe('isRelevanceSort', () => {
+	it('identifies the relevance sort', () => {
+		expect(isRelevanceSort(SEARCH_RELEVANCE_SORT)).toBe(true);
+		expect(isRelevanceSort('stars')).toBe(false);
+	});
+});
+
+describe('toSearchSortValue', () => {
+	it('collapses relevance to a single value', () => {
+		expect(toSearchSortValue({ sort: SEARCH_RELEVANCE_SORT, order: 'desc' })).toBe(
+			SEARCH_RELEVANCE_SORT
+		);
+	});
+
+	it('pairs a column sort with its order', () => {
+		expect(toSearchSortValue({ sort: 'stars', order: 'asc' })).toBe('stars-asc');
+		expect(toSearchSortValue({ sort: 'name', order: 'desc' })).toBe('name-desc');
+	});
+});
+
+describe('fromSearchSortValue', () => {
+	it('round-trips every option', () => {
+		for (const option of SEARCH_SORT_OPTIONS) {
+			const sorting = fromSearchSortValue(option.value);
+			expect(sorting).toEqual({ sort: option.sort, order: option.order });
+			expect(toSearchSortValue(sorting)).toBe(option.value);
+		}
+	});
+
+	it('falls back to relevance for unknown values', () => {
+		expect(fromSearchSortValue('bogus')).toEqual(DEFAULT_SEARCH_SORTING);
+	});
+});
+
+describe('readSearchSorting', () => {
+	it('defaults to relevance when no sort is given', () => {
+		expect(readSearchSorting(new URLSearchParams())).toEqual(DEFAULT_SEARCH_SORTING);
+	});
+
+	it('reads relevance explicitly', () => {
+		expect(readSearchSorting(new URLSearchParams({ sort: SEARCH_RELEVANCE_SORT }))).toEqual(
+			DEFAULT_SEARCH_SORTING
+		);
+	});
+
+	it('reads a column sort with its order', () => {
+		expect(readSearchSorting(new URLSearchParams({ sort: 'stars', order: 'asc' }))).toEqual({
+			sort: 'stars',
+			order: 'asc'
+		});
+	});
+
+	it('falls back to the browse default order for a known sort', () => {
+		expect(readSearchSorting(new URLSearchParams({ sort: 'name' }))).toEqual({
+			sort: 'name',
+			order: defaultOrderFor('name')
+		});
+		expect(readSearchSorting(new URLSearchParams({ sort: 'updated', order: 'sideways' }))).toEqual({
+			sort: 'updated',
+			order: defaultOrderFor('updated')
+		});
+	});
+
+	it('falls back to relevance for an unknown sort', () => {
+		expect(readSearchSorting(new URLSearchParams({ sort: 'bogus', order: 'asc' }))).toEqual(
+			DEFAULT_SEARCH_SORTING
+		);
+	});
+
+	it('ignores the order when the sort is relevance', () => {
+		expect(
+			readSearchSorting(new URLSearchParams({ sort: SEARCH_RELEVANCE_SORT, order: 'asc' }))
+		).toEqual(DEFAULT_SEARCH_SORTING);
+	});
+});
+
+describe('toSearchQueryString', () => {
+	it('emits only the query for the default relevance sort', () => {
+		expect(toSearchQueryString('hello world', DEFAULT_SEARCH_SORTING)).toBe('q=hello%20world');
+	});
+
+	it('includes the sort and order for a column sort', () => {
+		expect(toSearchQueryString('tetris', { sort: 'stars', order: 'asc' })).toBe(
+			'q=tetris&sort=stars&order=asc'
+		);
+	});
+
+	it('appends a positive offset last', () => {
+		expect(toSearchQueryString('tetris', { sort: 'name', order: 'desc' }, 24)).toBe(
+			'q=tetris&sort=name&order=desc&offset=24'
+		);
+	});
+
+	it('omits a zero offset', () => {
+		expect(toSearchQueryString('tetris', DEFAULT_SEARCH_SORTING, 0)).toBe('q=tetris');
+	});
+
+	it('encodes characters that would break the query string', () => {
+		expect(toSearchQueryString('a&b=c d', DEFAULT_SEARCH_SORTING)).toBe('q=a%26b%3Dc%20d');
+	});
+
+	it('round-trips through readSearchSorting', () => {
+		for (const option of SEARCH_SORT_OPTIONS) {
+			const sorting = { sort: option.sort, order: option.order };
+			const params = new URLSearchParams(toSearchQueryString('tetris', sorting));
+			expect(params.get('q')).toBe('tetris');
+			expect(readSearchSorting(params)).toEqual(sorting);
+		}
 	});
 });
