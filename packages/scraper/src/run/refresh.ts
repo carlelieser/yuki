@@ -2,7 +2,6 @@ import { mergeEvidence, scoreConfidence, type DetectedEvidence } from '../detect
 import { GithubSkip, type GithubClient } from '../github/client.ts';
 import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
-import { resolvePackageIdentity } from '../mapping/package-name.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
 import { mapReleases } from '../mapping/versions.ts';
 import type { GithubRepository, GithubTree } from '../github/types.ts';
@@ -51,10 +50,7 @@ export async function refreshListing(
 		const tree = await readOptional(() => client.getTree(owner, name, repo.default_branch));
 
 		const evidence = mergeEvidence(target.evidence ?? []);
-		const identity = await resolvePackageIdentity(tree, (path) =>
-			readOptional(() => client.getRawFile(owner, name, path, repo.default_branch))
-		);
-		const listing = mapRepository(repo, scoreConfidence(evidence), readme, identity.packageName);
+		const listing = mapRepository(repo, scoreConfidence(evidence), readme);
 		const bannerUrl =
 			readme === null ? null : findBannerUrl(readme, owner, name, repo.default_branch);
 
