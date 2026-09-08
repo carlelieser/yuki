@@ -43,6 +43,20 @@
       "when": 1788877860359,
       "tag": "0005_little_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788885116906,
+      "tag": "0006_overjoyed_george_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788890436875,
+      "tag": "0007_typical_gargoyle",
+      "breakpoints": true
     }
   ]
 }
