@@ -13,6 +13,7 @@
 		DropdownMenuSeparator,
 		DropdownMenuTrigger
 	} from '@yuki/ui';
+	import { initialsOf } from '$lib/initials.ts';
 
 	type Props = {
 		user: { name: string; email: string; image: string | null };
@@ -21,12 +22,7 @@
 	let { user }: Props = $props();
 
 	const initials = $derived(
-		user.name
-			.split(' ')
-			.filter(Boolean)
-			.slice(0, 2)
-			.map((part) => part[0]?.toUpperCase() ?? '')
-			.join('') || user.email[0]?.toUpperCase()
+		user.name.trim() ? initialsOf(user.name) : (user.email[0]?.toUpperCase() ?? '?')
 	);
 </script>
 

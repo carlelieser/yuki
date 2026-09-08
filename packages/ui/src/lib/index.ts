@@ -136,3 +136,4 @@ export {
 	FormLabel,
 	FormLegend
 } from './components/ui/form/index.ts';
+export { StarRating, StarRatingInput } from './components/ui/star-rating/index.ts';

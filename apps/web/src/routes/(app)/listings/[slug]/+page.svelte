@@ -13,7 +13,15 @@
 		ItemTitle,
 		Number
 	} from '@yuki/ui';
-	import { ImageCarousel, Section } from '$lib/components/storefront/index.ts';
+	import {
+		CollectionEmpty,
+		ImageCarousel,
+		RatingSummary,
+		ReviewCard,
+		ReviewForm,
+		ReviewsDialog,
+		Section
+	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import DownloadIcon from '@lucide/svelte/icons/download';
 	import { SquareTextIcon, StarIcon, BoxIcon } from '@lucide/svelte';
@@ -22,6 +30,9 @@
 
 	const listing = $derived(data.listing);
 	const latestVersion = $derived(listing.versions[0]);
+	const summary = $derived(data.summary);
+
+	let reviewsOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -149,4 +160,52 @@
 			</CollapsibleContent>
 		</Section>
 	{/if}
+
+	<Section title="Ratings & reviews">
+		{#snippet action()}
+			{#if data.reviews.hasMore}
+				<Button variant="ghost" onclick={() => (reviewsOpen = true)}>Show all reviews</Button>
+			{/if}
+		{/snippet}
+
+		<RatingSummary {summary} />
+
+		{#if data.user === null}
+			<p class="text-sm text-muted-foreground">
+				<a
+					href={resolve('/(auth)/signin')}
+					class="underline underline-offset-4"
+					data-sveltekit-preload-data="off">Sign in</a
+				> to write a review.
+			</p>
+		{:else if data.canReview}
+			<ReviewForm data={data.form} isEditing={data.hasReviewed} />
+		{:else}
+			<p class="text-sm text-muted-foreground">Download this app to write a review.</p>
+		{/if}
+
+		{#if summary.total === 0}
+			<CollectionEmpty
+				title="No reviews yet"
+				description="Be the first to share what you think of this app."
+			>
+				{#snippet icon()}
+					<StarIcon />
+				{/snippet}
+			</CollectionEmpty>
+		{:else}
+			<div class="space-y-3">
+				{#each data.reviews.results as review (review.id)}
+					<ReviewCard {review} />
+				{/each}
+			</div>
+		{/if}
+	</Section>
 </main>
+
+<ReviewsDialog
+	slug={listing.slug}
+	initial={data.reviews.results}
+	total={summary.total}
+	bind:open={reviewsOpen}
+/>
