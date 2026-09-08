@@ -1,0 +1,74 @@
+package app.yuki.notifications
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+
+const val NOTIFICATION_RATIONALE_TAG = "notification_rationale"
+
+private const val RATIONALE_TITLE = "Stay informed about downloads"
+private const val RATIONALE_MESSAGE =
+    "Yuki can notify you when a download or install finishes. " +
+        "Installs work either way, so you can skip this."
+private const val ALLOW_LABEL = "Allow"
+private const val NOT_NOW_LABEL = "Not now"
+
+@Composable
+internal fun rememberNotificationConsent(): NotificationConsentState {
+    val context = LocalContext.current
+    var isAsked by rememberSaveable { mutableStateOf(false) }
+    var isRationaleVisible by rememberSaveable { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isAsked = true }
+
+    val state = NotificationConsentState(
+        isRationaleVisible = isRationaleVisible,
+        onRequest = {
+            val isPending = !isAsked && !NotificationConsent.isGranted(context)
+            if (NotificationConsent.isRequired && isPending) isRationaleVisible = true
+        },
+        onDecision = { isAllowed ->
+            isRationaleVisible = false
+            isAsked = true
+            if (isAllowed) launcher.launch(NotificationConsent.PERMISSION)
+        },
+    )
+
+    return state
+}
+
+internal data class NotificationConsentState(
+    val isRationaleVisible: Boolean,
+    val onRequest: () -> Unit,
+    val onDecision: (Boolean) -> Unit,
+)
+
+@Composable
+internal fun NotificationRationaleDialog(state: NotificationConsentState) {
+    if (!state.isRationaleVisible) return
+
+    AlertDialog(
+        modifier = Modifier.testTag(NOTIFICATION_RATIONALE_TAG),
+        onDismissRequest = { state.onDecision(false) },
+        title = { Text(text = RATIONALE_TITLE) },
+        text = { Text(text = RATIONALE_MESSAGE) },
+        confirmButton = {
+            TextButton(onClick = { state.onDecision(true) }) { Text(text = ALLOW_LABEL) }
+        },
+        dismissButton = {
+            TextButton(onClick = { state.onDecision(false) }) { Text(text = NOT_NOW_LABEL) }
+        },
+    )
+}

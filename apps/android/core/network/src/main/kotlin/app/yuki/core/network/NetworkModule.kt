@@ -13,16 +13,9 @@ import javax.inject.Singleton
 @Retention(AnnotationRetention.BINARY)
 annotation class YukiBaseUrl
 
-const val YUKI_BASE_URL = "https://yuki.app/"
-
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkProviders {
-    @Provides
-    @Singleton
-    @YukiBaseUrl
-    fun baseUrl(): String = YUKI_BASE_URL
-
     @Provides
     @Singleton
     fun httpClient(@YukiBaseUrl baseUrl: String): HttpClient = YukiHttpClient.create(baseUrl)
