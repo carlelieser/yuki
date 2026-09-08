@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import {
 		Badge,
 		Button,
@@ -70,7 +71,14 @@
 
 	<div class="flex items-center flex-wrap gap-2">
 		{#if latestVersion?.downloadUrl}
-			<Button href={latestVersion.downloadUrl}>
+			<Button
+				href={resolve('/(app)/listings/[slug]/download/[tag]', {
+					slug: listing.slug,
+					tag: latestVersion.tag
+				})}
+				data-sveltekit-preload-data="off"
+				rel="nofollow"
+			>
 				<DownloadIcon />
 				Download {latestVersion.tag}
 			</Button>
@@ -121,7 +129,15 @@
 							</ItemContent>
 							{#if version.downloadUrl}
 								<ItemActions>
-									<Button href={version.downloadUrl} variant="ghost">
+									<Button
+										href={resolve('/(app)/listings/[slug]/download/[tag]', {
+											slug: listing.slug,
+											tag: version.tag
+										})}
+										data-sveltekit-preload-data="off"
+										rel="nofollow"
+										variant="ghost"
+									>
 										<DownloadIcon />
 										Download
 									</Button>

@@ -65,3 +65,5 @@ export function fromSortValue(value: string): BrowseSorting {
 	}
 	return { sort: option.sort, order: option.order };
 }
+
+export const REVIEWS_PAGE_SIZE = 10;
