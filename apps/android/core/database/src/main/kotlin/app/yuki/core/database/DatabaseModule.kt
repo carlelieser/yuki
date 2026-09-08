@@ -2,12 +2,14 @@ package app.yuki.core.database
 
 import android.content.Context
 import androidx.room.Room
+import app.yuki.core.installer.InstallRecorder
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
 import javax.inject.Singleton
 
 @Module
@@ -21,6 +23,10 @@ internal object DatabaseProviders {
     @Provides
     @Singleton
     fun installDao(database: YukiDatabase): InstallDao = database.installDao()
+
+    @Provides
+    @Singleton
+    fun clock(): Clock = Clock.systemUTC()
 }
 
 @Module
@@ -29,4 +35,8 @@ internal interface DatabaseBindings {
     @Binds
     @Singleton
     fun installStore(implementation: RoomInstallStore): InstallStore
+
+    @Binds
+    @Singleton
+    fun installRecorder(implementation: RoomInstallRecorder): InstallRecorder
 }
