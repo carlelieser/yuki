@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { LogOutIcon } from '@lucide/svelte';
 	import {
 		Avatar,
 		AvatarFallback,
@@ -54,7 +55,14 @@
 		<form method="POST" action={resolve('/signout')}>
 			<DropdownMenuItem>
 				{#snippet child({ props })}
-					<button {...props} type="submit" class="w-full text-left">Sign out</button>
+					<button
+						{...props}
+						type="submit"
+						class="w-full text-left flex items-center justify-between text-sm p-2"
+					>
+						Sign out
+						<LogOutIcon class="size-4 text-muted-foreground" />
+					</button>
 				{/snippet}
 			</DropdownMenuItem>
 		</form>
