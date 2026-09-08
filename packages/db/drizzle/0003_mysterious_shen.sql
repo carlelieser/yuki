@@ -1,0 +1,1 @@
+ALTER TABLE "scrape_sources" ADD COLUMN "mapping_version" integer DEFAULT 0 NOT NULL;

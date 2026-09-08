@@ -8,6 +8,7 @@ export const scrapeSources = pgTable(
 		id: uuid('id').primaryKey().defaultRandom(),
 		resource: text('resource').notNull(),
 		etag: text('etag'),
+		mappingVersion: integer('mapping_version').notNull().default(0),
 		fetchedAt: timestamp('fetched_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => [uniqueIndex('scrape_sources_resource_key').on(table.resource)]

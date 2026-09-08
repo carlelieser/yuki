@@ -41,6 +41,7 @@ export const listings = pgTable(
 		authorUrl: text('author_url').notNull(),
 		description: text('description'),
 		iconUrl: text('icon_url'),
+		bannerUrl: text('banner_url'),
 		repositoryUrl: text('repository_url').notNull(),
 		homepageUrl: text('homepage_url'),
 		license: text('license'),

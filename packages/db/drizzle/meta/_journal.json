@@ -15,6 +15,20 @@
       "when": 1788789050010,
       "tag": "0001_volatile_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788859974975,
+      "tag": "0002_lazy_namorita",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788864460270,
+      "tag": "0003_mysterious_shen",
+      "breakpoints": true
     }
   ]
 }
