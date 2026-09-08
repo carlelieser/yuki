@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 export type ListingSummary = {
@@ -8,6 +8,7 @@ export type ListingSummary = {
 	author: string;
 	description: string | null;
 	iconUrl: string | null;
+	bannerUrl: string | null;
 	stars: number;
 };
 
@@ -35,6 +36,7 @@ export const summaryColumns = {
 	author: schema.listings.author,
 	description: schema.listings.description,
 	iconUrl: schema.listings.iconUrl,
+	bannerUrl: schema.listings.bannerUrl,
 	stars: schema.listings.stars
 };
 
@@ -42,7 +44,13 @@ export async function getFeaturedListings(db: Database, limit: number): Promise<
 	return db
 		.select(summaryColumns)
 		.from(schema.listings)
-		.where(eq(schema.listings.isPublished, true))
+		.where(
+			and(
+				eq(schema.listings.isPublished, true),
+				isNotNull(schema.listings.iconUrl),
+				isNotNull(schema.listings.bannerUrl)
+			)
+		)
 		.orderBy(desc(schema.listings.stars))
 		.limit(limit);
 }
@@ -75,6 +83,7 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 		authorUrl: listing.authorUrl,
 		description: listing.description,
 		iconUrl: listing.iconUrl,
+		bannerUrl: listing.bannerUrl,
 		stars: listing.stars,
 		repositoryUrl: listing.repositoryUrl,
 		homepageUrl: listing.homepageUrl,
@@ -93,4 +102,26 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 			publishedAt: version.publishedAt
 		}))
 	};
+}
+
+export type ListingPage = {
+	results: ListingSummary[];
+	hasMore: boolean;
+};
+
+export async function getListingsPage(
+	db: Database,
+	page: { limit: number; offset: number }
+): Promise<ListingPage> {
+	const rows = await db
+		.select(summaryColumns)
+		.from(schema.listings)
+		.where(eq(schema.listings.isPublished, true))
+		.orderBy(desc(schema.listings.stars), asc(schema.listings.id))
+		.limit(page.limit + 1)
+		.offset(page.offset);
+
+	const results = rows.slice(0, page.limit);
+
+	return { results, hasMore: rows.length > page.limit };
 }
