@@ -10,6 +10,7 @@
 		ItemContent,
 		ItemDescription,
 		ItemGroup,
+		ItemMedia,
 		ItemTitle,
 		Number
 	} from '@yuki/ui';
@@ -24,7 +25,7 @@
 	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import DownloadIcon from '@lucide/svelte/icons/download';
-	import { SquareTextIcon, StarIcon, BoxIcon } from '@lucide/svelte';
+	import { SquareTextIcon, StarIcon, BoxIcon, ChevronRightIcon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -126,7 +127,10 @@
 			<CollapsibleContent showMoreLabel="Show all releases" showLessLabel="Show fewer releases">
 				<ItemGroup>
 					{#each listing.versions as version (version.tag)}
-						<Item variant="outline">
+						{#snippet versionDetails(hasDownload: boolean)}
+							<ItemMedia variant="icon">
+								<DownloadIcon />
+							</ItemMedia>
 							<ItemContent>
 								<ItemTitle>
 									{version.name ?? version.tag}
@@ -138,23 +142,34 @@
 									<ItemDescription>{version.publishedAt.toLocaleDateString()}</ItemDescription>
 								{/if}
 							</ItemContent>
-							{#if version.downloadUrl}
+							{#if hasDownload}
 								<ItemActions>
-									<Button
+									<ChevronRightIcon class="size-4 text-muted-foreground" />
+								</ItemActions>
+							{/if}
+						{/snippet}
+
+						{#if version.downloadUrl}
+							<Item variant="outline">
+								{#snippet child({ props }: { props: Record<string, unknown> })}
+									<a
 										href={resolve('/(app)/listings/[slug]/download/[tag]', {
 											slug: listing.slug,
 											tag: version.tag
 										})}
 										data-sveltekit-preload-data="off"
 										rel="nofollow"
-										variant="ghost"
+										{...props}
 									>
-										<DownloadIcon />
-										Download
-									</Button>
-								</ItemActions>
-							{/if}
-						</Item>
+										{@render versionDetails(true)}
+									</a>
+								{/snippet}
+							</Item>
+						{:else}
+							<Item variant="outline">
+								{@render versionDetails(false)}
+							</Item>
+						{/if}
 					{/each}
 				</ItemGroup>
 			</CollapsibleContent>
