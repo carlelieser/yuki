@@ -59,6 +59,7 @@ function formatFlags(candidate: ReviewCandidate): string {
 	if (candidate.isArchived) flags.push('archived');
 	if (candidate.isFork) flags.push('fork');
 	if (candidate.iconUrl === null) flags.push('no icon');
+	if (candidate.bannerUrl === null) flags.push('no banner');
 	if (candidate.screenshotCount === 0) flags.push('no screenshots');
 	return flags.length === 0 ? '' : `  [${flags.join(', ')}]`;
 }

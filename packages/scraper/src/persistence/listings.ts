@@ -17,6 +17,7 @@ export type ListingRecord = {
 export type PersistInput = {
 	listing: MappedListing;
 	iconUrl: string | null;
+	bannerUrl: string | null;
 	screenshots: ReadmeImage[];
 	versions: MappedVersion[];
 	evidence: DetectedEvidence[];
@@ -43,6 +44,7 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 				...input.listing,
 				slug,
 				iconUrl: input.iconUrl,
+				bannerUrl: input.bannerUrl,
 				lastScrapedAt: new Date(),
 				updatedAt: new Date()
 			})
@@ -57,6 +59,7 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 					authorUrl: input.listing.authorUrl,
 					description: input.listing.description,
 					iconUrl: input.iconUrl,
+					bannerUrl: input.bannerUrl,
 					repositoryUrl: input.listing.repositoryUrl,
 					homepageUrl: input.listing.homepageUrl,
 					license: input.listing.license,

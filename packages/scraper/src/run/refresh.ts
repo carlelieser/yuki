@@ -1,8 +1,8 @@
 import { mergeEvidence, scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
 import { GithubSkip, type GithubClient } from '../github/client.ts';
-import { buildIconUrl } from '../mapping/icon.ts';
+import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
-import { extractReadmeImages } from '../mapping/readme-images.ts';
+import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
 import { mapReleases } from '../mapping/versions.ts';
 import type { GithubRepository, GithubTree } from '../github/types.ts';
 import type { PersistInput } from '../persistence/listings.ts';
@@ -51,14 +51,19 @@ export async function refreshListing(
 
 		const evidence = mergeEvidence(target.evidence ?? []);
 		const listing = mapRepository(repo, scoreConfidence(evidence), readme);
+		const bannerUrl =
+			readme === null ? null : findBannerUrl(readme, owner, name, repo.default_branch);
 
 		return {
 			kind: 'updated',
 			input: {
 				listing,
-				iconUrl: iconFrom(tree, owner, name, repo.default_branch),
+				iconUrl: await iconFrom(client, tree, owner, name, repo.default_branch),
+				bannerUrl,
 				screenshots:
-					readme === null ? [] : extractReadmeImages(readme, owner, name, repo.default_branch),
+					readme === null
+						? []
+						: extractReadmeImages(readme, owner, name, repo.default_branch, bannerUrl),
 				versions: releases === null ? [] : mapReleases(releases),
 				evidence
 			}
@@ -71,14 +76,29 @@ export async function refreshListing(
 	}
 }
 
-function iconFrom(
+async function iconFrom(
+	client: GithubClient,
 	tree: GithubTree | null,
 	owner: string,
 	name: string,
 	branch: string
-): string | null {
+): Promise<string | null> {
 	if (tree === null || tree.truncated) return null;
-	return buildIconUrl(tree, owner, name, branch);
+
+	const read = async (path: string): Promise<string | null> => {
+		const response = await readOptional(() => client.getRawFile(owner, name, path, branch));
+		return response ?? null;
+	};
+
+	const readBlob = async (sha: string): Promise<string | null> => {
+		const response = await readOptional(() => client.getBlob(owner, name, sha));
+		return response ?? null;
+	};
+
+	const rasterUrl = await buildIconUrl(tree, owner, name, branch, readBlob);
+	if (rasterUrl !== null) return rasterUrl;
+
+	return buildVectorIcon(tree, read);
 }
 
 async function readOptional<Body>(

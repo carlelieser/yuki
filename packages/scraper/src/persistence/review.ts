@@ -15,6 +15,7 @@ export type ReviewCandidate = {
 	isArchived: boolean;
 	isFork: boolean;
 	iconUrl: string | null;
+	bannerUrl: string | null;
 	evidence: { kind: EvidenceKind; detail: string | null }[];
 	screenshotCount: number;
 	versionCount: number;
@@ -56,6 +57,7 @@ export async function listCandidates(
 			isArchived: row.isArchived,
 			isFork: row.isFork,
 			iconUrl: row.iconUrl,
+			bannerUrl: row.bannerUrl,
 			evidence: row.evidence.map((entry) => ({ kind: entry.kind, detail: entry.detail })),
 			screenshotCount: row.screenshots.length,
 			versionCount: row.versions.length

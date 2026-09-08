@@ -16,6 +16,7 @@ function candidate(overrides: Partial<ReviewCandidate> = {}): ReviewCandidate {
 		isArchived: false,
 		isFork: false,
 		iconUrl: 'https://example.com/icon.png',
+		bannerUrl: 'https://example.com/banner.png',
 		evidence: [{ kind: 'provider_class', detail: 'AndroidManifest.xml' }],
 		screenshotCount: 3,
 		versionCount: 12,
@@ -65,12 +66,19 @@ describe('formatCandidate', () => {
 
 	it('flags the things a reviewer should look at twice', () => {
 		const output = formatCandidate(
-			candidate({ isArchived: true, isFork: true, iconUrl: null, screenshotCount: 0 })
+			candidate({
+				isArchived: true,
+				isFork: true,
+				iconUrl: null,
+				bannerUrl: null,
+				screenshotCount: 0
+			})
 		);
 
 		expect(output).toContain('archived');
 		expect(output).toContain('fork');
 		expect(output).toContain('no icon');
+		expect(output).toContain('no banner');
 		expect(output).toContain('no screenshots');
 	});
 

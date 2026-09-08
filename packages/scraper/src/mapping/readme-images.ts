@@ -10,19 +10,105 @@ const MARKDOWN_IMAGE = /!\[([^\]]*)\]\(\s*<?([^\s)>]+)>?(?:\s+["'][^"']*["'])?\s
 const HTML_IMAGE = /<img\b[^>]*?\bsrc\s*=\s*["']([^"']+)["'][^>]*>/gi;
 const HTML_IMAGE_ALT = /\balt\s*=\s*["']([^"']*)["']/i;
 
-const BADGE_HOSTS = ['img.shields.io', 'badgen.net', 'badge.fury.io', 'travis-ci', 'codecov.io'];
-const PREFERRED_SEGMENTS = ['screenshot', 'screenshots', 'preview', 'previews'];
+const BADGE_HOSTS = [
+	'img.shields.io',
+	'badgen.net',
+	'badge.fury.io',
+	'travis-ci',
+	'codecov.io',
+	'discordapp.com/api',
+	'discord.com/api'
+];
+const PREFERRED_WORDS = ['screenshot', 'screenshots', 'preview', 'previews'];
+const BANNER_WORDS = ['banner', 'hero', 'cover', 'header', 'splash'];
+const CHROME_WORDS = [
+	'icon',
+	'logo',
+	'avatar',
+	'button',
+	'arrow',
+	'divider',
+	'spacer',
+	'bullet',
+	'launcher'
+];
+const STORE_WORDS = [
+	'izzyondroid',
+	'fdroid',
+	'droidify',
+	'obtainium',
+	'playstore',
+	'googleplay',
+	'amazonappstore',
+	'kofi',
+	'buymeacoffee',
+	'patreon',
+	'paypal',
+	'liberapay',
+	'opencollective'
+];
+const SOCIAL_WORDS = ['tg', 'telegram', 'discord', 'matrix', 'slack', 'mastodon', 'twitter', 'qq'];
+const GROUP_WORDS = ['group', 'chat', 'join', 'channel', 'invite', 'community', 'qr'];
+const RASTER_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'];
+
+function pathOf(url: string): string {
+	const lowered = url.toLowerCase();
+	const withoutFragment = lowered.split('#')[0] ?? '';
+	return withoutFragment.split('?')[0] ?? '';
+}
+
+function wordsOf(path: string): string[] {
+	const filename = path.split('/').pop() ?? '';
+	const stem = filename.replace(/\.[a-z0-9]+$/, '');
+	return stem.split(/[^a-z]+/).filter((word) => word !== '');
+}
+
+function hasWord(path: string, words: string[]): boolean {
+	const found = wordsOf(path);
+	return words.some((word) => found.includes(word));
+}
+
+function hasWordInPath(path: string, words: string[]): boolean {
+	const found = path.split(/[^a-z]+/).filter((part) => part !== '');
+	return words.some((word) => found.includes(word));
+}
+
+function isRasterImage(path: string): boolean {
+	return RASTER_EXTENSIONS.some((extension) => path.endsWith(extension));
+}
+
+function isSocialInvite(path: string): boolean {
+	const words = wordsOf(path);
+	const isSocial = SOCIAL_WORDS.some((word) => words.includes(word));
+	return isSocial && GROUP_WORDS.some((word) => words.includes(word));
+}
+
+function isStoreBadge(path: string): boolean {
+	const filename = path.split('/').pop() ?? '';
+	const collapsed = filename.replace(/[^a-z]/g, '');
+	return STORE_WORDS.some((word) => collapsed.includes(word));
+}
 
 function isRejected(url: string): boolean {
 	const lowered = url.toLowerCase();
-	if (lowered.endsWith('.svg')) return true;
-	if (lowered.includes('badge')) return true;
+	const path = pathOf(url);
+	if (!isRasterImage(path)) return true;
+	if (lowered.includes('badge') || lowered.includes('shield')) return true;
+	if (/\/api\//.test(lowered)) return true;
+	if (hasWord(path, CHROME_WORDS)) return true;
+	if (isStoreBadge(path)) return true;
+	if (isSocialInvite(path)) return true;
 	return BADGE_HOSTS.some((host) => lowered.includes(host));
 }
 
 function isPreferred(url: string): boolean {
-	const lowered = url.toLowerCase();
-	return PREFERRED_SEGMENTS.some((segment) => lowered.includes(segment));
+	return hasWordInPath(pathOf(url), PREFERRED_WORDS);
+}
+
+function isBanner(url: string): boolean {
+	const path = pathOf(url);
+	if (hasWord(path, CHROME_WORDS)) return false;
+	return hasWord(path, BANNER_WORDS);
 }
 
 export function resolveImageUrl(
@@ -62,11 +148,29 @@ function collectCandidates(markdown: string): { url: string; alt: string | null 
 	return candidates;
 }
 
-export function extractReadmeImages(
+export function findBannerUrl(
 	markdown: string,
 	owner: string,
 	name: string,
 	defaultBranch: string
+): string | null {
+	for (const candidate of collectCandidates(markdown)) {
+		if (isRejected(candidate.url)) continue;
+
+		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch);
+		if (url === null || isRejected(url)) continue;
+		if (isBanner(url)) return url;
+	}
+
+	return null;
+}
+
+export function extractReadmeImages(
+	markdown: string,
+	owner: string,
+	name: string,
+	defaultBranch: string,
+	exclude: string | null = null
 ): ReadmeImage[] {
 	const resolved: { url: string; alt: string | null }[] = [];
 	const seen = new Set<string>();
@@ -75,7 +179,7 @@ export function extractReadmeImages(
 		if (isRejected(candidate.url)) continue;
 
 		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch);
-		if (url === null || isRejected(url) || seen.has(url)) continue;
+		if (url === null || isRejected(url) || seen.has(url) || url === exclude) continue;
 
 		seen.add(url);
 		resolved.push({ url, alt: candidate.alt });
