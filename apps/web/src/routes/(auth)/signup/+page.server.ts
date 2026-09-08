@@ -1,25 +1,27 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { APIError } from 'better-auth/api';
+import { message, superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
-import { parseSignUp } from '$lib/server/auth-forms.ts';
+import { signUpSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.user) {
 		redirect(303, '/');
 	}
+
+	return { form: await superValidate(zod4(signUpSchema)) };
 };
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		const data = await request.formData();
-		const parsed = parseSignUp(data);
+		const form = await superValidate(request, zod4(signUpSchema));
+		const { name, email, password } = form.data;
 
-		if (!parsed.ok) {
-			return fail(400, { email: parsed.email, errors: parsed.errors });
-		}
+		form.data.password = '';
 
-		const { name, email, password } = parsed.value;
+		if (!form.valid) return fail(400, { form });
 
 		try {
 			await getAuth().api.signUpEmail({
@@ -28,17 +30,17 @@ export const actions: Actions = {
 			});
 		} catch (cause) {
 			if (cause instanceof APIError) {
-				const message =
+				const text =
 					cause.body?.code === 'USER_ALREADY_EXISTS'
 						? 'An account with that email already exists.'
 						: (cause.body?.message ?? 'Could not create your account. Please try again.');
 
-				return fail(400, { email, errors: {}, message });
+				return message(form, text, { status: 400 });
 			}
 
 			throw cause;
 		}
 
-		return { email, verificationSent: true };
+		return { form, verificationSent: true, email };
 	}
 };

@@ -1,46 +1,47 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { APIError } from 'better-auth/api';
+import { message, superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
-import { parseSignIn, safeRedirectTo } from '$lib/server/auth-forms.ts';
+import { safeRedirectTo } from '$lib/safe-redirect.ts';
+import { signInSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const redirectTo = safeRedirectTo(url.searchParams.get('redirectTo'));
 
 	if (locals.user) {
 		redirect(303, redirectTo as '/');
 	}
 
-	return { redirectTo };
+	return { form: await superValidate({ redirectTo }, zod4(signInSchema)) };
 };
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		const data = await request.formData();
-		const redirectTo = safeRedirectTo(data.get('redirectTo'));
-		const parsed = parseSignIn(data);
+		const form = await superValidate(request, zod4(signInSchema));
+		const { email, password, redirectTo } = form.data;
+		const target = safeRedirectTo(redirectTo);
 
-		if (!parsed.ok) {
-			return fail(400, { email: parsed.email, errors: parsed.errors, redirectTo });
-		}
+		form.data.password = '';
 
-		const { email, password } = parsed.value;
+		if (!form.valid) return fail(400, { form });
 
 		try {
 			await getAuth().api.signInEmail({ body: { email, password }, headers: request.headers });
 		} catch (cause) {
 			if (cause instanceof APIError) {
-				const message =
+				const text =
 					cause.body?.code === 'EMAIL_NOT_VERIFIED'
 						? 'Verify your email address before signing in. We sent you a new link.'
 						: 'Invalid email or password.';
 
-				return fail(400, { email, errors: {}, message, redirectTo });
+				return message(form, text, { status: 400 });
 			}
 
 			throw cause;
 		}
 
-		redirect(303, redirectTo as '/');
+		redirect(303, target as '/');
 	}
 };

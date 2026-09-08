@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import {
 		Button,
@@ -9,22 +8,32 @@
 		CardFooter,
 		CardHeader,
 		CardTitle,
-		Input,
-		Label
+		FormControl,
+		FormField,
+		FormFieldErrors,
+		FormLabel,
+		Input
 	} from '@yuki/ui';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { forgotPasswordSchema } from '$lib/schemas/auth.ts';
 
-	let { form } = $props();
+	let { data, form: actionData } = $props();
+
+	// svelte-ignore state_referenced_locally
+	const form = superForm(data.form, { validators: zod4Client(forgotPasswordSchema) });
+	const { form: formData, enhance } = form;
 </script>
 
 <svelte:head><title>Reset your password · Yuki</title></svelte:head>
 
 <main class="w-full max-w-md">
 	<Card>
-		{#if form?.sent}
+		{#if actionData?.sent}
 			<CardHeader>
 				<CardTitle>Check your email</CardTitle>
 				<CardDescription>
-					If an account exists for {form.email}, we sent a link to reset its password.
+					If an account exists for {actionData.email}, we sent a link to reset its password.
 				</CardDescription>
 			</CardHeader>
 			<CardFooter>
@@ -40,21 +49,23 @@
 
 			<form method="POST" use:enhance>
 				<CardContent class="grid gap-4">
-					<div class="grid gap-2">
-						<Label for="email">Email</Label>
-						<Input
-							id="email"
-							name="email"
-							type="email"
-							autocomplete="email"
-							required
-							aria-invalid={form?.errors?.email ? 'true' : undefined}
-							aria-describedby={form?.errors?.email ? 'email-error' : undefined}
-						/>
-						{#if form?.errors?.email}
-							<p id="email-error" class="text-sm text-destructive">{form.errors.email}</p>
-						{/if}
-					</div>
+					<FormField {form} name="email">
+						{#snippet children({ constraints })}
+							<FormControl>
+								{#snippet children({ props })}
+									<FormLabel>Email</FormLabel>
+									<Input
+										{...props}
+										{...constraints}
+										type="email"
+										autocomplete="email"
+										bind:value={$formData.email}
+									/>
+								{/snippet}
+							</FormControl>
+							<FormFieldErrors />
+						{/snippet}
+					</FormField>
 				</CardContent>
 
 				<CardFooter class="flex flex-col items-stretch gap-3">

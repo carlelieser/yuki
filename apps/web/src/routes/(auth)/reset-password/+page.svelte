@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import {
 		Alert,
@@ -12,14 +11,21 @@
 		CardFooter,
 		CardHeader,
 		CardTitle,
-		Input,
-		Label
+		FormControl,
+		FormField,
+		FormFieldErrors,
+		FormLabel,
+		Input
 	} from '@yuki/ui';
-	import type { FieldErrors } from '$lib/server/auth-forms.ts';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { resetPasswordSchema } from '$lib/schemas/auth.ts';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
-	const errors: FieldErrors = $derived(form?.errors ?? {});
+	// svelte-ignore state_referenced_locally
+	const form = superForm(data.form, { validators: zod4Client(resetPasswordSchema) });
+	const { form: formData, enhance, message } = form;
 </script>
 
 <svelte:head><title>Choose a new password · Yuki</title></svelte:head>
@@ -32,49 +38,51 @@
 		</CardHeader>
 
 		<form method="POST" use:enhance>
-			<input type="hidden" name="token" value={data.token} />
+			<input type="hidden" name="token" bind:value={$formData.token} />
 
 			<CardContent class="grid gap-4">
-				{#if form?.message}
+				{#if $message}
 					<Alert variant="destructive" role="alert">
 						<AlertTitle>Could not reset your password</AlertTitle>
-						<AlertDescription>{form.message}</AlertDescription>
+						<AlertDescription>{$message}</AlertDescription>
 					</Alert>
 				{/if}
 
-				<div class="grid gap-2">
-					<Label for="password">New password</Label>
-					<Input
-						id="password"
-						name="password"
-						type="password"
-						autocomplete="new-password"
-						required
-						minlength={8}
-						aria-invalid={errors.password ? 'true' : undefined}
-						aria-describedby={errors.password ? 'password-error' : undefined}
-					/>
-					{#if errors.password}
-						<p id="password-error" class="text-sm text-destructive">{errors.password}</p>
-					{/if}
-				</div>
+				<FormField {form} name="password">
+					{#snippet children({ constraints })}
+						<FormControl>
+							{#snippet children({ props })}
+								<FormLabel>New password</FormLabel>
+								<Input
+									{...props}
+									{...constraints}
+									type="password"
+									autocomplete="new-password"
+									bind:value={$formData.password}
+								/>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					{/snippet}
+				</FormField>
 
-				<div class="grid gap-2">
-					<Label for="confirmPassword">Confirm new password</Label>
-					<Input
-						id="confirmPassword"
-						name="confirmPassword"
-						type="password"
-						autocomplete="new-password"
-						required
-						minlength={8}
-						aria-invalid={errors.confirmPassword ? 'true' : undefined}
-						aria-describedby={errors.confirmPassword ? 'confirm-error' : undefined}
-					/>
-					{#if errors.confirmPassword}
-						<p id="confirm-error" class="text-sm text-destructive">{errors.confirmPassword}</p>
-					{/if}
-				</div>
+				<FormField {form} name="confirmPassword">
+					{#snippet children({ constraints })}
+						<FormControl>
+							{#snippet children({ props })}
+								<FormLabel>Confirm new password</FormLabel>
+								<Input
+									{...props}
+									{...constraints}
+									type="password"
+									autocomplete="new-password"
+									bind:value={$formData.confirmPassword}
+								/>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					{/snippet}
+				</FormField>
 			</CardContent>
 
 			<CardFooter class="flex flex-col items-stretch gap-3">

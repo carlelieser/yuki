@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import {
 		Alert,
@@ -11,15 +10,21 @@
 		CardFooter,
 		CardHeader,
 		CardTitle,
-		Input,
-		Label
+		FormControl,
+		FormField,
+		FormFieldErrors,
+		FormLabel,
+		Input
 	} from '@yuki/ui';
-	import type { FieldErrors } from '$lib/server/auth-forms.ts';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { signInSchema } from '$lib/schemas/auth.ts';
 
-	let { data, form } = $props();
+	let { data } = $props();
 
-	const errors: FieldErrors = $derived(form?.errors ?? {});
-	const redirectTo = $derived(form?.redirectTo ?? data.redirectTo);
+	// svelte-ignore state_referenced_locally
+	const form = superForm(data.form, { validators: zod4Client(signInSchema) });
+	const { form: formData, enhance, message } = form;
 </script>
 
 <svelte:head><title>Sign in · Yuki</title></svelte:head>
@@ -31,56 +36,59 @@
 		</CardHeader>
 
 		<form method="POST" use:enhance>
-			<input type="hidden" name="redirectTo" value={redirectTo} />
+			<input type="hidden" name="redirectTo" bind:value={$formData.redirectTo} />
 
 			<CardContent class="grid gap-4">
-				{#if form?.message}
+				{#if $message}
 					<Alert variant="destructive" role="alert">
 						<AlertTitle>Could not sign you in</AlertTitle>
-						<AlertDescription>{form.message}</AlertDescription>
+						<AlertDescription>{$message}</AlertDescription>
 					</Alert>
 				{/if}
 
-				<div class="grid gap-2">
-					<Label for="email">Email</Label>
-					<Input
-						id="email"
-						name="email"
-						type="email"
-						autocomplete="email"
-						required
-						value={form?.email ?? ''}
-						aria-invalid={errors.email ? 'true' : undefined}
-						aria-describedby={errors.email ? 'email-error' : undefined}
-					/>
-					{#if errors.email}
-						<p id="email-error" class="text-sm text-destructive">{errors.email}</p>
-					{/if}
-				</div>
+				<FormField {form} name="email">
+					{#snippet children({ constraints })}
+						<FormControl>
+							{#snippet children({ props })}
+								<FormLabel>Email</FormLabel>
+								<Input
+									{...props}
+									{...constraints}
+									type="email"
+									autocomplete="email"
+									bind:value={$formData.email}
+								/>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					{/snippet}
+				</FormField>
 
-				<div class="grid gap-2">
-					<div class="flex items-center justify-between">
-						<Label for="password">Password</Label>
-						<a
-							href={resolve('/forgot-password')}
-							class="text-sm text-muted-foreground underline underline-offset-4"
-						>
-							Forgot password?
-						</a>
-					</div>
-					<Input
-						id="password"
-						name="password"
-						type="password"
-						autocomplete="current-password"
-						required
-						aria-invalid={errors.password ? 'true' : undefined}
-						aria-describedby={errors.password ? 'password-error' : undefined}
-					/>
-					{#if errors.password}
-						<p id="password-error" class="text-sm text-destructive">{errors.password}</p>
-					{/if}
-				</div>
+				<FormField {form} name="password">
+					{#snippet children({ constraints })}
+						<FormControl>
+							{#snippet children({ props })}
+								<div class="flex items-center justify-between">
+									<FormLabel>Password</FormLabel>
+									<a
+										href={resolve('/forgot-password')}
+										class="text-sm text-muted-foreground underline underline-offset-4"
+									>
+										Forgot password?
+									</a>
+								</div>
+								<Input
+									{...props}
+									{...constraints}
+									type="password"
+									autocomplete="current-password"
+									bind:value={$formData.password}
+								/>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					{/snippet}
+				</FormField>
 			</CardContent>
 
 			<CardFooter class="flex flex-col items-stretch gap-3 mt-4">

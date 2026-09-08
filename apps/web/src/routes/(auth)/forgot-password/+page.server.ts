@@ -1,15 +1,21 @@
 import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import type { Actions, PageServerLoad } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
+import { forgotPasswordSchema } from '$lib/schemas/auth.ts';
+
+export const load: PageServerLoad = async () => {
+	return { form: await superValidate(zod4(forgotPasswordSchema)) };
+};
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		const data = await request.formData();
-		const email = typeof data.get('email') === 'string' ? String(data.get('email')).trim() : '';
+		const form = await superValidate(request, zod4(forgotPasswordSchema));
 
-		if (!email) {
-			return fail(400, { errors: { email: 'Email is required.' } });
-		}
+		if (!form.valid) return fail(400, { form });
+
+		const { email } = form.data;
 
 		try {
 			await getAuth().api.requestPasswordReset({
@@ -17,9 +23,9 @@ export const actions: Actions = {
 				headers: request.headers
 			});
 		} catch {
-			return { email, sent: true };
+			return { form, sent: true, email };
 		}
 
-		return { email, sent: true };
+		return { form, sent: true, email };
 	}
 };
