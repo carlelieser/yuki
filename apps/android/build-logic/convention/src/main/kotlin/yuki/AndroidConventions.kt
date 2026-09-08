@@ -21,20 +21,17 @@ internal fun VersionCatalog.version(name: String): String =
         IllegalStateException("Version catalog is missing a version named '$name'")
     }.requiredVersion
 
-internal fun Project.configureAndroid(extension: CommonExtension<*, *, *, *, *, *>) {
-    extension.apply {
-        compileSdk = libs.version("compileSdk").toInt()
+internal fun Project.configureAndroid(extension: CommonExtension) {
+    extension.compileSdk = libs.version("compileSdk").toInt()
+    extension.defaultConfig.minSdk = libs.version("minSdk").toInt()
 
-        defaultConfig {
-            minSdk = libs.version("minSdk").toInt()
-        }
+    extension.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+    extension.compileOptions.targetCompatibility = JavaVersion.VERSION_17
 
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-    }
+    configureJvmToolchain()
+}
 
+private fun Project.configureJvmToolchain() {
     extensions.getByType<JavaPluginExtension>().toolchain {
         languageVersion.set(JavaLanguageVersion.of(JVM_TOOLCHAIN_VERSION))
     }

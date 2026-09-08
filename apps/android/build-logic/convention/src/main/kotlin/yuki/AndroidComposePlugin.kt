@@ -19,6 +19,10 @@ class AndroidComposePlugin : Plugin<Project> {
             extensions.configure<LibraryExtension> { enableCompose(this) }
         }
 
+        addComposeDependencies()
+    }
+
+    private fun Project.addComposeDependencies() {
         val bom = libs.findLibrary("androidx-compose-bom").get()
 
         dependencies {
@@ -31,7 +35,7 @@ class AndroidComposePlugin : Plugin<Project> {
         }
     }
 
-    private fun enableCompose(extension: CommonExtension<*, *, *, *, *, *>) {
+    private fun enableCompose(extension: CommonExtension) {
         extension.buildFeatures.compose = true
     }
 }

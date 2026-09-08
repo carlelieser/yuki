@@ -12,21 +12,19 @@ class AndroidApplicationPlugin : Plugin<Project> {
 
         extensions.configure<ApplicationExtension> {
             configureAndroid(this)
+            defaultConfig.targetSdk = libs.version("targetSdk").toInt()
+            configureReleaseBuildType(this)
+        }
+    }
 
-            defaultConfig {
-                targetSdk = libs.version("targetSdk").toInt()
-            }
-
-            buildTypes {
-                getByName("release") {
-                    isMinifyEnabled = true
-                    isShrinkResources = true
-                    proguardFiles(
-                        getDefaultProguardFile("proguard-android-optimize.txt"),
-                        "proguard-rules.pro",
-                    )
-                }
-            }
+    private fun configureReleaseBuildType(extension: ApplicationExtension) {
+        extension.buildTypes.getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                extension.getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

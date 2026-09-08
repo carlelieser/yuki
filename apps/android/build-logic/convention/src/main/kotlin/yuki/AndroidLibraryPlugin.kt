@@ -13,10 +13,7 @@ class AndroidLibraryPlugin : Plugin<Project> {
 
         extensions.configure<LibraryExtension> {
             configureAndroid(this)
-
-            defaultConfig {
-                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            }
+            defaultConfig.testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
 
         dependencies {
