@@ -161,7 +161,7 @@
 		</Section>
 	{/if}
 
-	<Section title="Ratings & reviews">
+	<Section title="Ratings and reviews">
 		{#snippet action()}
 			{#if data.reviews.hasMore}
 				<Button variant="ghost" onclick={() => (reviewsOpen = true)}>Show all reviews</Button>
@@ -179,7 +179,7 @@
 				> to write a review.
 			</p>
 		{:else if data.canReview}
-			<ReviewForm data={data.form} isEditing={data.hasReviewed} />
+			<ReviewForm data={data.form} user={data.user} isEditing={data.hasReviewed} />
 		{:else}
 			<p class="text-sm text-muted-foreground">Download this app to write a review.</p>
 		{/if}
