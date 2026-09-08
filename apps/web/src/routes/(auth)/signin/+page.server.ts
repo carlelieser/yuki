@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		redirect(303, redirectTo as '/');
 	}
 
-	return { form: await superValidate({ redirectTo }, zod4(signInSchema)) };
+	return { form: await superValidate({ redirectTo }, zod4(signInSchema), { errors: false }) };
 };
 
 export const actions: Actions = {

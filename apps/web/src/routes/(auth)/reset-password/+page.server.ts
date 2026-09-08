@@ -9,7 +9,7 @@ import { resetPasswordSchema } from '$lib/schemas/auth.ts';
 export const load: PageServerLoad = async ({ url }) => {
 	const token = url.searchParams.get('token') ?? '';
 
-	return { form: await superValidate({ token }, zod4(resetPasswordSchema)) };
+	return { form: await superValidate({ token }, zod4(resetPasswordSchema), { errors: false }) };
 };
 
 export const actions: Actions = {
