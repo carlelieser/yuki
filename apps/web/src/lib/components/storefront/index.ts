@@ -15,5 +15,6 @@ export { default as SearchDialog } from './search-dialog.svelte';
 export { default as SearchSort } from './search-sort.svelte';
 export { default as Section } from './section.svelte';
 export { default as SiteHeader } from './site-header.svelte';
+export { default as SiteLogo } from './site-logo.svelte';
 export { default as SiteSearch } from './site-search.svelte';
 export { default as SortMenu } from './sort-menu.svelte';

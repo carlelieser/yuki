@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '@yuki/ui';
 	import ModeToggle from './mode-toggle.svelte';
+	import SiteLogo from './site-logo.svelte';
 	import SiteSearch from './site-search.svelte';
 	import UserMenu from './user-menu.svelte';
 
@@ -15,7 +16,7 @@
 
 <header class="sticky top-0 z-50 w-full border-b bg-background">
 	<div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-		<a href={resolve('/')} class="text-lg font-semibold tracking-tight">Yuki</a>
+		<SiteLogo />
 		<SiteSearch class="ms-auto" onopen={onopensearch} />
 
 		<ModeToggle />
