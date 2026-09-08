@@ -36,6 +36,7 @@ export const listings = pgTable(
 		githubRepoId: integer('github_repo_id').notNull(),
 		owner: text('owner').notNull(),
 		name: text('name').notNull(),
+		packageName: text('package_name'),
 		title: text('title').notNull(),
 		author: text('author').notNull(),
 		authorUrl: text('author_url').notNull(),
@@ -62,6 +63,7 @@ export const listings = pgTable(
 	(table) => [
 		uniqueIndex('listings_github_repo_id_key').on(table.githubRepoId),
 		uniqueIndex('listings_slug_key').on(table.slug),
+		index('listings_package_name_idx').on(table.packageName),
 		index('listings_published_stars_idx').on(table.isPublished, table.stars),
 		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
 		index('listings_published_pushed_idx').on(table.isPublished, table.repoPushedAt),

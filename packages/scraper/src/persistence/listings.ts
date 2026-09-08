@@ -54,6 +54,7 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 					slug,
 					owner: input.listing.owner,
 					name: input.listing.name,
+					packageName: input.listing.packageName,
 					title: input.listing.title,
 					author: input.listing.author,
 					authorUrl: input.listing.authorUrl,

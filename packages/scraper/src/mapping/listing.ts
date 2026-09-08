@@ -6,6 +6,7 @@ export type MappedListing = {
 	githubRepoId: number;
 	owner: string;
 	name: string;
+	packageName: string | null;
 	title: string;
 	author: string;
 	authorUrl: string;
@@ -84,7 +85,8 @@ export function buildTitle(name: string, readme: string | null): string {
 export function mapRepository(
 	repo: GithubRepository,
 	confidence: ListingConfidence,
-	readme: string | null
+	readme: string | null,
+	packageName: string | null = null
 ): MappedListing {
 	const homepage = repo.homepage?.trim();
 
@@ -93,6 +95,7 @@ export function mapRepository(
 		githubRepoId: repo.id,
 		owner: repo.owner.login,
 		name: repo.name,
+		packageName,
 		title: buildTitle(repo.name, readme),
 		author: repo.owner.login,
 		authorUrl: repo.owner.html_url,
