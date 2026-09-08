@@ -76,6 +76,33 @@ describe('parseGradlePackage', () => {
 		expect(parsed.packageName).toBe('me.weishu.kernelsu');
 	});
 
+	it('recognises a camelCase catalog alias', () => {
+		const parsed = parseGradlePackage(`plugins {
+				alias(libs.plugins.androidApplication)
+			}
+			android { namespace = "com.sdex.activityrunner" }`);
+
+		expect(parsed.packageName).toBe('com.sdex.activityrunner');
+	});
+
+	it('ignores a plugin that is declared but not applied', () => {
+		const parsed = parseGradlePackage(`plugins {
+				alias(libs.plugins.androidApplication) apply false
+			}
+			android { namespace = "dev.yuki.root" }`);
+
+		expect(parsed.packageName).toBeNull();
+	});
+
+	it('ignores a legacy plugin declared with apply false', () => {
+		const parsed = parseGradlePackage(`plugins {
+				id "com.android.application" apply false
+			}
+			android { namespace = "dev.yuki.root" }`);
+
+		expect(parsed.packageName).toBeNull();
+	});
+
 	it('does not treat a catalog library alias as an application', () => {
 		const parsed = parseGradlePackage(`plugins {
 				alias(libs.plugins.agp.lib)
@@ -171,6 +198,15 @@ describe('findGradleFiles', () => {
 		const found = findGradleFiles(tree(['build.gradle', 'core/build.gradle', 'app/build.gradle']));
 
 		expect(found[0]).toBe('app/build.gradle');
+	});
+
+	it('ranks build logic modules below real modules', () => {
+		const found = findGradleFiles(
+			tree(['buildSrc/build.gradle.kts', 'build-logic/build.gradle.kts', 'app/build.gradle.kts'])
+		);
+
+		expect(found[0]).toBe('app/build.gradle.kts');
+		expect(found.at(-1)).toMatch(/buildSrc|build-logic/);
 	});
 
 	it('ranks sample and test modules last', () => {
