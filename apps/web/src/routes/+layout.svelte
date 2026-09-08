@@ -5,5 +5,7 @@
 	let { children } = $props();
 </script>
 
+<svelte:head><title>Yuki</title></svelte:head>
+
 <ModeWatcher />
 {@render children?.()}

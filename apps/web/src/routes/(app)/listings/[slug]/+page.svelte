@@ -36,7 +36,7 @@
 </script>
 
 <svelte:head>
-	<title>{listing.title} — Yuki</title>
+	<title>{listing.title} · Yuki</title>
 	{#if listing.description}
 		<meta name="description" content={listing.description} />
 	{/if}

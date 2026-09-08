@@ -5,6 +5,8 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
+<svelte:head><title>Browse · Yuki</title></svelte:head>
+
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}

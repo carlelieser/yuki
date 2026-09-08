@@ -13,6 +13,8 @@
 
 	let { data }: { data: PageData } = $props();
 
+	const title = $derived(data.query === '' ? 'Search · Yuki' : `${data.query} · Yuki`);
+
 	const heading = $derived(
 		`${data.total} ${data.total === 1 ? 'result' : 'results'} for “${data.query}”`
 	);
@@ -21,6 +23,8 @@
 		resolve(`/(app)/search?${toSearchQueryString(data.query, data.sorting, nextOffset)}`)
 	);
 </script>
+
+<svelte:head><title>{title}</title></svelte:head>
 
 {#snippet card(entry: ListingSummary)}
 	<ListingCard {entry} />

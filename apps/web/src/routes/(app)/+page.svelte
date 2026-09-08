@@ -30,6 +30,8 @@
 	);
 </script>
 
+<svelte:head><title>Yuki</title></svelte:head>
+
 {#snippet card(entry: ListingSummary)}
 	<ListingCard {entry} />
 {/snippet}
