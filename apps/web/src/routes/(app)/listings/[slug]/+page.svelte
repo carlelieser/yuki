@@ -15,7 +15,7 @@
 	import { ImageCarousel, Section } from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import DownloadIcon from '@lucide/svelte/icons/download';
-	import { SquareTextIcon, StarIcon } from '@lucide/svelte';
+	import { SquareTextIcon, StarIcon, BoxIcon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -50,7 +50,9 @@
 				loading="lazy"
 			/>
 		{:else}
-			<div class="size-16 shrink-0 rounded-xl border bg-muted"></div>
+			<div class="size-16 shrink-0 rounded-xl border bg-muted">
+				<BoxIcon />
+			</div>
 		{/if}
 
 		<div class="min-w-0 flex-1 space-y-1">
