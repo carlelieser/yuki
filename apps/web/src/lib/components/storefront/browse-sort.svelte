@@ -37,7 +37,7 @@
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="ghost" size="sm" aria-label="Change sort order">
+			<Button {...props} variant="ghost" aria-label="Change sort order">
 				<ArrowUpDownIcon aria-hidden="true" />
 				{label}
 			</Button>
