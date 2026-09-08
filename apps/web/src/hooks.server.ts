@@ -2,11 +2,9 @@ import { sequence } from '@sveltejs/kit/hooks';
 import type { Handle } from '@sveltejs/kit';
 import { getAuth } from '$lib/server/auth.ts';
 import { getDatabase } from '$lib/server/database.ts';
-import { getRedisClient } from '$lib/server/redis.ts';
 
 const services: Handle = async ({ event, resolve }) => {
 	event.locals.db = getDatabase();
-	event.locals.redis = getRedisClient();
 	return resolve(event);
 };
 

@@ -1,7 +1,7 @@
 # Yuki
 
-Monorepo running on Bun, with SvelteKit on the frontend, Drizzle ORM over
-Postgres for persistence, and Redis for caching.
+Monorepo running on Bun, with SvelteKit on the frontend and Drizzle ORM over
+Postgres for persistence.
 
 ## Layout
 
@@ -9,7 +9,6 @@ Postgres for persistence, and Redis for caching.
 | ------------------ | --------------- | -------------------------------------------- |
 | `apps/web`         | `@yuki/web`     | SvelteKit application (Vite, adapter-node)   |
 | `packages/db`      | `@yuki/db`      | Drizzle schema, client, and migrations       |
-| `packages/redis`   | `@yuki/redis`   | Redis client factory                         |
 | `packages/scraper` | `@yuki/scraper` | GitHub discovery and nightly listing refresh |
 | `packages/ui`      | `@yuki/ui`      | shadcn-svelte components and theme tokens    |
 
@@ -26,11 +25,10 @@ bun run dev
 ```
 
 The app is served at http://localhost:5173. `GET /api/health` verifies
-connectivity to Postgres and Redis, returning 503 with a per-dependency reason
-when either is unreachable.
+connectivity to Postgres, returning 503 with the reason when it is unreachable.
 
-Postgres and Redis are published on ports `55432` and `56379` so they do not
-collide with services already running on the host defaults.
+Postgres is published on port `55432` so it does not collide with a server
+already running on the host default.
 
 ## Scripts
 

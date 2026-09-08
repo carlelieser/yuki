@@ -3,7 +3,6 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import type { Database } from '@yuki/db';
 import { schema } from '@yuki/db';
-import type { RedisClient } from '@yuki/redis';
 import {
 	getGithubCredentials,
 	getGoogleCredentials,
@@ -24,31 +23,12 @@ function socialProviders() {
 	};
 }
 
-export function createAuth(db: Database, redis: RedisClient, getRequestEvent: GetRequestEvent) {
+export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 	return betterAuth({
 		appName: 'Yuki',
 		secret: requireAuthSecret(),
 		baseURL: requireAuthUrl(),
 		database: drizzleAdapter(db, { provider: 'pg', schema }),
-		secondaryStorage: {
-			get: async (key) => await redis.get(key),
-			getAndDelete: async (key) => await redis.getdel(key),
-			increment: async (key, ttl) => {
-				const results = await redis.multi().incr(key).expire(key, ttl, 'NX').exec();
-				const value = results?.[0]?.[1];
-				return typeof value === 'number' ? value : Number(value);
-			},
-			set: async (key, value, ttl) => {
-				if (ttl) {
-					await redis.set(key, value, 'EX', ttl);
-				} else {
-					await redis.set(key, value);
-				}
-			},
-			delete: async (key) => {
-				await redis.del(key);
-			}
-		},
 		emailAndPassword: {
 			enabled: true,
 			requireEmailVerification: true,

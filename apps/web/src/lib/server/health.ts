@@ -1,12 +1,11 @@
 import { sql } from 'drizzle-orm';
 import type { Database } from '@yuki/db';
-import type { RedisClient } from '@yuki/redis';
 
 export type DependencyStatus = { isHealthy: true } | { isHealthy: false; error: string };
 
 export type HealthReport = {
 	isHealthy: boolean;
-	dependencies: Record<'postgres' | 'redis', DependencyStatus>;
+	dependencies: Record<'postgres', DependencyStatus>;
 };
 
 async function probe(check: () => Promise<unknown>): Promise<DependencyStatus> {
@@ -18,14 +17,8 @@ async function probe(check: () => Promise<unknown>): Promise<DependencyStatus> {
 	}
 }
 
-export async function checkHealth(db: Database, redis: RedisClient): Promise<HealthReport> {
-	const [postgres, redisStatus] = await Promise.all([
-		probe(() => db.execute(sql`select 1`)),
-		probe(() => redis.ping())
-	]);
+export async function checkHealth(db: Database): Promise<HealthReport> {
+	const postgres = await probe(() => db.execute(sql`select 1`));
 
-	return {
-		isHealthy: postgres.isHealthy && redisStatus.isHealthy,
-		dependencies: { postgres, redis: redisStatus }
-	};
+	return { isHealthy: postgres.isHealthy, dependencies: { postgres } };
 }
