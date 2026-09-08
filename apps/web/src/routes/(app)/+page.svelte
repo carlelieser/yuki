@@ -1,18 +1,24 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { buttonVariants } from '@yuki/ui';
+	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import {
 		BrowseSort,
 		ListingCard,
 		ListingFeed,
 		ProductCard,
 		ProductCarousel,
-		ProductGrid,
 		Section
 	} from '$lib/components/storefront/index.ts';
+	import { toBrowseQueryString } from '$lib/browse.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
 	let { data }: { data: PageData } = $props();
+
+	const browseHref = $derived(
+		resolve(`/(app)/browse?${toBrowseQueryString({ sort: data.sort, order: data.order })}`)
+	);
 </script>
 
 {#snippet card(entry: ListingSummary)}
@@ -50,15 +56,26 @@
 	</Section>
 
 	<Section title="New">
-		<ProductGrid items={data.recent} item={card} />
+		<ProductCarousel items={data.recent} item={card} itemClass="basis-1/4 ps-2" />
 	</Section>
 
-	<Section title="Browse" isHeaderSticky>
+	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
-			<BrowseSort sort={data.sort} order={data.order} />
+			<div class="flex items-center gap-1">
+				<BrowseSort sort={data.sort} order={data.order} />
+				<a href={browseHref} class={buttonVariants({ variant: 'ghost' })}>
+					Browse all
+					<ArrowRightIcon aria-hidden="true" />
+				</a>
+			</div>
 		{/snippet}
 		{#key `${data.sort}-${data.order}`}
-			<ListingFeed sort={data.sort} order={data.order} initialPage={data.browse} />
+			<ListingFeed
+				sort={data.sort}
+				order={data.order}
+				initialPage={data.browse}
+				hasInfiniteScroll={false}
+			/>
 		{/key}
 	</Section>
 </main>

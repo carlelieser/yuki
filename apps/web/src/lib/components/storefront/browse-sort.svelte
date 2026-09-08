@@ -5,21 +5,25 @@
 	import {
 		BROWSE_SORT_OPTIONS,
 		fromSortValue,
+		toBrowseQueryString,
 		toSortValue,
 		type BrowseOrder,
 		type BrowseSort
 	} from '$lib/browse.ts';
 
-	let { sort, order }: { sort: BrowseSort; order: BrowseOrder } = $props();
+	let {
+		sort,
+		order,
+		target = 'home'
+	}: { sort: BrowseSort; order: BrowseOrder; target?: 'home' | 'browse' } = $props();
 
 	const current = $derived(toSortValue({ sort, order }));
 
 	function select(value: string): void {
-		const selected = fromSortValue(value);
-		void goto(resolve(`/?sort=${selected.sort}&order=${selected.order}`), {
-			keepFocus: true,
-			noScroll: true
-		});
+		const query = toBrowseQueryString(fromSortValue(value));
+		const href = target === 'browse' ? resolve(`/(app)/browse?${query}`) : resolve(`/?${query}`);
+
+		void goto(href, { keepFocus: true, noScroll: true });
 	}
 </script>
 

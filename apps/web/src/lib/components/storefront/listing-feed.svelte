@@ -10,12 +10,14 @@
 		sort,
 		order,
 		initialPage,
-		skeletonCount = 8
+		skeletonCount = 8,
+		hasInfiniteScroll = true
 	}: {
 		sort: BrowseSort;
 		order: BrowseOrder;
 		initialPage?: ListingPage;
 		skeletonCount?: number;
+		hasInfiniteScroll?: boolean;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -30,7 +32,7 @@
 	let requestId = 0;
 
 	async function loadMore(): Promise<void> {
-		if (isLoading || !hasMore) return;
+		if (!hasInfiniteScroll || isLoading || !hasMore) return;
 		isLoading = true;
 
 		const currentRequest = ++requestId;
@@ -87,7 +89,7 @@
 		{/snippet}
 	</ProductGrid>
 
-	{#if hasMore}
+	{#if hasInfiniteScroll && hasMore}
 		<div bind:this={sentinel} aria-hidden="true" class="h-px"></div>
 	{/if}
 </div>

@@ -66,4 +66,10 @@ export function fromSortValue(value: string): BrowseSorting {
 	return { sort: option.sort, order: option.order };
 }
 
+export function toBrowseQueryString(sorting: BrowseSorting, offset: number = 0): string {
+	const parts = [`sort=${sorting.sort}`, `order=${sorting.order}`];
+	if (offset > 0) parts.push(`offset=${offset}`);
+	return parts.join('&');
+}
+
 export const REVIEWS_PAGE_SIZE = 10;

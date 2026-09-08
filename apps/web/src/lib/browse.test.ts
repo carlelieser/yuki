@@ -9,6 +9,7 @@ import {
 	readBrowseOrder,
 	readBrowseSort,
 	readBrowseSorting,
+	toBrowseQueryString,
 	toSortValue
 } from './browse.ts';
 
@@ -120,5 +121,35 @@ describe('sort option tokens', () => {
 			order: defaultOrderFor(DEFAULT_BROWSE_SORT)
 		});
 		expect(BROWSE_SORT_OPTIONS.some((option) => option.value === token)).toBe(true);
+	});
+});
+
+describe('toBrowseQueryString', () => {
+	it('always includes the sort and order', () => {
+		expect(toBrowseQueryString({ sort: 'stars', order: 'desc' })).toBe('sort=stars&order=desc');
+		expect(toBrowseQueryString({ sort: 'name', order: 'asc' })).toBe('sort=name&order=asc');
+	});
+
+	it('appends a positive offset last', () => {
+		expect(toBrowseQueryString({ sort: 'updated', order: 'desc' }, 24)).toBe(
+			'sort=updated&order=desc&offset=24'
+		);
+	});
+
+	it('omits a zero offset', () => {
+		expect(toBrowseQueryString({ sort: 'stars', order: 'desc' }, 0)).toBe('sort=stars&order=desc');
+	});
+
+	it('round-trips through readBrowseSorting for every option', () => {
+		for (const option of BROWSE_SORT_OPTIONS) {
+			const sorting = { sort: option.sort, order: option.order };
+			const params = new URLSearchParams(toBrowseQueryString(sorting));
+			expect(readBrowseSorting(params)).toEqual(sorting);
+		}
+	});
+
+	it('round-trips the offset through readBrowseOffset', () => {
+		const params = new URLSearchParams(toBrowseQueryString({ sort: 'stars', order: 'desc' }, 48));
+		expect(readBrowseOffset(params.get('offset'))).toBe(48);
 	});
 });
