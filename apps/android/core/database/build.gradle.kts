@@ -8,9 +8,13 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.model)
+    api(projects.core.model)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
-    testImplementation(libs.androidx.room.testing)
+
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }
