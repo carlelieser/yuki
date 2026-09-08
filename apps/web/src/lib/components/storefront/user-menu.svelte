@@ -2,16 +2,14 @@
 	import { resolve } from '$app/paths';
 	import { LogOutIcon } from '@lucide/svelte';
 	import {
-		Avatar,
-		AvatarFallback,
-		AvatarImage,
 		Button,
 		DropdownMenu,
 		DropdownMenuContent,
 		DropdownMenuItem,
 		DropdownMenuLabel,
 		DropdownMenuSeparator,
-		DropdownMenuTrigger
+		DropdownMenuTrigger,
+		UserAvatar
 	} from '@yuki/ui';
 	import { initialsOf } from '$lib/initials.ts';
 
@@ -20,22 +18,13 @@
 	};
 
 	let { user }: Props = $props();
-
-	const initials = $derived(
-		user.name.trim() ? initialsOf(user.name) : (user.email[0]?.toUpperCase() ?? '?')
-	);
 </script>
 
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
 			<Button {...props} variant="ghost" class="size-9 rounded-full p-0" aria-label="Account menu">
-				<Avatar class="size-9">
-					{#if user.image}
-						<AvatarImage src={user.image} alt="" />
-					{/if}
-					<AvatarFallback>{initials}</AvatarFallback>
-				</Avatar>
+				<UserAvatar initials={initialsOf(user.name, user.email)} image={user.image} />
 			</Button>
 		{/snippet}
 	</DropdownMenuTrigger>
