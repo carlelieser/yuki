@@ -15,8 +15,14 @@ describe('initialsOf', () => {
 		expect(initialsOf('  Ada   Lovelace  ')).toBe('AL');
 	});
 
-	it('falls back when there is nothing to abbreviate', () => {
+	it('falls back to the first letter of the fallback when there is no name', () => {
+		expect(initialsOf('', 'ada@example.com')).toBe('A');
+		expect(initialsOf('   ', 'ada@example.com')).toBe('A');
+	});
+
+	it('falls back to a placeholder when there is nothing to abbreviate', () => {
 		expect(initialsOf('')).toBe('?');
 		expect(initialsOf('   ')).toBe('?');
+		expect(initialsOf('', '')).toBe('?');
 	});
 });
