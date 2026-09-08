@@ -2,6 +2,7 @@
 	import {
 		Badge,
 		Button,
+		CollapsibleContent,
 		GithubIcon,
 		Item,
 		ItemActions,
@@ -9,11 +10,12 @@
 		ItemDescription,
 		ItemGroup,
 		ItemTitle,
-		Separator
+		Number
 	} from '@yuki/ui';
 	import { ImageCarousel, Section } from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import DownloadIcon from '@lucide/svelte/icons/download';
+	import { SquareTextIcon, StarIcon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -29,6 +31,16 @@
 </svelte:head>
 
 <main class="mx-auto w-full max-w-4xl space-y-8 px-4 py-8">
+	{#if listing.bannerUrl}
+		<img
+			src={listing.bannerUrl}
+			alt=""
+			class="h-auto w-full rounded-xl border object-cover"
+			decoding="async"
+			referrerpolicy="no-referrer"
+		/>
+	{/if}
+
 	<header class="flex flex-wrap items-start gap-4">
 		{#if listing.iconUrl}
 			<img
@@ -52,32 +64,35 @@
 				<p class="text-sm text-muted-foreground">{listing.description}</p>
 			{/if}
 		</div>
-
-		<div class="flex items-center gap-2">
-			{#if latestVersion?.downloadUrl}
-				<Button href={latestVersion.downloadUrl}>
-					<DownloadIcon />
-					Download {latestVersion.tag}
-				</Button>
-			{/if}
-			<Button href={listing.repositoryUrl} variant="outline">
-				<GithubIcon />
-				Source
-			</Button>
-		</div>
 	</header>
 
-	<div class="flex flex-wrap gap-2 text-sm">
-		<Badge variant="secondary">{listing.stars} stars</Badge>
-		{#if listing.license}
-			<Badge variant="secondary">{listing.license}</Badge>
+	<div class="flex items-center flex-wrap gap-2">
+		{#if latestVersion?.downloadUrl}
+			<Button href={latestVersion.downloadUrl}>
+				<DownloadIcon />
+				Download {latestVersion.tag}
+			</Button>
 		{/if}
-		{#if listing.isArchived}
-			<Badge variant="outline">Archived</Badge>
-		{/if}
+		<Button href={listing.repositoryUrl} variant="ghost">
+			<GithubIcon />
+			Source
+		</Button>
+		<div class="flex items-center gap-2 ml-auto">
+			<Badge variant="ghost">
+				<StarIcon />
+				<Number value={listing.stars} preset="compact" /> stars
+			</Badge>
+			{#if listing.license}
+				<Badge variant="ghost">
+					<SquareTextIcon />
+					{listing.license}
+				</Badge>
+			{/if}
+			{#if listing.isArchived}
+				<Badge variant="ghost">Archived</Badge>
+			{/if}
+		</div>
 	</div>
-
-	<Separator />
 
 	{#if listing.screenshots.length > 0}
 		<Section title="Screenshots">
@@ -87,31 +102,33 @@
 
 	{#if listing.versions.length > 0}
 		<Section title="Releases">
-			<ItemGroup>
-				{#each listing.versions as version (version.tag)}
-					<Item variant="outline">
-						<ItemContent>
-							<ItemTitle>
-								{version.name ?? version.tag}
-								{#if version.isPrerelease}
-									<Badge variant="outline">Prerelease</Badge>
+			<CollapsibleContent showMoreLabel="Show all releases" showLessLabel="Show fewer releases">
+				<ItemGroup>
+					{#each listing.versions as version (version.tag)}
+						<Item variant="outline">
+							<ItemContent>
+								<ItemTitle>
+									{version.name ?? version.tag}
+									{#if version.isPrerelease}
+										<Badge variant="outline">Prerelease</Badge>
+									{/if}
+								</ItemTitle>
+								{#if version.publishedAt}
+									<ItemDescription>{version.publishedAt.toLocaleDateString()}</ItemDescription>
 								{/if}
-							</ItemTitle>
-							{#if version.publishedAt}
-								<ItemDescription>{version.publishedAt.toLocaleDateString()}</ItemDescription>
+							</ItemContent>
+							{#if version.downloadUrl}
+								<ItemActions>
+									<Button href={version.downloadUrl} variant="ghost">
+										<DownloadIcon />
+										Download
+									</Button>
+								</ItemActions>
 							{/if}
-						</ItemContent>
-						{#if version.downloadUrl}
-							<ItemActions>
-								<Button href={version.downloadUrl} variant="outline" size="sm">
-									<DownloadIcon />
-									Download
-								</Button>
-							</ItemActions>
-						{/if}
-					</Item>
-				{/each}
-			</ItemGroup>
+						</Item>
+					{/each}
+				</ItemGroup>
+			</CollapsibleContent>
 		</Section>
 	{/if}
 </main>
