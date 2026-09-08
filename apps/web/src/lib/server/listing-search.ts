@@ -56,6 +56,7 @@ function publishedAnd(condition: SQL): SQL {
 function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
 	return {
 		id: row.id,
+		githubRepoId: row.githubRepoId,
 		slug: row.slug,
 		title: row.title,
 		author: row.author,

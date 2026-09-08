@@ -9,6 +9,7 @@ import {
 
 export type ListingSummary = {
 	id: string;
+	githubRepoId: number;
 	slug: string;
 	title: string;
 	author: string;
@@ -37,6 +38,7 @@ export type ListingDetail = ListingSummary & {
 
 export const summaryColumns = {
 	id: schema.listings.id,
+	githubRepoId: schema.listings.githubRepoId,
 	slug: schema.listings.slug,
 	title: schema.listings.title,
 	author: schema.listings.author,
@@ -83,6 +85,7 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 
 	return {
 		id: listing.id,
+		githubRepoId: listing.githubRepoId,
 		slug: listing.slug,
 		title: listing.title,
 		author: listing.author,
