@@ -12,18 +12,13 @@ const FLAVOUR_PENALTY = ['nightly', 'debug', 'dev', 'beta', 'alpha', 'staging', 
 
 const SECONDARY_MODULES = ['shell', 'server', 'daemon', 'cli', 'tool', 'benchmark'];
 
-const BUILD_LOGIC_MODULES = ['buildsrc', 'build-logic', 'build-conventions', 'gradle'];
-
 const PACKAGE_PATTERN = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i;
 
 const QUOTED = String.raw`["']([^"']+)["']`;
 
 const APPLICATION_ID = new RegExp(String.raw`\bapplicationId\s*(?:=|\s)\s*${QUOTED}`);
-const APPLICATION_ALIAS =
-	/\balias\(\s*libs\.plugins\.([A-Za-z0-9._-]+)\s*\)(?:\s*apply\s+(false))?/g;
-
-const APPLICATION_ALIAS_NAME =
-	/(?:^|[._-])(?:android[._-]?application|agp[._-]?app(?:lication)?)$/i;
+const APPLICATION_PLUGIN =
+	/\bcom\.android\.application\b|\balias\(\s*libs\.plugins\.[a-z0-9.]*\b(?:android\.application|agp\.app(?:lication)?)\b[a-z0-9.]*\s*\)/i;
 const NAMESPACE = new RegExp(String.raw`\bnamespace\s*(?:=|\s)\s*${QUOTED}`);
 const MANIFEST_PACKAGE = new RegExp(String.raw`<manifest\b[^>]*?\bpackage\s*=\s*${QUOTED}`, 's');
 
@@ -46,31 +41,15 @@ function firstMatch(source: string, pattern: RegExp): string | null {
 	return value === undefined || value === '' ? null : value;
 }
 
-function appliesApplicationPlugin(source: string): boolean {
-	if (/\bcom\.android\.application\b/.test(source)) {
-		return !/["']com\.android\.application["']\s*\)?\s*apply\s+false/.test(source);
-	}
-
-	for (const match of source.matchAll(APPLICATION_ALIAS)) {
-		const alias = match[1];
-		if (alias === undefined || !APPLICATION_ALIAS_NAME.test(alias)) continue;
-		if (match[2] === 'false') continue;
-
-		return true;
-	}
-
-	return false;
-}
-
 export function isApplicationModule(source: string): boolean {
-	return appliesApplicationPlugin(stripComments(source));
+	return APPLICATION_PLUGIN.test(stripComments(source));
 }
 
 export function parseGradlePackage(source: string): PackageIdentity {
 	const stripped = stripComments(source);
 
 	const applicationId = firstMatch(stripped, APPLICATION_ID);
-	const namespace = appliesApplicationPlugin(stripped) ? firstMatch(stripped, NAMESPACE) : null;
+	const namespace = APPLICATION_PLUGIN.test(stripped) ? firstMatch(stripped, NAMESPACE) : null;
 	const candidate = applicationId ?? namespace;
 
 	const versionName = firstMatch(stripped, VERSION_NAME);
@@ -105,10 +84,8 @@ function depthRank(path: string): number {
 }
 
 function moduleRank(path: string): number {
-	const lowered = path.toLowerCase();
-	const module = lowered.split('/').slice(0, -1).pop() ?? '';
+	const module = path.toLowerCase().split('/').slice(0, -1).pop() ?? '';
 
-	if (BUILD_LOGIC_MODULES.some((name) => lowered.startsWith(`${name}/`))) return 5;
 	if (module === 'app' || module === 'manager') return 0;
 	if (SECONDARY_MODULES.includes(module)) return 3;
 	if (FLAVOUR_PENALTY.includes(module)) return 4;
