@@ -9,8 +9,15 @@ export { Badge, badgeVariants, type BadgeVariant } from './components/ui/badge/i
 export { AspectRatio } from './components/ui/aspect-ratio/index.ts';
 export { Input } from './components/ui/input/index.ts';
 export { Skeleton } from './components/ui/skeleton/index.ts';
+export {
+	Number,
+	formatNumber,
+	type NumberFormatOptions,
+	type NumberFormatPreset
+} from './components/ui/number/index.ts';
 export { Separator } from './components/ui/separator/index.ts';
 export { ScrollArea, ScrollAreaScrollbar } from './components/ui/scroll-area/index.ts';
+export { CollapsibleContent } from './components/ui/collapsible-content/index.ts';
 export {
 	Card,
 	CardAction,
