@@ -30,6 +30,7 @@ export {
 export {
 	Carousel,
 	CarouselContent,
+	CarouselDots,
 	CarouselItem,
 	CarouselNext,
 	CarouselPrevious,

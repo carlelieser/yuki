@@ -1,4 +1,5 @@
 import Content from './carousel-content.svelte';
+import Dots from './carousel-dots.svelte';
 import Item from './carousel-item.svelte';
 import Next from './carousel-next.svelte';
 import Previous from './carousel-previous.svelte';
@@ -10,12 +11,14 @@ export {
 	Item,
 	Previous,
 	Next,
+	Dots,
 	//
 	Root as Carousel,
 	Content as CarouselContent,
 	Item as CarouselItem,
 	Previous as CarouselPrevious,
-	Next as CarouselNext
+	Next as CarouselNext,
+	Dots as CarouselDots
 };
 
 export type { CarouselAPI, CarouselOptions, CarouselPlugins, CarouselProps } from './context.ts';
