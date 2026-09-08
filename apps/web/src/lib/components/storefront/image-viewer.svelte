@@ -31,9 +31,13 @@
 	const neighbourUrls = $derived(
 		hasMultiple
 			? [
-					images[previousIndex(activeIndex, images.length)]?.url,
-					images[nextIndex(activeIndex, images.length)]?.url
-				].filter((url) => url !== undefined)
+					...new Set(
+						[
+							images[previousIndex(activeIndex, images.length)]?.url,
+							images[nextIndex(activeIndex, images.length)]?.url
+						].filter((url) => url !== undefined)
+					)
+				]
 			: []
 	);
 

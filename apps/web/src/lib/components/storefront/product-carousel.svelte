@@ -15,16 +15,18 @@
 		item,
 		isLoading = false,
 		skeletonCount = 4,
-		empty
+		empty,
+		variant = 'default',
+		itemClass = 'basis-1/2 sm:basis-1/3 lg:basis-1/4 ps-2'
 	}: {
 		items: Item[];
 		item: Snippet<[Item]>;
 		isLoading?: boolean;
 		skeletonCount?: number;
 		empty?: Snippet;
+		variant?: 'default' | 'wide';
+		itemClass?: string;
 	} = $props();
-
-	const itemClass = 'basis-1/2 sm:basis-1/3 lg:basis-1/4 ps-2';
 </script>
 
 {#if !isLoading && items.length === 0}
@@ -39,7 +41,7 @@
 			{#if isLoading}
 				{#each { length: skeletonCount }, index (index)}
 					<CarouselItem class={itemClass}>
-						<div class="p-1"><ProductCardSkeleton /></div>
+						<div class="p-1"><ProductCardSkeleton {variant} /></div>
 					</CarouselItem>
 				{/each}
 			{:else}

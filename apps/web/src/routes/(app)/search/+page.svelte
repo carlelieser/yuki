@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import {
 		CollectionEmpty,
-		ProductCard,
+		ListingCard,
 		ProductGrid,
 		Section
 	} from '$lib/components/storefront/index.ts';
@@ -18,18 +18,7 @@
 </script>
 
 {#snippet card(entry: ListingSummary)}
-	<ProductCard
-		title={entry.title}
-		href={resolve('/(app)/listings/[slug]', { slug: entry.slug })}
-		image={entry.iconUrl ? icon : undefined}
-		{meta}
-	/>
-	{#snippet icon()}
-		<img src={entry.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
-	{/snippet}
-	{#snippet meta()}
-		<p class="text-xs text-muted-foreground">{entry.author}</p>
-	{/snippet}
+	<ListingCard {entry} />
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">

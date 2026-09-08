@@ -54,6 +54,7 @@ function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
 		author: row.author,
 		description: row.description,
 		iconUrl: row.iconUrl,
+		bannerUrl: row.bannerUrl,
 		stars: row.stars
 	};
 }
