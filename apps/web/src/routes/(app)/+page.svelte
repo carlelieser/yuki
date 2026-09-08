@@ -53,7 +53,7 @@
 		<ProductGrid items={data.recent} item={card} />
 	</Section>
 
-	<Section title="Browse">
+	<Section title="Browse" isHeaderSticky>
 		{#snippet action()}
 			<BrowseSort sort={data.sort} order={data.order} />
 		{/snippet}
