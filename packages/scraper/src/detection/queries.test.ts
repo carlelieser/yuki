@@ -17,13 +17,13 @@ import {
 } from './queries.ts';
 
 describe('buildCodeSearchQueries', () => {
-	it('slices the two queries that exceed the result cap', () => {
-		const providerQueries = buildCodeSearchQueries().filter((query) =>
-			query.q.startsWith('rikka.shizuku.ShizukuProvider')
-		);
+	it('leaves size partitioning to the walker', () => {
+		expect(buildCodeSearchQueries().every((query) => !query.q.includes('size:'))).toBe(true);
+	});
 
-		expect(providerQueries.length).toBeGreaterThan(1);
-		expect(providerQueries.every((query) => query.q.includes('size:'))).toBe(true);
+	it('emits each query exactly once', () => {
+		const queries = buildCodeSearchQueries().map((query) => query.q);
+		expect(new Set(queries).size).toBe(queries.length);
 	});
 
 	it('drops the redundant permission marker', () => {

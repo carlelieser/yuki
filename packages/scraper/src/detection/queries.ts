@@ -16,23 +16,13 @@ export type RepoSearchQuery = {
 	detail: string;
 };
 
-const SIZE_SLICES = ['<50', '50..200', '200..1000', '>1000'];
-
-function sliceBySize(base: string, evidence: EvidenceKind, detail: string): CodeSearchQuery[] {
-	return SIZE_SLICES.map((size) => ({
-		q: `${base} size:${size}`,
-		evidence,
-		detail: `${detail} (size:${size})`
-	}));
-}
-
 export function buildCodeSearchQueries(): CodeSearchQuery[] {
 	return [
-		...sliceBySize(
-			'rikka.shizuku.ShizukuProvider filename:AndroidManifest.xml',
-			'provider_class',
-			'rikka.shizuku.ShizukuProvider in AndroidManifest.xml'
-		),
+		{
+			q: 'rikka.shizuku.ShizukuProvider filename:AndroidManifest.xml',
+			evidence: 'provider_class',
+			detail: 'rikka.shizuku.ShizukuProvider in AndroidManifest.xml'
+		},
 		{
 			q: 'dev.rikka.shizuku filename:build.gradle',
 			evidence: 'gradle_dependency',
@@ -105,8 +95,10 @@ export function withSizeRange(q: string, range: SizeRange): string {
 	return `${q} size:${range.from}..${range.to}`;
 }
 
+export const MAX_TRACKED_FILE_SIZE = 1_048_576;
+
 export function isSizeIndivisible(range: SizeRange): boolean {
-	if (range.to === null) return false;
+	if (range.to === null) return range.from >= MAX_TRACKED_FILE_SIZE;
 	return range.to - range.from <= 1;
 }
 

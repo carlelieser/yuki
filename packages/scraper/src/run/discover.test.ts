@@ -142,3 +142,23 @@ describe('discover', () => {
 		expect(completed.length).toBeGreaterThan(0);
 	});
 });
+
+describe('query construction', () => {
+	it('never stacks two size qualifiers on one query', async () => {
+		const queries: string[] = [];
+		const client = fakeClient((q) => {
+			const overflows = q.includes('size:>=0');
+			return {
+				totalCount: overflows ? RESULT_CAP + 1 : 5,
+				items: overflows ? [] : [codeItem(1)]
+			};
+		}, queries);
+
+		await discover(client, () => false, { maxNewRepos: 5, range: fullRange });
+
+		expect(queries.length).toBeGreaterThan(1);
+		for (const q of queries) {
+			expect(q.match(/size:/g)?.length ?? 0).toBeLessThanOrEqual(1);
+		}
+	});
+});

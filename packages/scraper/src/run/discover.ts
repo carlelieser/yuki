@@ -48,6 +48,8 @@ export type DiscoveryOptions = {
 
 type CodeQuery = { q: string; evidence: DetectedEvidence['kind']; detail: string };
 
+const MAX_SPLIT_DEPTH = 12;
+
 function record(
 	found: Map<number, DiscoveredRepo>,
 	repo: GithubMinimalRepository,
@@ -91,8 +93,15 @@ export async function discover(
 
 	return { repos: [...found.values()].slice(0, options.maxNewRepos), warnings };
 
-	async function walkCode(query: CodeQuery, size: SizeRange): Promise<void> {
+	async function walkCode(query: CodeQuery, size: SizeRange, depth = 0): Promise<void> {
 		if (found.size >= options.maxNewRepos) return;
+
+		if (depth > MAX_SPLIT_DEPTH) {
+			warnings.push(
+				`Query "${query.q}" still overflows after ${MAX_SPLIT_DEPTH} splits; giving up on ${describeSizeRange(size)}`
+			);
+			return;
+		}
 
 		const key = `code:${query.q}:${describeSizeRange(size)}`;
 		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return;
@@ -116,8 +125,8 @@ export async function discover(
 			} else {
 				const [lower, upper] = splitSizeRange(size);
 				log(`Splitting "${query.q}" at ${totalCount} results (${describeSizeRange(size)})`);
-				await walkCode(query, lower);
-				await walkCode(query, upper);
+				await walkCode(query, lower, depth + 1);
+				await walkCode(query, upper, depth + 1);
 				return;
 			}
 		}
