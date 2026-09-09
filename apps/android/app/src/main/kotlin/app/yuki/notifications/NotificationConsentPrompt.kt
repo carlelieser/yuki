@@ -4,7 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import app.yuki.core.designsystem.component.YukiTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,10 +65,10 @@ internal fun NotificationRationaleDialog(state: NotificationConsentState) {
         title = { Text(text = RATIONALE_TITLE) },
         text = { Text(text = RATIONALE_MESSAGE) },
         confirmButton = {
-            TextButton(onClick = { state.onDecision(true) }) { Text(text = ALLOW_LABEL) }
+            YukiTextButton(label = ALLOW_LABEL, onClick = { state.onDecision(true) })
         },
         dismissButton = {
-            TextButton(onClick = { state.onDecision(false) }) { Text(text = NOT_NOW_LABEL) }
+            YukiTextButton(label = NOT_NOW_LABEL, onClick = { state.onDecision(false) })
         },
     )
 }

@@ -12,6 +12,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
+import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.InstallState
@@ -22,6 +23,7 @@ const val LISTING_LOADING_TAG = "listingLoading"
 @Composable
 fun ListingRoute(
     slug: String,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ListingViewModel = hiltViewModel(key = slug)
@@ -31,6 +33,7 @@ fun ListingRoute(
     ListingScreen(
         state = ListingScreenState(listing = listing, installState = installState),
         callbacks = rememberListingCallbacks(viewModel),
+        onBackClick = onBackClick,
         modifier = modifier,
     )
 }
@@ -74,23 +77,36 @@ private fun ListingLoading() {
 internal fun ListingScreen(
     state: ListingScreenState,
     callbacks: ListingScreenCallbacks,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
-        when (val listing = state.listing) {
-            UiState.Loading -> ListingLoading()
-            is UiState.Success -> ListingDetailBody(
-                model = listing.data,
-                installState = state.installState,
-                callbacks = callbacks.callbacks,
-            )
-            is UiState.Failure -> FailureState(
-                reason = listing.reason,
-                onRetry = callbacks.onRetry,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(YukiSpacing.Large),
-            )
+    YukiDetailScreen(
+        title = state.listing.titleOrEmpty(),
+        onBackClick = onBackClick,
+        modifier = modifier,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (val listing = state.listing) {
+                UiState.Loading -> ListingLoading()
+                is UiState.Success -> ListingDetailBody(
+                    model = listing.data,
+                    installState = state.installState,
+                    callbacks = callbacks.callbacks,
+                )
+                is UiState.Failure -> FailureState(
+                    reason = listing.reason,
+                    missingMessage = LISTING_MISSING_MESSAGE,
+                    onRetry = callbacks.onRetry,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(YukiSpacing.Large),
+                )
+            }
         }
     }
 }
+
+private fun UiState<ListingUiModel>.titleOrEmpty(): String =
+    (this as? UiState.Success)?.data?.detail?.title.orEmpty()
+
+internal const val LISTING_MISSING_MESSAGE = "This app is no longer available."

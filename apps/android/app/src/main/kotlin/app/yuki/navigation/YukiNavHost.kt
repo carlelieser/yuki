@@ -1,6 +1,6 @@
 package app.yuki.navigation
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
@@ -18,50 +18,85 @@ import app.yuki.settings.SettingsDestination
 internal fun YukiNavHost(
     navController: NavHostController,
     navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
         navController = navController,
         startDestination = ExploreRoute,
         modifier = modifier,
+        enterTransition = { forwardEnter() },
+        exitTransition = { forwardExit() },
+        popEnterTransition = { backEnter() },
+        popExitTransition = { backExit() },
     ) {
-        exploreDestination(navigator)
-        libraryDestination(navigator)
-        updatesDestination(navigator)
-        listingDestination()
+        exploreDestination(navigator, bottomBarPadding)
+        libraryDestination(navigator, bottomBarPadding)
+        updatesDestination(navigator, bottomBarPadding)
+        listingDestination(navigator)
         settingsDestination(navigator)
     }
 }
 
-private fun NavGraphBuilder.exploreDestination(navigator: YukiNavigator) {
-    composable<ExploreRoute> {
-        ExploreTopBarScaffold(onSettingsClick = navigator::openSettings) { contentPadding ->
-            ExploreScreenRoute(
-                onListingSelected = navigator::openListing,
-                modifier = Modifier.padding(contentPadding),
-            )
-        }
-    }
-}
-
-private fun NavGraphBuilder.libraryDestination(navigator: YukiNavigator) {
-    composable<LibraryRoute> {
-        LibraryScreen(
-            onListingClick = navigator::openListing,
-            onExploreClick = { navigator.selectTab(YukiTab.Explore) },
+private fun NavGraphBuilder.exploreDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<ExploreRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabEnter() },
+        popExitTransition = { tabExit() },
+    ) {
+        ExploreScreenRoute(
+            onListingSelected = navigator::openListing,
+            onSettingsClick = navigator::openSettings,
+            contentPadding = bottomBarPadding,
         )
     }
 }
 
-private fun NavGraphBuilder.updatesDestination(navigator: YukiNavigator) {
-    composable<UpdatesRoute> {
-        UpdatesScreen(onListingClick = navigator::openListing)
+private fun NavGraphBuilder.libraryDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<LibraryRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabEnter() },
+        popExitTransition = { tabExit() },
+    ) {
+        LibraryScreen(
+            onListingClick = navigator::openListing,
+            onExploreClick = { navigator.selectTab(YukiTab.Explore) },
+            contentPadding = bottomBarPadding,
+        )
     }
 }
 
-private fun NavGraphBuilder.listingDestination() {
+private fun NavGraphBuilder.updatesDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<UpdatesRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabEnter() },
+        popExitTransition = { tabExit() },
+    ) {
+        UpdatesScreen(
+            onListingClick = navigator::openListing,
+            contentPadding = bottomBarPadding,
+        )
+    }
+}
+
+private fun NavGraphBuilder.listingDestination(navigator: YukiNavigator) {
     composable<ListingRoute> { entry ->
-        ListingScreenRoute(slug = entry.toRoute<ListingRoute>().slug)
+        ListingScreenRoute(
+            slug = entry.toRoute<ListingRoute>().slug,
+            onBackClick = navigator::navigateUp,
+        )
     }
 }
 

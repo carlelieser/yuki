@@ -1,7 +1,8 @@
 package app.yuki
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +44,7 @@ private fun YukiScaffold(navController: NavHostController) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (selectedTab != null) {
                 YukiTabBar(selectedTab = selectedTab, onSelect = navigator::selectTab)
@@ -52,7 +54,7 @@ private fun YukiScaffold(navController: NavHostController) {
         YukiNavHost(
             navController = navController,
             navigator = navigator,
-            modifier = Modifier.padding(contentPadding),
+            bottomBarPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
         )
     }
 

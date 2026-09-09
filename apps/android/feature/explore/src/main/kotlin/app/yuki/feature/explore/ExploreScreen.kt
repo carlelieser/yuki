@@ -1,13 +1,12 @@
 package app.yuki.feature.explore
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,19 +16,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ScreenAction
 import app.yuki.core.designsystem.component.SearchBar
 import app.yuki.core.designsystem.component.SearchBarState
 import app.yuki.core.designsystem.component.SectionHeader
+import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiScreen
+import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
 const val EXPLORE_SCREEN_TAG = "exploreScreen"
 
+internal const val EXPLORE_TITLE = "Explore"
+internal const val EXPLORE_MISSING_MESSAGE = "There are no apps to show right now."
+private const val SETTINGS_DESCRIPTION = "Settings"
+
 @Composable
 fun ExploreRoute(
     onListingSelected: (String) -> Unit,
+    onSettingsClick: () -> Unit,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
@@ -44,7 +53,9 @@ fun ExploreRoute(
             onRecentRemoved = viewModel::onRecentSearchRemoved,
             onRetry = viewModel::refreshFeatured,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
+            onSettingsClick = onSettingsClick,
         ),
+        contentPadding = contentPadding,
         modifier = modifier,
     )
 }
@@ -54,6 +65,7 @@ data class ExploreCallbacks(
     val onRecentRemoved: (String) -> Unit,
     val onRetry: () -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
+    val onSettingsClick: () -> Unit,
 )
 
 @Composable
@@ -61,22 +73,34 @@ internal fun ExploreScreen(
     state: UiState<ExploreContent>,
     listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.background,
-        modifier = modifier
-            .fillMaxSize()
-            .testTag(EXPLORE_SCREEN_TAG),
+    YukiScreen(
+        title = EXPLORE_TITLE,
+        action = ScreenAction(
+            icon = YukiIcons.Settings,
+            description = SETTINGS_DESCRIPTION,
+            onClick = callbacks.onSettingsClick,
+        ),
+        modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SearchBar(
                 state = SearchBarState(query = state.query()),
                 onQueryChange = callbacks.onQueryChange,
-                modifier = Modifier.padding(YukiSpacing.Large),
+                modifier = Modifier.padding(
+                    horizontal = YukiSpacing.Large,
+                    vertical = YukiSpacing.Small,
+                ),
             )
 
-            ExploreBody(state = state, listings = listings, callbacks = callbacks)
+            ExploreBody(
+                state = state,
+                listings = listings,
+                callbacks = callbacks,
+                contentPadding = contentPadding,
+            )
         }
     }
 }
@@ -89,22 +113,24 @@ private fun ExploreBody(
     state: UiState<ExploreContent>,
     listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
+    contentPadding: PaddingValues,
 ) {
     when (state) {
-        is UiState.Loading -> YukiLoadingIndicator(
-            modifier = Modifier.padding(YukiSpacing.ExtraLarge),
-        )
+        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-        is UiState.Failure -> FailureState(
-            reason = state.reason,
-            modifier = Modifier.padding(YukiSpacing.Large),
-            onRetry = callbacks.onRetry,
-        )
+        is UiState.Failure -> YukiScreenCenter(contentPadding) {
+            FailureState(
+                reason = state.reason,
+                missingMessage = EXPLORE_MISSING_MESSAGE,
+                onRetry = callbacks.onRetry,
+            )
+        }
 
         is UiState.Success -> ExploreContentBody(
             content = state.data,
             listings = listings,
             callbacks = callbacks,
+            contentPadding = contentPadding,
         )
     }
 }
@@ -114,13 +140,17 @@ private fun ExploreContentBody(
     content: ExploreContent,
     listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
+    contentPadding: PaddingValues,
 ) {
     if (content.search.isSearching) {
         SearchResults(state = content.search, onSelect = callbacks.onListingSelected)
         return
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+        contentPadding = contentPadding,
+        modifier = Modifier.fillMaxSize(),
+    ) {
         recentSection(content = content, callbacks = callbacks)
         featuredSection(content = content, callbacks = callbacks)
 
