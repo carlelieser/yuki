@@ -36,7 +36,8 @@ fun YukiTheme(
 ) {
     MaterialTheme(
         colorScheme = yukiColorScheme(isDarkTheme, isDynamicColorEnabled),
-        motionScheme = MotionScheme.expressive(),
+        motionScheme = MotionScheme.standard(),
+        typography = YukiTypography,
         content = content,
     )
 }
