@@ -21,6 +21,7 @@ object YukiSize {
     val BannerWidth = 288.dp
     val ScreenshotWidth = 220.dp
     val MinimumTouchTarget = 48.dp
+    val HeaderHeight = 64.dp
 }
 
 object YukiRatio {
