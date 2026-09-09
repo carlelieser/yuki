@@ -71,6 +71,13 @@
       "when": 1788981924818,
       "tag": "0009_public_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788989998689,
+      "tag": "0010_light_red_skull",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import {
 	readBrowseOffset,
 	readBrowseSorting
 } from '$lib/browse.ts';
+import { readCategory } from '$lib/categories.ts';
 
 async function featuredPage(db: Database): Promise<ListingPage> {
 	const results = await getFeaturedListings(db, FEATURED_PAGE_SIZE);
@@ -22,7 +23,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
 	const offset = readBrowseOffset(url.searchParams.get('offset'));
 	const { sort, order } = readBrowseSorting(url.searchParams);
-	const page = await getListingsPage(locals.db, { limit: BROWSE_PAGE_SIZE, offset, sort, order });
+	const category = readCategory(url.searchParams.get('category'));
+	const page = await getListingsPage(locals.db, {
+		limit: BROWSE_PAGE_SIZE,
+		offset,
+		sort,
+		order,
+		category
+	});
 
 	return json(page);
 };

@@ -38,6 +38,7 @@ function summary(overrides: Partial<ListingSummary> = {}): ListingSummary {
 		description: 'A toolbox',
 		iconUrl: 'https://example.com/icon.png',
 		bannerUrl: 'https://example.com/banner.png',
+		category: null,
 		stars: 128,
 		...overrides
 	};
@@ -90,10 +91,30 @@ describe('GET /api/listings', () => {
 			limit: 24,
 			offset: 24,
 			sort: 'newest',
-			order: 'asc'
+			order: 'asc',
+			category: null
 		});
 		expect(getFeaturedListings).not.toHaveBeenCalled();
 		await expect(response.json()).resolves.toEqual({ results: [summary()], hasMore: true });
+	});
+
+	it('passes a known category through to the query', async () => {
+		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
+
+		await listings(listingsEvent('?category=gaming'));
+
+		expect(getListingsPage).toHaveBeenCalledWith(
+			db,
+			expect.objectContaining({ category: 'gaming' })
+		);
+	});
+
+	it('ignores an unknown category', async () => {
+		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
+
+		await listings(listingsEvent('?category=not-a-category'));
+
+		expect(getListingsPage).toHaveBeenCalledWith(db, expect.objectContaining({ category: null }));
 	});
 
 	it('returns the featured listings under the same envelope', async () => {

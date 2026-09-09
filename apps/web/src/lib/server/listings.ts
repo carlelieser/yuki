@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, isNotNull, sql, type AnyColumn, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
+import type { ListingCategory } from '$lib/categories.ts';
 import {
 	DEFAULT_BROWSE_SORT,
 	defaultOrderFor,
@@ -17,6 +18,7 @@ export type ListingSummary = {
 	iconUrl: string | null;
 	bannerUrl: string | null;
 	stars: number;
+	category: ListingCategory | null;
 };
 
 export type ListingDetail = ListingSummary & {
@@ -45,7 +47,8 @@ export const summaryColumns = {
 	description: schema.listings.description,
 	iconUrl: schema.listings.iconUrl,
 	bannerUrl: schema.listings.bannerUrl,
-	stars: schema.listings.stars
+	stars: schema.listings.stars,
+	category: schema.listings.category
 };
 
 export async function getFeaturedListings(db: Database, limit: number): Promise<ListingSummary[]> {
@@ -94,6 +97,7 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 		iconUrl: listing.iconUrl,
 		bannerUrl: listing.bannerUrl,
 		stars: listing.stars,
+		category: listing.category,
 		repositoryUrl: listing.repositoryUrl,
 		homepageUrl: listing.homepageUrl,
 		license: listing.license,
@@ -137,15 +141,26 @@ export function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
 
 export async function getListingsPage(
 	db: Database,
-	page: { limit: number; offset: number; sort?: BrowseSort; order?: BrowseOrder }
+	page: {
+		limit: number;
+		offset: number;
+		sort?: BrowseSort;
+		order?: BrowseOrder;
+		category?: ListingCategory | null;
+	}
 ): Promise<ListingPage> {
 	const sort = page.sort ?? DEFAULT_BROWSE_SORT;
 	const order = page.order ?? defaultOrderFor(sort);
+	const category = page.category ?? null;
 
 	const rows = await db
 		.select(summaryColumns)
 		.from(schema.listings)
-		.where(eq(schema.listings.isPublished, true))
+		.where(
+			category === null
+				? eq(schema.listings.isPublished, true)
+				: and(eq(schema.listings.isPublished, true), eq(schema.listings.category, category))
+		)
 		.orderBy(...orderByFor(sort, order))
 		.limit(page.limit + 1)
 		.offset(page.offset);

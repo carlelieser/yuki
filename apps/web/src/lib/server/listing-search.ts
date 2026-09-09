@@ -63,6 +63,7 @@ function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
 		description: row.description,
 		iconUrl: row.iconUrl,
 		bannerUrl: row.bannerUrl,
+		category: row.category,
 		stars: row.stars
 	};
 }

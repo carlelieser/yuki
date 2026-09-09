@@ -5,16 +5,19 @@
 	import ProductGrid from './product-grid.svelte';
 	import type { ListingPage, ListingSummary } from '$lib/server/listings.ts';
 	import type { BrowseOrder, BrowseSort } from '$lib/browse.ts';
+	import type { ListingCategory } from '$lib/categories.ts';
 
 	let {
 		sort,
 		order,
+		category = null,
 		initialPage,
 		skeletonCount = 8,
 		hasInfiniteScroll = true
 	}: {
 		sort: BrowseSort;
 		order: BrowseOrder;
+		category?: ListingCategory | null;
 		initialPage?: ListingPage;
 		skeletonCount?: number;
 		hasInfiniteScroll?: boolean;
@@ -41,6 +44,7 @@
 			sort,
 			order
 		});
+		if (category !== null) params.set('category', category);
 
 		try {
 			const response = await fetch(`${resolve('/api/listings')}?${params.toString()}`);
@@ -85,7 +89,10 @@
 <div class="space-y-4">
 	<ProductGrid items={results} item={card} isLoading={!hasLoadedOnce} {skeletonCount}>
 		{#snippet empty()}
-			<CollectionEmpty title="No listings yet" description="Check back soon for new arrivals." />
+			<CollectionEmpty
+				title="No listings here yet"
+				description="Nothing matches this category right now. Try another one."
+			/>
 		{/snippet}
 	</ProductGrid>
 

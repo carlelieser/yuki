@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { BrowseSort, ListingFeed, Section } from '$lib/components/storefront/index.ts';
+	import {
+		BrowseSort,
+		CategoryFilter,
+		ListingFeed,
+		Section
+	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -12,8 +17,19 @@
 		{#snippet action()}
 			<BrowseSort sort={data.sort} order={data.order} target="browse" />
 		{/snippet}
-		{#key `${data.sort}-${data.order}`}
-			<ListingFeed sort={data.sort} order={data.order} initialPage={data.browse} />
+		<CategoryFilter
+			categories={data.categories}
+			selected={data.category}
+			sort={data.sort}
+			order={data.order}
+		/>
+		{#key `${data.sort}-${data.order}-${data.category ?? 'all'}`}
+			<ListingFeed
+				sort={data.sort}
+				order={data.order}
+				category={data.category}
+				initialPage={data.browse}
+			/>
 		{/key}
 	</Section>
 </main>

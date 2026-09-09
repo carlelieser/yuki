@@ -1,5 +1,6 @@
+import { categorize } from '../detection/category.ts';
 import type { GithubRepository } from '../github/types.ts';
-import type { ListingConfidence } from '@yuki/db/schema';
+import type { ListingCategory, ListingConfidence } from '@yuki/db/schema';
 
 export type MappedListing = {
 	slug: string;
@@ -15,6 +16,7 @@ export type MappedListing = {
 	license: string | null;
 	stars: number;
 	confidence: ListingConfidence;
+	category: ListingCategory | null;
 	isFork: boolean;
 	isArchived: boolean;
 	repoPushedAt: Date | null;
@@ -102,6 +104,11 @@ export function mapRepository(
 		license: repo.license?.spdx_id ?? null,
 		stars: repo.stargazers_count,
 		confidence,
+		category: categorize({
+			description: repo.description,
+			topics: repo.topics ?? [],
+			readme
+		}),
 		isFork: repo.fork,
 		isArchived: repo.archived,
 		repoPushedAt: parseTimestamp(repo.pushed_at)

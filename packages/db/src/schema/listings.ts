@@ -20,6 +20,22 @@ const tsvector = customType<{ data: string; driverData: string }>({
 
 export const listingConfidence = pgEnum('listing_confidence', ['strong', 'probable', 'weak']);
 
+export const listingCategory = pgEnum('listing_category', [
+	'system_tweaks',
+	'app_management',
+	'file_management',
+	'media',
+	'gaming',
+	'automation',
+	'networking',
+	'privacy_security',
+	'developer_tools',
+	'device_specific',
+	'customization',
+	'connectivity',
+	'utilities'
+]);
+
 export const evidenceKind = pgEnum('evidence_kind', [
 	'provider_class',
 	'gradle_dependency',
@@ -47,6 +63,7 @@ export const listings = pgTable(
 		license: text('license'),
 		stars: integer('stars').notNull().default(0),
 		confidence: listingConfidence('confidence').notNull(),
+		category: listingCategory('category'),
 		isFork: boolean('is_fork').notNull().default(false),
 		isArchived: boolean('is_archived').notNull().default(false),
 		isPublished: boolean('is_published').notNull().default(false),
@@ -63,6 +80,11 @@ export const listings = pgTable(
 		uniqueIndex('listings_github_repo_id_key').on(table.githubRepoId),
 		uniqueIndex('listings_slug_key').on(table.slug),
 		index('listings_published_stars_idx').on(table.isPublished, table.stars),
+		index('listings_published_category_stars_idx').on(
+			table.isPublished,
+			table.category,
+			table.stars
+		),
 		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
 		index('listings_published_pushed_idx').on(table.isPublished, table.repoPushedAt),
 		index('listings_published_title_idx').on(table.isPublished, sql`lower(${table.title})`),
@@ -154,4 +176,5 @@ export type NewListingVersion = typeof listingVersions.$inferInsert;
 export type ListingEvidence = typeof listingEvidence.$inferSelect;
 export type NewListingEvidence = typeof listingEvidence.$inferInsert;
 export type ListingConfidence = (typeof listingConfidence.enumValues)[number];
+export type ListingCategory = (typeof listingCategory.enumValues)[number];
 export type EvidenceKind = (typeof evidenceKind.enumValues)[number];

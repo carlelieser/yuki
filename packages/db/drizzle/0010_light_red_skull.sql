@@ -1,0 +1,3 @@
+CREATE TYPE "public"."listing_category" AS ENUM('system_tweaks', 'app_management', 'file_management', 'media', 'gaming', 'automation', 'networking', 'privacy_security', 'developer_tools', 'device_specific', 'customization', 'connectivity', 'utilities');--> statement-breakpoint
+ALTER TABLE "listings" ADD COLUMN "category" "listing_category";--> statement-breakpoint
+CREATE INDEX "listings_published_category_stars_idx" ON "listings" USING btree ("is_published","category","stars");

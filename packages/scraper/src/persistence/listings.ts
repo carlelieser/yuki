@@ -130,6 +130,7 @@ async function insertOrUpdate(
 				license: listing.license,
 				stars: listing.stars,
 				confidence: listing.confidence,
+				...(listing.category === null ? {} : { category: listing.category }),
 				isFork: listing.isFork,
 				isArchived: listing.isArchived,
 				repoPushedAt: listing.repoPushedAt,

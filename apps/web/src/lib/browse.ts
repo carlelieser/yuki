@@ -71,9 +71,14 @@ export function fromSortValue(value: string): BrowseSorting {
 	return { sort: option.sort, order: option.order };
 }
 
-export function toBrowseQueryString(sorting: BrowseSorting, offset: number = 0): string {
+export function toBrowseQueryString(
+	sorting: BrowseSorting,
+	offset: number = 0,
+	category: string | null = null
+): string {
 	const parts = [`sort=${sorting.sort}`, `order=${sorting.order}`];
 	if (offset > 0) parts.push(`offset=${offset}`);
+	if (category !== null) parts.push(`category=${category}`);
 	return parts.join('&');
 }
 
