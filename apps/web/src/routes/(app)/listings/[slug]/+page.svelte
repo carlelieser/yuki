@@ -63,7 +63,7 @@
 				loading="lazy"
 			/>
 		{:else}
-			<div class="size-16 shrink-0 rounded-xl border bg-muted">
+			<div class="size-16 shrink-0 rounded-xl border bg-muted flex items-center justify-center">
 				<BoxIcon />
 			</div>
 		{/if}
