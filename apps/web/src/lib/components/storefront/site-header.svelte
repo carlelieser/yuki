@@ -28,7 +28,7 @@
 				<a href={resolve('/signin')} class={buttonVariants({ variant: 'ghost', size: 'sm' })}>
 					Sign in
 				</a>
-				<a href={resolve('/signup')} class={buttonVariants({ size: 'sm' })}>Sign up</a>
+				<a href={resolve('/signup')} class={buttonVariants({ size: 'sm' })}>Get started</a>
 			</nav>
 		{/if}
 	</div>
