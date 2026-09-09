@@ -68,9 +68,13 @@ const knownListing: ListingRecord = {
 };
 
 describe('runNightly', () => {
-	it('counts a 304 as skipped rather than updated', async () => {
+	it('counts an all-resources 304 as skipped rather than updated', async () => {
 		const runPorts = ports({
-			client: fakeClient({ getRepository: async () => ({ isModified: false }) }),
+			client: fakeClient({
+				getRepository: async () => ({ isModified: false }),
+				getReleases: async () => ({ isModified: false })
+			}),
+			etags: { read: async () => 'main W/"a"', write: async () => {} },
 			listTargets: async () => [knownListing]
 		});
 
@@ -81,10 +85,14 @@ describe('runNightly', () => {
 		expect(runPorts.persisted).toHaveLength(0);
 	});
 
-	it('advances lastScrapedAt on a 304 so the cursor keeps moving', async () => {
+	it('advances lastScrapedAt on an all-resources 304 so the cursor keeps moving', async () => {
 		const touched: string[] = [];
 		const runPorts = ports({
-			client: fakeClient({ getRepository: async () => ({ isModified: false }) }),
+			client: fakeClient({
+				getRepository: async () => ({ isModified: false }),
+				getReleases: async () => ({ isModified: false })
+			}),
+			etags: { read: async () => 'main W/"a"', write: async () => {} },
 			listTargets: async () => [knownListing],
 			touch: async (listingId) => {
 				touched.push(listingId);
@@ -102,7 +110,7 @@ describe('runNightly', () => {
 		const summary = await runNightly(runPorts, options);
 
 		expect(summary.updatedCount).toBe(1);
-		expect(runPorts.persisted[0]?.listing.slug).toBe('acme-app');
+		expect(runPorts.persisted[0]?.listing?.slug).toBe('acme-app');
 	});
 
 	it('keeps going when one listing fails and records why', async () => {

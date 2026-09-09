@@ -22,6 +22,8 @@ export type RefreshTarget = {
 	repo?: GithubRepository;
 };
 
+type Resource<Body> = { state: 'fresh'; body: Body } | { state: 'unchanged' } | { state: 'absent' };
+
 export async function refreshListing(
 	client: GithubClient,
 	etags: EtagStore,
@@ -31,40 +33,60 @@ export async function refreshListing(
 	const repoResource = `repos/${owner}/${name}`;
 
 	try {
-		let repo = target.repo;
-
-		if (repo === undefined) {
-			const etag = await etags.read(repoResource);
-			const response = await client.getRepository(owner, name, etag);
-
-			if (!response.isModified) {
-				return { kind: 'skipped', reason: `${repoResource} not modified` };
-			}
-
-			repo = response.body;
-			await etags.write(repoResource, response.etag);
+		const repo = await readRepository(client, etags, target, repoResource);
+		if (repo.state === 'absent') {
+			return { kind: 'skipped', reason: `${repoResource} not found` };
 		}
 
-		const readme = await readOptional(() => client.getReadme(owner, name));
-		const releases = await readOptional(() => client.getReleases(owner, name));
-		const tree = await readOptional(() => client.getTree(owner, name, repo.default_branch));
+		const branch = repo.state === 'fresh' ? repo.body.default_branch : repo.branch;
+
+		const releases = await readResource(etags, `${repoResource}/releases`, (etag) =>
+			client.getReleases(owner, name, etag)
+		);
+		const readme = await readResource(etags, `${repoResource}/readme`, (etag) =>
+			client.getReadme(owner, name, etag)
+		);
+		const tree = await readResource(etags, `${repoResource}/git/trees/${branch}`, (etag) =>
+			client.getTree(owner, name, branch, etag)
+		);
+
+		if (
+			repo.state === 'unchanged' &&
+			releases.state === 'unchanged' &&
+			readme.state === 'unchanged' &&
+			tree.state === 'unchanged'
+		) {
+			return { kind: 'skipped', reason: `${repoResource} not modified` };
+		}
 
 		const evidence = mergeEvidence(target.evidence ?? []);
-		const listing = mapRepository(repo, scoreConfidence(evidence), readme);
-		const bannerUrl =
-			readme === null ? null : findBannerUrl(readme, owner, name, repo.default_branch);
+		const readmeBody = readme.state === 'fresh' ? readme.body : null;
+		const bannerUrl = readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch);
 
 		return {
 			kind: 'updated',
 			input: {
-				listing,
-				iconUrl: await iconFrom(client, tree, owner, name, repo.default_branch),
-				bannerUrl,
+				owner,
+				name,
+				listing:
+					repo.state === 'fresh'
+						? mapRepository(repo.body, scoreConfidence(evidence), readmeBody)
+						: null,
+				iconUrl:
+					tree.state === 'fresh' ? await iconFrom(client, tree.body, owner, name, branch) : null,
+				bannerUrl: readme.state === 'unchanged' ? null : bannerUrl,
 				screenshots:
-					readme === null
-						? []
-						: extractReadmeImages(readme, owner, name, repo.default_branch, bannerUrl),
-				versions: releases === null ? [] : mapReleases(releases),
+					readme.state === 'unchanged'
+						? null
+						: readmeBody === null
+							? []
+							: extractReadmeImages(readmeBody, owner, name, branch, bannerUrl),
+				versions:
+					releases.state === 'unchanged'
+						? null
+						: releases.state === 'absent'
+							? []
+							: mapReleases(releases.body),
 				evidence
 			}
 		};
@@ -76,14 +98,61 @@ export async function refreshListing(
 	}
 }
 
+type RepoResource =
+	| { state: 'fresh'; body: GithubRepository }
+	| { state: 'unchanged'; branch: string }
+	| { state: 'absent' };
+
+async function readRepository(
+	client: GithubClient,
+	etags: EtagStore,
+	target: RefreshTarget,
+	resource: string
+): Promise<RepoResource> {
+	if (target.repo !== undefined) return { state: 'fresh', body: target.repo };
+
+	const stored = await etags.read(resource);
+	const etag = stored === null ? null : parseRepoEtag(stored).etag;
+
+	try {
+		const response = await client.getRepository(target.owner, target.name, etag);
+
+		if (!response.isModified) {
+			const branch = stored === null ? null : parseRepoEtag(stored).branch;
+			if (branch === null) return { state: 'absent' };
+			return { state: 'unchanged', branch };
+		}
+
+		await etags.write(resource, formatRepoEtag(response.etag, response.body.default_branch));
+		return { state: 'fresh', body: response.body };
+	} catch (cause) {
+		if (cause instanceof GithubSkip) return { state: 'absent' };
+		throw cause;
+	}
+}
+
+const REPO_ETAG_SEPARATOR = ' ';
+
+function formatRepoEtag(etag: string | null, branch: string): string | null {
+	if (etag === null) return null;
+	return `${branch}${REPO_ETAG_SEPARATOR}${etag}`;
+}
+
+function parseRepoEtag(stored: string): { etag: string; branch: string | null } {
+	const index = stored.indexOf(REPO_ETAG_SEPARATOR);
+	if (index === -1) return { etag: stored, branch: null };
+
+	return { branch: stored.slice(0, index), etag: stored.slice(index + 1) };
+}
+
 async function iconFrom(
 	client: GithubClient,
-	tree: GithubTree | null,
+	tree: GithubTree,
 	owner: string,
 	name: string,
 	branch: string
 ): Promise<string | null> {
-	if (tree === null || tree.truncated) return null;
+	if (tree.truncated) return null;
 
 	const read = async (path: string): Promise<string | null> => {
 		const response = await readOptional(() => client.getRawFile(owner, name, path, branch));
@@ -99,6 +168,27 @@ async function iconFrom(
 	if (rasterUrl !== null) return rasterUrl;
 
 	return buildVectorIcon(tree, read);
+}
+
+async function readResource<Body>(
+	etags: EtagStore,
+	resource: string,
+	load: (
+		etag: string | null
+	) => Promise<{ isModified: true; body: Body; etag: string | null } | { isModified: false }>
+): Promise<Resource<Body>> {
+	try {
+		const etag = await etags.read(resource);
+		const response = await load(etag);
+
+		if (!response.isModified) return { state: 'unchanged' };
+
+		await etags.write(resource, response.etag);
+		return { state: 'fresh', body: response.body };
+	} catch (cause) {
+		if (cause instanceof GithubSkip) return { state: 'absent' };
+		throw cause;
+	}
 }
 
 async function readOptional<Body>(

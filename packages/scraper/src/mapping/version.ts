@@ -1,1 +1,1 @@
-export const MAPPING_VERSION = 7;
+export const MAPPING_VERSION = 8;

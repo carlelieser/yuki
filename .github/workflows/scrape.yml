@@ -1,0 +1,57 @@
+name: Scrape
+
+on:
+  schedule:
+    - cron: '20 3 * * *'
+    - cron: '40 4 * * 0'
+  workflow_dispatch:
+    inputs:
+      discover:
+        description: 'Also search GitHub for new repositories'
+        type: boolean
+        default: false
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.event.schedule == '20 3 * * *' || (github.event_name == 'workflow_dispatch' && !inputs.discover)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4'
+
+      - run: bun install --frozen-lockfile
+
+      - name: Refresh known listings
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
+        run: bun run scrape
+
+  discover:
+    if: github.event.schedule == '40 4 * * 0' || (github.event_name == 'workflow_dispatch' && inputs.discover)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4'
+
+      - run: bun install --frozen-lockfile
+
+      - name: Discover and refresh listings
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
+        run: bun run scrape --discover

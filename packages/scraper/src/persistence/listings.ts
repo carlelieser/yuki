@@ -1,4 +1,4 @@
-import { asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -15,11 +15,13 @@ export type ListingRecord = {
 };
 
 export type PersistInput = {
-	listing: MappedListing;
+	listing: MappedListing | null;
+	owner: string;
+	name: string;
 	iconUrl: string | null;
 	bannerUrl: string | null;
-	screenshots: ReadmeImage[];
-	versions: MappedVersion[];
+	screenshots: ReadmeImage[] | null;
+	versions: MappedVersion[] | null;
 	evidence: DetectedEvidence[];
 };
 
@@ -36,63 +38,29 @@ async function resolveSlug(tx: Transaction, slug: string, githubRepoId: number):
 
 export async function upsertListing(db: Database, input: PersistInput): Promise<string> {
 	return db.transaction(async (tx) => {
-		const slug = await resolveSlug(tx, input.listing.slug, input.listing.githubRepoId);
+		const listingId =
+			input.listing === null
+				? await updateExisting(tx, input)
+				: await insertOrUpdate(tx, input, input.listing);
 
-		const [row] = await tx
-			.insert(schema.listings)
-			.values({
-				...input.listing,
-				slug,
-				iconUrl: input.iconUrl,
-				bannerUrl: input.bannerUrl,
-				lastScrapedAt: new Date(),
-				updatedAt: new Date()
-			})
-			.onConflictDoUpdate({
-				target: schema.listings.githubRepoId,
-				set: {
-					slug,
-					owner: input.listing.owner,
-					name: input.listing.name,
-					title: input.listing.title,
-					author: input.listing.author,
-					authorUrl: input.listing.authorUrl,
-					description: input.listing.description,
-					iconUrl: input.iconUrl,
-					bannerUrl: input.bannerUrl,
-					repositoryUrl: input.listing.repositoryUrl,
-					homepageUrl: input.listing.homepageUrl,
-					license: input.listing.license,
-					stars: input.listing.stars,
-					confidence: input.listing.confidence,
-					isFork: input.listing.isFork,
-					isArchived: input.listing.isArchived,
-					repoPushedAt: input.listing.repoPushedAt,
-					lastScrapedAt: new Date(),
-					updatedAt: new Date()
-				}
-			})
-			.returning({ id: schema.listings.id });
+		if (input.screenshots !== null) {
+			await tx
+				.delete(schema.listingScreenshots)
+				.where(eq(schema.listingScreenshots.listingId, listingId));
 
-		if (!row) throw new Error(`Upsert returned no row for ${input.listing.slug}`);
-		const listingId = row.id;
-
-		await tx
-			.delete(schema.listingScreenshots)
-			.where(eq(schema.listingScreenshots.listingId, listingId));
-
-		if (input.screenshots.length > 0) {
-			await tx.insert(schema.listingScreenshots).values(
-				input.screenshots.map((screenshot) => ({
-					listingId,
-					url: screenshot.url,
-					alt: screenshot.alt,
-					position: screenshot.position
-				}))
-			);
+			if (input.screenshots.length > 0) {
+				await tx.insert(schema.listingScreenshots).values(
+					input.screenshots.map((screenshot) => ({
+						listingId,
+						url: screenshot.url,
+						alt: screenshot.alt,
+						position: screenshot.position
+					}))
+				);
+			}
 		}
 
-		for (const version of input.versions) {
+		for (const version of input.versions ?? []) {
 			await tx
 				.insert(schema.listingVersions)
 				.values({ listingId, ...version })
@@ -124,6 +92,70 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 
 		return listingId;
 	});
+}
+
+async function insertOrUpdate(
+	tx: Transaction,
+	input: PersistInput,
+	listing: MappedListing
+): Promise<string> {
+	const slug = await resolveSlug(tx, listing.slug, listing.githubRepoId);
+
+	const [row] = await tx
+		.insert(schema.listings)
+		.values({
+			...listing,
+			slug,
+			iconUrl: input.iconUrl,
+			bannerUrl: input.bannerUrl,
+			isPublished: true,
+			lastScrapedAt: new Date(),
+			updatedAt: new Date()
+		})
+		.onConflictDoUpdate({
+			target: schema.listings.githubRepoId,
+			set: {
+				slug,
+				owner: listing.owner,
+				name: listing.name,
+				title: listing.title,
+				author: listing.author,
+				authorUrl: listing.authorUrl,
+				description: listing.description,
+				...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
+				...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
+				repositoryUrl: listing.repositoryUrl,
+				homepageUrl: listing.homepageUrl,
+				license: listing.license,
+				stars: listing.stars,
+				confidence: listing.confidence,
+				isFork: listing.isFork,
+				isArchived: listing.isArchived,
+				repoPushedAt: listing.repoPushedAt,
+				lastScrapedAt: new Date(),
+				updatedAt: new Date()
+			}
+		})
+		.returning({ id: schema.listings.id });
+
+	if (!row) throw new Error(`Upsert returned no row for ${listing.slug}`);
+	return row.id;
+}
+
+async function updateExisting(tx: Transaction, input: PersistInput): Promise<string> {
+	const [row] = await tx
+		.update(schema.listings)
+		.set({
+			...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
+			...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
+			lastScrapedAt: new Date(),
+			updatedAt: new Date()
+		})
+		.where(and(eq(schema.listings.owner, input.owner), eq(schema.listings.name, input.name)))
+		.returning({ id: schema.listings.id });
+
+	if (!row) throw new Error(`No stored listing for ${input.owner}/${input.name}`);
+	return row.id;
 }
 
 export async function listListingsForRefresh(

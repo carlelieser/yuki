@@ -61,11 +61,14 @@ Discovery is deliberately separate: code search is capped at 10 requests per
 minute, so the full query set takes roughly 18 minutes and re-finds the same
 repositories every night. The nightly refresh instead issues conditional
 requests against the 5000/hour core quota, where `304 Not Modified` responses do
-not count against the limit.
+not count against the limit. Each listing tracks a separate ETag for the
+repository, its releases, its readme, and its tree, so a listing is only skipped
+when all four are unchanged. A repository's metadata does not change when a
+maintainer publishes a release, which is why releases are checked independently.
 
-New listings are stored with `is_published = false`. Detection has measured
-false positives (wikis and awesome-lists that merely mention Shizuku), so
-nothing reaches the storefront until it is reviewed and published:
+Newly discovered listings go live immediately. Detection has measured false
+positives (wikis and awesome-lists that merely mention Shizuku), so unpublishing
+is the correction mechanism:
 
 ```sh
 bun run listings pending              # candidates, with the evidence behind each
@@ -74,17 +77,25 @@ bun run listings unpublish <slug>...  # take them back off
 bun run listings published            # what is live right now
 ```
 
-Refreshing a listing never changes `is_published`, so a nightly run cannot
-unpublish something you approved or resurrect something you rejected.
+Publishing happens on insert only, never on refresh. A nightly run therefore
+cannot resurrect something you unpublished, so taking a listing down sticks.
 
 Each run records its counters in `scrape_runs` — including `request_count`
 versus `not_modified_count`, which is how you tell the conditional requests are
-working. The exit code is the health signal for an external scheduler:
+working. `main.ts` exits nonzero on failure, so a failed scheduled run shows up
+as a failed workflow.
 
-```sh
-docker compose --profile scrape run --rm scraper                          # nightly
-docker compose --profile scrape run --rm scraper bun run packages/scraper/src/main.ts --discover   # weekly
-```
+`.github/workflows/scrape.yml` runs the refresh nightly and discovery weekly,
+and either can be started by hand from the Actions tab. Both jobs need two
+repository secrets:
+
+| Secret                 | Purpose                                             |
+| ---------------------- | --------------------------------------------------- |
+| `DATABASE_URL`         | Postgres connection string                          |
+| `SCRAPER_GITHUB_TOKEN` | PAT with public read access, used as `GITHUB_TOKEN` |
+
+The automatic `secrets.GITHUB_TOKEN` cannot be used: it is scoped to this
+repository, and discovery searches all of GitHub.
 
 ## Database
 
