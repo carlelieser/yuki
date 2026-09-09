@@ -1,0 +1,33 @@
+name: Seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      max-repos:
+        description: 'Stop after indexing this many new repositories'
+        type: string
+        default: '10000'
+
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4'
+
+      - run: bun install --frozen-lockfile
+
+      - name: Exhaust the search space
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
+        run: bun run scrape --seed --max-repos=${{ inputs.max-repos }}

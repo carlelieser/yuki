@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 export type RunTotals = {
@@ -17,6 +17,17 @@ export async function startRun(db: Database): Promise<string> {
 
 	if (!row) throw new Error('Failed to open a scrape run');
 	return row.id;
+}
+
+export async function lastSuccessfulRunAt(db: Database): Promise<Date | null> {
+	const [row] = await db
+		.select({ finishedAt: schema.scrapeRuns.finishedAt })
+		.from(schema.scrapeRuns)
+		.where(and(eq(schema.scrapeRuns.status, 'succeeded'), isNotNull(schema.scrapeRuns.finishedAt)))
+		.orderBy(desc(schema.scrapeRuns.finishedAt))
+		.limit(1);
+
+	return row?.finishedAt ?? null;
 }
 
 export async function finishRun(

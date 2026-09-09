@@ -1,4 +1,5 @@
-import { discover } from './discover.ts';
+import { discover, type PartitionStore } from './discover.ts';
+import { GITHUB_EPOCH, type DateRange } from '../detection/queries.ts';
 import { refreshListing, type EtagStore, type RefreshTarget } from './refresh.ts';
 import type { GithubClient } from '../github/client.ts';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
@@ -8,6 +9,8 @@ export type RunPorts = {
 	client: GithubClient;
 	etags: EtagStore;
 	listTargets: (limit: number) => Promise<ListingRecord[]>;
+	listKnownRepoIds?: () => Promise<number[]>;
+	partitions?: PartitionStore;
 	persist: (input: PersistInput) => Promise<string>;
 	touch: (listingId: string) => Promise<void>;
 	log?: (message: string) => void;
@@ -17,6 +20,7 @@ export type RunOptions = {
 	shouldDiscover: boolean;
 	maxRepos: number;
 	maxRefresh: number;
+	discoveryRange?: DateRange;
 };
 
 export type RunSummary = RunTotals & { warnings: string[] };
@@ -32,7 +36,15 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 	const seenRepoIds = new Set<number>();
 
 	if (options.shouldDiscover) {
-		const discovery = await discover(ports.client, options.maxRepos);
+		const knownRepoIds = new Set(await (ports.listKnownRepoIds?.() ?? Promise.resolve([])));
+		const range = options.discoveryRange ?? { since: GITHUB_EPOCH, until: new Date() };
+
+		const discovery = await discover(ports.client, (id) => knownRepoIds.has(id), {
+			maxNewRepos: options.maxRepos,
+			range,
+			partitions: ports.partitions,
+			log
+		});
 		warnings.push(...discovery.warnings);
 		discoveredCount = discovery.repos.length;
 		log(`Discovered ${discoveredCount} candidate repositories`);

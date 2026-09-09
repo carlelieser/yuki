@@ -81,3 +81,36 @@ export function isSourceFilenameMatch(path: string): boolean {
 export function isSliceTruncated(totalCount: number): boolean {
 	return totalCount > RESULT_CAP;
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const GITHUB_EPOCH = new Date('2008-01-01T00:00:00.000Z');
+
+export type DateRange = { since: Date; until: Date };
+
+function toDay(value: Date): string {
+	return value.toISOString().slice(0, 10);
+}
+
+export function withCreatedRange(q: string, range: DateRange): string {
+	return `${q} created:${toDay(range.since)}..${toDay(range.until)}`;
+}
+
+export function withPushedRange(q: string, range: DateRange): string {
+	return `${q} pushed:${toDay(range.since)}..${toDay(range.until)}`;
+}
+
+export function isIndivisible(range: DateRange): boolean {
+	return range.until.getTime() - range.since.getTime() <= DAY_MS;
+}
+
+export function splitRange(range: DateRange): [DateRange, DateRange] {
+	const midpoint = new Date(
+		range.since.getTime() + Math.floor((range.until.getTime() - range.since.getTime()) / 2)
+	);
+
+	return [
+		{ since: range.since, until: midpoint },
+		{ since: new Date(midpoint.getTime() + DAY_MS), until: range.until }
+	];
+}

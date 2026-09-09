@@ -14,6 +14,18 @@ export const scrapeSources = pgTable(
 	(table) => [uniqueIndex('scrape_sources_resource_key').on(table.resource)]
 );
 
+export const scrapePartitions = pgTable(
+	'scrape_partitions',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		query: text('query').notNull(),
+		since: timestamp('since', { withTimezone: true }).notNull(),
+		until: timestamp('until', { withTimezone: true }).notNull(),
+		completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [uniqueIndex('scrape_partitions_key').on(table.query, table.since, table.until)]
+);
+
 export const scrapeRuns = pgTable('scrape_runs', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	status: scrapeRunStatus('status').notNull().default('running'),
@@ -29,6 +41,8 @@ export const scrapeRuns = pgTable('scrape_runs', {
 
 export type ScrapeSource = typeof scrapeSources.$inferSelect;
 export type NewScrapeSource = typeof scrapeSources.$inferInsert;
+export type ScrapePartition = typeof scrapePartitions.$inferSelect;
+export type NewScrapePartition = typeof scrapePartitions.$inferInsert;
 export type ScrapeRun = typeof scrapeRuns.$inferSelect;
 export type NewScrapeRun = typeof scrapeRuns.$inferInsert;
 export type ScrapeRunStatus = (typeof scrapeRunStatus.enumValues)[number];

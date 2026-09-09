@@ -1,12 +1,20 @@
 import { createDatabase } from '@yuki/db';
 import { requireGithubToken } from './env.ts';
 import { createGithubClient } from './github/client.ts';
-import { listListingsForRefresh, touchListing, upsertListing } from './persistence/listings.ts';
-import { finishRun, startRun } from './persistence/runs.ts';
+import {
+	listKnownRepoIds,
+	listListingsForRefresh,
+	touchListing,
+	upsertListing
+} from './persistence/listings.ts';
+import { isPartitionComplete, markPartitionComplete } from './persistence/partitions.ts';
+import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts';
+import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
 import { runNightly } from './run/nightly.ts';
 
 const DEFAULT_MAX_REPOS = 200;
+const DEFAULT_SEED_MAX_REPOS = 10000;
 const DEFAULT_MAX_REFRESH = 500;
 
 function readNumberFlag(flag: string, fallback: number): number {
@@ -18,13 +26,27 @@ function readNumberFlag(flag: string, fallback: number): number {
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-const shouldDiscover = process.argv.includes('--discover');
-const maxRepos = readNumberFlag('--max-repos', DEFAULT_MAX_REPOS);
+const shouldSeed = process.argv.includes('--seed');
+const shouldDiscover = shouldSeed || process.argv.includes('--discover');
+const maxRepos = readNumberFlag(
+	'--max-repos',
+	shouldSeed ? DEFAULT_SEED_MAX_REPOS : DEFAULT_MAX_REPOS
+);
 const maxRefresh = readNumberFlag('--max-refresh', DEFAULT_MAX_REFRESH);
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());
+
+const discoveryRange = shouldDiscover ? await resolveDiscoveryRange() : undefined;
 const runId = await startRun(db);
+
+async function resolveDiscoveryRange() {
+	const until = new Date();
+	if (shouldSeed) return { since: GITHUB_EPOCH, until };
+
+	const watermark = await lastSuccessfulRunAt(db);
+	return { since: watermark ?? GITHUB_EPOCH, until };
+}
 
 try {
 	const summary = await runNightly(
@@ -35,11 +57,16 @@ try {
 				write: (resource, etag) => writeEtag(db, resource, etag)
 			},
 			listTargets: (limit) => listListingsForRefresh(db, limit),
+			listKnownRepoIds: () => listKnownRepoIds(db),
+			partitions: {
+				isComplete: (query, range) => isPartitionComplete(db, query, range),
+				markComplete: (query, range) => markPartitionComplete(db, query, range)
+			},
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),
 			log: (message) => console.log(message)
 		},
-		{ shouldDiscover, maxRepos, maxRefresh }
+		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange }
 	);
 
 	const { warnings, ...totals } = summary;

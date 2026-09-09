@@ -57,6 +57,13 @@
       "when": 1788890436875,
       "tag": "0007_typical_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788968178638,
+      "tag": "0008_amused_star_brand",
+      "breakpoints": true
     }
   ]
 }

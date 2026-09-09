@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+	GITHUB_EPOCH,
 	RESULT_CAP,
 	buildCodeSearchQueries,
+	isIndivisible,
 	isMarkdownPath,
 	isSliceTruncated,
-	isSourceFilenameMatch
+	isSourceFilenameMatch,
+	splitRange,
+	withCreatedRange
 } from './queries.ts';
 
 describe('buildCodeSearchQueries', () => {
@@ -52,5 +56,42 @@ describe('isSliceTruncated', () => {
 	it('flags a slice that still exceeds what pagination can reach', () => {
 		expect(isSliceTruncated(RESULT_CAP + 1)).toBe(true);
 		expect(isSliceTruncated(RESULT_CAP)).toBe(false);
+	});
+});
+
+describe('date ranges', () => {
+	const day = (value: string) => new Date(`${value}T00:00:00.000Z`);
+
+	it('formats a created range as a GitHub qualifier', () => {
+		expect(
+			withCreatedRange('topic:shizuku', { since: day('2020-01-01'), until: day('2020-06-30') })
+		).toBe('topic:shizuku created:2020-01-01..2020-06-30');
+	});
+
+	it('splits a range into halves that do not overlap', () => {
+		const [left, right] = splitRange({ since: day('2020-01-01'), until: day('2020-01-11') });
+
+		expect(left.since).toEqual(day('2020-01-01'));
+		expect(left.until).toEqual(day('2020-01-06'));
+		expect(right.since).toEqual(day('2020-01-07'));
+		expect(right.until).toEqual(day('2020-01-11'));
+	});
+
+	it('treats a single day as indivisible', () => {
+		expect(isIndivisible({ since: day('2020-01-01'), until: day('2020-01-02') })).toBe(true);
+		expect(isIndivisible({ since: day('2020-01-01'), until: day('2020-01-05') })).toBe(false);
+	});
+
+	it('always terminates when splitting repeatedly', () => {
+		let range = { since: GITHUB_EPOCH, until: day('2026-01-01') };
+		let depth = 0;
+
+		while (!isIndivisible(range)) {
+			range = splitRange(range)[0];
+			depth += 1;
+			if (depth > 100) break;
+		}
+
+		expect(depth).toBeLessThan(20);
 	});
 });

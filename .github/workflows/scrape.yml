@@ -6,38 +6,18 @@ on:
     - cron: '40 4 * * 0'
   workflow_dispatch:
     inputs:
-      discover:
-        description: 'Also search GitHub for new repositories'
-        type: boolean
-        default: false
+      mode:
+        description: 'What to run'
+        type: choice
+        options: [refresh, discover]
+        default: refresh
 
 concurrency:
   group: scrape
   cancel-in-progress: false
 
 jobs:
-  refresh:
-    if: github.event.schedule == '20 3 * * *' || (github.event_name == 'workflow_dispatch' && !inputs.discover)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1.4'
-
-      - run: bun install --frozen-lockfile
-
-      - name: Refresh known listings
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
-        run: bun run scrape
-
-  discover:
-    if: github.event.schedule == '40 4 * * 0' || (github.event_name == 'workflow_dispatch' && inputs.discover)
+  scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -50,7 +30,26 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Discover and refresh listings
+      - name: Resolve mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "40 4 * * 0" ]; then
+            echo "value=discover" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=refresh" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Refresh known listings
+        if: steps.mode.outputs.value == 'refresh'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
+        run: bun run scrape
+
+      - name: Discover repositories added since the last run
+        if: steps.mode.outputs.value == 'discover'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}

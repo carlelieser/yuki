@@ -174,6 +174,14 @@ export async function listListingsForRefresh(
 		.limit(limit);
 }
 
+export async function listKnownRepoIds(db: Database): Promise<number[]> {
+	const rows = await db
+		.select({ githubRepoId: schema.listings.githubRepoId })
+		.from(schema.listings);
+
+	return rows.map((row) => row.githubRepoId);
+}
+
 export async function touchListing(db: Database, listingId: string): Promise<void> {
 	await db
 		.update(schema.listings)

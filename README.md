@@ -54,17 +54,32 @@ fine-grained token with public read access is enough).
 
 ```sh
 bun run scrape              # nightly refresh of known listings
-bun run scrape --discover   # weekly, also searches for new repositories
+bun run scrape --discover   # weekly, searches for repositories added since the last run
+bun run scrape --seed       # one-off, exhausts the search space
 ```
 
-Discovery is deliberately separate: code search is capped at 10 requests per
-minute, so the full query set takes roughly 18 minutes and re-finds the same
-repositories every night. The nightly refresh instead issues conditional
-requests against the 5000/hour core quota, where `304 Not Modified` responses do
-not count against the limit. Each listing tracks a separate ETag for the
-repository, its releases, its readme, and its tree, so a listing is only skipped
-when all four are unchanged. A repository's metadata does not change when a
-maintainer publishes a release, which is why releases are checked independently.
+The three modes answer different questions. Refresh asks what changed in what we
+already have. Discovery asks what appeared since the last successful run. Seed
+asks what exists at all, and is meant to be run once rather than on a schedule.
+
+Discovery only counts repositories that are not already indexed, so a run spends
+its budget on new findings instead of confirming known ones. Search is bounded to
+repositories created within a date range: discovery starts at the last successful
+run's finish time, seed starts at 2008.
+
+GitHub pages search results to 1000 per query, so a range reporting more than that
+cannot be walked. When that happens the range is halved and each half is searched
+separately, repeating until every partition fits. Completed partitions are recorded
+in `scrape_partitions`, so an interrupted seed resumes instead of restarting, and a
+weekly run skips ground it has already covered.
+
+Code search is capped at 10 requests per minute, which is why seed takes hours and
+runs by hand. The nightly refresh instead issues conditional requests against the
+5000/hour core quota, where `304 Not Modified` responses do not count against the
+limit. Each listing tracks a separate ETag for the repository, its releases, its
+readme, and its tree, so a listing is only skipped when all four are unchanged. A
+repository's metadata does not change when a maintainer publishes a release, which
+is why releases are checked independently.
 
 Newly discovered listings go live immediately. Detection has measured false
 positives (wikis and awesome-lists that merely mention Shizuku), so unpublishing
@@ -85,8 +100,10 @@ versus `not_modified_count`, which is how you tell the conditional requests are
 working. `main.ts` exits nonzero on failure, so a failed scheduled run shows up
 as a failed workflow.
 
-`.github/workflows/scrape.yml` runs the refresh nightly and discovery weekly,
-and either can be started by hand from the Actions tab. Both jobs need two
+`.github/workflows/scrape.yml` runs the refresh nightly and discovery weekly, and
+either can be started by hand from the Actions tab. Seed lives in its own
+`seed.yml`, dispatch only, and shares the `scrape` concurrency group so it cannot
+overlap a scheduled run. Both jobs need two
 repository secrets:
 
 | Secret                 | Purpose                                             |
