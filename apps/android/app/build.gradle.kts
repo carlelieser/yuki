@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val YUKI_STOREFRONT_URL = "https://yuki.app/"
+val YUKI_STOREFRONT_URL = "https://yukistore.org/"
 
 android {
     namespace = "app.yuki"
