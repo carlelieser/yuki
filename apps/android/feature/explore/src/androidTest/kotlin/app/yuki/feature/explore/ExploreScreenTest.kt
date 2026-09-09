@@ -3,6 +3,7 @@ package app.yuki.feature.explore
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -27,6 +28,7 @@ class ExploreScreenTest {
         onRecentRemoved = {},
         onRetry = {},
         onListingSelected = {},
+        onSettingsClick = {},
     )
 
     private fun searching(results: UiState<List<ListingSummary>>) = UiState.Success(
@@ -42,6 +44,7 @@ class ExploreScreenTest {
                 state = state,
                 listings = emptyListings(),
                 callbacks = noCallbacks,
+                contentPadding = PaddingValues(),
             )
         }
     }

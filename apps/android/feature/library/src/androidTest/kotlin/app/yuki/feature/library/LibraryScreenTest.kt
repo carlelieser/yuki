@@ -1,5 +1,6 @@
 package app.yuki.feature.library
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -71,6 +72,7 @@ class LibraryScreenTest {
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
                 ),
+                contentPadding = PaddingValues(),
             )
         }
     }

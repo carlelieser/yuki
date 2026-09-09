@@ -1,6 +1,7 @@
 package app.yuki.feature.updates
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -108,6 +109,7 @@ class UpdatesScreenTest {
                     onInstallAction = onInstallAction,
                     onRetry = {},
                 ),
+                contentPadding = PaddingValues(),
             )
         }
     }

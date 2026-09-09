@@ -33,6 +33,7 @@ class ListingScreenTest {
             ListingScreen(
                 state = ListingScreenState(listing = listing, installState = installState),
                 callbacks = callbacks,
+                onBackClick = {},
             )
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.yuki.MainActivity
+import app.yuki.core.designsystem.component.SCREEN_ACTION_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Rule
@@ -31,7 +32,7 @@ class YukiNavigationTest {
 
     @Test
     fun theGearActionOpensSettingsAsAFullScreen() {
-        composeRule.onNodeWithTag(SETTINGS_ACTION_TAG).performClick()
+        composeRule.onNodeWithTag(SCREEN_ACTION_TAG).performClick()
 
         composeRule.onNodeWithText(SETTINGS_TITLE).assertIsDisplayed()
     }
