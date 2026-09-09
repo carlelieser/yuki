@@ -9,6 +9,9 @@ import app.yuki.core.installer.InstallRequest
 import app.yuki.core.installer.InstallSource
 import app.yuki.core.installer.InstallTarget
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.deviceArchitecture
+import app.yuki.core.model.downloadUrl
+import app.yuki.core.network.YukiBaseUrl
 import app.yuki.feature.listing.ListingInstallGateway
 import app.yuki.feature.listing.ListingInstallRequest
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,9 +25,10 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     private val coordinator: InstallCoordinator,
     private val store: InstallStore,
     @ApplicationContext private val context: Context,
+    @param:YukiBaseUrl private val baseUrl: String,
 ) : ListingInstallGateway {
     override fun install(request: ListingInstallRequest): Flow<InstallState> =
-        coordinator.install(request.toInstallRequest())
+        coordinator.install(request.toInstallRequest(baseUrl))
 
     override fun observe(githubRepoId: Long): Flow<InstallState> = flow {
         emit(installedStateOf(githubRepoId))
@@ -55,7 +59,7 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     }
 }
 
-private fun ListingInstallRequest.toInstallRequest(): InstallRequest = InstallRequest(
+private fun ListingInstallRequest.toInstallRequest(baseUrl: String): InstallRequest = InstallRequest(
     target = InstallTarget(
         githubRepoId = detail.githubRepoId,
         slug = detail.slug,
@@ -63,7 +67,12 @@ private fun ListingInstallRequest.toInstallRequest(): InstallRequest = InstallRe
         iconUrl = detail.summary.iconUrl,
     ),
     source = InstallSource(
-        downloadUrl = downloadUrl,
+        downloadUrl = downloadUrl(
+            baseUrl = baseUrl,
+            slug = detail.slug,
+            versionTag = version.tag,
+            architecture = deviceArchitecture(),
+        ),
         versionTag = version.tag,
         assetName = version.assetName,
     ),

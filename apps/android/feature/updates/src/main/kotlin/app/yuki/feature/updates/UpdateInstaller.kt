@@ -6,6 +6,9 @@ import app.yuki.core.installer.InstallSource
 import app.yuki.core.installer.InstallTarget
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.deviceArchitecture
+import app.yuki.core.model.downloadUrl
+import app.yuki.core.network.YukiBaseUrl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,7 +24,7 @@ interface UpdateInstaller {
 internal fun AvailableUpdate.toInstallState(): InstallState =
     InstallState.UpdateAvailable(from = installed.versionTag, to = version.tag)
 
-private fun AvailableUpdate.toRequest(): InstallRequest = InstallRequest(
+private fun AvailableUpdate.toRequest(baseUrl: String): InstallRequest = InstallRequest(
     target = InstallTarget(
         githubRepoId = installed.githubRepoId,
         slug = installed.slug,
@@ -29,9 +32,12 @@ private fun AvailableUpdate.toRequest(): InstallRequest = InstallRequest(
         iconUrl = installed.iconUrl,
     ),
     source = InstallSource(
-        downloadUrl = requireNotNull(version.downloadUrl) {
-            "Update ${version.tag} for slug=${installed.slug} has no download url"
-        },
+        downloadUrl = downloadUrl(
+            baseUrl = baseUrl,
+            slug = installed.slug,
+            versionTag = version.tag,
+            architecture = deviceArchitecture(),
+        ),
         versionTag = version.tag,
         assetName = version.assetName,
     ),
@@ -40,9 +46,10 @@ private fun AvailableUpdate.toRequest(): InstallRequest = InstallRequest(
 @Singleton
 internal class CoordinatorUpdateInstaller @Inject constructor(
     private val coordinator: InstallCoordinator,
+    @param:YukiBaseUrl private val baseUrl: String,
 ) : UpdateInstaller {
     override fun install(update: AvailableUpdate): Flow<InstallState> =
-        coordinator.install(update.toRequest())
+        coordinator.install(update.toRequest(baseUrl))
 }
 
 @Module
