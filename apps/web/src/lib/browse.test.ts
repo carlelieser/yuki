@@ -4,6 +4,7 @@ import {
 	DEFAULT_BROWSE_SORT,
 	defaultOrderFor,
 	fromSortValue,
+	isFeaturedRequested,
 	MAX_BROWSE_OFFSET,
 	readBrowseOffset,
 	readBrowseOrder,
@@ -151,5 +152,23 @@ describe('toBrowseQueryString', () => {
 	it('round-trips the offset through readBrowseOffset', () => {
 		const params = new URLSearchParams(toBrowseQueryString({ sort: 'stars', order: 'desc' }, 48));
 		expect(readBrowseOffset(params.get('offset'))).toBe(48);
+	});
+});
+
+describe('isFeaturedRequested', () => {
+	it('recognises the featured flag', () => {
+		expect(isFeaturedRequested('true')).toBe(true);
+	});
+
+	it('treats a missing or falsy flag as a normal browse request', () => {
+		expect(isFeaturedRequested(null)).toBe(false);
+		expect(isFeaturedRequested('')).toBe(false);
+		expect(isFeaturedRequested('false')).toBe(false);
+	});
+
+	it('does not accept other truthy-looking values', () => {
+		expect(isFeaturedRequested('1')).toBe(false);
+		expect(isFeaturedRequested('TRUE')).toBe(false);
+		expect(isFeaturedRequested('yes')).toBe(false);
 	});
 });

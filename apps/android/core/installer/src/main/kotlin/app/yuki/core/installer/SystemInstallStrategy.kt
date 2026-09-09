@@ -1,0 +1,48 @@
+package app.yuki.core.installer
+
+import android.content.Context
+import android.content.Intent
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.transformWhile
+
+internal class SystemInstallStrategy @Inject constructor(
+    @ApplicationContext private val context: Context,
+) : InstallStrategy {
+    private val sessions = InstallSessionWriter(context)
+
+    override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
+        val sessionId = sessions.createSession(identity)
+        sessions.writeApk(sessionId, apk)
+
+        val outcomes = InstallStatusBus.updates
+            .onSubscription { sessions.commit(sessionId) }
+            .filter { status -> status.sessionId == sessionId }
+            .transformWhile { status -> emitUntilTerminal(status) }
+
+        emitAll(outcomes)
+    }
+
+    private suspend fun FlowCollector<InstallOutcome>.emitUntilTerminal(
+        status: SessionStatus,
+    ): Boolean {
+        val outcome = status.toOutcome()
+        if (outcome is InstallOutcome.AwaitingUserAction) launchUserAction(status)
+
+        emit(outcome)
+
+        return outcome is InstallOutcome.AwaitingUserAction
+    }
+
+    private fun launchUserAction(status: SessionStatus) {
+        val intent = status.userAction ?: return
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}

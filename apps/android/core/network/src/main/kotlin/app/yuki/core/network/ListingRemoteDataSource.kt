@@ -1,0 +1,59 @@
+package app.yuki.core.network
+
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.isSuccess
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+
+data class BrowseQuery(
+    val sort: String = "stars",
+    val order: String = "desc",
+    val offset: Int = 0,
+)
+
+@Singleton
+internal class ListingRemoteDataSource @Inject constructor(
+    private val client: HttpClient,
+) {
+    suspend fun browse(query: BrowseQuery): ListingPageDto {
+        val response = client.get("api/listings") {
+            parameter("sort", query.sort)
+            parameter("order", query.order)
+            parameter("offset", query.offset)
+        }
+
+        return response.decode("Browse listings (sort=${query.sort}, offset=${query.offset})")
+    }
+
+    suspend fun featured(): ListingPageDto {
+        val response = client.get("api/listings") { parameter("featured", "true") }
+        return response.decode("Load featured listings")
+    }
+
+    suspend fun search(query: String): SearchResultsDto {
+        val response = client.get("api/search") { parameter("q", query) }
+        return response.decode("Search listings for q=$query")
+    }
+
+    suspend fun detail(slug: String): ListingDetailDto {
+        val response = client.get("api/listings/$slug")
+        return response.decode("Load listing detail for slug=$slug")
+    }
+}
+
+private suspend inline fun <reified T> HttpResponse.decode(operation: String): T {
+    if (!status.isSuccess()) throw RemoteRequestException(statusFailure(this), operation)
+
+    return try {
+        body<T>()
+    } catch (cancellation: CancellationException) {
+        throw cancellation
+    } catch (error: Throwable) {
+        throw RemoteRequestException(thrownFailure(error), operation, error)
+    }
+}

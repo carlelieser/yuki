@@ -1,0 +1,100 @@
+package app.yuki.core.designsystem
+
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.yuki.core.designsystem.component.InstallAction
+import app.yuki.core.designsystem.component.InstallActionHandler
+import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.theme.YukiTheme
+import app.yuki.core.model.InstallFailure
+import app.yuki.core.model.InstallState
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class InstallButtonTest {
+    @get:Rule
+    val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun render(state: InstallState, onAction: InstallActionHandler = InstallActionHandler { }) {
+        composeRule.setContent {
+            YukiTheme(isDynamicColorEnabled = false) {
+                InstallButton(state = state, onAction = onAction)
+            }
+        }
+    }
+
+    @Test
+    fun notInstalledOffersInstall() {
+        render(InstallState.NotInstalled)
+
+        composeRule.onNodeWithText("Install").assertIsEnabled()
+    }
+
+    @Test
+    fun downloadingOffersCancel() {
+        render(InstallState.Downloading(progress = 0.4f))
+
+        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+    }
+
+    @Test
+    fun pendingUserActionIsNotClickable() {
+        render(InstallState.PendingUserAction)
+
+        composeRule.onNodeWithText("Waiting for confirmation").assertIsNotEnabled()
+    }
+
+    @Test
+    fun installedOffersOpen() {
+        render(InstallState.Installed(versionTag = "v1.2.0"))
+
+        composeRule.onNodeWithText("Open").assertIsEnabled()
+    }
+
+    @Test
+    fun updateAvailableOffersUpdate() {
+        render(InstallState.UpdateAvailable(from = "v1.0.0", to = "v1.2.0"))
+
+        composeRule.onNodeWithText("Update").assertIsEnabled()
+    }
+
+    @Test
+    fun failedOffersRetryAndNamesTheFailure() {
+        render(InstallState.Failed(reason = InstallFailure.InsufficientStorage))
+
+        composeRule.onNodeWithText("Retry").assertIsEnabled()
+        composeRule.onNodeWithText("Not enough space").assertIsDisplayed()
+    }
+
+    @Test
+    fun notInstalledEmitsInstallAction() {
+        val actions = mutableListOf<InstallAction>()
+        render(InstallState.NotInstalled, InstallActionHandler { action -> actions.add(action) })
+
+        composeRule.onNodeWithText("Install").performClick()
+
+        assertEquals(listOf(InstallAction.Install), actions)
+    }
+
+    @Test
+    fun updateAvailableEmitsUpdateAction() {
+        val actions = mutableListOf<InstallAction>()
+        render(
+            InstallState.UpdateAvailable(from = "v1.0.0", to = "v1.2.0"),
+            InstallActionHandler { action -> actions.add(action) },
+        )
+
+        composeRule.onNodeWithText("Update").performClick()
+
+        assertEquals(listOf(InstallAction.Update), actions)
+    }
+}

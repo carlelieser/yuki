@@ -1,0 +1,55 @@
+package app.yuki.feature.library
+
+import app.yuki.core.database.InstallRecording
+import app.yuki.core.database.InstallStore
+import app.yuki.core.model.InstalledApp
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+
+internal class FakeInstallStore(initial: List<InstalledApp> = emptyList()) : InstallStore {
+    private val rows = MutableStateFlow(initial)
+
+    val forgottenPackages = mutableListOf<List<String>>()
+
+    override fun observeInstalls(): Flow<List<InstalledApp>> = rows
+
+    override suspend fun installs(): List<InstalledApp> = rows.value
+
+    override suspend fun packageNameOf(githubRepoId: Long): String? =
+        rows.value.firstOrNull { app -> app.githubRepoId == githubRepoId }?.packageName
+
+    override suspend fun record(recording: InstallRecording) {
+        rows.value = rows.value.filterNot { app ->
+            app.githubRepoId == recording.app.githubRepoId
+        } + recording.app
+    }
+
+    override suspend fun forget(githubRepoId: Long) {
+        rows.value = rows.value.filterNot { app -> app.githubRepoId == githubRepoId }
+    }
+
+    override suspend fun forgetPackages(packageNames: List<String>) {
+        forgottenPackages += packageNames
+        rows.value = rows.value.filterNot { app -> app.packageName in packageNames }
+    }
+}
+
+internal class FakeInstalledPackages(
+    private val present: MutableSet<String> = mutableSetOf(),
+) : InstalledPackages {
+    private val launchable = mutableSetOf<String>()
+
+    override fun isPresent(packageName: String): Boolean = packageName in present
+
+    override fun launchIntentExists(packageName: String): Boolean = packageName in launchable
+
+    fun install(packageName: String, isLaunchable: Boolean = true) {
+        present += packageName
+        if (isLaunchable) launchable += packageName
+    }
+
+    fun uninstall(packageName: String) {
+        present -= packageName
+        launchable -= packageName
+    }
+}
