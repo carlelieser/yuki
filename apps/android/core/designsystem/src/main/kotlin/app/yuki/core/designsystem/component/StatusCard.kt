@@ -11,9 +11,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import app.yuki.core.designsystem.theme.YukiShape
@@ -73,7 +71,7 @@ fun StatusCard(
 
             val action = content.action ?: return@Column
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = action.onClick) { Text(text = action.label) }
+                YukiTextButton(label = action.label, onClick = action.onClick)
             }
         }
     }

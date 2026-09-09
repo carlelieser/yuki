@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -71,15 +69,6 @@ private fun isFilled(state: InstallState): Boolean =
     state is InstallState.NotInstalled || state is InstallState.UpdateAvailable
 
 @Composable
-private fun InstallLabel(state: InstallState) {
-    Text(
-        text = labelFor(state),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
-@Composable
 private fun DownloadProgress(progress: Float) {
     LinearProgressIndicator(
         progress = { progress.coerceIn(0f, 1f) },
@@ -104,15 +93,19 @@ private fun InstallControl(state: InstallState, onAction: InstallActionHandler) 
     val isEnabled = state !is InstallState.PendingUserAction
 
     if (isFilled(state)) {
-        Button(onClick = { onAction.onAction(action) }, enabled = isEnabled) {
-            InstallLabel(state)
-        }
+        YukiButton(
+            label = labelFor(state),
+            onClick = { onAction.onAction(action) },
+            isEnabled = isEnabled,
+        )
         return
     }
 
-    OutlinedButton(onClick = { onAction.onAction(action) }, enabled = isEnabled) {
-        InstallLabel(state)
-    }
+    YukiSecondaryButton(
+        label = labelFor(state),
+        onClick = { onAction.onAction(action) },
+        isEnabled = isEnabled,
+    )
 }
 
 @Composable
