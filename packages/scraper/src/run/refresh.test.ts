@@ -42,6 +42,21 @@ function release(tag: string): GithubRelease {
 	};
 }
 
+function releaseWithoutApk(tag: string): GithubRelease {
+	return {
+		...release(tag),
+		assets: [
+			{
+				name: 'sources.zip',
+				browser_download_url: `https://github.com/acme/app/releases/${tag}/sources.zip`,
+				size: 100,
+				download_count: 5,
+				content_type: 'application/zip'
+			}
+		]
+	};
+}
+
 type ClientOverrides = Partial<{
 	getRepository: GithubClient['getRepository'];
 	getReadme: GithubClient['getReadme'];
@@ -171,5 +186,59 @@ describe('refreshListing', () => {
 		await refreshListing(client, storedEtags(repoEtag), target);
 
 		expect(repoCalls).toBe(1);
+	});
+});
+
+describe('apk requirement', () => {
+	it('reports an apk when a fetched release carries one', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.hasApk).toBe(true);
+	});
+
+	it('reports no apk when fetched releases carry none', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({
+				isModified: true,
+				body: [releaseWithoutApk('v2')],
+				etag: 'W/"r2"'
+			})
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.hasApk).toBe(false);
+	});
+
+	it('reports no apk when the repository has no releases at all', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({ isModified: true, body: [], etag: 'W/"r2"' })
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.hasApk).toBe(false);
+	});
+
+	it('withholds a verdict when releases were not refetched', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo2"' })
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.hasApk).toBeNull();
 	});
 });

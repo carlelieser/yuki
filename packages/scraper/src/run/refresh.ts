@@ -3,7 +3,7 @@ import { GithubSkip, type GithubClient } from '../github/client.ts';
 import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
-import { mapReleases } from '../mapping/versions.ts';
+import { hasDistributableApk, mapReleases } from '../mapping/versions.ts';
 import type { GithubRepository, GithubTree } from '../github/types.ts';
 import type { PersistInput } from '../persistence/listings.ts';
 
@@ -60,6 +60,12 @@ export async function refreshListing(
 		}
 
 		const evidence = mergeEvidence(target.evidence ?? []);
+		const versions =
+			releases.state === 'unchanged'
+				? null
+				: releases.state === 'absent'
+					? []
+					: mapReleases(releases.body);
 		const readmeBody = readme.state === 'fresh' ? readme.body : null;
 		const bannerUrl = readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch);
 
@@ -81,12 +87,8 @@ export async function refreshListing(
 						: readmeBody === null
 							? []
 							: extractReadmeImages(readmeBody, owner, name, branch, bannerUrl),
-				versions:
-					releases.state === 'unchanged'
-						? null
-						: releases.state === 'absent'
-							? []
-							: mapReleases(releases.body),
+				versions,
+				hasApk: versions === null ? null : hasDistributableApk(versions),
 				evidence
 			}
 		};

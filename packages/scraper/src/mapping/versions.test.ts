@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapReleases, pickApkAsset } from './versions.ts';
+import { hasDistributableApk, mapReleases, pickApkAsset } from './versions.ts';
 import type { GithubRelease, GithubReleaseAsset } from '../github/types.ts';
 
 function asset(overrides: Partial<GithubReleaseAsset> = {}): GithubReleaseAsset {
@@ -95,5 +95,29 @@ describe('pickApkAsset', () => {
 		]);
 
 		expect(picked?.name).toBe('app-universal.apk');
+	});
+});
+
+describe('hasDistributableApk', () => {
+	it('is false when there are no releases at all', () => {
+		expect(hasDistributableApk([])).toBe(false);
+	});
+
+	it('is false when no release carries an apk', () => {
+		const versions = mapReleases([
+			release({ assets: [asset({ name: 'sources.zip', size: 10 })] }),
+			release({ tag_name: 'v2', assets: [] })
+		]);
+
+		expect(hasDistributableApk(versions)).toBe(false);
+	});
+
+	it('is true when any release carries an apk', () => {
+		const versions = mapReleases([
+			release({ assets: [asset({ name: 'sources.zip', size: 10 })] }),
+			release({ tag_name: 'v2', assets: [asset({ name: 'app-release.apk', size: 20 })] })
+		]);
+
+		expect(hasDistributableApk(versions)).toBe(true);
 	});
 });

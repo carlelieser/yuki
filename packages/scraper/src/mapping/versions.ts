@@ -34,6 +34,10 @@ export function pickApkAsset(assets: GithubReleaseAsset[]): GithubReleaseAsset |
 	return pool.reduce((largest, asset) => (asset.size > largest.size ? asset : largest));
 }
 
+export function hasDistributableApk(versions: MappedVersion[]): boolean {
+	return versions.some((version) => version.downloadUrl !== null);
+}
+
 export function mapReleases(releases: GithubRelease[]): MappedVersion[] {
 	return releases
 		.filter((release) => !release.draft)

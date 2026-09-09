@@ -22,6 +22,7 @@ export type PersistInput = {
 	bannerUrl: string | null;
 	screenshots: ReadmeImage[] | null;
 	versions: MappedVersion[] | null;
+	hasApk: boolean | null;
 	evidence: DetectedEvidence[];
 };
 
@@ -108,7 +109,7 @@ async function insertOrUpdate(
 			slug,
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
-			isPublished: true,
+			isPublished: input.hasApk === true,
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
@@ -132,6 +133,7 @@ async function insertOrUpdate(
 				isFork: listing.isFork,
 				isArchived: listing.isArchived,
 				repoPushedAt: listing.repoPushedAt,
+				...(input.hasApk === null ? {} : { isPublished: input.hasApk }),
 				lastScrapedAt: new Date(),
 				updatedAt: new Date()
 			}
@@ -148,6 +150,7 @@ async function updateExisting(tx: Transaction, input: PersistInput): Promise<str
 		.set({
 			...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 			...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
+			...(input.hasApk === null ? {} : { isPublished: input.hasApk }),
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
