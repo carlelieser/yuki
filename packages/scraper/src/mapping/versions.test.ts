@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasDistributableApk, mapReleases, pickApkAsset } from './versions.ts';
+import { hasDistributableApk, mapReleases, parseArchitecture, pickApkAsset } from './versions.ts';
 import type { GithubRelease, GithubReleaseAsset } from '../github/types.ts';
 
 function asset(overrides: Partial<GithubReleaseAsset> = {}): GithubReleaseAsset {
@@ -95,6 +95,68 @@ describe('pickApkAsset', () => {
 		]);
 
 		expect(picked?.name).toBe('app-universal.apk');
+	});
+
+	it('picks the asset matching the requested architecture over a larger one', () => {
+		const picked = pickApkAsset(
+			[
+				asset({ name: 'app-arm64-v8a.apk', size: 100 }),
+				asset({ name: 'app-x86_64.apk', size: 900 })
+			],
+			'arm64-v8a'
+		);
+
+		expect(picked?.name).toBe('app-arm64-v8a.apk');
+	});
+
+	it('does not treat armeabi-v7a as a match for arm64-v8a', () => {
+		const picked = pickApkAsset([asset({ name: 'app-armeabi-v7a.apk' })], 'arm64-v8a');
+
+		expect(picked).toBeNull();
+	});
+
+	it('falls back to a universal build when no split matches', () => {
+		const picked = pickApkAsset(
+			[
+				asset({ name: 'app-armeabi-v7a.apk', size: 100 }),
+				asset({ name: 'app-release.apk', size: 900 })
+			],
+			'x86_64'
+		);
+
+		expect(picked?.name).toBe('app-release.apk');
+	});
+
+	it('returns null when only non-matching splits exist', () => {
+		const picked = pickApkAsset(
+			[asset({ name: 'app-x86.apk' }), asset({ name: 'app-x86_64.apk' })],
+			'arm64-v8a'
+		);
+
+		expect(picked).toBeNull();
+	});
+
+	it('keeps deprioritising debug builds when an architecture is requested', () => {
+		const picked = pickApkAsset(
+			[
+				asset({ name: 'app-arm64-v8a-debug.apk', size: 900 }),
+				asset({ name: 'app-arm64-v8a-release.apk', size: 100 })
+			],
+			'arm64-v8a'
+		);
+
+		expect(picked?.name).toBe('app-arm64-v8a-release.apk');
+	});
+});
+
+describe('parseArchitecture', () => {
+	it('accepts a known abi', () => {
+		expect(parseArchitecture('arm64-v8a')).toBe('arm64-v8a');
+	});
+
+	it('rejects anything else', () => {
+		expect(parseArchitecture('sparc')).toBeNull();
+		expect(parseArchitecture(null)).toBeNull();
 	});
 });
 

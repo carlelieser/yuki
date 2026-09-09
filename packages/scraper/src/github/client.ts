@@ -127,6 +127,10 @@ export function createGithubClient(
 			return request<GithubRelease[]>(`/repos/${owner}/${name}/releases?per_page=100`, { etag });
 		},
 
+		getReleaseByTag(owner: string, name: string, tag: string) {
+			return request<GithubRelease>(`/repos/${owner}/${name}/releases/tags/${encodeURIComponent(tag)}`);
+		},
+
 		getReadme(owner: string, name: string, etag: string | null = null) {
 			return request<string>(`/repos/${owner}/${name}/readme`, {
 				etag,

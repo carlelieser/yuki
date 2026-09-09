@@ -24,6 +24,7 @@
         "@lucide/svelte": "1.41.0",
         "@yuki/auth": "workspace:*",
         "@yuki/db": "workspace:*",
+        "@yuki/scraper": "workspace:*",
         "@yuki/ui": "workspace:*",
         "better-auth": "1.7.3",
         "drizzle-orm": "0.45.2",
