@@ -1,15 +1,21 @@
 import {
+	FULL_SIZE_RANGE,
 	MAX_PAGES,
 	RESULTS_PER_PAGE,
 	buildCodeSearchQueries,
 	buildRepoSearchQueries,
+	describeSizeRange,
 	isIndivisible,
 	isMarkdownPath,
+	isSizeIndivisible,
 	isSliceTruncated,
 	isSourceFilenameMatch,
 	splitRange,
+	splitSizeRange,
 	withCreatedRange,
-	type DateRange
+	withSizeRange,
+	type DateRange,
+	type SizeRange
 } from '../detection/queries.ts';
 import type { DetectedEvidence } from '../detection/evidence.ts';
 import type { GithubClient } from '../github/client.ts';
@@ -29,8 +35,8 @@ export type DiscoveryResult = {
 };
 
 export type PartitionStore = {
-	isComplete: (query: string, range: DateRange) => Promise<boolean>;
-	markComplete: (query: string, range: DateRange) => Promise<void>;
+	isComplete: (partition: string) => Promise<boolean>;
+	markComplete: (partition: string) => Promise<void>;
 };
 
 export type DiscoveryOptions = {
@@ -40,14 +46,7 @@ export type DiscoveryOptions = {
 	log?: (message: string) => void;
 };
 
-type SearchKind = 'code' | 'repository';
-
-type PlannedQuery = {
-	q: string;
-	evidence: DetectedEvidence['kind'];
-	detail: string;
-	kind: SearchKind;
-};
+type CodeQuery = { q: string; evidence: DetectedEvidence['kind']; detail: string };
 
 function record(
 	found: Map<number, DiscoveredRepo>,
@@ -71,13 +70,6 @@ function record(
 	existing.repo ??= full;
 }
 
-function plan(): PlannedQuery[] {
-	return [
-		...buildCodeSearchQueries().map((query) => ({ ...query, kind: 'code' as const })),
-		...buildRepoSearchQueries().map((query) => ({ ...query, kind: 'repository' as const }))
-	];
-}
-
 export async function discover(
 	client: GithubClient,
 	isKnown: (githubRepoId: number) => boolean,
@@ -87,88 +79,136 @@ export async function discover(
 	const found = new Map<number, DiscoveredRepo>();
 	const warnings: string[] = [];
 
-	for (const query of plan()) {
+	for (const query of buildCodeSearchQueries()) {
 		if (found.size >= options.maxNewRepos) break;
+		await walkCode(query, FULL_SIZE_RANGE);
+	}
 
-		await walk(query, options.range);
+	for (const query of buildRepoSearchQueries()) {
+		if (found.size >= options.maxNewRepos) break;
+		await walkRepositories(query, options.range);
 	}
 
 	return { repos: [...found.values()].slice(0, options.maxNewRepos), warnings };
 
-	async function walk(query: PlannedQuery, range: DateRange): Promise<void> {
+	async function walkCode(query: CodeQuery, size: SizeRange): Promise<void> {
 		if (found.size >= options.maxNewRepos) return;
 
-		const scoped = withCreatedRange(query.q, range);
+		const key = `code:${query.q}:${describeSizeRange(size)}`;
+		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return;
 
-		if (options.partitions !== undefined && (await options.partitions.isComplete(query.q, range))) {
+		const scoped = withSizeRange(query.q, size);
+		const first = await client.searchCode(scoped, 1, RESULTS_PER_PAGE);
+		if (!first.isModified) return;
+
+		const totalCount = first.body.total_count;
+
+		if (totalCount === 0) {
+			warnings.push(`Query "${scoped}" matched nothing; not recording it as searched`);
 			return;
 		}
 
-		const first = await search(query, scoped, 1);
-		if (first === null) return;
-
-		if (isSliceTruncated(first.totalCount)) {
-			if (isIndivisible(range)) {
+		if (isSliceTruncated(totalCount)) {
+			if (isSizeIndivisible(size)) {
 				warnings.push(
-					`Query "${scoped}" reports ${first.totalCount} results in a single day, beyond what paging reaches`
+					`Query "${scoped}" reports ${totalCount} results in the narrowest size band, beyond what paging reaches`
 				);
 			} else {
-				const [left, right] = splitRange(range);
-				log(`Splitting "${query.q}" at ${first.totalCount} results`);
-				await walk(query, left);
-				await walk(query, right);
+				const [lower, upper] = splitSizeRange(size);
+				log(`Splitting "${query.q}" at ${totalCount} results (${describeSizeRange(size)})`);
+				await walkCode(query, lower);
+				await walkCode(query, upper);
 				return;
 			}
 		}
 
-		absorb(query, first.items);
+		absorbCode(query, first.body.items);
+		let lastPageSize = first.body.items.length;
 
-		for (let page = 2; page <= MAX_PAGES; page += 1) {
-			if (first.items.length < RESULTS_PER_PAGE) break;
+		for (let page = 2; page <= MAX_PAGES && lastPageSize === RESULTS_PER_PAGE; page += 1) {
 			if (found.size >= options.maxNewRepos) return;
 
-			const next = await search(query, scoped, page);
-			if (next === null) break;
+			const next = await client.searchCode(scoped, page, RESULTS_PER_PAGE);
+			if (!next.isModified) break;
 
-			absorb(query, next.items);
-			if (next.items.length < RESULTS_PER_PAGE) break;
+			absorbCode(query, next.body.items);
+			lastPageSize = next.body.items.length;
 		}
 
-		await options.partitions?.markComplete(query.q, range);
+		await options.partitions?.markComplete(key);
 	}
 
-	async function search(
-		query: PlannedQuery,
-		scoped: string,
-		page: number
-	): Promise<{ totalCount: number; items: unknown[] } | null> {
-		if (query.kind === 'code') {
-			const response = await client.searchCode(scoped, page, RESULTS_PER_PAGE);
-			if (!response.isModified) return null;
-			return { totalCount: response.body.total_count, items: response.body.items };
+	async function walkRepositories(
+		query: { q: string; evidence: DetectedEvidence['kind']; detail: string },
+		range: DateRange
+	): Promise<void> {
+		if (found.size >= options.maxNewRepos) return;
+
+		const key = `repo:${query.q}:${range.since.toISOString()}..${range.until.toISOString()}`;
+		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return;
+
+		const scoped = withCreatedRange(query.q, range);
+		const first = await client.searchRepositories(scoped, 1, RESULTS_PER_PAGE);
+		if (!first.isModified) return;
+
+		const totalCount = first.body.total_count;
+
+		if (totalCount === 0) {
+			warnings.push(`Query "${scoped}" matched nothing; not recording it as searched`);
+			return;
 		}
 
-		const response = await client.searchRepositories(scoped, page, RESULTS_PER_PAGE);
-		if (!response.isModified) return null;
-		return { totalCount: response.body.total_count, items: response.body.items };
-	}
-
-	function absorb(query: PlannedQuery, items: unknown[]): void {
-		for (const item of items) {
-			if (query.kind === 'code') {
-				const entry = item as { path: string; repository: GithubMinimalRepository };
-				if (isMarkdownPath(entry.path)) continue;
-				if (isKnown(entry.repository.id)) continue;
-
-				record(found, entry.repository, { kind: query.evidence, detail: query.detail });
-
-				if (isSourceFilenameMatch(entry.path)) {
-					record(found, entry.repository, { kind: 'source_filename', detail: entry.path });
-				}
-				continue;
+		if (isSliceTruncated(totalCount)) {
+			if (isIndivisible(range)) {
+				warnings.push(
+					`Query "${scoped}" reports ${totalCount} results in a single day, beyond what paging reaches`
+				);
+			} else {
+				const [left, right] = splitRange(range);
+				log(`Splitting "${query.q}" at ${totalCount} results`);
+				await walkRepositories(query, left);
+				await walkRepositories(query, right);
+				return;
 			}
+		}
 
-			const repo = item as GithubRepository;
+		absorbRepositories(query, first.body.items);
+		let lastPageSize = first.body.items.length;
+
+		for (let page = 2; page <= MAX_PAGES && lastPageSize === RESULTS_PER_PAGE; page += 1) {
+			if (found.size >= options.maxNewRepos) return;
+
+			const next = await client.searchRepositories(scoped, page, RESULTS_PER_PAGE);
+			if (!next.isModified) break;
+
+			absorbRepositories(query, next.body.items);
+			lastPageSize = next.body.items.length;
+		}
+
+		await options.partitions?.markComplete(key);
+	}
+
+	function absorbCode(
+		query: CodeQuery,
+		items: { path: string; repository: GithubMinimalRepository }[]
+	): void {
+		for (const item of items) {
+			if (isMarkdownPath(item.path)) continue;
+			if (isKnown(item.repository.id)) continue;
+
+			record(found, item.repository, { kind: query.evidence, detail: query.detail });
+
+			if (isSourceFilenameMatch(item.path)) {
+				record(found, item.repository, { kind: 'source_filename', detail: item.path });
+			}
+		}
+	}
+
+	function absorbRepositories(
+		query: { evidence: DetectedEvidence['kind']; detail: string },
+		items: GithubRepository[]
+	): void {
+		for (const repo of items) {
 			if (isKnown(repo.id)) continue;
 			record(found, repo, { kind: query.evidence, detail: query.detail }, repo);
 		}

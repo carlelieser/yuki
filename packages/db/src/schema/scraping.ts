@@ -15,15 +15,13 @@ export const scrapeSources = pgTable(
 );
 
 export const scrapePartitions = pgTable(
-	'scrape_partitions',
+	'scrape_searched_partitions',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		query: text('query').notNull(),
-		since: timestamp('since', { withTimezone: true }).notNull(),
-		until: timestamp('until', { withTimezone: true }).notNull(),
+		partition: text('partition').notNull(),
 		completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow()
 	},
-	(table) => [uniqueIndex('scrape_partitions_key').on(table.query, table.since, table.until)]
+	(table) => [uniqueIndex('scrape_searched_partitions_key').on(table.partition)]
 );
 
 export const scrapeRuns = pgTable('scrape_runs', {

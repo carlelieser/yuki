@@ -8,7 +8,12 @@ import {
 	isSliceTruncated,
 	isSourceFilenameMatch,
 	splitRange,
-	withCreatedRange
+	splitSizeRange,
+	withCreatedRange,
+	withSizeRange,
+	isSizeIndivisible,
+	FULL_SIZE_RANGE,
+	type SizeRange
 } from './queries.ts';
 
 describe('buildCodeSearchQueries', () => {
@@ -93,5 +98,41 @@ describe('date ranges', () => {
 		}
 
 		expect(depth).toBeLessThan(20);
+	});
+});
+
+describe('size ranges', () => {
+	it('formats bounded and unbounded ranges', () => {
+		expect(withSizeRange('q', { from: 0, to: 100 })).toBe('q size:0..100');
+		expect(withSizeRange('q', { from: 500, to: null })).toBe('q size:>=500');
+	});
+
+	it('splits a bounded range into halves that do not overlap', () => {
+		const [left, right] = splitSizeRange({ from: 0, to: 100 });
+		expect(left).toEqual({ from: 0, to: 50 });
+		expect(right).toEqual({ from: 51, to: 100 });
+	});
+
+	it('always makes progress on an unbounded range', () => {
+		let range: SizeRange = FULL_SIZE_RANGE;
+
+		for (let i = 0; i < 12; i += 1) {
+			const [, upper] = splitSizeRange(range);
+			expect(upper.from).toBeGreaterThan(range.from);
+			range = upper;
+		}
+	});
+
+	it('terminates when splitting a bounded range repeatedly', () => {
+		let range: SizeRange = { from: 0, to: 100000 };
+		let depth = 0;
+
+		while (!isSizeIndivisible(range)) {
+			range = splitSizeRange(range)[0];
+			depth += 1;
+			if (depth > 200) break;
+		}
+
+		expect(depth).toBeLessThan(30);
 	});
 });

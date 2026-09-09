@@ -59,8 +59,8 @@ try {
 			listTargets: (limit) => listListingsForRefresh(db, limit),
 			listKnownRepoIds: () => listKnownRepoIds(db),
 			partitions: {
-				isComplete: (query, range) => isPartitionComplete(db, query, range),
-				markComplete: (query, range) => markPartitionComplete(db, query, range)
+				isComplete: (partition) => isPartitionComplete(db, partition),
+				markComplete: (partition) => markPartitionComplete(db, partition)
 			},
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),

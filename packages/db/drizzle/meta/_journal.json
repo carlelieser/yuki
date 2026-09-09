@@ -64,6 +64,13 @@
       "when": 1788968178638,
       "tag": "0008_amused_star_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788981924818,
+      "tag": "0009_public_titanium_man",
+      "breakpoints": true
     }
   ]
 }

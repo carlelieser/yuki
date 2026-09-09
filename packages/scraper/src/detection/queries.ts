@@ -96,8 +96,38 @@ export function withCreatedRange(q: string, range: DateRange): string {
 	return `${q} created:${toDay(range.since)}..${toDay(range.until)}`;
 }
 
-export function withPushedRange(q: string, range: DateRange): string {
-	return `${q} pushed:${toDay(range.since)}..${toDay(range.until)}`;
+export type SizeRange = { from: number; to: number | null };
+
+export const FULL_SIZE_RANGE: SizeRange = { from: 0, to: null };
+
+export function withSizeRange(q: string, range: SizeRange): string {
+	if (range.to === null) return `${q} size:>=${range.from}`;
+	return `${q} size:${range.from}..${range.to}`;
+}
+
+export function isSizeIndivisible(range: SizeRange): boolean {
+	if (range.to === null) return false;
+	return range.to - range.from <= 1;
+}
+
+export function splitSizeRange(range: SizeRange): [SizeRange, SizeRange] {
+	if (range.to === null) {
+		const boundary = range.from === 0 ? 1024 : range.from * 4;
+		return [
+			{ from: range.from, to: boundary },
+			{ from: boundary + 1, to: null }
+		];
+	}
+
+	const midpoint = range.from + Math.floor((range.to - range.from) / 2);
+	return [
+		{ from: range.from, to: midpoint },
+		{ from: midpoint + 1, to: range.to }
+	];
+}
+
+export function describeSizeRange(range: SizeRange): string {
+	return range.to === null ? `${range.from}+` : `${range.from}..${range.to}`;
 }
 
 export function isIndivisible(range: DateRange): boolean {

@@ -63,10 +63,10 @@ describe('discover', () => {
 		expect(result.repos.every((repo) => !known.has(repo.githubRepoId))).toBe(true);
 	});
 
-	it('subdivides a range that overflows the paging cap', async () => {
+	it('subdivides a size band that overflows the paging cap', async () => {
 		const queries: string[] = [];
 		const client = fakeClient((q) => {
-			const overflows = q.includes('2008-01-01..2016');
+			const overflows = q.includes('size:>=0');
 			return {
 				totalCount: overflows ? RESULT_CAP + 1 : 1,
 				items: overflows ? [] : [codeItem(42)]
@@ -75,8 +75,36 @@ describe('discover', () => {
 
 		await discover(client, () => false, { maxNewRepos: 50, range: fullRange });
 
-		expect(queries.some((q) => q.includes('created:2008-01-01..'))).toBe(true);
+		expect(queries.some((q) => q.includes('size:0..'))).toBe(true);
 		expect(queries.length).toBeGreaterThan(1);
+	});
+
+	it('never puts a date qualifier on a code search', async () => {
+		const queries: string[] = [];
+		const client = fakeClient(() => ({ totalCount: 1, items: [codeItem(1)] }), queries);
+
+		await discover(client, () => false, { maxNewRepos: 5, range: fullRange });
+
+		expect(queries.every((q) => !q.includes('created:'))).toBe(true);
+	});
+
+	it('does not record a partition that matched nothing', async () => {
+		const completed: string[] = [];
+		const client = fakeClient(() => ({ totalCount: 0, items: [] }));
+
+		const result = await discover(client, () => false, {
+			maxNewRepos: 10,
+			range: fullRange,
+			partitions: {
+				isComplete: async () => false,
+				markComplete: async (partition) => {
+					completed.push(partition);
+				}
+			}
+		});
+
+		expect(completed).toEqual([]);
+		expect(result.warnings.some((w) => w.includes('matched nothing'))).toBe(true);
 	});
 
 	it('does not revisit partitions already recorded as complete', async () => {
@@ -104,8 +132,8 @@ describe('discover', () => {
 
 		const partitions: PartitionStore = {
 			isComplete: async () => false,
-			markComplete: async (query) => {
-				completed.push(query);
+			markComplete: async (partition) => {
+				completed.push(partition);
 			}
 		};
 
