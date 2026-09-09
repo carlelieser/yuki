@@ -35,7 +35,8 @@ function sleep(ms: number): Promise<void> {
 export function createGithubClient(
 	token: string,
 	fetchImpl: FetchImpl = fetch,
-	wait: (ms: number) => Promise<void> = sleep
+	wait: (ms: number) => Promise<void> = sleep,
+	maxAttempts?: number
 ) {
 	const stats: ClientStats = { requestCount: 0, notModifiedCount: 0 };
 
@@ -69,6 +70,7 @@ export function createGithubClient(
 				status: response.status,
 				headers: response.headers,
 				attempt,
+				maxAttempts,
 				isCodeSearch,
 				resource: path
 			});

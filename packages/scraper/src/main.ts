@@ -15,6 +15,7 @@ import { runNightly } from './run/nightly.ts';
 
 const DEFAULT_MAX_REPOS = 200;
 const DEFAULT_SEED_MAX_REPOS = 10000;
+const SEED_MAX_ATTEMPTS = 60;
 const DEFAULT_MAX_REFRESH = 500;
 
 function readNumberFlag(flag: string, fallback: number): number {
@@ -35,7 +36,12 @@ const maxRepos = readNumberFlag(
 const maxRefresh = readNumberFlag('--max-refresh', DEFAULT_MAX_REFRESH);
 
 const db = createDatabase();
-const client = createGithubClient(requireGithubToken());
+const client = createGithubClient(
+	requireGithubToken(),
+	undefined,
+	undefined,
+	shouldSeed ? SEED_MAX_ATTEMPTS : undefined
+);
 
 const discoveryRange = shouldDiscover ? await resolveDiscoveryRange() : undefined;
 const runId = await startRun(db);

@@ -15,6 +15,7 @@ export type RetryContext = {
 	attempt: number;
 	isCodeSearch: boolean;
 	resource: string;
+	maxAttempts?: number;
 	now?: Date;
 };
 
@@ -28,12 +29,13 @@ export function decideRetry({
 	attempt,
 	isCodeSearch,
 	resource,
+	maxAttempts = MAX_ATTEMPTS,
 	now = new Date()
 }: RetryContext): RetryDecision {
 	if (status >= 200 && status < 300) return { kind: 'succeed' };
 	if (status === 304) return { kind: 'succeed' };
 
-	const hasAttemptsLeft = attempt < MAX_ATTEMPTS;
+	const hasAttemptsLeft = attempt < maxAttempts;
 	const snapshot = readRateLimit(headers);
 
 	if (snapshot.retryAfterMs !== null) {

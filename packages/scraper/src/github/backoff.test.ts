@@ -138,3 +138,36 @@ describe('decideRetry', () => {
 		}
 	});
 });
+
+describe('attempt ceiling', () => {
+	const exhausted = () =>
+		headers({
+			'x-ratelimit-remaining': '0',
+			'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 60)
+		});
+
+	it('keeps retrying an exhausted quota when the caller allows more attempts', () => {
+		const decision = decideRetry({
+			status: 403,
+			headers: exhausted(),
+			attempt: 5,
+			isCodeSearch: true,
+			resource: 'search/code',
+			maxAttempts: 60
+		});
+
+		expect(decision.kind).toBe('retry');
+	});
+
+	it('still gives up at the default ceiling', () => {
+		const decision = decideRetry({
+			status: 403,
+			headers: exhausted(),
+			attempt: MAX_ATTEMPTS,
+			isCodeSearch: true,
+			resource: 'search/code'
+		});
+
+		expect(decision.kind).toBe('fail');
+	});
+});

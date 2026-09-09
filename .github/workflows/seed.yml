@@ -31,3 +31,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
         run: bun run scrape --seed --max-repos=${{ inputs.max-repos }}
+
+      - name: Note on resuming
+        if: failure() || cancelled()
+        run: |
+          echo "Completed partitions are recorded, so dispatching this workflow"
+          echo "again continues from where it stopped rather than restarting."
+          echo "Code search allows about 10 requests per minute, so a full seed"
+          echo "may need several dispatches to finish."
