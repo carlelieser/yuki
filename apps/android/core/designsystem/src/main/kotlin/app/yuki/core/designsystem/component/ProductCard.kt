@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -89,7 +91,7 @@ private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
 @Composable
 private fun CardCaption(listing: ListingSummary) {
     Column(
-        modifier = Modifier.padding(YukiSpacing.Medium),
+        modifier = Modifier.padding(vertical = YukiSpacing.Medium),
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
     ) {
         Text(
@@ -117,6 +119,7 @@ fun ProductCard(
     Card(
         onClick = onClick,
         shape = YukiShape.Card,
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier.width(YukiSize.CardWidth),
     ) {
         CardMedia(imageUrl = listing.iconUrl, kind = CardMediaKind.Icon)
@@ -129,7 +132,7 @@ private fun WideCaption(listing: ListingSummary) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(YukiSpacing.Medium),
+            .padding(vertical = YukiSpacing.Medium),
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -161,6 +164,7 @@ fun FeaturedCard(
     Card(
         onClick = onClick,
         shape = YukiShape.Card,
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier = modifier.width(YukiSize.BannerWidth),
     ) {
         CardMedia(imageUrl = listing.bannerUrl, kind = CardMediaKind.Banner)
