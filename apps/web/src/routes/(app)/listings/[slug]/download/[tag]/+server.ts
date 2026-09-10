@@ -1,8 +1,9 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Database } from '@yuki/db';
-import { createGithubClient, parseArchitecture, pickApkAsset } from '@yuki/github';
+import { parseArchitecture, pickApkAsset } from '@yuki/github';
 import { getListingBySlug, type ListingDetail } from '$lib/server/listings.ts';
+import { fetchReleaseAssets } from '$lib/server/release-assets.ts';
 import { recordDownload } from '$lib/server/reviews.ts';
 
 async function recordQuietly(
@@ -12,31 +13,15 @@ async function recordQuietly(
 	await recordDownload(db, input).catch(() => undefined);
 }
 
-function repositoryPath(listing: ListingDetail): { owner: string; name: string } | null {
-	const segments = new URL(listing.repositoryUrl).pathname.split('/').filter(Boolean);
-	const [owner, name] = segments;
-	if (!owner || !name) return null;
-
-	return { owner, name };
-}
-
 async function resolveForArchitecture(
 	listing: ListingDetail,
 	tag: string,
 	architecture: string
 ): Promise<string | null> {
-	const token = process.env.GITHUB_TOKEN;
-	const path = repositoryPath(listing);
-	if (!token || path === null) return null;
+	const assets = await fetchReleaseAssets(listing, tag);
+	if (assets === null) return null;
 
-	const release = await createGithubClient(token)
-		.getReleaseByTag(path.owner, path.name, tag)
-		.catch(() => null);
-	if (release === null || !release.isModified) return null;
-
-	return (
-		pickApkAsset(release.body.assets, parseArchitecture(architecture))?.browser_download_url ?? null
-	);
+	return pickApkAsset(assets, parseArchitecture(architecture))?.browser_download_url ?? null;
 }
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {
