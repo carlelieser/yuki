@@ -1,11 +1,13 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingLinks
 import app.yuki.core.model.ListingPage
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
+import app.yuki.core.model.readListingCategory
 import java.time.Instant
 import java.time.format.DateTimeParseException
 
@@ -18,6 +20,7 @@ internal fun ListingSummaryDto.toDomain(): ListingSummary = ListingSummary(
     description = description,
     iconUrl = iconUrl,
     bannerUrl = bannerUrl,
+    category = readListingCategory(category),
     stars = stars,
 )
 
@@ -25,6 +28,18 @@ internal fun ListingPageDto.toDomain(): ListingPage = ListingPage(
     results = results.map(ListingSummaryDto::toDomain),
     hasMore = hasMore,
 )
+
+internal fun CategorySectionsDto.toDomain(): List<CategorySection> =
+    sections.mapNotNull(CategorySectionDto::toDomain)
+
+private fun CategorySectionDto.toDomain(): CategorySection? {
+    val known = readListingCategory(category) ?: return null
+
+    return CategorySection(
+        category = known,
+        results = results.map(ListingSummaryDto::toDomain),
+    )
+}
 
 internal fun ListingDetailDto.toDomain(): ListingDetail = ListingDetail(
     summary = toSummary(),
@@ -44,6 +59,7 @@ private fun ListingDetailDto.toSummary(): ListingSummary = ListingSummary(
     description = description,
     iconUrl = iconUrl,
     bannerUrl = bannerUrl,
+    category = readListingCategory(category),
     stars = stars,
 )
 

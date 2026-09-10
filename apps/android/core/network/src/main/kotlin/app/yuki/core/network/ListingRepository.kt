@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingPage
 import app.yuki.core.model.ListingSummary
@@ -10,6 +11,8 @@ interface ListingRepository {
     suspend fun browse(query: BrowseQuery): Result<ListingPage>
 
     suspend fun featured(): Result<List<ListingSummary>>
+
+    suspend fun sections(limit: Int): Result<List<CategorySection>>
 
     suspend fun search(query: String): Result<List<ListingSummary>>
 
@@ -28,6 +31,11 @@ internal class NetworkListingRepository @Inject constructor(
     override suspend fun featured(): Result<List<ListingSummary>> =
         runRemote("Load featured listings") {
             remote.featured().toDomain().results
+        }
+
+    override suspend fun sections(limit: Int): Result<List<CategorySection>> =
+        runRemote("Load listing sections (limit=$limit)") {
+            remote.sections(limit).toDomain()
         }
 
     override suspend fun search(query: String): Result<List<ListingSummary>> =

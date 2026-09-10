@@ -12,6 +12,7 @@ internal data class ListingSummaryDto(
     val description: String? = null,
     val iconUrl: String? = null,
     val bannerUrl: String? = null,
+    val category: String? = null,
     val stars: Int,
 )
 
@@ -25,6 +26,7 @@ internal data class ListingDetailDto(
     val description: String? = null,
     val iconUrl: String? = null,
     val bannerUrl: String? = null,
+    val category: String? = null,
     val stars: Int,
     val authorUrl: String,
     val repositoryUrl: String,
@@ -59,5 +61,16 @@ internal data class ListingPageDto(
 
 @Serializable
 internal data class SearchResultsDto(
+    val results: List<ListingSummaryDto> = emptyList(),
+)
+
+@Serializable
+internal data class CategorySectionsDto(
+    val sections: List<CategorySectionDto> = emptyList(),
+)
+
+@Serializable
+internal data class CategorySectionDto(
+    val category: String? = null,
     val results: List<ListingSummaryDto> = emptyList(),
 )

@@ -11,6 +11,7 @@ data class ListingSummary(
     val description: String?,
     val iconUrl: String?,
     val bannerUrl: String?,
+    val category: ListingCategory?,
     val stars: Int,
 )
 
@@ -52,4 +53,9 @@ data class ListingVersion(
 data class ListingPage(
     val results: List<ListingSummary>,
     val hasMore: Boolean,
+)
+
+data class CategorySection(
+    val category: ListingCategory,
+    val results: List<ListingSummary>,
 )

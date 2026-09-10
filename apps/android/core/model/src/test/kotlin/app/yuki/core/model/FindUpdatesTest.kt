@@ -38,6 +38,7 @@ private fun detail(versions: List<ListingVersion>) = ListingDetail(
         description = null,
         iconUrl = null,
         bannerUrl = null,
+        category = null,
         stars = 0,
     ),
     links = ListingLinks("https://example.test", "https://example.test/repo", null),

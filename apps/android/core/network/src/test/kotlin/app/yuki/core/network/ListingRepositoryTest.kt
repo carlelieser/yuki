@@ -1,6 +1,7 @@
 package app.yuki.core.network
 
 import app.yuki.core.model.FailureReason
+import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.UiState
 import app.yuki.core.model.failureReason
 import app.yuki.core.model.toUiState
@@ -24,6 +25,44 @@ class ListingRepositoryBrowseTest {
         assertEquals(1_234_567_890L, summary.githubRepoId)
         assertEquals(42, summary.stars)
         assertNull(summary.description)
+        assertEquals(ListingCategory.DeveloperTools, summary.category)
+    }
+
+    @Test
+    fun `a listing sent without a category has none`() = runTest {
+        val page = repositoryReturning(UNCATEGORISED_PAGE_JSON).browse(BrowseQuery()).getOrThrow()
+
+        assertNull(page.results.single().category)
+    }
+
+    @Test
+    fun `a category the client does not know yet is dropped rather than fatal`() = runTest {
+        val page =
+            repositoryReturning(UNKNOWN_CATEGORY_PAGE_JSON).browse(BrowseQuery()).getOrThrow()
+
+        assertNull(page.results.single().category)
+    }
+
+    @Test
+    fun `sends the category the caller asked to filter by`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repository = repositoryRecording(requests, BROWSE_PAGE_JSON)
+
+        repository.browse(BrowseQuery(category = ListingCategory.PrivacySecurity)).getOrThrow()
+
+        assertEquals("privacy_security", requests.single().url.parameters["category"])
+    }
+
+    @Test
+    fun `omits the category parameter when browsing every category`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repository = repositoryRecording(requests, BROWSE_PAGE_JSON)
+
+        repository.browse(BrowseQuery()).getOrThrow()
+
+        val parameters = requests.single().url.parameters
+        assertTrue(parameters.contains("category").not())
+        assertNull(parameters["category"])
     }
 
     @Test
@@ -81,6 +120,7 @@ class ListingRepositoryDetailTest {
 
         assertEquals("example-app", detail.slug)
         assertEquals("MIT", detail.license)
+        assertEquals(ListingCategory.DeveloperTools, detail.summary.category)
         assertEquals("https://github.com/octocat", detail.links.authorUrl)
         assertEquals(listOf("https://cdn.test/one.png"), detail.screenshots.map { it.url })
         assertTrue(detail.isArchived.not())
@@ -108,6 +148,53 @@ class ListingRepositoryDetailTest {
         repositoryRecording(requests, DETAIL_JSON).detail("example-app").getOrThrow()
 
         assertEquals("/api/listings/example-app", requests.single().url.encodedPath)
+    }
+}
+
+class ListingRepositorySectionsTest {
+    @Test
+    fun `maps each section to its category and summaries`() = runTest {
+        val sections = repositoryReturning(SECTIONS_JSON).sections(3).getOrThrow()
+
+        assertEquals(
+            listOf(ListingCategory.Gaming, ListingCategory.Media),
+            sections.map { section -> section.category },
+        )
+        assertEquals("example-app", sections.first().results.single().slug)
+    }
+
+    @Test
+    fun `a section category the client does not know yet is dropped not fatal`() = runTest {
+        val sections = repositoryReturning(UNKNOWN_SECTION_JSON).sections(3).getOrThrow()
+
+        assertEquals(listOf(ListingCategory.Gaming), sections.map { section -> section.category })
+    }
+
+    @Test
+    fun `an empty sections array is a success not a failure`() = runTest {
+        val sections = repositoryReturning(EMPTY_SECTIONS_JSON).sections(3).getOrThrow()
+
+        assertTrue(sections.isEmpty())
+    }
+
+    @Test
+    fun `requests the sections path with the limit the caller asked for`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+
+        repositoryRecording(requests, SECTIONS_JSON).sections(6).getOrThrow()
+
+        val request = requests.single()
+        assertEquals("/api/feed", request.url.encodedPath)
+        assertEquals("6", request.url.parameters["limit"])
+    }
+
+    @Test
+    fun `a sections failure names the operation and the limit`() = runTest {
+        val result = repositoryFailingWith(HttpStatusCode.InternalServerError).sections(3)
+
+        val error = result.exceptionOrNull()!!
+        assertEquals(FailureReason.Server(500), error.failureReason())
+        assertTrue(error.message!!.contains("limit=3"))
     }
 }
 

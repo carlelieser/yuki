@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.ListingCategory
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -14,6 +15,7 @@ data class BrowseQuery(
     val sort: String = "stars",
     val order: String = "desc",
     val offset: Int = 0,
+    val category: ListingCategory? = null,
 )
 
 @Singleton
@@ -25,6 +27,7 @@ internal class ListingRemoteDataSource @Inject constructor(
             parameter("sort", query.sort)
             parameter("order", query.order)
             parameter("offset", query.offset)
+            query.category?.let { category -> parameter("category", category.wireValue) }
         }
 
         return response.decode("Browse listings (sort=${query.sort}, offset=${query.offset})")
@@ -33,6 +36,11 @@ internal class ListingRemoteDataSource @Inject constructor(
     suspend fun featured(): ListingPageDto {
         val response = client.get("api/listings") { parameter("featured", "true") }
         return response.decode("Load featured listings")
+    }
+
+    suspend fun sections(limit: Int): CategorySectionsDto {
+        val response = client.get("api/feed") { parameter("limit", limit) }
+        return response.decode("Load listing sections (limit=$limit)")
     }
 
     suspend fun search(query: String): SearchResultsDto {

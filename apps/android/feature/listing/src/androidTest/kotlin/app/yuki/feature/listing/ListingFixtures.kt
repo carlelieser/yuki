@@ -9,7 +9,10 @@ import java.time.Instant
 
 internal const val SLUG = "aurora"
 
-internal fun summary(): ListingSummary = ListingSummary(
+internal fun summary(
+    bannerUrl: String? = "https://cdn.test/banner.png",
+    stars: Int = 128,
+): ListingSummary = ListingSummary(
     id = "listing-1",
     githubRepoId = 42L,
     slug = SLUG,
@@ -17,8 +20,9 @@ internal fun summary(): ListingSummary = ListingSummary(
     author = "nightsky",
     description = "A calm launcher.",
     iconUrl = "https://cdn.test/icon.png",
-    bannerUrl = "https://cdn.test/banner.png",
-    stars = 128,
+    bannerUrl = bannerUrl,
+    category = null,
+    stars = stars,
 )
 
 internal fun version(
@@ -40,8 +44,9 @@ internal fun detail(
     isArchived: Boolean = false,
     license: String? = "MIT",
     screenshots: List<Screenshot> = listOf(Screenshot("https://cdn.test/one.png", "Home")),
+    summary: ListingSummary = summary(),
 ): ListingDetail = ListingDetail(
-    summary = summary(),
+    summary = summary,
     links = ListingLinks(
         authorUrl = "https://github.com/nightsky",
         repositoryUrl = "https://github.com/nightsky/aurora",

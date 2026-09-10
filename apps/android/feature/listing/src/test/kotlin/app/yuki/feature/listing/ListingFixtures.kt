@@ -1,5 +1,6 @@
 package app.yuki.feature.listing
 
+import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingDetail
@@ -23,6 +24,7 @@ internal fun summary(): ListingSummary = ListingSummary(
     description = "A calm launcher.",
     iconUrl = "https://cdn.test/icon.png",
     bannerUrl = "https://cdn.test/banner.png",
+    category = null,
     stars = 128,
 )
 
@@ -72,6 +74,9 @@ internal class FakeListingRepository(
 
     override suspend fun featured(): Result<List<ListingSummary>> =
         error("featured is not used by the listing screen")
+
+    override suspend fun sections(limit: Int): Result<List<CategorySection>> =
+        error("sections is not used by the listing screen")
 
     override suspend fun search(query: String): Result<List<ListingSummary>> =
         error("search is not used by the listing screen")
