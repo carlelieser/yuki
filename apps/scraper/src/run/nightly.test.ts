@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { runNightly, type RunPorts } from './nightly.ts';
-import type { GithubClient } from '../github/client.ts';
-import type { GithubRepository } from '../github/types.ts';
+import type { GithubClient } from '@yuki/github';
+import type { GithubRepository } from '@yuki/github';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
 
 function repository(overrides: Partial<GithubRepository> = {}): GithubRepository {

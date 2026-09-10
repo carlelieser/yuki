@@ -6,7 +6,7 @@ import {
 	humanizeRepoName,
 	mapRepository
 } from './listing.ts';
-import type { GithubRepository } from '../github/types.ts';
+import type { GithubRepository } from '@yuki/github';
 
 function repository(overrides: Partial<GithubRepository> = {}): GithubRepository {
 	return {

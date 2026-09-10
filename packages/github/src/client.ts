@@ -128,7 +128,9 @@ export function createGithubClient(
 		},
 
 		getReleaseByTag(owner: string, name: string, tag: string) {
-			return request<GithubRelease>(`/repos/${owner}/${name}/releases/tags/${encodeURIComponent(tag)}`);
+			return request<GithubRelease>(
+				`/repos/${owner}/${name}/releases/tags/${encodeURIComponent(tag)}`
+			);
 		},
 
 		getReadme(owner: string, name: string, etag: string | null = null) {

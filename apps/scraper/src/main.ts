@@ -1,6 +1,5 @@
 import { createDatabase } from '@yuki/db';
-import { requireGithubToken } from './env.ts';
-import { createGithubClient } from './github/client.ts';
+import { createGithubClient, requireGithubToken } from '@yuki/github';
 import {
 	listKnownRepoIds,
 	listListingsForRefresh,

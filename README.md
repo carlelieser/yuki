@@ -5,12 +5,13 @@ Postgres for persistence.
 
 ## Layout
 
-| Path               | Package         | Purpose                                      |
-| ------------------ | --------------- | -------------------------------------------- |
-| `apps/web`         | `@yuki/web`     | SvelteKit application (Vite, adapter-node)   |
-| `packages/db`      | `@yuki/db`      | Drizzle schema, client, and migrations       |
-| `packages/scraper` | `@yuki/scraper` | GitHub discovery and nightly listing refresh |
-| `packages/ui`      | `@yuki/ui`      | shadcn-svelte components and theme tokens    |
+| Path              | Package         | Purpose                                      |
+| ----------------- | --------------- | -------------------------------------------- |
+| `apps/web`        | `@yuki/web`     | SvelteKit application (Vite, adapter-node)   |
+| `apps/scraper`    | `@yuki/scraper` | GitHub discovery and nightly listing refresh |
+| `packages/db`     | `@yuki/db`      | Drizzle schema, client, and migrations       |
+| `packages/github` | `@yuki/github`  | GitHub API client and release asset mapping  |
+| `packages/ui`     | `@yuki/ui`      | shadcn-svelte components and theme tokens    |
 
 ## Getting started
 
@@ -48,7 +49,7 @@ already running on the host default.
 
 ## Scraper
 
-`packages/scraper` discovers Shizuku-based Android projects on GitHub and keeps
+`apps/scraper` discovers Shizuku-based Android projects on GitHub and keeps
 existing listings current. It needs `GITHUB_TOKEN` in `.env` (a classic or
 fine-grained token with public read access is enough).
 

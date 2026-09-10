@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { discover, type PartitionStore } from './discover.ts';
 import { GITHUB_EPOCH, RESULT_CAP, type DateRange } from '../detection/queries.ts';
-import type { GithubClient } from '../github/client.ts';
+import type { GithubClient } from '@yuki/github';
 
 type CodeItem = {
 	path: string;

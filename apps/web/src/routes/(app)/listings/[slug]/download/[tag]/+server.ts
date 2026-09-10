@@ -1,7 +1,7 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Database } from '@yuki/db';
-import { createGithubClient, parseArchitecture, pickApkAsset } from '@yuki/scraper';
+import { createGithubClient, parseArchitecture, pickApkAsset } from '@yuki/github';
 import { getListingBySlug, type ListingDetail } from '$lib/server/listings.ts';
 import { recordDownload } from '$lib/server/reviews.ts';
 
@@ -34,7 +34,9 @@ async function resolveForArchitecture(
 		.catch(() => null);
 	if (release === null || !release.isModified) return null;
 
-	return pickApkAsset(release.body.assets, parseArchitecture(architecture))?.browser_download_url ?? null;
+	return (
+		pickApkAsset(release.body.assets, parseArchitecture(architecture))?.browser_download_url ?? null
+	);
 }
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {

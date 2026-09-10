@@ -3,9 +3,6 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"exports": {
-		".": "./src/index.ts"
-	},
 	"scripts": {
 		"start": "bun run src/main.ts",
 		"review": "bun run src/review.ts",
@@ -14,6 +11,7 @@
 	},
 	"dependencies": {
 		"@yuki/db": "workspace:*",
+		"@yuki/github": "workspace:*",
 		"drizzle-orm": "0.45.2"
 	},
 	"devDependencies": {

@@ -6,7 +6,7 @@ import {
 	findIconPath,
 	resolveRelativePath
 } from './icon.ts';
-import type { GithubTree } from '../github/types.ts';
+import type { GithubTree } from '@yuki/github';
 
 function tree(paths: string[], truncated = false): GithubTree {
 	return {

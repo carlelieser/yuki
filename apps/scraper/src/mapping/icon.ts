@@ -1,4 +1,4 @@
-import type { GithubTree } from '../github/types.ts';
+import type { GithubTree } from '@yuki/github';
 import { composeAdaptiveSvg, parseAdaptiveIcon, parseColors, toDataUri } from './vector-icon.ts';
 
 const RASTER_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];

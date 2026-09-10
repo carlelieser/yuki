@@ -18,8 +18,8 @@ import {
 	type SizeRange
 } from '../detection/queries.ts';
 import type { DetectedEvidence } from '../detection/evidence.ts';
-import type { GithubClient } from '../github/client.ts';
-import type { GithubMinimalRepository, GithubRepository } from '../github/types.ts';
+import type { GithubClient } from '@yuki/github';
+import type { GithubMinimalRepository, GithubRepository } from '@yuki/github';
 
 export type DiscoveredRepo = {
 	owner: string;

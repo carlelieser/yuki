@@ -1,10 +1,10 @@
 import { mergeEvidence, scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
-import { GithubSkip, type GithubClient } from '../github/client.ts';
+import { GithubSkip, type GithubClient } from '@yuki/github';
 import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
-import { hasDistributableApk, mapReleases } from '../mapping/versions.ts';
-import type { GithubRepository, GithubTree } from '../github/types.ts';
+import { hasDistributableApk, mapReleases } from '@yuki/github';
+import type { GithubRepository, GithubTree } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
 
 export type EtagStore = {

@@ -1,7 +1,7 @@
 import { discover, type PartitionStore } from './discover.ts';
 import { GITHUB_EPOCH, type DateRange } from '../detection/queries.ts';
 import { refreshListing, type EtagStore, type RefreshTarget } from './refresh.ts';
-import type { GithubClient } from '../github/client.ts';
+import type { GithubClient } from '@yuki/github';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
 import type { RunTotals } from '../persistence/runs.ts';
 

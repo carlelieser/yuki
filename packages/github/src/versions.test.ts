@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hasDistributableApk, mapReleases, parseArchitecture, pickApkAsset } from './versions.ts';
-import type { GithubRelease, GithubReleaseAsset } from '../github/types.ts';
+import type { GithubRelease, GithubReleaseAsset } from './types.ts';
 
 function asset(overrides: Partial<GithubReleaseAsset> = {}): GithubReleaseAsset {
 	return {

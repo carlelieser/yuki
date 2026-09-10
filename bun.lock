@@ -17,6 +17,18 @@
         "typescript-eslint": "8.69.0",
       },
     },
+    "apps/scraper": {
+      "name": "@yuki/scraper",
+      "version": "0.0.0",
+      "dependencies": {
+        "@yuki/db": "workspace:*",
+        "@yuki/github": "workspace:*",
+        "drizzle-orm": "0.45.2",
+      },
+      "devDependencies": {
+        "vitest": "5.0.0",
+      },
+    },
     "apps/web": {
       "name": "@yuki/web",
       "version": "0.0.0",
@@ -24,7 +36,7 @@
         "@lucide/svelte": "1.41.0",
         "@yuki/auth": "workspace:*",
         "@yuki/db": "workspace:*",
-        "@yuki/scraper": "workspace:*",
+        "@yuki/github": "workspace:*",
         "@yuki/ui": "workspace:*",
         "better-auth": "1.7.3",
         "drizzle-orm": "0.45.2",
@@ -70,13 +82,9 @@
         "drizzle-kit": "0.31.10",
       },
     },
-    "packages/scraper": {
-      "name": "@yuki/scraper",
+    "packages/github": {
+      "name": "@yuki/github",
       "version": "0.0.0",
-      "dependencies": {
-        "@yuki/db": "workspace:*",
-        "drizzle-orm": "0.45.2",
-      },
       "devDependencies": {
         "vitest": "5.0.0",
       },
@@ -471,7 +479,9 @@
 
     "@yuki/db": ["@yuki/db@workspace:packages/db"],
 
-    "@yuki/scraper": ["@yuki/scraper@workspace:packages/scraper"],
+    "@yuki/github": ["@yuki/github@workspace:packages/github"],
+
+    "@yuki/scraper": ["@yuki/scraper@workspace:apps/scraper"],
 
     "@yuki/ui": ["@yuki/ui@workspace:packages/ui"],
 

@@ -1,6 +1,5 @@
 import { categorize } from '../detection/category.ts';
-import { parseTimestamp } from './timestamp.ts';
-import type { GithubRepository } from '../github/types.ts';
+import { parseTimestamp, type GithubRepository } from '@yuki/github';
 import type { ListingCategory, ListingConfidence } from '@yuki/db/schema';
 
 export type MappedListing = {

@@ -4,7 +4,7 @@ import { schema, type Database } from '@yuki/db';
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 import type { DetectedEvidence } from '../detection/evidence.ts';
 import type { MappedListing } from '../mapping/listing.ts';
-import type { MappedVersion } from '../mapping/versions.ts';
+import type { MappedVersion } from '@yuki/github';
 import type { ReadmeImage } from '../mapping/readme-images.ts';
 
 export type ListingRecord = {

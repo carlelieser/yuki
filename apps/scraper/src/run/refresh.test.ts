@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { refreshListing, type EtagStore } from './refresh.ts';
-import type { GithubClient } from '../github/client.ts';
-import type { GithubRelease, GithubRepository } from '../github/types.ts';
+import type { GithubClient } from '@yuki/github';
+import type { GithubRelease, GithubRepository } from '@yuki/github';
 
 function repository(overrides: Partial<GithubRepository> = {}): GithubRepository {
 	return {
