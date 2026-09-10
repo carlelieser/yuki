@@ -16,3 +16,6 @@ data object SettingsRoute
 
 @Serializable
 data class ListingRoute(val slug: String)
+
+@Serializable
+data class SearchRoute(val category: String? = null)

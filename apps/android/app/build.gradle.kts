@@ -32,6 +32,7 @@ dependencies {
     implementation(projects.feature.explore)
     implementation(projects.feature.library)
     implementation(projects.feature.listing)
+    implementation(projects.feature.search)
     implementation(projects.feature.settings)
     implementation(projects.feature.updates)
 

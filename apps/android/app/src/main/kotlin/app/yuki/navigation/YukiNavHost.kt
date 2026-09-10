@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
+import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
 import app.yuki.settings.SettingsDestination
 
@@ -34,6 +35,7 @@ internal fun YukiNavHost(
         libraryDestination(navigator, bottomBarPadding)
         updatesDestination(navigator, bottomBarPadding)
         listingDestination(navigator)
+        searchDestination(navigator, bottomBarPadding)
         settingsDestination(navigator)
     }
 }
@@ -45,11 +47,12 @@ private fun NavGraphBuilder.exploreDestination(
     composable<ExploreRoute>(
         enterTransition = { tabEnter() },
         exitTransition = { tabExit() },
-        popEnterTransition = { tabEnter() },
-        popExitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
     ) {
         ExploreScreenRoute(
             onListingSelected = navigator::openListing,
+            onCategorySelected = navigator::openSearch,
             onSettingsClick = navigator::openSettings,
             contentPadding = bottomBarPadding,
         )
@@ -63,8 +66,8 @@ private fun NavGraphBuilder.libraryDestination(
     composable<LibraryRoute>(
         enterTransition = { tabEnter() },
         exitTransition = { tabExit() },
-        popEnterTransition = { tabEnter() },
-        popExitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
     ) {
         LibraryScreen(
             onListingClick = navigator::openListing,
@@ -81,8 +84,8 @@ private fun NavGraphBuilder.updatesDestination(
     composable<UpdatesRoute>(
         enterTransition = { tabEnter() },
         exitTransition = { tabExit() },
-        popEnterTransition = { tabEnter() },
-        popExitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
     ) {
         UpdatesScreen(
             onListingClick = navigator::openListing,
@@ -96,6 +99,19 @@ private fun NavGraphBuilder.listingDestination(navigator: YukiNavigator) {
         ListingScreenRoute(
             slug = entry.toRoute<ListingRoute>().slug,
             onBackClick = navigator::navigateUp,
+        )
+    }
+}
+
+private fun NavGraphBuilder.searchDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<SearchRoute> {
+        SearchScreenRoute(
+            onListingSelected = navigator::openListing,
+            onBackClick = navigator::navigateUp,
+            contentPadding = bottomBarPadding,
         )
     }
 }

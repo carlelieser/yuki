@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import app.yuki.core.model.ListingCategory
 
 internal class YukiNavigator(
     private val navController: NavHostController,
@@ -26,6 +27,10 @@ internal class YukiNavigator(
 
     fun openSettings() {
         navController.navigate(SettingsRoute)
+    }
+
+    fun openSearch(category: ListingCategory?) {
+        navController.navigate(SearchRoute(category = category?.wireValue))
     }
 
     fun navigateUp() {
