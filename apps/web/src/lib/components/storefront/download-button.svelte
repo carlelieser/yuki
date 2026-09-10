@@ -47,11 +47,7 @@
 
 	const href = $derived(urlFor(selected));
 
-	function selectArchitecture(architecture: string): void {
-		selected = architecture;
-		open = false;
-		window.location.href = urlFor(architecture);
-	}
+	const buttonLabel = $derived(selected === DEFAULT_VALUE ? label : `${label} · ${selected}`);
 
 	async function loadArchitectures(): Promise<void> {
 		hasRequested = true;
@@ -82,7 +78,7 @@
 <ButtonGroup>
 	<Button {href} {size} data-sveltekit-preload-data="off" rel="nofollow">
 		<DownloadIcon />
-		{label}
+		{buttonLabel}
 	</Button>
 	<ButtonGroupSeparator />
 	<DropdownMenu bind:open>
@@ -104,7 +100,7 @@
 				{#if isLoading}
 					<Skeleton class="mx-2 my-1.5 h-6 rounded-sm" />
 				{:else}
-					<DropdownMenuRadioGroup value={selected} onValueChange={selectArchitecture}>
+					<DropdownMenuRadioGroup bind:value={selected}>
 						<DropdownMenuRadioItem value={DEFAULT_VALUE}>Default</DropdownMenuRadioItem>
 						{#each architectures as architecture (architecture)}
 							<DropdownMenuRadioItem value={architecture}>{architecture}</DropdownMenuRadioItem>
