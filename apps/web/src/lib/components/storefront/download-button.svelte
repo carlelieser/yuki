@@ -47,8 +47,6 @@
 
 	const href = $derived(urlFor(selected));
 
-	const buttonLabel = $derived(selected === DEFAULT_VALUE ? label : `${label} · ${selected}`);
-
 	async function loadArchitectures(): Promise<void> {
 		hasRequested = true;
 		isLoading = true;
@@ -78,7 +76,7 @@
 <ButtonGroup>
 	<Button {href} {size} data-sveltekit-preload-data="off" rel="nofollow">
 		<DownloadIcon />
-		{buttonLabel}
+		{label}
 	</Button>
 	<ButtonGroupSeparator />
 	<DropdownMenu bind:open>

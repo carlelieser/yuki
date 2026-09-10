@@ -25,7 +25,6 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
-	import DownloadIcon from '@lucide/svelte/icons/download';
 	import { SquareTextIcon, StarIcon, BoxIcon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -124,7 +123,7 @@
 					{#each listing.versions as version (version.tag)}
 						<Item variant="outline">
 							<ItemMedia variant="icon">
-								<DownloadIcon />
+								<BoxIcon />
 							</ItemMedia>
 							<ItemContent>
 								<ItemTitle>
