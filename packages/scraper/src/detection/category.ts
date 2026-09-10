@@ -14,7 +14,8 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'fps unlocker',
 				'gaming booster',
 				'game performance',
-				'controller'
+				'game controller',
+				'gamepad keymapper'
 			]
 		},
 		{
@@ -22,6 +23,7 @@ const RULES: Record<ListingCategory, Tier[]> = {
 			terms: [
 				'game',
 				'games',
+				'gaming',
 				'codm',
 				'mobile legends',
 				'retroarch',
@@ -30,7 +32,7 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'游戏'
 			]
 		},
-		{ weight: 1, terms: ['tuning', 'resolution', 'boost', 'xbox', 'play'] }
+		{ weight: 1, terms: ['tuning', 'resolution', 'boost', 'xbox'] }
 	],
 	media: [
 		{
@@ -368,6 +370,13 @@ const PRECEDENCE: { winner: ListingCategory; rival: ListingCategory; conditions:
 	}
 ];
 
+// A game named once in passing ("works in games too") is not a gaming app, but
+// a real one says it repeatedly. Measured on the labeled sample: requiring two
+// readme mentions drops every false positive and costs one true positive, which
+// its description still catches.
+const AMBIGUOUS_README_TERMS = new Set(['game', 'games', 'gaming', 'emulator', 'handheld', '游戏']);
+const MIN_AMBIGUOUS_README_HITS = 2;
+
 const README_BUDGET = 1500;
 const MIN_DESCRIPTION_LENGTH = 10;
 const MIN_README_LENGTH = 40;
@@ -380,6 +389,15 @@ export type CategoryInput = {
 
 function stripBoilerplate(text: string): string {
 	return BOILERPLATE.reduce((current, pattern) => current.replace(pattern, ' '), text);
+}
+
+function countTerm(term: string, text: string): number {
+	const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const pattern = /[a-z0-9]/.test(term)
+		? new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'g')
+		: new RegExp(escaped, 'g');
+
+	return text.match(pattern)?.length ?? 0;
 }
 
 function hasTerm(term: string, text: string): boolean {
@@ -409,7 +427,12 @@ function scoreCategories(input: CategoryInput): Map<ListingCategory, number> {
 		for (const tier of tiers) {
 			for (const term of tier.terms) {
 				const inPurpose = hasTerm(term, purpose);
-				const inReadme = category === 'device_specific' ? false : hasTerm(term, readme);
+				const inReadme =
+					category === 'device_specific'
+						? false
+						: AMBIGUOUS_README_TERMS.has(term)
+							? countTerm(term, readme) >= MIN_AMBIGUOUS_README_HITS
+							: hasTerm(term, readme);
 				if (!inPurpose && !inReadme) continue;
 				if (RELEASE_NOISE.has(term) && !inPurpose) continue;
 

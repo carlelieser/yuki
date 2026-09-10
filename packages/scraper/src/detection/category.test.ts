@@ -87,6 +87,46 @@ describe('categorize', () => {
 		).toBe('networking');
 	});
 
+	it('ignores a game mentioned once in passing', () => {
+		expect(
+			categorize({
+				description: 'Utilize an integrated firewall to manage application components',
+				topics: [],
+				readme: 'Blocker controls components. Also useful while playing a game.'
+			})
+		).not.toBe('gaming');
+	});
+
+	it('still reads a readme that is about games throughout', () => {
+		expect(
+			categorize({
+				description: 'Performance booster',
+				topics: [],
+				readme: 'Boost your games. Tune each game and relaunch the game for best results.'
+			})
+		).toBe('gaming');
+	});
+
+	it('does not treat a generic controller as a game controller', () => {
+		expect(
+			categorize({
+				description: 'An open-source volume controller for Android',
+				topics: [],
+				readme: 'Routes the hardware volume keys between screens.'
+			})
+		).not.toBe('gaming');
+	});
+
+	it('reads a real gamepad app as gaming', () => {
+		expect(
+			categorize({
+				description: 'Use the Steam Controller as a standard Android gamepad',
+				topics: [],
+				readme: 'Exposes the controller to Android as a virtual gamepad.'
+			})
+		).toBe('gaming');
+	});
+
 	it('is deterministic across repeated calls', () => {
 		const input = {
 			description: 'Android file manager with dual pane browsing',
