@@ -2,6 +2,7 @@ export { createGithubClient, GithubSkip, type GithubClient, type FetchImpl } fro
 export { requireGithubToken } from './env.ts';
 export { parseTimestamp } from './timestamp.ts';
 export {
+	availableArchitectures,
 	hasDistributableApk,
 	mapReleases,
 	parseArchitecture,

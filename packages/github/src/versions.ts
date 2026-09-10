@@ -47,15 +47,28 @@ function largestOf(assets: GithubReleaseAsset[]): GithubReleaseAsset {
 	return assets.reduce((largest, asset) => (asset.size > largest.size ? asset : largest));
 }
 
+function distributableApks(assets: GithubReleaseAsset[]): GithubReleaseAsset[] {
+	const apks = assets.filter(isApk);
+	const preferred = apks.filter((asset) => !isDeprioritised(asset));
+	return preferred.length > 0 ? preferred : apks;
+}
+
+export function availableArchitectures(assets: GithubReleaseAsset[]): Architecture[] {
+	const found = new Set(
+		distributableApks(assets)
+			.map(architectureOf)
+			.filter((architecture) => architecture !== null)
+	);
+
+	return ARCHITECTURES.filter((architecture) => found.has(architecture));
+}
+
 export function pickApkAsset(
 	assets: GithubReleaseAsset[],
 	architecture: Architecture | null = null
 ): GithubReleaseAsset | null {
-	const apks = assets.filter(isApk);
-	if (apks.length === 0) return null;
-
-	const preferred = apks.filter((asset) => !isDeprioritised(asset));
-	const pool = preferred.length > 0 ? preferred : apks;
+	const pool = distributableApks(assets);
+	if (pool.length === 0) return null;
 
 	if (architecture === null) return largestOf(pool);
 
