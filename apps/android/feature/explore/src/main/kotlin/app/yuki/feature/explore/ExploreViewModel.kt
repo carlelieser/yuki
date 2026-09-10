@@ -2,11 +2,8 @@ package app.yuki.feature.explore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import app.yuki.core.datastore.RecentSearchStore
+import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
@@ -30,6 +27,7 @@ import kotlinx.coroutines.launch
 const val SEARCH_DEBOUNCE_MILLIS = 250L
 const val MINIMUM_QUERY_LENGTH = 1
 const val MAXIMUM_QUERY_LENGTH = 100
+const val SECTION_ITEM_COUNT = 3
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -37,15 +35,11 @@ class ExploreViewModel @Inject constructor(
     private val recentSearches: RecentSearchStore,
 ) : ViewModel() {
     private val featured = MutableStateFlow<UiState<List<ListingSummary>>>(UiState.Loading)
+    private val sections = MutableStateFlow<UiState<List<CategorySection>>>(UiState.Loading)
     private val query = MutableStateFlow("")
 
-    val listings: Flow<PagingData<ListingSummary>> =
-        Pager(config = PagingConfig(pageSize = BROWSE_PAGE_SIZE)) {
-            ListingPagingSource(repository)
-        }.flow.cachedIn(viewModelScope)
-
     val state: StateFlow<UiState<ExploreContent>> =
-        combine(featured, searchState(), ::content)
+        combine(featured, sections, searchState(), ::content)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -53,7 +47,7 @@ class ExploreViewModel @Inject constructor(
             )
 
     init {
-        refreshFeatured()
+        refresh()
     }
 
     fun onQueryChange(value: String) {
@@ -64,10 +58,22 @@ class ExploreViewModel @Inject constructor(
         viewModelScope.launch { recentSearches.forget(value) }
     }
 
+    fun refresh() {
+        refreshFeatured()
+        refreshSections()
+    }
+
     fun refreshFeatured() {
         viewModelScope.launch {
             featured.value = UiState.Loading
             featured.value = repository.featured().toUiState()
+        }
+    }
+
+    fun refreshSections() {
+        viewModelScope.launch {
+            sections.value = UiState.Loading
+            sections.value = repository.sections(SECTION_ITEM_COUNT).toUiState()
         }
     }
 
@@ -98,12 +104,27 @@ private fun normalize(query: String): String = query.trim().take(MAXIMUM_QUERY_L
 
 private fun content(
     featured: UiState<List<ListingSummary>>,
+    sections: UiState<List<CategorySection>>,
     search: SearchState,
 ): UiState<ExploreContent> {
-    val isBlockedByFeatured = featured !is UiState.Success && !search.isSearching
+    val loaded = ExploreContent(featured = featured, sections = sections, search = search)
+    if (search.isSearching) return UiState.Success(loaded)
 
-    if (isBlockedByFeatured && featured is UiState.Failure) return UiState.Failure(featured.reason)
-    if (isBlockedByFeatured) return UiState.Loading
+    val hasContent = featured is UiState.Success || sections is UiState.Success
+    if (hasContent) return UiState.Success(loaded)
 
-    return UiState.Success(ExploreContent(featured = featured, search = search))
+    val blockingFailure = firstFailure(featured, sections)
+    if (blockingFailure != null) return UiState.Failure(blockingFailure.reason)
+
+    return UiState.Loading
+}
+
+private fun firstFailure(
+    featured: UiState<List<ListingSummary>>,
+    sections: UiState<List<CategorySection>>,
+): UiState.Failure? {
+    val isEitherLoading = featured is UiState.Loading || sections is UiState.Loading
+    if (isEitherLoading) return null
+
+    return featured as? UiState.Failure ?: sections as? UiState.Failure
 }

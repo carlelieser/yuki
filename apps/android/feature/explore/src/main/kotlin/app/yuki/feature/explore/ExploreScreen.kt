@@ -13,8 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.LazyPagingItems
-import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ScreenAction
 import app.yuki.core.designsystem.component.SearchBar
@@ -25,6 +23,7 @@ import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
@@ -37,22 +36,22 @@ private const val SETTINGS_DESCRIPTION = "Settings"
 @Composable
 fun ExploreRoute(
     onListingSelected: (String) -> Unit,
+    onCategorySelected: (ListingCategory) -> Unit,
     onSettingsClick: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val listings = viewModel.listings.collectAsLazyPagingItems()
 
     ExploreScreen(
         state = state,
-        listings = listings,
         callbacks = ExploreCallbacks(
             onQueryChange = viewModel::onQueryChange,
             onRecentRemoved = viewModel::onRecentSearchRemoved,
-            onRetry = viewModel::refreshFeatured,
+            onRetry = viewModel::refresh,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
+            onCategorySelected = onCategorySelected,
             onSettingsClick = onSettingsClick,
         ),
         contentPadding = contentPadding,
@@ -65,13 +64,13 @@ data class ExploreCallbacks(
     val onRecentRemoved: (String) -> Unit,
     val onRetry: () -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
+    val onCategorySelected: (ListingCategory) -> Unit,
     val onSettingsClick: () -> Unit,
 )
 
 @Composable
 internal fun ExploreScreen(
     state: UiState<ExploreContent>,
-    listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -97,7 +96,6 @@ internal fun ExploreScreen(
 
             ExploreBody(
                 state = state,
-                listings = listings,
                 callbacks = callbacks,
                 contentPadding = contentPadding,
             )
@@ -111,7 +109,6 @@ private fun UiState<ExploreContent>.query(): String =
 @Composable
 private fun ExploreBody(
     state: UiState<ExploreContent>,
-    listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
 ) {
@@ -128,7 +125,6 @@ private fun ExploreBody(
 
         is UiState.Success -> ExploreContentBody(
             content = state.data,
-            listings = listings,
             callbacks = callbacks,
             contentPadding = contentPadding,
         )
@@ -138,7 +134,6 @@ private fun ExploreBody(
 @Composable
 private fun ExploreContentBody(
     content: ExploreContent,
-    listings: LazyPagingItems<ListingSummary>,
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
 ) {
@@ -149,14 +144,20 @@ private fun ExploreContentBody(
 
     LazyColumn(
         contentPadding = contentPadding,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(CATEGORY_SECTIONS_TAG),
     ) {
         recentSection(content = content, callbacks = callbacks)
         featuredSection(content = content, callbacks = callbacks)
 
-        item { SectionHeader(title = "All apps") }
-        browseRefreshState(listings = listings)
-        browseList(listings = listings, onSelect = callbacks.onListingSelected)
+        categorySections(
+            sections = content.sections,
+            actions = CategorySectionActions(
+                onListingSelected = callbacks.onListingSelected,
+                onCategorySelected = callbacks.onCategorySelected,
+            ),
+        )
     }
 }
 
