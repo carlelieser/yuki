@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.component.YukiCategoryIcons
+import app.yuki.core.designsystem.component.icon
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingCategory
 
@@ -63,6 +67,16 @@ private fun CategoryChip(
         selected = isSelected,
         onClick = onSelect,
         label = { Text(text = category?.label ?: ALL_CATEGORIES_LABEL) },
+        leadingIcon = { CategoryChipIcon(category = category) },
+    )
+}
+
+@Composable
+private fun CategoryChipIcon(category: ListingCategory?) {
+    Icon(
+        imageVector = category?.icon ?: YukiCategoryIcons.AllCategories,
+        contentDescription = null,
+        modifier = Modifier.size(FilterChipDefaults.IconSize),
     )
 }
 
