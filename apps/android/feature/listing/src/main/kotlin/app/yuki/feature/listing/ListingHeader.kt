@@ -1,6 +1,5 @@
 package app.yuki.feature.listing
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,28 +21,22 @@ import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
+import app.yuki.core.model.formatStarCount
 import coil3.compose.AsyncImage
 
 const val LISTING_BANNER_TAG = "listingBanner"
 
 @Composable
-internal fun ListingBanner(bannerUrl: String?, modifier: Modifier = Modifier) {
-    val shape = modifier
-        .fillMaxWidth()
-        .aspectRatio(YukiRatio.Banner)
-        .clip(YukiShape.Media)
-        .testTag(LISTING_BANNER_TAG)
-
-    if (bannerUrl == null) {
-        Column(modifier = shape.background(MaterialTheme.colorScheme.surfaceContainerHighest)) { }
-        return
-    }
-
+internal fun ListingBanner(bannerUrl: String, modifier: Modifier = Modifier) {
     AsyncImage(
         model = bannerUrl,
         contentDescription = null,
         contentScale = ContentScale.Crop,
-        modifier = shape,
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(YukiRatio.Banner)
+            .clip(YukiShape.Media)
+            .testTag(LISTING_BANNER_TAG),
     )
 }
 
@@ -72,8 +65,10 @@ private fun ListingIdentity(summary: ListingSummary, modifier: Modifier = Modifi
 
 @Composable
 private fun ListingStars(stars: Int) {
+    val label = if (stars == 1) "star" else "stars"
+
     Text(
-        text = "$stars stars",
+        text = "${formatStarCount(stars)} $label",
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )

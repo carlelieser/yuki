@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollToNode
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
@@ -66,6 +67,34 @@ class ListingScreenTest {
         composeRule.onNodeWithText("Aurora").assertIsDisplayed()
         composeRule.onNodeWithText("nightsky").assertIsDisplayed()
         composeRule.onNodeWithText("128 stars").assertIsDisplayed()
+    }
+
+    @Test
+    fun abbreviatesALargeStarCount() {
+        setScreen(UiState.Success(detail(summary = summary(stars = 15420)).toUiModel()))
+
+        composeRule.onNodeWithText("15.4k stars").assertIsDisplayed()
+    }
+
+    @Test
+    fun namesASingleStarInTheSingular() {
+        setScreen(UiState.Success(detail(summary = summary(stars = 1)).toUiModel()))
+
+        composeRule.onNodeWithText("1 star").assertIsDisplayed()
+    }
+
+    @Test
+    fun rendersTheBannerWhenTheListingHasOne() {
+        setScreen(UiState.Success(detail().toUiModel()))
+
+        composeRule.onNode(hasTestTag(LISTING_BANNER_TAG)).assertIsDisplayed()
+    }
+
+    @Test
+    fun omitsTheBannerWhenTheListingHasNone() {
+        setScreen(UiState.Success(detail(summary = summary(bannerUrl = null)).toUiModel()))
+
+        composeRule.onAllNodesWithTag(LISTING_BANNER_TAG).assertCountEquals(0)
     }
 
     @Test

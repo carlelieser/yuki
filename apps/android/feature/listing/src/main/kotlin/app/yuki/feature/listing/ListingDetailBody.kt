@@ -24,8 +24,13 @@ data class ListingCallbacks(
     val onOpenLink: LinkOpener,
 )
 
+private fun LazyListScope.bannerSection(model: ListingUiModel) {
+    val bannerUrl = model.detail.summary.bannerUrl ?: return
+
+    item { ListingBanner(bannerUrl = bannerUrl) }
+}
+
 private fun LazyListScope.headerSection(model: ListingUiModel) {
-    item { ListingBanner(bannerUrl = model.detail.summary.bannerUrl) }
     item { ListingHeader(summary = model.detail.summary) }
 }
 
@@ -98,6 +103,7 @@ internal fun ListingDetailBody(
         contentPadding = PaddingValues(vertical = YukiSpacing.Large),
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
     ) {
+        bannerSection(model)
         headerSection(model)
         installSection(model, installState, callbacks.onInstallAction)
         warningSection(model)
