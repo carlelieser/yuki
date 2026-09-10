@@ -2,9 +2,12 @@ package app.yuki.feature.library
 
 import app.yuki.core.database.InstallRecording
 import app.yuki.core.database.InstallStore
+import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.model.InstalledApp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 internal class FakeInstallStore(initial: List<InstalledApp> = emptyList()) : InstallStore {
     private val rows = MutableStateFlow(initial)
@@ -51,5 +54,25 @@ internal class FakeInstalledPackages(
     fun uninstall(packageName: String) {
         present -= packageName
         launchable -= packageName
+    }
+}
+
+internal class FakeLibraryProgressStore : InstallProgressStore {
+    private val rows = MutableStateFlow<List<InstallProgress>>(emptyList())
+
+    override fun observe(githubRepoId: Long): Flow<InstallProgress?> =
+        rows.map { current -> current.firstOrNull { it.githubRepoId == githubRepoId } }
+
+    override fun observeActive(): Flow<List<InstallProgress>> = rows
+
+    override suspend fun find(githubRepoId: Long): InstallProgress? =
+        rows.value.firstOrNull { it.githubRepoId == githubRepoId }
+
+    override suspend fun write(progress: InstallProgress) {
+        rows.value = rows.value.filterNot { it.githubRepoId == progress.githubRepoId } + progress
+    }
+
+    override suspend fun clear(githubRepoId: Long) {
+        rows.value = rows.value.filterNot { it.githubRepoId == githubRepoId }
     }
 }

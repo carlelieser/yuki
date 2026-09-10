@@ -11,16 +11,13 @@ import app.yuki.core.network.ListingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,8 +34,6 @@ class ListingViewModel @Inject constructor(
     }
 
     private val mutableListing = MutableStateFlow<UiState<ListingUiModel>>(UiState.Loading)
-    private val activeInstall = MutableStateFlow<InstallState?>(null)
-    private var installJob: Job? = null
 
     val listing: StateFlow<UiState<ListingUiModel>> = mutableListing.asStateFlow()
 
@@ -68,7 +63,7 @@ class ListingViewModel @Inject constructor(
 
         when (action) {
             InstallAction.Install, InstallAction.Update, InstallAction.Retry -> startInstall(model)
-            InstallAction.Cancel -> cancelInstall(model.repoId)
+            InstallAction.Cancel -> viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
         }
     }
@@ -77,26 +72,12 @@ class ListingViewModel @Inject constructor(
         val version = model.installableVersion ?: return
         val request = ListingInstallRequest(detail = model.detail, version = version)
 
-        installJob?.cancel()
-        installJob = viewModelScope.launch {
-            installGateway.install(request).collect { state -> activeInstall.value = state }
-        }
-    }
-
-    private fun cancelInstall(githubRepoId: Long) {
-        installJob?.cancel()
-        installJob = null
-        activeInstall.value = null
-        viewModelScope.launch { installGateway.cancel(githubRepoId) }
+        viewModelScope.launch { installGateway.install(request) }
     }
 
     private fun installStateFor(state: UiState<ListingUiModel>): Flow<InstallState> =
         when (state) {
-            is UiState.Success -> merge(
-                flowOf(InstallState.NotInstalled),
-                installGateway.observe(state.data.repoId),
-                activeInstall.filterNotNull(),
-            )
+            is UiState.Success -> installGateway.observe(state.data.repoId)
             else -> flowOf(InstallState.NotInstalled)
         }
 

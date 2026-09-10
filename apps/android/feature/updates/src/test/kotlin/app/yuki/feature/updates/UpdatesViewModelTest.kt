@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingVersion
@@ -190,10 +191,10 @@ class UpdatesViewModelTest {
             )
 
             viewModel.onInstallAction(TERMUX.githubRepoId, InstallAction.Update)
-            installer.emit(InstallState.Downloading(0.5f))
+            installer.emit(InstallState.Downloading(HALF_DOWNLOADED))
 
             assertEquals(
-                InstallState.Downloading(0.5f),
+                InstallState.Downloading(HALF_DOWNLOADED),
                 successOf(awaitItem()).updates.single().install,
             )
             cancelAndIgnoreRemainingEvents()
@@ -231,3 +232,5 @@ private fun termuxWith(vararg versions: ListingVersion): ListingDetail =
 private val TERMUX = installedApp(1_234L, "termux", "v0.118.0")
 
 private val AURORA = installedApp(5_678L, "aurora-store", "4.6.4")
+
+private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)

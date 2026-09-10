@@ -14,6 +14,7 @@ import app.yuki.core.designsystem.component.InstallButton
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -41,9 +42,31 @@ class InstallButtonTest {
 
     @Test
     fun downloadingOffersCancel() {
-        render(InstallState.Downloading(progress = 0.4f))
+        render(InstallState.Downloading(PARTLY_DOWNLOADED))
 
         composeRule.onNodeWithText("Cancel").assertIsEnabled()
+    }
+
+    @Test
+    fun downloadingShowsTheTransferredBytes() {
+        render(InstallState.Downloading(PARTLY_DOWNLOADED))
+
+        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertExists()
+    }
+
+    @Test
+    fun aDownloadWithAnUnknownTotalStillReportsTheBytesReceived() {
+        render(InstallState.Downloading(UNKNOWN_TOTAL))
+
+        composeRule.onNodeWithText("4.1 MB / ?").assertExists()
+    }
+
+    @Test
+    fun anUnreadableDownloadIsNotReportedAsIncompatible() {
+        render(InstallState.Failed(InstallFailure.DownloadUnreadable))
+
+        composeRule.onNodeWithText("Download incomplete").assertExists()
+        composeRule.onNodeWithText("Not compatible").assertDoesNotExist()
     }
 
     @Test
@@ -98,3 +121,8 @@ class InstallButtonTest {
         assertEquals(listOf(InstallAction.Update), actions)
     }
 }
+
+private val PARTLY_DOWNLOADED =
+    downloadSizeOf(bytesDownloaded = 4_100_000L, bytesTotal = 12_100_000L)
+
+private val UNKNOWN_TOTAL = downloadSizeOf(bytesDownloaded = 4_100_000L, bytesTotal = 0L)

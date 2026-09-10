@@ -16,7 +16,7 @@ data class ListingInstallRequest(
 }
 
 interface ListingInstallGateway {
-    fun install(request: ListingInstallRequest): Flow<InstallState>
+    suspend fun install(request: ListingInstallRequest)
 
     fun observe(githubRepoId: Long): Flow<InstallState>
 

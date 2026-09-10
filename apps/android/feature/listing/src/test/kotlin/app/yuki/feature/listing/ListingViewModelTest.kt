@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.UiState
 import kotlinx.coroutines.Dispatchers
@@ -156,7 +157,7 @@ class ListingViewModelTest {
     }
 
     @Test
-    fun `install progress from the install flow reaches the screen`() = runTest {
+    fun `install progress observed for the listing reaches the screen`() = runTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
@@ -166,14 +167,32 @@ class ListingViewModelTest {
             viewModel.onInstallAction(InstallAction.Install)
             dispatcher.scheduler.advanceUntilIdle()
 
-            installGateway.emitInstallProgress(InstallState.Downloading(0.5f))
+            installGateway.emitObserved(InstallState.Downloading(HALF_DOWNLOADED))
             dispatcher.scheduler.advanceUntilIdle()
-            assertEquals(InstallState.Downloading(0.5f), awaitItem())
+            assertEquals(InstallState.Downloading(HALF_DOWNLOADED), awaitItem())
 
-            installGateway.emitInstallProgress(InstallState.Installed("v2.0.0"))
+            installGateway.emitObserved(InstallState.Installed("v2.0.0"))
             dispatcher.scheduler.advanceUntilIdle()
             assertEquals(InstallState.Installed("v2.0.0"), awaitItem())
         }
+    }
+
+    @Test
+    fun `install keeps running after the screen stops collecting`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.installState.test {
+            assertEquals(InstallState.NotInstalled, awaitItem())
+            viewModel.onInstallAction(InstallAction.Install)
+            dispatcher.scheduler.advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, installGateway.requests.size)
+        assertEquals(emptyList<Long>(), installGateway.cancelled)
     }
 
     @Test
@@ -187,3 +206,5 @@ class ListingViewModelTest {
         }
     }
 }
+
+private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)

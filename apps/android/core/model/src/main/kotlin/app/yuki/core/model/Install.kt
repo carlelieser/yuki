@@ -3,6 +3,8 @@ package app.yuki.core.model
 sealed interface InstallFailure {
     data object DownloadFailed : InstallFailure
 
+    data object DownloadUnreadable : InstallFailure
+
     data object Aborted : InstallFailure
 
     data object InsufficientStorage : InstallFailure
@@ -14,10 +16,36 @@ sealed interface InstallFailure {
     data class Rejected(val message: String) : InstallFailure
 }
 
+data class DownloadSize(
+    val bytesDownloaded: Long,
+    val bytesTotal: Long?,
+) {
+    init {
+        require(bytesDownloaded >= 0) { "bytesDownloaded must not be negative: $bytesDownloaded" }
+        require(bytesTotal == null || bytesTotal > 0) {
+            "bytesTotal must be null or positive: $bytesTotal"
+        }
+    }
+
+    val isTotalKnown: Boolean get() = bytesTotal != null
+
+    val fraction: Float?
+        get() = bytesTotal?.let { total ->
+            (bytesDownloaded.toFloat() / total).coerceIn(0f, 1f)
+        }
+
+    val label: String get() = formatByteProgress(bytesDownloaded, bytesTotal)
+}
+
+fun downloadSizeOf(bytesDownloaded: Long, bytesTotal: Long): DownloadSize = DownloadSize(
+    bytesDownloaded = bytesDownloaded.coerceAtLeast(0L),
+    bytesTotal = bytesTotal.takeIf { total -> total > 0L },
+)
+
 sealed interface InstallState {
     data object NotInstalled : InstallState
 
-    data class Downloading(val progress: Float) : InstallState
+    data class Downloading(val size: DownloadSize) : InstallState
 
     data object PendingUserAction : InstallState
 

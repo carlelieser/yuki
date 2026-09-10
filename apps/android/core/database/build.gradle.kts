@@ -5,6 +5,14 @@ plugins {
 
 android {
     namespace = "app.yuki.core.database"
+
+    (this as com.android.build.api.dsl.LibraryExtension).sourceSets.named("androidTest") {
+        assets.srcDir(layout.projectDirectory.dir("schemas"))
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", layout.projectDirectory.dir("schemas").asFile.path)
 }
 
 dependencies {
