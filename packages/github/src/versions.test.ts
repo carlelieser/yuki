@@ -206,6 +206,54 @@ describe('availableArchitectures', () => {
 	});
 });
 
+describe('architecture naming', () => {
+	it('recognises the short arm spellings releases actually use', () => {
+		const found = availableArchitectures([
+			asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk' }),
+			asset({ name: 'wgtunnel-standalone-v5.7.2-armv7.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a', 'armeabi-v7a']);
+	});
+
+	it('recognises aarch64 as arm64', () => {
+		expect(availableArchitectures([asset({ name: 'app-aarch64.apk' })])).toEqual(['arm64-v8a']);
+	});
+
+	it('does not read x86 out of an x86_64 asset', () => {
+		expect(availableArchitectures([asset({ name: 'app-x86_64.apk' })])).toEqual(['x86_64']);
+	});
+
+	it('does not read an architecture out of a version number', () => {
+		expect(availableArchitectures([asset({ name: 'app-v1.8664.apk' })])).toEqual([]);
+	});
+
+	it('does not treat arm64 inside a longer word as a match', () => {
+		expect(availableArchitectures([asset({ name: 'apparm64x.apk' })])).toEqual([]);
+	});
+
+	it('routes a short-spelled asset to the requested architecture', () => {
+		const picked = pickApkAsset(
+			[
+				asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk', size: 100 }),
+				asset({ name: 'wgtunnel-standalone-v5.7.2-armv7.apk', size: 900 })
+			],
+			'arm64-v8a'
+		);
+
+		expect(picked?.name).toBe('wgtunnel-standalone-v5.7.2-arm64.apk');
+	});
+
+	it('keeps a universal build out of the architecture list', () => {
+		const found = availableArchitectures([
+			asset({ name: 'wgtunnel-standalone-v5.7.2.apk' }),
+			asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a']);
+	});
+});
+
 describe('parseArchitecture', () => {
 	it('accepts a known abi', () => {
 		expect(parseArchitecture('arm64-v8a')).toBe('arm64-v8a');
