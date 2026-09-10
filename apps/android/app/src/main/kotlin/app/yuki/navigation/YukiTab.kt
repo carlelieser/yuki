@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiNavDestination
 import kotlin.reflect.KClass
 
@@ -14,6 +15,7 @@ internal enum class YukiTab(
     val route: KClass<*>,
 ) {
     Explore("Explore", YukiTabIcons.Explore, ExploreRoute::class),
+    Browse("Browse", YukiIcons.Search, SearchRoute::class),
     Library("Library", YukiTabIcons.Library, LibraryRoute::class),
     Updates("Updates", YukiTabIcons.Updates, UpdatesRoute::class),
 }
@@ -25,6 +27,7 @@ internal fun YukiTab.toNavDestination(): YukiNavDestination = YukiNavDestination
 
 internal fun YukiTab.startRoute(): Any = when (this) {
     YukiTab.Explore -> ExploreRoute
+    YukiTab.Browse -> SearchRoute
     YukiTab.Library -> LibraryRoute
     YukiTab.Updates -> UpdatesRoute
 }

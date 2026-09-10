@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
+import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
 import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
 import app.yuki.settings.SettingsDestination
@@ -36,6 +37,7 @@ internal fun YukiNavHost(
         updatesDestination(navigator, bottomBarPadding)
         listingDestination(navigator)
         searchDestination(navigator, bottomBarPadding)
+        categoryDestination(navigator, bottomBarPadding)
         settingsDestination(navigator)
     }
 }
@@ -52,7 +54,7 @@ private fun NavGraphBuilder.exploreDestination(
     ) {
         ExploreScreenRoute(
             onListingSelected = navigator::openListing,
-            onCategorySelected = navigator::openSearch,
+            onCategorySelected = navigator::openCategory,
             onSettingsClick = navigator::openSettings,
             contentPadding = bottomBarPadding,
         )
@@ -107,8 +109,25 @@ private fun NavGraphBuilder.searchDestination(
     navigator: YukiNavigator,
     bottomBarPadding: PaddingValues,
 ) {
-    composable<SearchRoute> {
+    composable<SearchRoute>(
+        enterTransition = { tabEnter() },
+        exitTransition = { tabExit() },
+        popEnterTransition = { tabPopEnter() },
+        popExitTransition = { tabPopExit() },
+    ) {
         SearchScreenRoute(
+            onListingSelected = navigator::openListing,
+            contentPadding = bottomBarPadding,
+        )
+    }
+}
+
+private fun NavGraphBuilder.categoryDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<CategoryRoute> {
+        CategoryScreenRoute(
             onListingSelected = navigator::openListing,
             onBackClick = navigator::navigateUp,
             contentPadding = bottomBarPadding,
