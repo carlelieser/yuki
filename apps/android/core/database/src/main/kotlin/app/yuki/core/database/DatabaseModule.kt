@@ -19,7 +19,9 @@ internal object DatabaseProviders {
     @Provides
     @Singleton
     fun database(@ApplicationContext context: Context): YukiDatabase =
-        Room.databaseBuilder(context, YukiDatabase::class.java, YUKI_DATABASE_NAME).build()
+        Room.databaseBuilder(context, YukiDatabase::class.java, YUKI_DATABASE_NAME)
+            .addMigrations(*YUKI_MIGRATIONS)
+            .build()
 
     @Provides
     @Singleton

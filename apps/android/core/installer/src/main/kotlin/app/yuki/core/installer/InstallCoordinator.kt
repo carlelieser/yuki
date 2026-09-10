@@ -19,9 +19,14 @@ class InstallCoordinator @Inject constructor(
 ) {
     fun install(request: InstallRequest): Flow<InstallState> = flow {
         val apk = downloadApk(request.source)
-        val staged = StagedApk(apk, strategies.identityReader.read(apk))
-        guardPackageIdentity(request.target.githubRepoId, staged.identity)
-        runStrategy(request, staged)
+
+        try {
+            val staged = StagedApk(apk, strategies.identityReader.read(apk))
+            guardPackageIdentity(request.target.githubRepoId, staged.identity)
+            runStrategy(request, staged)
+        } finally {
+            downloader.discard(apk)
+        }
     }.catch { error ->
         if (error is CancellationException) throw error
         emit(InstallState.Failed(error.toInstallFailure()))

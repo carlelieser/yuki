@@ -12,6 +12,8 @@ sealed interface DownloadProgress {
 
 interface ApkDownloader {
     fun download(source: InstallSource): Flow<DownloadProgress>
+
+    fun discard(apk: File)
 }
 
 interface ApkIdentityReader {

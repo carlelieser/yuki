@@ -27,11 +27,17 @@ internal class FakeApkDownloader(
     private val failure: InstallException? = null,
     private val cancelMidway: Boolean = false,
 ) : ApkDownloader {
+    val discarded: MutableList<File> = mutableListOf()
+
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
         failure?.let { error -> throw error }
         if (cancelMidway) throw CancellationException("cancelled while downloading")
         sizes.forEach { size -> emit(DownloadProgress.Running(size)) }
         emit(DownloadProgress.Completed(TEST_APK))
+    }
+
+    override fun discard(apk: File) {
+        discarded += apk
     }
 }
 

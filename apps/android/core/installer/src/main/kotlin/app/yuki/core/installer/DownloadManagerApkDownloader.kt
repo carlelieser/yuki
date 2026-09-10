@@ -7,6 +7,7 @@ import android.os.Environment
 import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -21,15 +22,24 @@ internal class DownloadManagerApkDownloader @Inject constructor(
     private val manager: DownloadManager
         get() = context.getSystemService(DownloadManager::class.java)
 
+    private val downloadIdsByPath = ConcurrentHashMap<String, Long>()
+
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
         val downloadId = manager.enqueue(source.toRequest())
-        val completed = try {
-            emitUntilComplete(downloadId, source)
-        } finally {
+        val apk = try {
+            resolveApk(emitUntilComplete(downloadId, source), source)
+        } catch (failure: Throwable) {
             manager.remove(downloadId)
+            throw failure
         }
 
-        emit(DownloadProgress.Completed(resolveApk(completed, source)))
+        downloadIdsByPath[apk.absolutePath] = downloadId
+        emit(DownloadProgress.Completed(apk))
+    }
+
+    override fun discard(apk: File) {
+        val downloadId = downloadIdsByPath.remove(apk.absolutePath) ?: return
+        manager.remove(downloadId)
     }
 
     private suspend fun FlowCollector<DownloadProgress>.emitUntilComplete(
