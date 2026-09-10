@@ -64,39 +64,10 @@ internal class DownloadManagerApkDownloader @Inject constructor(
             )
 }
 
-internal fun resolveApk(snapshot: DownloadSnapshot, source: InstallSource): File {
-    val localUri = snapshot.localUri ?: throw InstallException(
-        InstallFailure.DownloadUnreadable,
-        "DownloadManager reported no local file for ${source.downloadUrl}",
-    )
+internal fun resolveApk(snapshot: DownloadSnapshot, source: InstallSource): File =
+    verifyDownloadedApk(snapshot.localUri?.toLocalPath(), source)
 
-    val apk = localUri.toDownloadedFile(source)
-
-    if (!apk.isFile) {
-        throw InstallException(
-            InstallFailure.DownloadUnreadable,
-            "Downloaded file ${apk.absolutePath} for ${source.downloadUrl} does not exist",
-        )
-    }
-
-    if (apk.length() <= 0L) {
-        throw InstallException(
-            InstallFailure.DownloadUnreadable,
-            "Downloaded file ${apk.absolutePath} for ${source.downloadUrl} is empty",
-        )
-    }
-
-    return apk
-}
-
-private fun String.toDownloadedFile(source: InstallSource): File {
-    val path = Uri.parse(this).path ?: throw InstallException(
-        InstallFailure.DownloadUnreadable,
-        "DownloadManager reported an unusable local uri '$this' for ${source.downloadUrl}",
-    )
-
-    return File(path)
-}
+private fun String.toLocalPath(): String? = Uri.parse(this).path
 
 internal fun InstallSource.fileName(): String {
     val candidate = assetName ?: "$versionTag.apk"
