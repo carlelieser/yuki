@@ -122,6 +122,42 @@ export type ListingPage = {
 	hasMore: boolean;
 };
 
+export type CategorySection = {
+	category: ListingCategory;
+	results: ListingSummary[];
+};
+
+export type RankedRow = ListingSummary & { rank: number };
+
+function summaryOf(row: RankedRow): ListingSummary {
+	return {
+		id: row.id,
+		githubRepoId: row.githubRepoId,
+		slug: row.slug,
+		title: row.title,
+		author: row.author,
+		description: row.description,
+		iconUrl: row.iconUrl,
+		bannerUrl: row.bannerUrl,
+		category: row.category,
+		stars: row.stars
+	};
+}
+
+export function groupIntoSections(rows: RankedRow[], limit: number): CategorySection[] {
+	const sections = new Map<ListingCategory, ListingSummary[]>();
+
+	for (const row of rows) {
+		if (row.category === null) continue;
+		const results = sections.get(row.category) ?? [];
+		if (results.length >= limit) continue;
+		results.push(summaryOf(row));
+		sections.set(row.category, results);
+	}
+
+	return [...sections].map(([category, results]) => ({ category, results }));
+}
+
 const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
 	stars: schema.listings.stars,
 	newest: schema.listings.createdAt,
@@ -168,4 +204,31 @@ export async function getListingsPage(
 	const results = rows.slice(0, page.limit);
 
 	return { results, hasMore: rows.length > page.limit };
+}
+
+export async function getCategorySections(
+	db: Database,
+	limit: number
+): Promise<CategorySection[]> {
+	const ranked = db
+		.select({
+			...summaryColumns,
+			rank: sql<number>`row_number() over (
+				partition by ${schema.listings.category}
+				order by ${schema.listings.stars} desc, ${schema.listings.id} asc
+			)`
+				.mapWith(Number)
+				.as('rank')
+		})
+		.from(schema.listings)
+		.where(and(eq(schema.listings.isPublished, true), isNotNull(schema.listings.category)))
+		.as('ranked');
+
+	const rows = await db
+		.select()
+		.from(ranked)
+		.where(sql`${ranked.rank} <= ${limit}`)
+		.orderBy(asc(ranked.category), asc(ranked.rank));
+
+	return groupIntoSections(rows as RankedRow[], limit);
 }

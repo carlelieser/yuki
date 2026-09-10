@@ -1,6 +1,8 @@
 export const BROWSE_PAGE_SIZE = 24;
 export const FEATURED_PAGE_SIZE = 10;
 export const MAX_BROWSE_OFFSET = 2000;
+export const SECTION_PAGE_SIZE = 3;
+export const MAX_SECTION_PAGE_SIZE = 24;
 
 export const BROWSE_SORTS = ['stars', 'newest', 'updated', 'name'] as const;
 export const BROWSE_ORDERS = ['asc', 'desc'] as const;
@@ -36,6 +38,12 @@ export function readBrowseOffset(raw: string | null): number {
 	const parsed = Number(raw);
 	if (!Number.isFinite(parsed) || parsed <= 0) return 0;
 	return Math.min(Math.floor(parsed), MAX_BROWSE_OFFSET);
+}
+
+export function readSectionLimit(raw: string | null): number {
+	const parsed = Number(raw);
+	if (!Number.isFinite(parsed) || parsed <= 0) return SECTION_PAGE_SIZE;
+	return Math.min(Math.floor(parsed), MAX_SECTION_PAGE_SIZE);
 }
 
 export function isFeaturedRequested(raw: string | null): boolean {

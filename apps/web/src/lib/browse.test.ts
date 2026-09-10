@@ -6,10 +6,13 @@ import {
 	fromSortValue,
 	isFeaturedRequested,
 	MAX_BROWSE_OFFSET,
+	MAX_SECTION_PAGE_SIZE,
 	readBrowseOffset,
 	readBrowseOrder,
 	readBrowseSort,
 	readBrowseSorting,
+	readSectionLimit,
+	SECTION_PAGE_SIZE,
 	toBrowseQueryString,
 	toSortValue
 } from './browse.ts';
@@ -177,5 +180,27 @@ describe('isFeaturedRequested', () => {
 		expect(isFeaturedRequested('1')).toBe(false);
 		expect(isFeaturedRequested('TRUE')).toBe(false);
 		expect(isFeaturedRequested('yes')).toBe(false);
+	});
+});
+
+describe('readSectionLimit', () => {
+	it('defaults to the section page size for missing and unparseable values', () => {
+		expect(readSectionLimit(null)).toBe(SECTION_PAGE_SIZE);
+		expect(readSectionLimit('')).toBe(SECTION_PAGE_SIZE);
+		expect(readSectionLimit('abc')).toBe(SECTION_PAGE_SIZE);
+		expect(readSectionLimit('0')).toBe(SECTION_PAGE_SIZE);
+		expect(readSectionLimit('-5')).toBe(SECTION_PAGE_SIZE);
+	});
+
+	it('defaults to three listings per section', () => {
+		expect(SECTION_PAGE_SIZE).toBe(3);
+	});
+
+	it('reads a valid limit', () => {
+		expect(readSectionLimit('6')).toBe(6);
+	});
+
+	it('clamps limits beyond the maximum', () => {
+		expect(readSectionLimit('999999')).toBe(MAX_SECTION_PAGE_SIZE);
 	});
 });
