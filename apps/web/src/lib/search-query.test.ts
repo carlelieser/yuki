@@ -16,6 +16,7 @@ import {
 	toSearchQueryString,
 	toSearchSortValue
 } from './search-query.ts';
+import { CATEGORY_OPTIONS, readCategory } from './categories.ts';
 
 const WELL_FORMED_TSQUERY = /^[a-zA-Z0-9._-]+(?: & [a-zA-Z0-9._-]+)*(?::\*)?$/;
 
@@ -230,6 +231,31 @@ describe('toSearchQueryString', () => {
 			const params = new URLSearchParams(toSearchQueryString('tetris', sorting));
 			expect(params.get('q')).toBe('tetris');
 			expect(readSearchSorting(params)).toEqual(sorting);
+		}
+	});
+
+	it('appends a category after the offset', () => {
+		expect(toSearchQueryString('tetris', DEFAULT_SEARCH_SORTING, 24, 'gaming')).toBe(
+			'q=tetris&offset=24&category=gaming'
+		);
+	});
+
+	it('omits a null category', () => {
+		expect(toSearchQueryString('tetris', DEFAULT_SEARCH_SORTING, 0, null)).toBe('q=tetris');
+	});
+
+	it('keeps the category alongside a column sort', () => {
+		expect(toSearchQueryString('tetris', { sort: 'stars', order: 'desc' }, 0, 'media')).toBe(
+			'q=tetris&sort=stars&order=desc&category=media'
+		);
+	});
+
+	it('round-trips the category through readCategory', () => {
+		for (const option of CATEGORY_OPTIONS) {
+			const params = new URLSearchParams(
+				toSearchQueryString('tetris', DEFAULT_SEARCH_SORTING, 0, option.value)
+			);
+			expect(readCategory(params.get('category'))).toBe(option.value);
 		}
 	});
 });

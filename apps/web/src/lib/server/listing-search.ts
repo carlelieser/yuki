@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import { orderByFor, summaryColumns, type ListingSummary } from './listings.ts';
+import type { ListingCategory } from '../categories.ts';
 import {
 	DEFAULT_SEARCH_SORTING,
 	hasEnoughLengthForTrigram,
@@ -16,7 +17,12 @@ export type SearchPage = {
 	hasMore: boolean;
 };
 
-type SearchPageRequest = { limit: number; offset: number; sorting?: SearchSorting };
+type SearchPageRequest = {
+	limit: number;
+	offset: number;
+	sorting?: SearchSorting;
+	category?: ListingCategory | null;
+};
 
 function fullTextMatch(tsQuery: SQL): SQL {
 	return sql`${schema.listings.searchVector} @@ ${tsQuery}`;
@@ -49,8 +55,10 @@ function buildFullSearchMatch(normalized: string): SearchMatch | null {
 	return matchFor(normalized, sql`websearch_to_tsquery('english', ${normalized})`);
 }
 
-function publishedAnd(condition: SQL): SQL {
-	return and(eq(schema.listings.isPublished, true), condition) as SQL;
+function publishedAnd(condition: SQL, category: ListingCategory | null = null): SQL {
+	const published = and(eq(schema.listings.isPublished, true), condition) as SQL;
+	if (category === null) return published;
+	return and(published, eq(schema.listings.category, category)) as SQL;
 }
 
 function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
@@ -106,7 +114,7 @@ export async function searchListingsPage(
 	const rows = await db
 		.select({ ...summaryColumns, total: sql<number>`count(*) over ()`.mapWith(Number) })
 		.from(schema.listings)
-		.where(publishedAnd(match.condition))
+		.where(publishedAnd(match.condition, page.category ?? null))
 		.orderBy(...searchOrderBy(sorting, match.rank))
 		.limit(page.limit)
 		.offset(offset);

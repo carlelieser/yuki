@@ -91,7 +91,8 @@ export function readSearchSorting(params: URLSearchParams): SearchSorting {
 export function toSearchQueryString(
 	query: string,
 	sorting: SearchSorting,
-	offset: number = 0
+	offset: number = 0,
+	category: string | null = null
 ): string {
 	const parts = [`q=${encodeURIComponent(query)}`];
 
@@ -100,6 +101,7 @@ export function toSearchQueryString(
 	}
 
 	if (offset > 0) parts.push(`offset=${offset}`);
+	if (category !== null) parts.push(`category=${category}`);
 
 	return parts.join('&');
 }

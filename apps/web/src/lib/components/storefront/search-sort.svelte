@@ -9,14 +9,19 @@
 		toSearchSortValue,
 		type SearchSorting
 	} from '$lib/search-query.ts';
+	import type { ListingCategory } from '$lib/categories.ts';
 
-	let { query, sorting }: { query: string; sorting: SearchSorting } = $props();
+	let {
+		query,
+		sorting,
+		category = null
+	}: { query: string; sorting: SearchSorting; category?: ListingCategory | null } = $props();
 
 	const current = $derived(toSearchSortValue(sorting));
 
 	function select(value: string): void {
 		const selected = fromSearchSortValue(value);
-		void goto(resolve(`/(app)/search?${toSearchQueryString(query, selected)}`), {
+		void goto(resolve(`/(app)/search?${toSearchQueryString(query, selected, 0, category)}`), {
 			keepFocus: true,
 			noScroll: true
 		});
