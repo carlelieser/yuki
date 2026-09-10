@@ -1,6 +1,6 @@
 package app.yuki.feature.library
 
-import app.yuki.core.designsystem.component.AppRowContent
+import app.yuki.core.designsystem.component.ProductListItemContent
 import app.yuki.core.model.InstalledApp
 
 data class LibraryItem(
@@ -9,7 +9,7 @@ data class LibraryItem(
 ) {
     val githubRepoId: Long get() = app.githubRepoId
 
-    val row: AppRowContent get() = AppRowContent(
+    val listItem: ProductListItemContent get() = ProductListItemContent(
         title = app.title,
         supporting = app.versionTag,
         iconUrl = app.iconUrl,

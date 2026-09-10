@@ -17,17 +17,17 @@ import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 
-data class AppRowContent(
+data class ProductListItemContent(
     val title: String,
     val supporting: String,
     val iconUrl: String?,
 )
 
-fun ListingSummary.toRowContent(): AppRowContent =
-    AppRowContent(title = title, supporting = author, iconUrl = iconUrl)
+fun ListingSummary.toProductListItemContent(): ProductListItemContent =
+    ProductListItemContent(title = title, supporting = author, iconUrl = iconUrl)
 
 @Composable
-private fun AppRowText(content: AppRowContent, modifier: Modifier = Modifier) {
+private fun ProductListItemText(content: ProductListItemContent, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
@@ -49,8 +49,8 @@ private fun AppRowText(content: AppRowContent, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AppRow(
-    content: AppRowContent,
+fun ProductListItem(
+    content: ProductListItemContent,
     modifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -63,16 +63,16 @@ fun AppRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AppIcon(iconUrl = content.iconUrl, size = YukiSize.IconMedium)
-        AppRowText(content = content, modifier = Modifier.weight(1f))
+        ProductListItemText(content = content, modifier = Modifier.weight(1f))
         trailing?.invoke()
     }
 }
 
 @Composable
-fun ClickableAppRow(
-    content: AppRowContent,
+fun ClickableProductListItem(
+    content: ProductListItemContent,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AppRow(content = content, modifier = modifier.clickable(onClick = onClick))
+    ProductListItem(content = content, modifier = modifier.clickable(onClick = onClick))
 }

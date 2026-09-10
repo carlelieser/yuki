@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.AppRow
+import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
@@ -28,8 +28,8 @@ data class UpdatesActions(
 
 internal fun LazyListScope.updateRows(content: UpdatesContent, actions: UpdatesActions) {
     items(content.updates, key = UpdateRow::githubRepoId) { row ->
-        AppRow(
-            content = row.row,
+        ProductListItem(
+            content = row.listItem,
             modifier = Modifier.clickable { actions.onListingClick(row.slug) },
             trailing = {
                 InstallButton(
@@ -55,8 +55,8 @@ internal fun LazyListScope.uncheckedRows(content: UpdatesContent, actions: Updat
 
 @Composable
 private fun UncheckedRow(entry: UncheckedApp, onClick: () -> Unit) {
-    AppRow(
-        content = entry.row,
+    ProductListItem(
+        content = entry.listItem,
         modifier = Modifier.clickable(onClick = onClick).testTag(UNCHECKED_ROW_TAG),
         trailing = { UncheckedNote(reason = entry.reason) },
     )

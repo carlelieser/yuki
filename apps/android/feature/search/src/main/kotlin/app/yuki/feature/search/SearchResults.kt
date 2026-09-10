@@ -10,12 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.ClickableAppRow
+import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
-import app.yuki.core.designsystem.component.toRowContent
+import app.yuki.core.designsystem.component.toProductListItemContent
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
@@ -79,8 +79,8 @@ private fun MatchList(
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
     ) {
         items(items = matches, key = { listing -> listing.id }) { listing ->
-            ClickableAppRow(
-                content = listing.toRowContent(),
+            ClickableProductListItem(
+                content = listing.toProductListItemContent(),
                 onClick = { onSelect(listing) },
             )
         }

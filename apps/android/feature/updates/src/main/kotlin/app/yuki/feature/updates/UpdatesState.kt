@@ -1,6 +1,6 @@
 package app.yuki.feature.updates
 
-import app.yuki.core.designsystem.component.AppRowContent
+import app.yuki.core.designsystem.component.ProductListItemContent
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
@@ -14,7 +14,7 @@ data class UpdateRow(
 
     val slug: String get() = update.installed.slug
 
-    val row: AppRowContent get() = AppRowContent(
+    val listItem: ProductListItemContent get() = ProductListItemContent(
         title = update.installed.title,
         supporting = "${update.installed.versionTag} $VERSION_ARROW ${update.version.tag}",
         iconUrl = update.installed.iconUrl,
@@ -29,7 +29,7 @@ data class UncheckedApp(
 
     val slug: String get() = app.slug
 
-    val row: AppRowContent get() = AppRowContent(
+    val listItem: ProductListItemContent get() = ProductListItemContent(
         title = app.title,
         supporting = app.versionTag,
         iconUrl = app.iconUrl,

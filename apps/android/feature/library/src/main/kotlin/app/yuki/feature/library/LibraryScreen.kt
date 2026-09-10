@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.yuki.core.designsystem.component.ClickableAppRow
+import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
@@ -91,8 +91,8 @@ private fun LibraryList(
             .testTag(LIBRARY_LIST_TAG),
     ) {
         items(content.items, key = LibraryItem::githubRepoId) { item ->
-            ClickableAppRow(
-                content = item.row,
+            ClickableProductListItem(
+                content = item.listItem,
                 onClick = { actions.onListingClick(item.app.slug) },
             )
         }
