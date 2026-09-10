@@ -94,6 +94,7 @@ fun YukiDetailScreen(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -101,14 +102,18 @@ fun YukiDetailScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            YukiDetailHeader(title = title, onBackClick = onBackClick)
+            YukiDetailHeader(title = title, onBackClick = onBackClick, trailing = trailing)
             Box(modifier = Modifier.fillMaxSize()) { content() }
         }
     }
 }
 
 @Composable
-private fun YukiDetailHeader(title: String, onBackClick: () -> Unit) {
+private fun YukiDetailHeader(
+    title: String,
+    onBackClick: () -> Unit,
+    trailing: (@Composable () -> Unit)?,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,6 +136,7 @@ private fun YukiDetailHeader(title: String, onBackClick: () -> Unit) {
                 .weight(1f)
                 .semantics { heading() },
         )
+        trailing?.invoke()
     }
 }
 
