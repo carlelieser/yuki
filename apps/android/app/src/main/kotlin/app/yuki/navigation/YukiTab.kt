@@ -1,27 +1,39 @@
 package app.yuki.navigation
 
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
+import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiNavDestination
 import kotlin.reflect.KClass
 
 internal enum class YukiTab(
     val label: String,
-    val icon: ImageVector,
     val route: KClass<*>,
 ) {
-    Explore("Explore", YukiTabIcons.Explore, ExploreRoute::class),
-    Library("Library", YukiTabIcons.Library, LibraryRoute::class),
-    Updates("Updates", YukiTabIcons.Updates, UpdatesRoute::class),
+    Explore("Explore", ExploreRoute::class),
+    Library("Library", LibraryRoute::class),
+    Updates("Updates", UpdatesRoute::class),
 }
 
-internal fun YukiTab.toNavDestination(): YukiNavDestination = YukiNavDestination(
-    label = label,
-    icon = { Icon(imageVector = icon, contentDescription = label) },
-)
+@Composable
+private fun YukiTab.icon(): ImageVector = when (this) {
+    YukiTab.Explore -> YukiIcons.Explore
+    YukiTab.Library -> YukiIcons.Library
+    YukiTab.Updates -> YukiIcons.Update
+}
+
+@Composable
+internal fun YukiTab.toNavDestination(): YukiNavDestination {
+    val icon = icon()
+    return YukiNavDestination(
+        label = label,
+        icon = { Icon(imageVector = icon, contentDescription = label) },
+    )
+}
 
 internal fun YukiTab.startRoute(): Any = when (this) {
     YukiTab.Explore -> ExploreRoute
