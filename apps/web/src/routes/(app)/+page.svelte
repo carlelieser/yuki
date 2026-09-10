@@ -2,8 +2,10 @@
 	import { resolve } from '$app/paths';
 	import { buttonVariants } from '@yuki/ui';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
+	import { goto } from '$app/navigation';
 	import {
 		BrowseSort,
+		CategoryMenu,
 		ListingCard,
 		ListingFeed,
 		ProductCard,
@@ -11,6 +13,7 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toBrowseQueryString } from '$lib/browse.ts';
+	import type { ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 	import Autoplay from 'embla-carousel-autoplay';
@@ -28,6 +31,12 @@
 	const browseHref = $derived(
 		resolve(`/(app)/browse?${toBrowseQueryString({ sort: data.sort, order: data.order })}`)
 	);
+
+	function selectCategory(category: ListingCategory | null): void {
+		const query = toBrowseQueryString({ sort: data.sort, order: data.order }, 0, category);
+
+		void goto(resolve(`/(app)/browse?${query}`), { keepFocus: true, noScroll: true });
+	}
 </script>
 
 <svelte:head><title>Yuki</title></svelte:head>
@@ -76,6 +85,7 @@
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
 			<div class="flex items-center gap-1">
+				<CategoryMenu categories={data.categories} onSelect={selectCategory} />
 				<BrowseSort sort={data.sort} order={data.order} />
 				<a href={browseHref} class={buttonVariants({ variant: 'ghost' })}>
 					Browse all

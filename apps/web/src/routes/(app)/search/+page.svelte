@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
+		CategoryMenu,
 		CollectionEmpty,
 		ListingCard,
 		ProductGrid,
@@ -8,6 +10,7 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toSearchQueryString } from '$lib/search-query.ts';
+	import type { ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
@@ -20,8 +23,16 @@
 	);
 	const nextOffset = $derived(data.results.length);
 	const nextPageHref = $derived(
-		resolve(`/(app)/search?${toSearchQueryString(data.query, data.sorting, nextOffset)}`)
+		resolve(
+			`/(app)/search?${toSearchQueryString(data.query, data.sorting, nextOffset, data.category)}`
+		)
 	);
+
+	function selectCategory(category: ListingCategory | null): void {
+		const query = toSearchQueryString(data.query, data.sorting, 0, category);
+
+		void goto(resolve(`/(app)/search?${query}`), { keepFocus: true, noScroll: true });
+	}
 </script>
 
 <svelte:head><title>{title}</title></svelte:head>
@@ -39,7 +50,14 @@
 	{:else}
 		<Section title={heading}>
 			{#snippet action()}
-				<SearchSort query={data.query} sorting={data.sorting} />
+				<div class="flex items-center gap-1">
+					<CategoryMenu
+						categories={data.categories}
+						selected={data.category}
+						onSelect={selectCategory}
+					/>
+					<SearchSort query={data.query} sorting={data.sorting} category={data.category} />
+				</div>
 			{/snippet}
 			<ProductGrid items={data.results} item={card}>
 				{#snippet empty()}
