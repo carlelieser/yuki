@@ -181,6 +181,21 @@ object YukiIcons {
         }
     }
 
+    val Forward: ImageVector = materialIcon("Forward") {
+        path(fill = SolidColor(Color.Black)) {
+            moveTo(4f, 11f)
+            horizontalLineToRelative(12.17f)
+            lineToRelative(-5.59f, -5.59f)
+            lineTo(12f, 4f)
+            lineToRelative(8f, 8f)
+            lineToRelative(-8f, 8f)
+            lineToRelative(-1.41f, -1.41f)
+            lineTo(16.17f, 13f)
+            horizontalLineTo(4f)
+            close()
+        }
+    }
+
     val Close: ImageVector = materialIcon("Close") {
         path(fill = SolidColor(Color.Black)) {
             moveTo(19f, 6.41f)

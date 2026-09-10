@@ -1,5 +1,6 @@
 package app.yuki.core.designsystem.component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,11 +8,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -22,31 +28,64 @@ import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
-import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+
+private enum class CardMediaKind(val ratio: Float, val hasGlyph: Boolean) {
+    Icon(ratio = YukiRatio.Square, hasGlyph = true),
+    Banner(ratio = YukiRatio.Banner, hasGlyph = false),
+}
 
 @Composable
-private fun CardMedia(imageUrl: String?, ratio: Float) {
+private fun CardMediaPlaceholder(kind: CardMediaKind) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(ratio),
+            .aspectRatio(kind.ratio),
         contentAlignment = Alignment.Center,
     ) {
-        if (imageUrl == null) {
-            ShimmerBox(modifier = Modifier.fillMaxWidth().aspectRatio(ratio), isAnimated = false)
-            return@Box
-        }
+        ShimmerBox(
+            modifier = Modifier.fillMaxWidth().aspectRatio(kind.ratio),
+            isAnimated = false,
+        )
 
-        AsyncImage(
-            model = imageUrl,
+        if (!kind.hasGlyph) return@Box
+
+        Icon(
+            imageVector = Icons.Outlined.Inventory2,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(ratio)
+                .size(YukiSize.IconLarge)
                 .clearAndSetSemantics { },
         )
     }
+}
+
+@Composable
+private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
+    if (imageUrl == null) {
+        CardMediaPlaceholder(kind = kind)
+        return
+    }
+
+    val painter = rememberAsyncImagePainter(model = imageUrl, contentScale = ContentScale.Crop)
+    val state = painter.state.collectAsState().value
+
+    if (state !is AsyncImagePainter.State.Success) {
+        CardMediaPlaceholder(kind = kind)
+        return
+    }
+
+    Image(
+        painter = painter,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(kind.ratio)
+            .clearAndSetSemantics { },
+    )
 }
 
 @Composable
@@ -82,7 +121,7 @@ fun ProductCard(
         shape = YukiShape.Card,
         modifier = modifier.width(YukiSize.CardWidth),
     ) {
-        CardMedia(imageUrl = listing.iconUrl, ratio = YukiRatio.Square)
+        CardMedia(imageUrl = listing.iconUrl, kind = CardMediaKind.Icon)
         CardCaption(listing = listing)
     }
 }
@@ -126,7 +165,7 @@ fun FeaturedCard(
         shape = YukiShape.Card,
         modifier = modifier.width(YukiSize.BannerWidth),
     ) {
-        CardMedia(imageUrl = listing.bannerUrl, ratio = YukiRatio.Banner)
+        CardMedia(imageUrl = listing.bannerUrl, kind = CardMediaKind.Banner)
         WideCaption(listing = listing)
     }
 }

@@ -9,6 +9,7 @@ android {
 
 dependencies {
     api(projects.core.model)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
