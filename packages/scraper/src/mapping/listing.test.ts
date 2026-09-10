@@ -4,8 +4,7 @@ import {
 	buildTitle,
 	extractReadmeHeading,
 	humanizeRepoName,
-	mapRepository,
-	parseTimestamp
+	mapRepository
 } from './listing.ts';
 import type { GithubRepository } from '../github/types.ts';
 
@@ -121,20 +120,5 @@ describe('mapRepository', () => {
 
 	it('handles a missing license', () => {
 		expect(mapRepository(repository({ license: null }), 'weak', null).license).toBeNull();
-	});
-});
-
-describe('parseTimestamp', () => {
-	it('parses a GitHub timestamp', () => {
-		expect(parseTimestamp('2026-02-01T00:00:00Z')).toEqual(new Date('2026-02-01T00:00:00Z'));
-	});
-
-	it('treats null and undefined alike, since search results omit fields', () => {
-		expect(parseTimestamp(null)).toBeNull();
-		expect(parseTimestamp(undefined)).toBeNull();
-	});
-
-	it('returns null rather than an Invalid Date the database would reject', () => {
-		expect(parseTimestamp('not a date')).toBeNull();
 	});
 });

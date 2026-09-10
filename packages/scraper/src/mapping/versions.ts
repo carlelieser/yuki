@@ -1,4 +1,4 @@
-import { parseTimestamp } from './listing.ts';
+import { parseTimestamp } from './timestamp.ts';
 import type { GithubRelease, GithubReleaseAsset } from '../github/types.ts';
 
 export type MappedVersion = {

@@ -1,4 +1,5 @@
 import { categorize } from '../detection/category.ts';
+import { parseTimestamp } from './timestamp.ts';
 import type { GithubRepository } from '../github/types.ts';
 import type { ListingCategory, ListingConfidence } from '@yuki/db/schema';
 
@@ -23,13 +24,6 @@ export type MappedListing = {
 };
 
 const MAX_TITLE_LENGTH = 60;
-
-export function parseTimestamp(value: string | null | undefined): Date | null {
-	if (value === null || value === undefined) return null;
-
-	const parsed = new Date(value);
-	return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 export function slugify(value: string): string {
 	return value
