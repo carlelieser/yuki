@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-	parseArchitecturePreference,
-	selectedArchitecture
-} from './architecture-preference.ts';
+import { parseArchitecturePreference, selectedArchitecture } from './architecture-preference.ts';
 
 describe('parseArchitecturePreference', () => {
 	it('reads a stored architecture', () => {
