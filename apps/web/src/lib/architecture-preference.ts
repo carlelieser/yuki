@@ -12,9 +12,10 @@ export function parseArchitecturePreference(raw: string | null): ArchitecturePre
 
 export function selectedArchitecture(
 	preference: ArchitecturePreference,
-	available: Architecture[]
+	available: Architecture[] | null
 ): ArchitecturePreference {
 	if (preference === null) return null;
+	if (available === null) return preference;
 
 	return available.includes(preference) ? preference : null;
 }

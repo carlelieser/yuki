@@ -29,8 +29,12 @@ describe('selectedArchitecture', () => {
 		expect(selectedArchitecture('x86', ['arm64-v8a'])).toBeNull();
 	});
 
-	it('falls back to the default before the architectures are known', () => {
+	it('falls back to the default when the release ships no splits', () => {
 		expect(selectedArchitecture('arm64-v8a', [])).toBeNull();
+	});
+
+	it('keeps the preference before the architectures are known', () => {
+		expect(selectedArchitecture('arm64-v8a', null)).toBe('arm64-v8a');
 	});
 
 	it('stays on the default when there is no preference', () => {

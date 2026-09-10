@@ -15,6 +15,8 @@
 		type ButtonSize
 	} from '@yuki/ui';
 	import type { Architecture } from '@yuki/github';
+	import { getArchitectureStore } from '$lib/architecture-store.svelte.ts';
+	import { selectedArchitecture } from '$lib/architecture-preference.ts';
 	import DownloadIcon from '@lucide/svelte/icons/download';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
@@ -32,17 +34,24 @@
 		size?: ButtonSize;
 	} = $props();
 
+	const store = getArchitectureStore();
+
 	let open = $state(false);
 	let hasRequested = $state(false);
 	let isLoading = $state(false);
-	let architectures = $state<Architecture[]>([]);
-	let selected = $state(DEFAULT_VALUE);
+	let architectures = $state<Architecture[] | null>(null);
+
+	const selected = $derived(selectedArchitecture(store.preference, architectures) ?? DEFAULT_VALUE);
 
 	const downloadPath = $derived(resolve('/(app)/listings/[slug]/download/[tag]', { slug, tag }));
 
 	function urlFor(architecture: string): string {
 		if (architecture === DEFAULT_VALUE) return downloadPath;
 		return `${downloadPath}?arch=${encodeURIComponent(architecture)}`;
+	}
+
+	function choose(value: string): void {
+		store.choose(value === DEFAULT_VALUE ? null : (value as Architecture));
 	}
 
 	const href = $derived(urlFor(selected));
@@ -98,9 +107,9 @@
 				{#if isLoading}
 					<Skeleton class="mx-2 my-1.5 h-6 rounded-sm" />
 				{:else}
-					<DropdownMenuRadioGroup bind:value={selected}>
+					<DropdownMenuRadioGroup value={selected} onValueChange={choose}>
 						<DropdownMenuRadioItem value={DEFAULT_VALUE}>Default</DropdownMenuRadioItem>
-						{#each architectures as architecture (architecture)}
+						{#each architectures ?? [] as architecture (architecture)}
 							<DropdownMenuRadioItem value={architecture}>{architecture}</DropdownMenuRadioItem>
 						{/each}
 					</DropdownMenuRadioGroup>
