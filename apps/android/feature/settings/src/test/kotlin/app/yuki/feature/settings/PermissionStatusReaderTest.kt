@@ -3,72 +3,125 @@ package app.yuki.feature.settings
 import android.Manifest
 import android.os.Build
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PermissionStatusReaderTest {
     @Test
-    fun installUnknownAppsReadsTheAppOpNotTheRuntimeGrant() {
-        val lookup = RecordingLookup(grantedKinds = setOf(PermissionKind.InstallPackagesAppOp))
+    fun installUnknownAppsIsGrantedWhenOnlyTheAppOpIsGranted() {
+        val platform = FakePlatformPermissions(canRequestPackageInstalls = true)
 
-        val status = statusOf(permissionFor(Manifest.permission.REQUEST_INSTALL_PACKAGES), SDK, lookup)
+        val status = readerFor(platform).statusOf(installUnknownApps())
 
         assertEquals(PermissionStatus.Granted, status)
-        assertEquals(listOf(PermissionKind.InstallPackagesAppOp), lookup.kindsAsked)
+    }
+
+    @Test
+    fun installUnknownAppsIgnoresTheRuntimeGrantEntirely() {
+        val platform = FakePlatformPermissions(
+            grantedRuntimePermissions = setOf(Manifest.permission.REQUEST_INSTALL_PACKAGES),
+            canRequestPackageInstalls = false,
+        )
+
+        val status = readerFor(platform).statusOf(installUnknownApps())
+
+        assertEquals(PermissionStatus.Denied, status)
+        assertTrue(platform.runtimeChecks.isEmpty())
+        assertEquals(1, platform.packageInstallChecks)
     }
 
     @Test
     fun installUnknownAppsIsDeniedWhenTheAppOpIsNotGranted() {
-        val lookup = RecordingLookup(grantedKinds = setOf(PermissionKind.Runtime))
+        val platform = FakePlatformPermissions(canRequestPackageInstalls = false)
 
-        val status = statusOf(permissionFor(Manifest.permission.REQUEST_INSTALL_PACKAGES), SDK, lookup)
+        val status = readerFor(platform).statusOf(installUnknownApps())
 
         assertEquals(PermissionStatus.Denied, status)
     }
 
     @Test
-    fun aRuntimePermissionStillReadsTheRuntimeGrant() {
-        val lookup = RecordingLookup(grantedKinds = setOf(PermissionKind.Runtime))
+    fun aRuntimePermissionReadsTheRuntimeGrantNotTheAppOp() {
+        val platform = FakePlatformPermissions(
+            grantedRuntimePermissions = setOf(Manifest.permission.INTERNET),
+            canRequestPackageInstalls = false,
+        )
 
-        val status = statusOf(permissionFor(Manifest.permission.INTERNET), SDK, lookup)
+        val status = readerFor(platform).statusOf(permissionFor(Manifest.permission.INTERNET))
 
         assertEquals(PermissionStatus.Granted, status)
-        assertEquals(listOf(PermissionKind.Runtime), lookup.kindsAsked)
+        assertEquals(listOf(Manifest.permission.INTERNET), platform.runtimeChecks)
+        assertEquals(0, platform.packageInstallChecks)
+    }
+
+    @Test
+    fun aRuntimePermissionIsDeniedWhenOnlyTheAppOpIsGranted() {
+        val platform = FakePlatformPermissions(canRequestPackageInstalls = true)
+
+        val status = readerFor(platform).statusOf(permissionFor(Manifest.permission.INTERNET))
+
+        assertEquals(PermissionStatus.Denied, status)
     }
 
     @Test
     fun notificationsCountAsGrantedBelowTheSdkThatIntroducedThem() {
-        val lookup = RecordingLookup(grantedKinds = emptySet())
-        val notifications = permissionFor(Manifest.permission.POST_NOTIFICATIONS)
+        val platform = FakePlatformPermissions(sdkInt = Build.VERSION_CODES.S)
 
-        val status = statusOf(notifications, Build.VERSION_CODES.S, lookup)
+        val status = readerFor(platform).statusOf(notifications())
 
         assertEquals(PermissionStatus.Granted, status)
-        assertEquals(emptyList<PermissionKind>(), lookup.kindsAsked)
+        assertTrue(platform.runtimeChecks.isEmpty())
     }
 
     @Test
     fun notificationsReadTheRuntimeGrantOnceTheSdkSupportsThem() {
-        val lookup = RecordingLookup(grantedKinds = emptySet())
-        val notifications = permissionFor(Manifest.permission.POST_NOTIFICATIONS)
+        val platform = FakePlatformPermissions(sdkInt = Build.VERSION_CODES.TIRAMISU)
 
-        val status = statusOf(notifications, Build.VERSION_CODES.TIRAMISU, lookup)
+        val status = readerFor(platform).statusOf(notifications())
 
         assertEquals(PermissionStatus.Denied, status)
-        assertEquals(listOf(PermissionKind.Runtime), lookup.kindsAsked)
+        assertEquals(listOf(Manifest.permission.POST_NOTIFICATIONS), platform.runtimeChecks)
+    }
+
+    @Test
+    fun everyDeclaredPermissionIsReadableWithoutTouchingTheWrongPlatformCall() {
+        val platform = FakePlatformPermissions()
+
+        YUKI_PERMISSIONS.forEach { permission -> readerFor(platform).statusOf(permission) }
+
+        assertFalse(platform.runtimeChecks.contains(Manifest.permission.REQUEST_INSTALL_PACKAGES))
+        assertEquals(1, platform.packageInstallChecks)
     }
 }
 
-private const val SDK = Build.VERSION_CODES.TIRAMISU
+private class FakePlatformPermissions(
+    private val grantedRuntimePermissions: Set<String> = emptySet(),
+    private val canRequestPackageInstalls: Boolean = false,
+    override val sdkInt: Int = Build.VERSION_CODES.TIRAMISU,
+) : PlatformPermissions {
+    val runtimeChecks: MutableList<String> = mutableListOf()
 
-private class RecordingLookup(private val grantedKinds: Set<PermissionKind>) :
-    PlatformPermissionLookup {
-    val kindsAsked: MutableList<PermissionKind> = mutableListOf()
+    var packageInstallChecks: Int = 0
+        private set
 
-    override fun isGranted(kind: PermissionKind, permission: String): Boolean {
-        kindsAsked += kind
-        return kind in grantedKinds
+    override fun isRuntimeGranted(permission: String): Boolean {
+        runtimeChecks += permission
+        return permission in grantedRuntimePermissions
+    }
+
+    override fun canRequestPackageInstalls(): Boolean {
+        packageInstallChecks += 1
+        return canRequestPackageInstalls
     }
 }
+
+private fun readerFor(platform: PlatformPermissions): PermissionStatusReader =
+    ContextPermissionStatusReader(platform)
+
+private fun installUnknownApps(): AppPermission =
+    permissionFor(Manifest.permission.REQUEST_INSTALL_PACKAGES)
+
+private fun notifications(): AppPermission = permissionFor(Manifest.permission.POST_NOTIFICATIONS)
 
 private fun permissionFor(permission: String): AppPermission =
     YUKI_PERMISSIONS.first { entry -> entry.permission == permission }

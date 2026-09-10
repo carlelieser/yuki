@@ -21,44 +21,47 @@ interface PermissionStatusReader {
     fun statusOf(permission: AppPermission): PermissionStatus
 }
 
-internal fun interface PlatformPermissionLookup {
-    fun isGranted(kind: PermissionKind, permission: String): Boolean
+internal interface PlatformPermissions {
+    fun isRuntimeGranted(permission: String): Boolean
+
+    fun canRequestPackageInstalls(): Boolean
+
+    val sdkInt: Int
 }
 
 internal fun isNotificationsSupported(sdkInt: Int): Boolean = sdkInt >= Build.VERSION_CODES.TIRAMISU
 
-internal fun statusOf(
-    permission: AppPermission,
-    sdkInt: Int,
-    lookup: PlatformPermissionLookup,
-): PermissionStatus {
-    val isUnsupported = permission.permission == Manifest.permission.POST_NOTIFICATIONS &&
-        !isNotificationsSupported(sdkInt)
-    if (isUnsupported) return PermissionStatus.Granted
+internal class ContextPlatformPermissions(private val context: Context) : PlatformPermissions {
+    override fun isRuntimeGranted(permission: String): Boolean =
+        context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 
-    return if (lookup.isGranted(permission.kind, permission.permission)) {
-        PermissionStatus.Granted
-    } else {
-        PermissionStatus.Denied
-    }
+    override fun canRequestPackageInstalls(): Boolean =
+        context.packageManager.canRequestPackageInstalls()
+
+    override val sdkInt: Int get() = Build.VERSION.SDK_INT
 }
 
 @Singleton
-internal class ContextPermissionStatusReader @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+internal class ContextPermissionStatusReader(
+    private val platform: PlatformPermissions,
 ) : PermissionStatusReader {
-    private val lookup = PlatformPermissionLookup { kind, permission ->
-        when (kind) {
-            PermissionKind.Runtime -> isRuntimeGranted(permission)
-            PermissionKind.InstallPackagesAppOp -> context.packageManager.canRequestPackageInstalls()
-        }
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(ContextPlatformPermissions(context))
+
+    override fun statusOf(permission: AppPermission): PermissionStatus {
+        if (isUnsupportedNotifications(permission)) return PermissionStatus.Granted
+
+        return if (isGranted(permission)) PermissionStatus.Granted else PermissionStatus.Denied
     }
 
-    override fun statusOf(permission: AppPermission): PermissionStatus =
-        statusOf(permission, Build.VERSION.SDK_INT, lookup)
+    private fun isUnsupportedNotifications(permission: AppPermission): Boolean =
+        permission.permission == Manifest.permission.POST_NOTIFICATIONS &&
+            !isNotificationsSupported(platform.sdkInt)
 
-    private fun isRuntimeGranted(permission: String): Boolean =
-        context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    private fun isGranted(permission: AppPermission): Boolean = when (permission.kind) {
+        PermissionKind.Runtime -> platform.isRuntimeGranted(permission.permission)
+        PermissionKind.InstallPackagesAppOp -> platform.canRequestPackageInstalls()
+    }
 }
 
 @Module
