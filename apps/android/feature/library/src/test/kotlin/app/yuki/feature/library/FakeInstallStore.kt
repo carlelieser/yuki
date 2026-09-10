@@ -4,6 +4,7 @@ import app.yuki.core.database.InstallRecording
 import app.yuki.core.database.InstallStore
 import app.yuki.core.installer.InstallProgress
 import app.yuki.core.installer.InstallProgressStore
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,6 +61,9 @@ internal class FakeInstalledPackages(
 internal class FakeLibraryProgressStore : InstallProgressStore {
     private val rows = MutableStateFlow<List<InstallProgress>>(emptyList())
 
+    var settledClearances = 0
+        private set
+
     override fun observe(githubRepoId: Long): Flow<InstallProgress?> =
         rows.map { current -> current.firstOrNull { it.githubRepoId == githubRepoId } }
 
@@ -74,5 +78,10 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
 
     override suspend fun clear(githubRepoId: Long) {
         rows.value = rows.value.filterNot { it.githubRepoId == githubRepoId }
+    }
+
+    override suspend fun clearSettled() {
+        settledClearances += 1
+        rows.value = rows.value.filterNot { row -> row.state is InstallState.Installed }
     }
 }

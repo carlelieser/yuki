@@ -1,11 +1,16 @@
 package app.yuki.feature.library
 
+import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
+import app.yuki.core.database.InstallRecording
 import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallTarget
+import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.UiState
 import app.yuki.core.model.downloadSizeOf
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -117,7 +122,7 @@ class LibraryViewModelTest {
 
             progress.write(
                 InstallProgress(
-                    TERMUX.githubRepoId,
+                    TERMUX.target,
                     "v0.119.0",
                     InstallState.Downloading(HALF_DOWNLOADED),
                 ),
@@ -142,7 +147,7 @@ class LibraryViewModelTest {
 
             progress.write(
                 InstallProgress(
-                    TERMUX.githubRepoId,
+                    TERMUX.target,
                     "v0.119.0",
                     InstallState.Downloading(HALF_DOWNLOADED),
                 ),
@@ -169,7 +174,7 @@ class LibraryViewModelTest {
 
             progress.write(
                 InstallProgress(
-                    AURORA.githubRepoId,
+                    AURORA.target,
                     "v4.7.0",
                     InstallState.Downloading(HALF_DOWNLOADED),
                 ),
@@ -179,6 +184,152 @@ class LibraryViewModelTest {
             assertEquals(listOf(AURORA.githubRepoId), items.downloading.map(LibraryItem::githubRepoId))
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun aFirstTimeDownloadAppearsEvenThoughNothingIsInstalledYet() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue((awaitItem() as UiState.Success).data.isEmpty)
+
+            progress.write(
+                InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Downloading(HALF_DOWNLOADED)),
+            )
+
+            val item = singleItem(awaitItem())
+            assertEquals("Obsidian", item.listItem.title)
+            assertEquals("500 B / 1 KB", item.listItem.supporting)
+            assertTrue(item.isDownloading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aFirstTimeDownloadKeepsItsSlugSoTheRowStillOpensTheListing() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Downloading(HALF_DOWNLOADED)),
+            )
+
+            assertEquals("obsidian", singleItem(awaitItem()).app.slug)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aCompletedFirstInstallBecomesASingleInstalledRow() = runTest {
+        val store = FakeInstallStore()
+        val packages = FakeInstalledPackages()
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(store, packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Downloading(HALF_DOWNLOADED)),
+            )
+            assertEquals(OBSIDIAN.githubRepoId, singleItem(awaitItem()).githubRepoId)
+
+            packages.install(OBSIDIAN_APP.packageName)
+            progress.write(InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Installed("v1.5.0")))
+            store.record(recordingOf(OBSIDIAN_APP))
+
+            val settled = awaitLatestItems(this)
+            assertEquals(listOf(OBSIDIAN.githubRepoId), settled.map(LibraryItem::githubRepoId))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aFailedFirstTimeDownloadStaysVisibleSoItCanBeRetried() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(
+                    OBSIDIAN,
+                    "v1.5.0",
+                    InstallState.Failed(InstallFailure.InsufficientStorage),
+                ),
+            )
+
+            val item = singleItem(awaitItem())
+            assertTrue(item.isFailed)
+            assertEquals(LIBRARY_FAILED_SUPPORTING, item.listItem.supporting)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aDownloadSortsAboveTheAppsThatAreAlreadySettled() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Downloading(HALF_DOWNLOADED)),
+            )
+
+            val items = (awaitItem() as UiState.Success).data.items
+            assertEquals(
+                listOf(OBSIDIAN.githubRepoId, TERMUX.githubRepoId),
+                items.map(LibraryItem::githubRepoId),
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun anInstalledAppBeingUpdatedNeverRendersTwice() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(TERMUX.target, "v0.119.0", InstallState.Downloading(HALF_DOWNLOADED)),
+            )
+
+            val items = (awaitItem() as UiState.Success).data.items
+            assertEquals(listOf(TERMUX.githubRepoId), items.map(LibraryItem::githubRepoId))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun settledInstallProgressIsClearedSoRowsDoNotLeakForever() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertTrue(progress.settledClearances > 0)
     }
 
     private fun viewModelFor(
@@ -192,10 +343,42 @@ class LibraryViewModelTest {
     )
 }
 
+private suspend fun awaitLatestItems(
+    turbine: ReceiveTurbine<UiState<LibraryContent>>,
+): List<LibraryItem> {
+    while (true) {
+        val next = turbine.awaitItem() as? UiState.Success ?: continue
+        val items = next.data.items
+        if (items.isNotEmpty() && items.all { item -> item.isInstalled }) return items
+    }
+}
+
 private fun singleItem(state: UiState<LibraryContent>): LibraryItem =
     (state as UiState.Success).data.items.single()
 
+private val OBSIDIAN_APP = InstalledApp(
+    githubRepoId = 9_012L,
+    packageName = "md.obsidian",
+    slug = "obsidian",
+    title = "Obsidian",
+    iconUrl = null,
+    versionTag = "v1.5.0",
+)
+
+private fun recordingOf(app: InstalledApp): InstallRecording =
+    InstallRecording(app = app, versionCode = 1L, installedAt = Instant.EPOCH)
+
 private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)
+
+private val InstalledApp.target: InstallTarget
+    get() = InstallTarget(githubRepoId, slug, title, iconUrl)
+
+private val OBSIDIAN = InstallTarget(
+    githubRepoId = 9_012L,
+    slug = "obsidian",
+    title = "Obsidian",
+    iconUrl = null,
+)
 
 private fun successApps(state: UiState<LibraryContent>): List<InstalledApp> =
     (state as UiState.Success).data.items.map(LibraryItem::app)

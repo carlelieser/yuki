@@ -13,6 +13,17 @@ data class LibraryItem(
 
     val isDownloading: Boolean get() = install is InstallState.Downloading
 
+    val isFailed: Boolean get() = install is InstallState.Failed
+
+    val isInstalled: Boolean get() = app.packageName.isNotEmpty()
+
+    internal val sortRank: Int get() = when {
+        isDownloading -> RANK_DOWNLOADING
+        install == InstallState.PendingUserAction -> RANK_PENDING
+        isFailed -> RANK_FAILED
+        else -> RANK_SETTLED
+    }
+
     val listItem: ProductListItemContent get() = ProductListItemContent(
         title = app.title,
         supporting = supportingText(),
@@ -34,6 +45,11 @@ data class LibraryContent(
 
     val downloading: List<LibraryItem> get() = items.filter(LibraryItem::isDownloading)
 }
+
+private const val RANK_DOWNLOADING = 0
+private const val RANK_PENDING = 1
+private const val RANK_FAILED = 2
+private const val RANK_SETTLED = 3
 
 internal const val LIBRARY_PENDING_SUPPORTING = "Waiting for confirmation"
 internal const val LIBRARY_FAILED_SUPPORTING = "Install failed"
