@@ -16,6 +16,7 @@ export { Badge, badgeVariants, type BadgeVariant } from './components/ui/badge/i
 export { AspectRatio } from './components/ui/aspect-ratio/index.ts';
 export { Input } from './components/ui/input/index.ts';
 export { Skeleton } from './components/ui/skeleton/index.ts';
+export { Spinner } from './components/ui/spinner/index.ts';
 export {
 	Number,
 	formatNumber,
