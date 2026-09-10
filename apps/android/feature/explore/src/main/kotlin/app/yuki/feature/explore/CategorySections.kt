@@ -25,8 +25,6 @@ import app.yuki.core.model.UiState
 const val CATEGORY_SECTIONS_TAG = "categorySections"
 const val CATEGORY_SECTION_ARROW_DESCRIPTION = "See all"
 
-private const val SECTION_PREVIEW_LIMIT = 5
-
 private val NothingToExplore = EmptyContent(
     title = "No apps yet",
     description = "There is nothing to explore right now. Pull to refresh shortly.",
@@ -75,9 +73,10 @@ private fun LazyListScope.categorySection(
         )
     }
 
-    val preview = section.results.take(SECTION_PREVIEW_LIMIT)
-
-    items(items = preview, key = { listing -> "${category.wireValue}/${listing.id}" }) { listing ->
+    items(
+        items = section.results,
+        key = { listing -> "${category.wireValue}/${listing.id}" },
+    ) { listing ->
         ClickableProductListItem(
             content = listing.toProductListItemContent(),
             onClick = { actions.onListingSelected(listing) },

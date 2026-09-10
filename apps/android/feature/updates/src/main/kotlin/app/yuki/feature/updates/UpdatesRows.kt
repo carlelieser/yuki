@@ -10,10 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.FailureReason
