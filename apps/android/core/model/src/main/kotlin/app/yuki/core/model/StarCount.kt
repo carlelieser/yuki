@@ -5,7 +5,7 @@ private const val MILLION = 1_000_000
 
 fun formatStarCount(stars: Int): String = when {
     stars >= MILLION -> scaled(stars, MILLION, "M")
-    stars >= THOUSAND -> scaled(stars, THOUSAND, "k")
+    stars >= THOUSAND -> scaled(stars, THOUSAND, "K")
     else -> stars.toString()
 }
 

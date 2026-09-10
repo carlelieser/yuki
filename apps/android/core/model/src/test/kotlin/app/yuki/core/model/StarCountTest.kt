@@ -1,6 +1,7 @@
 package app.yuki.core.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StarCountTest {
@@ -21,22 +22,34 @@ class StarCountTest {
 
     @Test
     fun `drops a trailing zero decimal at a thousand`() {
-        assertEquals("1k", formatStarCount(1000))
+        assertEquals("1K", formatStarCount(1000))
     }
 
     @Test
     fun `abbreviates thousands with one decimal`() {
-        assertEquals("1.2k", formatStarCount(1200))
+        assertEquals("1.2K", formatStarCount(1200))
     }
 
     @Test
     fun `abbreviates tens of thousands with one decimal`() {
-        assertEquals("15.4k", formatStarCount(15420))
+        assertEquals("15.4K", formatStarCount(15420))
     }
 
     @Test
     fun `truncates toward zero rather than rounding up to a million`() {
-        assertEquals("999.9k", formatStarCount(999999))
+        assertEquals("999.9K", formatStarCount(999999))
+    }
+
+    @Test
+    fun `capitalises the thousands unit at the boundary`() {
+        assertEquals("1K", formatStarCount(1000))
+        assertEquals("999.9K", formatStarCount(999999))
+    }
+
+    @Test
+    fun `uses the same capitalisation for both units`() {
+        assertTrue(formatStarCount(2500).endsWith("K"))
+        assertTrue(formatStarCount(2500000).endsWith("M"))
     }
 
     @Test

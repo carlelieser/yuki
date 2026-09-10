@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.performScrollToNode
@@ -73,7 +74,7 @@ class ListingScreenTest {
     fun abbreviatesALargeStarCount() {
         setScreen(UiState.Success(detail(summary = summary(stars = 15420)).toUiModel()))
 
-        composeRule.onNodeWithText("15.4k stars").assertIsDisplayed()
+        composeRule.onNodeWithText("15.4K stars").assertIsDisplayed()
     }
 
     @Test
@@ -155,6 +156,15 @@ class ListingScreenTest {
         composeRule.onNodeWithText("Repository").performClick()
 
         assertEquals(listOf("https://github.com/nightsky/aurora"), opened)
+    }
+
+    @Test
+    fun marksEveryLinkRowAsOpeningExternally() {
+        setScreen(UiState.Success(detail().toUiModel()))
+
+        composeRule.scrollToText("License")
+        composeRule.onAllNodesWithContentDescription(EXTERNAL_LINK_DESCRIPTION)
+            .assertCountEquals(linkRows(detail()).size)
     }
 
     @Test
