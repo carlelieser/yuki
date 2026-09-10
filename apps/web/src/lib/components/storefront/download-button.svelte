@@ -105,8 +105,8 @@
 			<DropdownMenuGroup>
 				<DropdownMenuGroupHeading>Architecture</DropdownMenuGroupHeading>
 				{#if isLoading}
-					<div class="flex h-8 items-center justify-center">
-						<Spinner class="text-muted-foreground" />
+					<div class="flex h-12 items-center justify-center">
+						<Spinner class="stroke-primary size-4" />
 					</div>
 				{:else}
 					<DropdownMenuRadioGroup value={selected} onValueChange={choose}>
