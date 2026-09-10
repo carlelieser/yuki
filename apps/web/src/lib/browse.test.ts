@@ -149,6 +149,13 @@ describe('toBrowseQueryString', () => {
 		}
 	});
 
+	it('preserves an active category across a sort change', () => {
+		const params = new URLSearchParams(toBrowseQueryString(fromSortValue('name-asc'), 0, 'gaming'));
+
+		expect(readBrowseSorting(params)).toEqual({ sort: 'name', order: 'asc' });
+		expect(params.get('category')).toBe('gaming');
+	});
+
 	it('round-trips the offset through readBrowseOffset', () => {
 		const params = new URLSearchParams(toBrowseQueryString({ sort: 'stars', order: 'desc' }, 48));
 		expect(readBrowseOffset(params.get('offset'))).toBe(48);
