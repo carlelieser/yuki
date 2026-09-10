@@ -7,7 +7,7 @@ COPY apps/web/package.json apps/web/
 COPY packages/auth/package.json packages/auth/
 COPY packages/db/package.json packages/db/
 COPY packages/ui/package.json packages/ui/
-COPY packages/scraper/package.json packages/scraper/
+COPY packages/github/package.json packages/github/
 RUN bun install --frozen-lockfile
 
 FROM node:24-alpine AS build
