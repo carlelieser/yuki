@@ -38,4 +38,10 @@ object YukiIcons {
 
     val ArrowOutward: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_arrow_outward)
+
+    val GridView: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_grid_view)
+
+    val Sort: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_sort)
 }

@@ -1,6 +1,5 @@
 package app.yuki.feature.search
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
 import androidx.paging.testing.asSnapshot
 import app.cash.turbine.ReceiveTurbine
@@ -40,25 +39,13 @@ class SearchViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(category: ListingCategory? = null) = SearchViewModel(
-        savedStateHandle = SavedStateHandle(
-            mapOf(SEARCH_CATEGORY_KEY to category?.wireValue),
-        ),
+    private fun viewModel() = SearchViewModel(
         repository = repository,
         recentSearches = recentSearches,
     )
 
     @Test
-    fun `the category nav argument reaches the repository`() = runTest {
-        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
-
-        viewModel(ListingCategory.Gaming).listings.collectPage()
-
-        assertEquals(listOf(ListingCategory.Gaming), repository.browsedCategories)
-    }
-
-    @Test
-    fun `a missing category nav argument browses every category`() = runTest {
+    fun `browse starts unfiltered by category`() = runTest {
         repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
 
         viewModel().listings.collectPage()
@@ -102,7 +89,8 @@ class SearchViewModelTest {
     fun `a later page keeps the active category and sort`() = runTest {
         repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), true))
 
-        val model = viewModel(ListingCategory.Gaming)
+        val model = viewModel()
+        model.onCategoryChange(ListingCategory.Gaming)
         model.onSortChange(BrowseSortOption.NameAscending)
         model.listings.collectPage()
 

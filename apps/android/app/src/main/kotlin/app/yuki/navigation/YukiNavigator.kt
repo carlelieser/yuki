@@ -29,8 +29,8 @@ internal class YukiNavigator(
         navController.navigate(SettingsRoute)
     }
 
-    fun openSearch(category: ListingCategory?) {
-        navController.navigate(SearchRoute(category = category?.wireValue))
+    fun openCategory(category: ListingCategory) {
+        navController.navigate(CategoryRoute(category = category.wireValue))
     }
 
     fun navigateUp() {

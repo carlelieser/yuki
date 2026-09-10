@@ -21,6 +21,7 @@ import org.junit.Test
 
 private const val EXPLORE_TAG = "exploreStub"
 private const val LIBRARY_TAG = "libraryStub"
+private const val BROWSE_TAG = "browseStub"
 private const val LISTING_TAG = "listingStub"
 private const val SETTLE_MILLIS = 1_000L
 private const val MID_TRANSITION_MILLIS = 90L
@@ -46,6 +47,7 @@ class YukiTabTransitionTest {
             ) {
                 tabStub<ExploreRoute>(EXPLORE_TAG)
                 tabStub<LibraryRoute>(LIBRARY_TAG)
+                tabStub<SearchRoute>(BROWSE_TAG)
                 composable<ListingRoute> {
                     Text(text = "listing", modifier = Modifier.testTag(LISTING_TAG))
                 }
@@ -113,6 +115,17 @@ class YukiTabTransitionTest {
 
         composeRule.onNodeWithTag(EXPLORE_TAG).assertIsDisplayed()
         assertTrue(currentRouteIsExplore())
+    }
+
+    @Test
+    fun movingToBrowseKeepsExploreInPlaceBecauseBrowseIsATab() {
+        setContent()
+        val restingLeft = exploreLeftEdge()
+
+        navigate { navController.navigate(SearchRoute) }
+        composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
+
+        assertEquals(restingLeft.value, exploreLeftEdge().value, 0.5f)
     }
 
     @Test

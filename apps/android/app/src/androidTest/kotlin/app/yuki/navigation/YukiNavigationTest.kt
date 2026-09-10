@@ -38,7 +38,7 @@ class YukiNavigationTest {
     }
 
     @Test
-    fun settingsIsNotOfferedAsAFourthBarDestination() {
+    fun everyTabIsOfferedInTheBarAndSettingsIsNot() {
         YukiTab.entries.forEach { tab ->
             composeRule.onNodeWithText(tab.label).assertIsDisplayed()
         }

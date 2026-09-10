@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -31,7 +33,6 @@ class SearchScreenTest {
         onCategorySelected = {},
         onSortSelected = {},
         onListingSelected = {},
-        onBackClick = {},
     )
 
     private fun browsing(
@@ -67,19 +68,31 @@ class SearchScreenTest {
     }
 
     @Test
-    fun theBrowseViewOffersTheFilterControlsAndABackButton() {
+    fun theBrowseTabOffersTheFilterControlsWithoutABackButton() {
         render(browsing())
 
-        composeRule.onNodeWithTag(BACK_ACTION_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(CATEGORY_FILTER_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(SORT_SELECTOR_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(BACK_ACTION_TAG).assertDoesNotExist()
     }
 
     @Test
-    fun theSelectedSortLabelIsShown() {
+    fun theSortControlSitsInTheSearchBarAndNamesTheActiveSort() {
         render(browsing(sort = BrowseSortOption.NameAscending))
 
-        composeRule.onNodeWithText("Name A-Z").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("$SORT_DESCRIPTION Name A-Z")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun everySortOptionIsReachableFromTheDropdown() {
+        render(browsing())
+
+        composeRule.onNodeWithTag(SORT_SELECTOR_TAG).performClick()
+
+        BrowseSortOption.entries.forEach { option ->
+            composeRule.onNodeWithText(option.label).assertIsDisplayed()
+        }
     }
 
     @Test

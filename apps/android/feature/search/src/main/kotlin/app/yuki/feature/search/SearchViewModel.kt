@@ -1,6 +1,5 @@
 package app.yuki.feature.search
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
@@ -11,7 +10,6 @@ import app.yuki.core.datastore.RecentSearchStore
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
-import app.yuki.core.model.readListingCategory
 import app.yuki.core.model.toUiState
 import app.yuki.core.network.ListingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,18 +31,14 @@ import kotlinx.coroutines.launch
 const val SEARCH_DEBOUNCE_MILLIS = 250L
 const val MINIMUM_QUERY_LENGTH = 1
 const val MAXIMUM_QUERY_LENGTH = 100
-const val SEARCH_CATEGORY_KEY = "category"
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val repository: ListingRepository,
     private val recentSearches: RecentSearchStore,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
-    private val filter = MutableStateFlow(
-        BrowseFilter(category = readListingCategory(savedStateHandle[SEARCH_CATEGORY_KEY])),
-    )
+    private val filter = MutableStateFlow(BrowseFilter())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listings: Flow<PagingData<ListingSummary>> = filter
