@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { hasDistributableApk, mapReleases, parseArchitecture, pickApkAsset } from './versions.ts';
+import {
+	availableArchitectures,
+	hasDistributableApk,
+	mapReleases,
+	parseArchitecture,
+	pickApkAsset
+} from './versions.ts';
 import type { GithubRelease, GithubReleaseAsset } from './types.ts';
 
 function asset(overrides: Partial<GithubReleaseAsset> = {}): GithubReleaseAsset {
@@ -146,6 +152,105 @@ describe('pickApkAsset', () => {
 		);
 
 		expect(picked?.name).toBe('app-arm64-v8a-release.apk');
+	});
+});
+
+describe('availableArchitectures', () => {
+	it('is empty when a release ships only a universal build', () => {
+		expect(availableArchitectures([asset({ name: 'app-release.apk' })])).toEqual([]);
+	});
+
+	it('is empty when a release ships no apk at all', () => {
+		expect(availableArchitectures([asset({ name: 'sources.zip' })])).toEqual([]);
+	});
+
+	it('lists split architectures in a canonical order', () => {
+		const found = availableArchitectures([
+			asset({ name: 'app-x86.apk' }),
+			asset({ name: 'app-arm64-v8a.apk' }),
+			asset({ name: 'app-armeabi-v7a.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a', 'armeabi-v7a', 'x86']);
+	});
+
+	it('collapses repeated architectures to one entry', () => {
+		const found = availableArchitectures([
+			asset({ name: 'app-arm64-v8a.apk', size: 100 }),
+			asset({ name: 'app-arm64-v8a-signed.apk', size: 200 })
+		]);
+
+		expect(found).toEqual(['arm64-v8a']);
+	});
+
+	it('does not offer an architecture that only a debug build covers', () => {
+		const found = availableArchitectures([
+			asset({ name: 'app-x86-debug.apk' }),
+			asset({ name: 'app-arm64-v8a-release.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a']);
+	});
+
+	it('offers a debug-only architecture when the release ships nothing else', () => {
+		expect(availableArchitectures([asset({ name: 'app-x86-debug.apk' })])).toEqual(['x86']);
+	});
+
+	it('ignores a universal build sitting alongside splits', () => {
+		const found = availableArchitectures([
+			asset({ name: 'app-release.apk' }),
+			asset({ name: 'app-arm64-v8a.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a']);
+	});
+});
+
+describe('architecture naming', () => {
+	it('recognises the short arm spellings releases actually use', () => {
+		const found = availableArchitectures([
+			asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk' }),
+			asset({ name: 'wgtunnel-standalone-v5.7.2-armv7.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a', 'armeabi-v7a']);
+	});
+
+	it('recognises aarch64 as arm64', () => {
+		expect(availableArchitectures([asset({ name: 'app-aarch64.apk' })])).toEqual(['arm64-v8a']);
+	});
+
+	it('does not read x86 out of an x86_64 asset', () => {
+		expect(availableArchitectures([asset({ name: 'app-x86_64.apk' })])).toEqual(['x86_64']);
+	});
+
+	it('does not read an architecture out of a version number', () => {
+		expect(availableArchitectures([asset({ name: 'app-v1.8664.apk' })])).toEqual([]);
+	});
+
+	it('does not treat arm64 inside a longer word as a match', () => {
+		expect(availableArchitectures([asset({ name: 'apparm64x.apk' })])).toEqual([]);
+	});
+
+	it('routes a short-spelled asset to the requested architecture', () => {
+		const picked = pickApkAsset(
+			[
+				asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk', size: 100 }),
+				asset({ name: 'wgtunnel-standalone-v5.7.2-armv7.apk', size: 900 })
+			],
+			'arm64-v8a'
+		);
+
+		expect(picked?.name).toBe('wgtunnel-standalone-v5.7.2-arm64.apk');
+	});
+
+	it('keeps a universal build out of the architecture list', () => {
+		const found = availableArchitectures([
+			asset({ name: 'wgtunnel-standalone-v5.7.2.apk' }),
+			asset({ name: 'wgtunnel-standalone-v5.7.2-arm64.apk' })
+		]);
+
+		expect(found).toEqual(['arm64-v8a']);
 	});
 });
 

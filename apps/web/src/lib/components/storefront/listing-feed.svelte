@@ -4,7 +4,7 @@
 	import ListingCard from './listing-card.svelte';
 	import ProductGrid from './product-grid.svelte';
 	import type { ListingPage, ListingSummary } from '$lib/server/listings.ts';
-	import type { BrowseOrder, BrowseSort } from '$lib/browse.ts';
+	import { toBrowseQueryString, type BrowseOrder, type BrowseSort } from '$lib/browse.ts';
 	import type { ListingCategory } from '$lib/categories.ts';
 
 	let {
@@ -39,15 +39,10 @@
 		isLoading = true;
 
 		const currentRequest = ++requestId;
-		const params = new URLSearchParams({
-			offset: String(results.length),
-			sort,
-			order
-		});
-		if (category !== null) params.set('category', category);
+		const query = toBrowseQueryString({ sort, order }, results.length, category);
 
 		try {
-			const response = await fetch(`${resolve('/api/listings')}?${params.toString()}`);
+			const response = await fetch(`${resolve('/api/listings')}?${query}`);
 			if (currentRequest !== requestId) return;
 
 			if (!response.ok) {

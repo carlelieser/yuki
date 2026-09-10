@@ -2,6 +2,10 @@
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"noEmit": true,
+		"paths": {
+			"@ui": ["./src/lib"],
+			"@ui/*": ["./src/lib/*"]
+		},
 		"lib": ["ES2023", "DOM", "DOM.Iterable"],
 		"allowJs": true,
 		"checkJs": true

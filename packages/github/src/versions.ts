@@ -33,9 +33,32 @@ function isDeprioritised(asset: GithubReleaseAsset): boolean {
 	return DEPRIORITISED.some((marker) => lowered.includes(marker));
 }
 
+const ARCHITECTURE_ALIASES: Record<Architecture, readonly string[]> = {
+	'arm64-v8a': ['arm64-v8a', 'arm64', 'aarch64'],
+	'armeabi-v7a': ['armeabi-v7a', 'armeabi', 'armv7', 'arm32'],
+	x86_64: ['x86_64', 'x86-64', 'x64'],
+	x86: ['x86']
+};
+
+function hasToken(name: string, token: string): boolean {
+	for (let index = name.indexOf(token); index !== -1; index = name.indexOf(token, index + 1)) {
+		const before = name[index - 1];
+		const after = name[index + token.length];
+		if (!isTokenCharacter(before) && !isTokenCharacter(after)) return true;
+	}
+
+	return false;
+}
+
+function isTokenCharacter(character: string | undefined): boolean {
+	return character !== undefined && /[a-z0-9]/.test(character);
+}
+
 function architectureOf(asset: GithubReleaseAsset): Architecture | null {
 	const lowered = asset.name.toLowerCase();
-	const matches = ARCHITECTURES.filter((architecture) => lowered.includes(architecture));
+	const matches = ARCHITECTURES.filter((architecture) =>
+		ARCHITECTURE_ALIASES[architecture].some((alias) => hasToken(lowered, alias))
+	);
 	if (matches.length === 0) return null;
 
 	return matches.reduce((longest, architecture) =>
@@ -47,15 +70,28 @@ function largestOf(assets: GithubReleaseAsset[]): GithubReleaseAsset {
 	return assets.reduce((largest, asset) => (asset.size > largest.size ? asset : largest));
 }
 
+function distributableApks(assets: GithubReleaseAsset[]): GithubReleaseAsset[] {
+	const apks = assets.filter(isApk);
+	const preferred = apks.filter((asset) => !isDeprioritised(asset));
+	return preferred.length > 0 ? preferred : apks;
+}
+
+export function availableArchitectures(assets: GithubReleaseAsset[]): Architecture[] {
+	const found = new Set(
+		distributableApks(assets)
+			.map(architectureOf)
+			.filter((architecture) => architecture !== null)
+	);
+
+	return ARCHITECTURES.filter((architecture) => found.has(architecture));
+}
+
 export function pickApkAsset(
 	assets: GithubReleaseAsset[],
 	architecture: Architecture | null = null
 ): GithubReleaseAsset | null {
-	const apks = assets.filter(isApk);
-	if (apks.length === 0) return null;
-
-	const preferred = apks.filter((asset) => !isDeprioritised(asset));
-	const pool = preferred.length > 0 ? preferred : apks;
+	const pool = distributableApks(assets);
+	if (pool.length === 0) return null;
 
 	if (architecture === null) return largestOf(pool);
 

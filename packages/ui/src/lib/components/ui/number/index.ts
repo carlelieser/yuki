@@ -5,4 +5,8 @@ export {
 	//
 	Root as Number
 };
-export { formatNumber, type NumberFormatOptions, type NumberFormatPreset } from './number.svelte';
+export {
+	formatNumber,
+	type NumberFormatOptions,
+	type NumberFormatPreset
+} from './format-number.ts';

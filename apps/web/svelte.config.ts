@@ -5,6 +5,9 @@ import type { Config } from '@sveltejs/kit';
 export default {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter()
+		adapter: adapter(),
+		alias: {
+			'@ui/*': '../../packages/ui/src/lib/*'
+		}
 	}
 } satisfies Config;

@@ -66,6 +66,10 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 					required: false,
 					defaultValue: 'user',
 					input: false
+				},
+				architecture: {
+					type: ['arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'],
+					required: false
 				}
 			}
 		},

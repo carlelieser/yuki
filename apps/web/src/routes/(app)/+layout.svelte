@@ -1,8 +1,18 @@
 <script lang="ts">
 	import SearchDialog from '$lib/components/storefront/search-dialog.svelte';
 	import SiteHeader from '$lib/components/storefront/site-header.svelte';
+	import { createArchitectureStore } from '$lib/architecture-store.svelte.ts';
 
 	let { children, data } = $props();
+
+	const architectures = createArchitectureStore(
+		() => data.user?.architecture ?? null,
+		() => data.user !== null
+	);
+
+	$effect(() => {
+		architectures.loadLocal();
+	});
 
 	let isSearchOpen = $state(false);
 

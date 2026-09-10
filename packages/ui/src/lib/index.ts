@@ -5,10 +5,18 @@ export {
 	type ButtonSize,
 	type ButtonVariant
 } from './components/ui/button/index.ts';
+export {
+	ButtonGroup,
+	ButtonGroupSeparator,
+	ButtonGroupText,
+	buttonGroupVariants,
+	type ButtonGroupOrientation
+} from './components/ui/button-group/index.ts';
 export { Badge, badgeVariants, type BadgeVariant } from './components/ui/badge/index.ts';
 export { AspectRatio } from './components/ui/aspect-ratio/index.ts';
 export { Input } from './components/ui/input/index.ts';
 export { Skeleton } from './components/ui/skeleton/index.ts';
+export { Spinner } from './components/ui/spinner/index.ts';
 export {
 	Number,
 	formatNumber,
