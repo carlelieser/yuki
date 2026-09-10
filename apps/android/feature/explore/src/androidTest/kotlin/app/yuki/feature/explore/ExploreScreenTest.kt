@@ -26,20 +26,10 @@ class ExploreScreenTest {
     private val chosenCategories = mutableListOf<ListingCategory>()
 
     private val noCallbacks = ExploreCallbacks(
-        onQueryChange = {},
-        onRecentRemoved = {},
         onRetry = {},
         onListingSelected = {},
         onCategorySelected = { category -> chosenCategories += category },
         onSettingsClick = {},
-    )
-
-    private fun searching(results: UiState<List<ListingSummary>>) = UiState.Success(
-        ExploreContent(
-            featured = UiState.Success(emptyList()),
-            sections = UiState.Success(emptyList()),
-            search = SearchState(query = "ghost", recent = emptyList(), results = results),
-        ),
     )
 
     private fun browsing(
@@ -49,7 +39,6 @@ class ExploreScreenTest {
         ExploreContent(
             featured = featured,
             sections = sections,
-            search = SearchState(query = "", recent = emptyList(), results = null),
         ),
     )
 
@@ -64,36 +53,10 @@ class ExploreScreenTest {
     }
 
     @Test
-    fun anEmptySearchRendersTheEmptyStateNotAFailure() {
-        render(searching(UiState.Success(emptyList())))
-
-        composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    fun aFailedSearchRendersTheFailureStateNotTheEmptyState() {
-        render(searching(UiState.Failure(FailureReason.Offline)))
-
-        composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    fun searchResultsReplaceTheBrowseList() {
-        render(searching(UiState.Success(listOf(listing("beta")))))
-
-        composeRule.onNodeWithTag(SEARCH_RESULTS_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText("Beta").assertIsDisplayed()
-        composeRule.onNodeWithTag(FEATURED_ROW_TAG).assertDoesNotExist()
-    }
-
-    @Test
-    fun featuredListingsRenderWhenNotSearching() {
+    fun featuredListingsRender() {
         render(browsing(featured = UiState.Success(listOf(listing("alpha")))))
 
         composeRule.onNodeWithTag(FEATURED_ROW_TAG).assertIsDisplayed()
-        composeRule.onNodeWithTag(SEARCH_RESULTS_TAG).assertDoesNotExist()
     }
 
     @Test

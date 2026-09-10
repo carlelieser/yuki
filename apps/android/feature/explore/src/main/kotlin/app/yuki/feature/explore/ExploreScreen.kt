@@ -1,10 +1,8 @@
 package app.yuki.feature.explore
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
@@ -15,14 +13,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ScreenAction
-import app.yuki.core.designsystem.component.SearchBar
-import app.yuki.core.designsystem.component.SearchBarState
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
-import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
@@ -47,8 +42,6 @@ fun ExploreRoute(
     ExploreScreen(
         state = state,
         callbacks = ExploreCallbacks(
-            onQueryChange = viewModel::onQueryChange,
-            onRecentRemoved = viewModel::onRecentSearchRemoved,
             onRetry = viewModel::refresh,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onCategorySelected = onCategorySelected,
@@ -60,8 +53,6 @@ fun ExploreRoute(
 }
 
 data class ExploreCallbacks(
-    val onQueryChange: (String) -> Unit,
-    val onRecentRemoved: (String) -> Unit,
     val onRetry: () -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
@@ -84,27 +75,13 @@ internal fun ExploreScreen(
         ),
         modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            SearchBar(
-                state = SearchBarState(query = state.query()),
-                onQueryChange = callbacks.onQueryChange,
-                modifier = Modifier.padding(
-                    horizontal = YukiSpacing.Large,
-                    vertical = YukiSpacing.Small,
-                ),
-            )
-
-            ExploreBody(
-                state = state,
-                callbacks = callbacks,
-                contentPadding = contentPadding,
-            )
-        }
+        ExploreBody(
+            state = state,
+            callbacks = callbacks,
+            contentPadding = contentPadding,
+        )
     }
 }
-
-private fun UiState<ExploreContent>.query(): String =
-    (this as? UiState.Success)?.data?.search?.query.orEmpty()
 
 @Composable
 private fun ExploreBody(
@@ -137,18 +114,12 @@ private fun ExploreContentBody(
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
 ) {
-    if (content.search.isSearching) {
-        SearchResults(state = content.search, onSelect = callbacks.onListingSelected)
-        return
-    }
-
     LazyColumn(
         contentPadding = contentPadding,
         modifier = Modifier
             .fillMaxSize()
             .testTag(CATEGORY_SECTIONS_TAG),
     ) {
-        recentSection(content = content, callbacks = callbacks)
         featuredSection(content = content, callbacks = callbacks)
 
         categorySections(
@@ -156,21 +127,6 @@ private fun ExploreContentBody(
             actions = CategorySectionActions(
                 onListingSelected = callbacks.onListingSelected,
                 onCategorySelected = callbacks.onCategorySelected,
-            ),
-        )
-    }
-}
-
-private fun LazyListScope.recentSection(
-    content: ExploreContent,
-    callbacks: ExploreCallbacks,
-) {
-    item {
-        RecentSearches(
-            entries = content.search.recent,
-            actions = RecentSearchActions(
-                onSelect = callbacks.onQueryChange,
-                onRemove = callbacks.onRecentRemoved,
             ),
         )
     }

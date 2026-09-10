@@ -7,9 +7,7 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.datastore)
     implementation(projects.core.network)
-    implementation(libs.androidx.paging.compose)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
