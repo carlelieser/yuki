@@ -1,5 +1,6 @@
 package app.yuki.feature.library
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.yuki.core.designsystem.component.AppRow
 import app.yuki.core.designsystem.component.ClickableAppRow
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
@@ -18,6 +20,7 @@ import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 
 const val LIBRARY_LIST_TAG = "libraryList"
@@ -91,12 +94,21 @@ private fun LibraryList(
             .testTag(LIBRARY_LIST_TAG),
     ) {
         items(content.items, key = LibraryItem::githubRepoId) { item ->
-            ClickableAppRow(
-                content = item.row,
-                onClick = { actions.onListingClick(item.app.slug) },
-            )
+            LibraryRow(item = item, onClick = { actions.onListingClick(item.app.slug) })
         }
     }
+}
+
+@Composable
+private fun LibraryRow(item: LibraryItem, onClick: () -> Unit) {
+    val downloading = item.install as? InstallState.Downloading
+        ?: return ClickableAppRow(content = item.row, onClick = onClick)
+
+    AppRow(
+        content = item.row,
+        modifier = Modifier.clickable(onClick = onClick),
+        trailing = { LibraryDownloadIndicator(downloading.size) },
+    )
 }
 
 @Composable

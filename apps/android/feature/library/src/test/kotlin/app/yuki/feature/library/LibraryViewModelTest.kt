@@ -1,8 +1,11 @@
 package app.yuki.feature.library
 
 import app.cash.turbine.test
+import app.yuki.core.installer.InstallProgress
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.UiState
+import app.yuki.core.model.downloadSizeOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -102,15 +105,97 @@ class LibraryViewModelTest {
         }
     }
 
+    @Test
+    fun showsAnInFlightDownloadWithItsByteCounts() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(InstallState.NotInstalled, singleItem(awaitItem()).install)
+
+            progress.write(
+                InstallProgress(
+                    TERMUX.githubRepoId,
+                    "v0.119.0",
+                    InstallState.Downloading(HALF_DOWNLOADED),
+                ),
+            )
+
+            val downloading = singleItem(awaitItem())
+            assertEquals(InstallState.Downloading(HALF_DOWNLOADED), downloading.install)
+            assertTrue(downloading.isDownloading)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aDownloadingRowShowsTransferredBytesInsteadOfTheInstalledVersion() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(TERMUX.versionTag, singleItem(awaitItem()).row.supporting)
+
+            progress.write(
+                InstallProgress(
+                    TERMUX.githubRepoId,
+                    "v0.119.0",
+                    InstallState.Downloading(HALF_DOWNLOADED),
+                ),
+            )
+
+            assertEquals("500 B / 1 KB", singleItem(awaitItem()).row.supporting)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aDownloadIsAttributedOnlyToTheAppItBelongsTo() = runTest {
+        val packages = FakeInstalledPackages().apply {
+            install(TERMUX.packageName)
+            install(AURORA.packageName)
+        }
+        val progress = FakeLibraryProgressStore()
+        val store = FakeInstallStore(listOf(TERMUX, AURORA))
+        val viewModel = viewModelFor(store, packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(
+                    AURORA.githubRepoId,
+                    "v4.7.0",
+                    InstallState.Downloading(HALF_DOWNLOADED),
+                ),
+            )
+
+            val items = (awaitItem() as UiState.Success).data
+            assertEquals(listOf(AURORA.githubRepoId), items.downloading.map(LibraryItem::githubRepoId))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModelFor(
         store: FakeInstallStore,
         packages: FakeInstalledPackages,
+        progress: FakeLibraryProgressStore = FakeLibraryProgressStore(),
     ): LibraryViewModel = LibraryViewModel(
         store = store,
-        reconciler = LibraryReconciler(store, packages),
-        packages = packages,
+        progress = progress,
+        dependencies = LibraryDependencies(LibraryReconciler(store, packages), packages),
     )
 }
+
+private fun singleItem(state: UiState<LibraryContent>): LibraryItem =
+    (state as UiState.Success).data.items.single()
+
+private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)
 
 private fun successApps(state: UiState<LibraryContent>): List<InstalledApp> =
     (state as UiState.Success).data.items.map(LibraryItem::app)

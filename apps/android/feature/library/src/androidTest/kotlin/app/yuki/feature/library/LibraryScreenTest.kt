@@ -11,6 +11,7 @@ import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -78,7 +79,8 @@ class LibraryScreenTest {
     }
 }
 
-private fun item(): LibraryItem = LibraryItem(app = TERMUX, canOpen = true)
+private fun item(install: InstallState = InstallState.NotInstalled): LibraryItem =
+    LibraryItem(app = TERMUX, canOpen = true, install = install)
 
 private val TERMUX = InstalledApp(
     githubRepoId = 1_234L,
