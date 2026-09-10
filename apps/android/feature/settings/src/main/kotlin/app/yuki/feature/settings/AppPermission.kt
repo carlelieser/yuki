@@ -2,11 +2,17 @@ package app.yuki.feature.settings
 
 import android.Manifest
 
+enum class PermissionKind {
+    Runtime,
+    InstallPackagesAppOp,
+}
+
 data class AppPermission(
     val permission: String,
     val label: String,
     val reason: String,
     val isRequired: Boolean,
+    val kind: PermissionKind = PermissionKind.Runtime,
 )
 
 const val SHIZUKU_PERMISSION = "moe.shizuku.manager.permission.API_V23"
@@ -23,6 +29,7 @@ val YUKI_PERMISSIONS: List<AppPermission> = listOf(
         label = "Install unknown apps",
         reason = "Install apps when Shizuku is unavailable",
         isRequired = true,
+        kind = PermissionKind.InstallPackagesAppOp,
     ),
     AppPermission(
         permission = Manifest.permission.POST_NOTIFICATIONS,

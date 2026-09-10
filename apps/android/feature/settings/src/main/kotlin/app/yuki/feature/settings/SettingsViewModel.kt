@@ -61,7 +61,7 @@ internal class SettingsDependencies @Inject constructor(
     private val reader: PermissionStatusReader,
 ) {
     fun readPermissions(): List<PermissionRow> = YUKI_PERMISSIONS.map { permission ->
-        PermissionRow(permission = permission, status = reader.statusOf(permission.permission))
+        PermissionRow(permission = permission, status = reader.statusOf(permission))
     }
 }
 

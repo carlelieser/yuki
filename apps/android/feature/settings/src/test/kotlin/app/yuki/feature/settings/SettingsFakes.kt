@@ -37,8 +37,8 @@ internal class FakeShizukuSource(initial: ShizukuDetail = detailOf(ShizukuState.
 internal class FakePermissionStatusReader(
     private var statuses: Map<String, PermissionStatus> = emptyMap(),
 ) : PermissionStatusReader {
-    override fun statusOf(permission: String): PermissionStatus =
-        statuses[permission] ?: PermissionStatus.Denied
+    override fun statusOf(permission: AppPermission): PermissionStatus =
+        statuses[permission.permission] ?: PermissionStatus.Denied
 
     fun grant(permission: String) {
         statuses = statuses + (permission to PermissionStatus.Granted)

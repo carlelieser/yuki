@@ -18,30 +18,48 @@ enum class PermissionStatus {
 }
 
 interface PermissionStatusReader {
-    fun statusOf(permission: String): PermissionStatus
+    fun statusOf(permission: AppPermission): PermissionStatus
+}
+
+internal fun interface PlatformPermissionLookup {
+    fun isGranted(kind: PermissionKind, permission: String): Boolean
 }
 
 internal fun isNotificationsSupported(sdkInt: Int): Boolean = sdkInt >= Build.VERSION_CODES.TIRAMISU
+
+internal fun statusOf(
+    permission: AppPermission,
+    sdkInt: Int,
+    lookup: PlatformPermissionLookup,
+): PermissionStatus {
+    val isUnsupported = permission.permission == Manifest.permission.POST_NOTIFICATIONS &&
+        !isNotificationsSupported(sdkInt)
+    if (isUnsupported) return PermissionStatus.Granted
+
+    return if (lookup.isGranted(permission.kind, permission.permission)) {
+        PermissionStatus.Granted
+    } else {
+        PermissionStatus.Denied
+    }
+}
 
 @Singleton
 internal class ContextPermissionStatusReader @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) : PermissionStatusReader {
-    override fun statusOf(permission: String): PermissionStatus {
-        val isUnsupported = permission == Manifest.permission.POST_NOTIFICATIONS &&
-            !isNotificationsSupported(Build.VERSION.SDK_INT)
-        if (isUnsupported) return PermissionStatus.Granted
-
-        return toStatus(context.checkSelfPermission(permission))
+    private val lookup = PlatformPermissionLookup { kind, permission ->
+        when (kind) {
+            PermissionKind.Runtime -> isRuntimeGranted(permission)
+            PermissionKind.InstallPackagesAppOp -> context.packageManager.canRequestPackageInstalls()
+        }
     }
+
+    override fun statusOf(permission: AppPermission): PermissionStatus =
+        statusOf(permission, Build.VERSION.SDK_INT, lookup)
+
+    private fun isRuntimeGranted(permission: String): Boolean =
+        context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
 }
-
-internal fun toStatus(result: Int): PermissionStatus =
-    if (result == PackageManager.PERMISSION_GRANTED) {
-        PermissionStatus.Granted
-    } else {
-        PermissionStatus.Denied
-    }
 
 @Module
 @InstallIn(SingletonComponent::class)

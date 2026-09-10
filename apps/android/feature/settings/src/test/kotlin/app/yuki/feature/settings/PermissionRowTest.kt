@@ -68,6 +68,24 @@ class PermissionRowTest {
     }
 
     @Test
+    fun installUnknownAppsIsDeclaredAsAnAppOpNotARuntimePermission() {
+        val permissions = YUKI_PERMISSIONS.associateBy(AppPermission::permission)
+
+        assertEquals(
+            PermissionKind.InstallPackagesAppOp,
+            permissions.getValue(Manifest.permission.REQUEST_INSTALL_PACKAGES).kind,
+        )
+        assertEquals(
+            PermissionKind.Runtime,
+            permissions.getValue(Manifest.permission.INTERNET).kind,
+        )
+        assertEquals(
+            PermissionKind.Runtime,
+            permissions.getValue(Manifest.permission.POST_NOTIFICATIONS).kind,
+        )
+    }
+
+    @Test
     fun theSupportingLineNamesTheReasonAndWhetherItIsRequired() {
         val required = supportingFor(rowFor(requiredPermission(), PermissionStatus.Denied))
         val optional = supportingFor(rowFor(optionalPermission(), PermissionStatus.Denied))
