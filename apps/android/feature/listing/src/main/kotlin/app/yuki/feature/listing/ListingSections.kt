@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -88,9 +89,11 @@ internal fun ListingLinkItem(row: ListingLinkRow, onOpen: () -> Unit) {
             .clickable(onClick = onOpen)
             .defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)
             .padding(horizontal = YukiSpacing.Large, vertical = YukiSpacing.Medium),
+        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LinkRowText(row = row, modifier = Modifier.weight(1f))
+        ExternalLinkIcon(modifier = Modifier.size(YukiSize.IconSmall))
     }
 }
 
