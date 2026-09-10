@@ -30,6 +30,21 @@ internal fun AnimatedContentTransitionScope<NavBackStackEntry>.backExit(): ExitT
     slideOutHorizontally(animationSpec = YukiMotion.exit()) { width -> width.inward() } +
         fadeOut(animationSpec = YukiMotion.fade())
 
-internal fun tabEnter(): EnterTransition = fadeIn(animationSpec = YukiMotion.fade())
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabToTab(): Boolean {
+    val initialTab = initialState.destination.selectedTab()
+    val targetTab = targetState.destination.selectedTab()
 
-internal fun tabExit(): ExitTransition = fadeOut(animationSpec = YukiMotion.fade())
+    return initialTab != null && targetTab != null
+}
+
+internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabEnter(): EnterTransition =
+    if (isTabToTab()) fadeIn(animationSpec = YukiMotion.fade()) else forwardEnter()
+
+internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabExit(): ExitTransition =
+    if (isTabToTab()) fadeOut(animationSpec = YukiMotion.fade()) else forwardExit()
+
+internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabPopEnter(): EnterTransition =
+    if (isTabToTab()) fadeIn(animationSpec = YukiMotion.fade()) else backEnter()
+
+internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabPopExit(): ExitTransition =
+    if (isTabToTab()) fadeOut(animationSpec = YukiMotion.fade()) else backExit()
