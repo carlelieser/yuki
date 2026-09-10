@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -41,11 +42,13 @@ private fun CardMediaPlaceholder(kind: CardMediaKind) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(kind.ratio),
+            .aspectRatio(kind.ratio)
+            .clip(YukiShape.Card),
         contentAlignment = Alignment.Center,
     ) {
         ShimmerBox(
             modifier = Modifier.fillMaxWidth().aspectRatio(kind.ratio),
+            shape = YukiShape.Card,
             isAnimated = false,
         )
 
@@ -84,6 +87,7 @@ private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(kind.ratio)
+            .clip(YukiShape.Card)
             .clearAndSetSemantics { },
     )
 }
