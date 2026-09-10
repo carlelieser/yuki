@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
@@ -14,6 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 
@@ -31,6 +33,7 @@ enum class InstallAction {
 
 private fun failureLabel(reason: InstallFailure): String = when (reason) {
     InstallFailure.DownloadFailed -> "Download failed"
+    InstallFailure.DownloadUnreadable -> "Download incomplete"
     InstallFailure.Aborted -> "Install cancelled"
     InstallFailure.InsufficientStorage -> "Not enough space"
     InstallFailure.Incompatible -> "Not compatible"
@@ -58,7 +61,7 @@ private fun actionFor(state: InstallState): InstallAction = when (state) {
 
 private fun describe(state: InstallState): String = when (state) {
     InstallState.NotInstalled -> "Install"
-    is InstallState.Downloading -> "Downloading, ${(state.progress * 100).toInt()} percent"
+    is InstallState.Downloading -> describeDownload(state.size)
     InstallState.PendingUserAction -> "Waiting for confirmation"
     is InstallState.Installed -> "Installed, version ${state.versionTag}"
     is InstallState.UpdateAvailable -> "Update from ${state.from} to ${state.to}"
@@ -68,12 +71,33 @@ private fun describe(state: InstallState): String = when (state) {
 private fun isFilled(state: InstallState): Boolean =
     state is InstallState.NotInstalled || state is InstallState.UpdateAvailable
 
+private fun describeDownload(size: DownloadSize): String {
+    val fraction = size.fraction
+        ?: return "Downloading, ${size.label}, total size unknown"
+
+    return "Downloading, ${(fraction * 100).toInt()} percent, ${size.label}"
+}
+
 @Composable
-private fun DownloadProgress(progress: Float) {
-    LinearProgressIndicator(
-        progress = { progress.coerceIn(0f, 1f) },
-        modifier = Modifier.width(YukiSpacing.Section * 3),
-    )
+private fun DownloadProgress(size: DownloadSize) {
+    val fraction = size.fraction
+    val progressModifier = Modifier.width(YukiSpacing.Section * 3)
+
+    Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
+        if (fraction == null) {
+            LinearProgressIndicator(modifier = progressModifier)
+        } else {
+            LinearProgressIndicator(progress = { fraction }, modifier = progressModifier)
+        }
+
+        Text(
+            text = size.label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 @Composable
@@ -123,7 +147,7 @@ fun InstallButton(
     ) {
         InstallControl(state = state, onAction = onAction)
 
-        if (state is InstallState.Downloading) DownloadProgress(state.progress)
+        if (state is InstallState.Downloading) DownloadProgress(state.size)
         if (state is InstallState.Failed) FailureNote(state.reason)
         if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
     }

@@ -1,0 +1,71 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "20da2e9d5835bd69dd1653e04f1ae87a",
+    "entities": [
+      {
+        "tableName": "installs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`githubRepoId` INTEGER NOT NULL, `packageName` TEXT NOT NULL, `slug` TEXT NOT NULL, `title` TEXT NOT NULL, `iconUrl` TEXT, `versionTag` TEXT NOT NULL, `versionCode` INTEGER, `installedAt` INTEGER NOT NULL, PRIMARY KEY(`githubRepoId`))",
+        "fields": [
+          {
+            "fieldPath": "githubRepoId",
+            "columnName": "githubRepoId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packageName",
+            "columnName": "packageName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slug",
+            "columnName": "slug",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iconUrl",
+            "columnName": "iconUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "versionTag",
+            "columnName": "versionTag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "versionCode",
+            "columnName": "versionCode",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "installedAt",
+            "columnName": "installedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "githubRepoId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '20da2e9d5835bd69dd1653e04f1ae87a')"
+    ]
+  }
+}

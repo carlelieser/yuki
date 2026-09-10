@@ -18,7 +18,7 @@ class InstallCoordinatorTest {
     fun `first install emits progress then installed and records identity`() = runTest {
         val recorder = FakeInstallRecorder(mutableMapOf())
         val coordinator = coordinatorOf(
-            downloader = FakeApkDownloader(fractions = listOf(0.25f, 0.75f)),
+            downloader = FakeApkDownloader(sizes = listOf(testSize(250L), testSize(750L))),
             recorder = recorder,
             strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
         )
@@ -27,8 +27,8 @@ class InstallCoordinatorTest {
 
         assertEquals(
             listOf(
-                InstallState.Downloading(0.25f),
-                InstallState.Downloading(0.75f),
+                InstallState.Downloading(testSize(250L)),
+                InstallState.Downloading(testSize(750L)),
                 InstallState.Installed("v1.2.0"),
             ),
             states,
@@ -49,7 +49,7 @@ class InstallCoordinatorTest {
 
         assertEquals(
             listOf(
-                InstallState.Downloading(0.5f),
+                InstallState.Downloading(testSize(500L)),
                 InstallState.PendingUserAction,
                 InstallState.Installed("v1.2.0"),
             ),

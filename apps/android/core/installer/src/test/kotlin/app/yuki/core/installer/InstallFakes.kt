@@ -1,5 +1,7 @@
 package app.yuki.core.installer
 
+import app.yuki.core.model.DownloadSize
+import app.yuki.core.model.downloadSizeOf
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -15,15 +17,20 @@ internal fun testRequest(
     source = InstallSource("https://example.test/acme.apk", versionTag, "acme.apk"),
 )
 
+internal val TEST_TOTAL_BYTES = 1_000L
+
+internal fun testSize(bytesDownloaded: Long, bytesTotal: Long = TEST_TOTAL_BYTES): DownloadSize =
+    downloadSizeOf(bytesDownloaded = bytesDownloaded, bytesTotal = bytesTotal)
+
 internal class FakeApkDownloader(
-    private val fractions: List<Float> = listOf(0.5f),
+    private val sizes: List<DownloadSize> = listOf(testSize(500L)),
     private val failure: InstallException? = null,
     private val cancelMidway: Boolean = false,
 ) : ApkDownloader {
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
         failure?.let { error -> throw error }
         if (cancelMidway) throw CancellationException("cancelled while downloading")
-        fractions.forEach { fraction -> emit(DownloadProgress.Running(fraction)) }
+        sizes.forEach { size -> emit(DownloadProgress.Running(size)) }
         emit(DownloadProgress.Completed(TEST_APK))
     }
 }

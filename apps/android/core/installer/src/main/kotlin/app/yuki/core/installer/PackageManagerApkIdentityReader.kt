@@ -12,20 +12,31 @@ internal class PackageManagerApkIdentityReader @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ApkIdentityReader {
     override fun read(apk: File): ApkIdentity {
+        requireReadableFile(apk)
+
         val info = context.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
             ?: throw InstallException(
-                InstallFailure.Incompatible,
-                "Could not read package identity from APK at ${apk.absolutePath}",
+                InstallFailure.DownloadUnreadable,
+                "Could not parse an APK from the file downloaded to ${apk.absolutePath}",
             )
 
         if (info.packageName.isEmpty()) {
             throw InstallException(
-                InstallFailure.Incompatible,
-                "APK at ${apk.absolutePath} declares no package name",
+                InstallFailure.DownloadUnreadable,
+                "The file downloaded to ${apk.absolutePath} declares no package name",
             )
         }
 
         return ApkIdentity(info.packageName, info.longVersionCode())
+    }
+
+    private fun requireReadableFile(apk: File) {
+        if (apk.isFile && apk.length() > 0L) return
+
+        throw InstallException(
+            InstallFailure.DownloadUnreadable,
+            "No readable download is present at ${apk.absolutePath}",
+        )
     }
 }
 

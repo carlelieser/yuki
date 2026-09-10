@@ -2,6 +2,7 @@ package app.yuki.core.database
 
 import android.content.Context
 import androidx.room.Room
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstallRecorder
 import dagger.Binds
 import dagger.Module
@@ -26,6 +27,11 @@ internal object DatabaseProviders {
 
     @Provides
     @Singleton
+    fun installProgressDao(database: YukiDatabase): InstallProgressDao =
+        database.installProgressDao()
+
+    @Provides
+    @Singleton
     fun clock(): Clock = Clock.systemUTC()
 }
 
@@ -39,4 +45,8 @@ internal interface DatabaseBindings {
     @Binds
     @Singleton
     fun installRecorder(implementation: RoomInstallRecorder): InstallRecorder
+
+    @Binds
+    @Singleton
+    fun installProgressStore(implementation: RoomInstallProgressStore): InstallProgressStore
 }

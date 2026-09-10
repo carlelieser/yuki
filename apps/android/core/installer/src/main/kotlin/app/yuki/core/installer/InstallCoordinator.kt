@@ -32,7 +32,7 @@ class InstallCoordinator @Inject constructor(
 
         downloader.download(source).collect { progress ->
             when (progress) {
-                is DownloadProgress.Running -> emit(InstallState.Downloading(progress.fraction))
+                is DownloadProgress.Running -> emit(InstallState.Downloading(progress.size))
                 is DownloadProgress.Completed -> downloaded = progress.apk
             }
         }
