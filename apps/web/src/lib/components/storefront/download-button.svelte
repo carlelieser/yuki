@@ -11,7 +11,7 @@
 		DropdownMenuRadioGroup,
 		DropdownMenuRadioItem,
 		DropdownMenuTrigger,
-		Skeleton,
+		Spinner,
 		type ButtonSize
 	} from '@yuki/ui';
 	import type { Architecture } from '@yuki/github';
@@ -105,7 +105,9 @@
 			<DropdownMenuGroup>
 				<DropdownMenuGroupHeading>Architecture</DropdownMenuGroupHeading>
 				{#if isLoading}
-					<Skeleton class="mx-2 my-1.5 h-6 rounded-sm" />
+					<div class="flex h-8 items-center justify-center">
+						<Spinner class="text-muted-foreground" />
+					</div>
 				{:else}
 					<DropdownMenuRadioGroup value={selected} onValueChange={choose}>
 						<DropdownMenuRadioItem value={DEFAULT_VALUE}>Default</DropdownMenuRadioItem>
