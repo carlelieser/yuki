@@ -51,6 +51,18 @@ class InstallRunTest {
     }
 
     @Test
+    fun `progress carries the identity a library row needs before anything is installed`() =
+        runTest {
+            val progress = FakeInstallProgressStore()
+
+            runOf(progress = progress).execute(testRequest(githubRepoId = 77L))
+
+            val target = progress.find(77L)?.target
+            assertEquals("acme-app", target?.slug)
+            assertEquals("Acme App", target?.title)
+        }
+
+    @Test
     fun `a failure is persisted so a restarted process can still show it`() = runTest {
         val progress = FakeInstallProgressStore()
         val run = runOf(

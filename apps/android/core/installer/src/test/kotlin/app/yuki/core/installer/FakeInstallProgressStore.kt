@@ -1,5 +1,6 @@
 package app.yuki.core.installer
 
+import app.yuki.core.model.InstallState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -24,5 +25,11 @@ internal class FakeInstallProgressStore : InstallProgressStore {
 
     override suspend fun clear(githubRepoId: Long) {
         rows.value = rows.value - githubRepoId
+    }
+
+    override suspend fun clearSettled() {
+        rows.value = rows.value.filterValues { progress ->
+            progress.state !is InstallState.Installed
+        }
     }
 }

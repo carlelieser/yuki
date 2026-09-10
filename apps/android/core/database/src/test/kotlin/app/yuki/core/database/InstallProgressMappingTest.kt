@@ -1,6 +1,7 @@
 package app.yuki.core.database
 
 import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallTarget
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
@@ -10,6 +11,12 @@ import org.junit.Test
 private const val REPO_ID = 42L
 private const val VERSION_TAG = "v1.2.0"
 private const val UPDATED_AT = 1_700_000_000_000L
+private val TARGET = InstallTarget(
+    githubRepoId = REPO_ID,
+    slug = "termux",
+    title = "Termux",
+    iconUrl = "https://example.test/termux.png",
+)
 
 class InstallProgressMappingTest {
     @Test
@@ -68,12 +75,12 @@ class InstallProgressMappingTest {
     @Test
     fun `an unreadable download is persisted separately from an incompatible package`() {
         val unreadable = InstallProgress(
-            REPO_ID,
+            TARGET,
             VERSION_TAG,
             InstallState.Failed(InstallFailure.DownloadUnreadable),
         ).toEntity(UPDATED_AT)
         val incompatible = InstallProgress(
-            REPO_ID,
+            TARGET,
             VERSION_TAG,
             InstallState.Failed(InstallFailure.Incompatible),
         ).toEntity(UPDATED_AT)
@@ -82,8 +89,27 @@ class InstallProgressMappingTest {
     }
 
     @Test
+    fun `the persisted row carries the identity needed to render a library row`() {
+        val entity = InstallProgress(TARGET, VERSION_TAG, InstallState.PendingUserAction)
+            .toEntity(UPDATED_AT)
+
+        assertEquals("termux", entity.slug)
+        assertEquals("Termux", entity.title)
+        assertEquals("https://example.test/termux.png", entity.iconUrl)
+    }
+
+    @Test
+    fun `the install target round trips so a download can render before it is installed`() {
+        val restored = InstallProgress(TARGET, VERSION_TAG, InstallState.PendingUserAction)
+            .toEntity(UPDATED_AT)
+            .toProgress()
+
+        assertEquals(TARGET, restored.target)
+    }
+
+    @Test
     fun `the persisted row carries the repo id version tag and timestamp`() {
-        val entity = InstallProgress(REPO_ID, VERSION_TAG, InstallState.PendingUserAction)
+        val entity = InstallProgress(TARGET, VERSION_TAG, InstallState.PendingUserAction)
             .toEntity(UPDATED_AT)
 
         assertEquals(REPO_ID, entity.githubRepoId)
@@ -93,4 +119,4 @@ class InstallProgressMappingTest {
 }
 
 private fun roundTrip(state: InstallState): InstallState =
-    InstallProgress(REPO_ID, VERSION_TAG, state).toEntity(UPDATED_AT).toProgress().state
+    InstallProgress(TARGET, VERSION_TAG, state).toEntity(UPDATED_AT).toProgress().state

@@ -23,4 +23,30 @@ internal val MIGRATION_1_TO_2 = object : Migration(1, 2) {
     }
 }
 
-internal val YUKI_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_TO_2)
+internal val MIGRATION_2_TO_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `install_progress` ADD COLUMN `slug` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `install_progress` ADD COLUMN `title` TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE `install_progress` ADD COLUMN `iconUrl` TEXT")
+        db.execSQL(
+            """
+            UPDATE `install_progress` SET
+                `slug` = COALESCE(
+                    (SELECT `slug` FROM `installs`
+                     WHERE `installs`.`githubRepoId` = `install_progress`.`githubRepoId`),
+                    ''
+                ),
+                `title` = COALESCE(
+                    (SELECT `title` FROM `installs`
+                     WHERE `installs`.`githubRepoId` = `install_progress`.`githubRepoId`),
+                    ''
+                ),
+                `iconUrl` = (SELECT `iconUrl` FROM `installs`
+                    WHERE `installs`.`githubRepoId` = `install_progress`.`githubRepoId`)
+            """.trimIndent(),
+        )
+        db.execSQL("DELETE FROM `install_progress` WHERE `title` = ''")
+    }
+}
+
+internal val YUKI_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_TO_2, MIGRATION_2_TO_3)

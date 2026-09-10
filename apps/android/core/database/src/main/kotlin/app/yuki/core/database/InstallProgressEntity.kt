@@ -6,6 +6,9 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "install_progress")
 data class InstallProgressEntity(
     @PrimaryKey val githubRepoId: Long,
+    val slug: String,
+    val title: String,
+    val iconUrl: String?,
     val status: String,
     val versionTag: String,
     val bytesDownloaded: Long,

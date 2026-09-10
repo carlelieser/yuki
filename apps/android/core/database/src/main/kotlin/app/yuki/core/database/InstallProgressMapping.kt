@@ -1,6 +1,7 @@
 package app.yuki.core.database
 
 import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallTarget
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
@@ -26,6 +27,9 @@ private object FailureName {
 internal fun InstallProgress.toEntity(updatedAt: Long): InstallProgressEntity =
     InstallProgressEntity(
         githubRepoId = githubRepoId,
+        slug = target.slug,
+        title = target.title,
+        iconUrl = target.iconUrl,
         status = state.statusName(),
         versionTag = versionTag,
         bytesDownloaded = state.bytesDownloaded(),
@@ -36,7 +40,12 @@ internal fun InstallProgress.toEntity(updatedAt: Long): InstallProgressEntity =
     )
 
 internal fun InstallProgressEntity.toProgress(): InstallProgress = InstallProgress(
-    githubRepoId = githubRepoId,
+    target = InstallTarget(
+        githubRepoId = githubRepoId,
+        slug = slug,
+        title = title,
+        iconUrl = iconUrl,
+    ),
     versionTag = versionTag,
     state = toState(),
 )

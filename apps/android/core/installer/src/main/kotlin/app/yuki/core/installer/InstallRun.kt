@@ -12,15 +12,15 @@ internal class InstallRun @Inject constructor(
     private val progress: InstallProgressStore,
 ) {
     suspend fun execute(request: InstallRequest): InstallState {
-        val githubRepoId = request.target.githubRepoId
+        val target = request.target
         val versionTag = request.source.versionTag
         var latest: InstallState = QUEUED
 
-        progress.write(InstallProgress(githubRepoId, versionTag, latest))
+        progress.write(InstallProgress(target, versionTag, latest))
 
         coordinator.install(request).collect { state ->
             latest = state
-            progress.write(InstallProgress(githubRepoId, versionTag, state))
+            progress.write(InstallProgress(target, versionTag, state))
         }
 
         return latest
