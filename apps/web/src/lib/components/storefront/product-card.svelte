@@ -9,7 +9,7 @@
 		badge,
 		image,
 		icon,
-		meta,
+		badges,
 		variant = 'default'
 	}: {
 		title: string;
@@ -17,7 +17,7 @@
 		badge?: string;
 		image?: Snippet;
 		icon?: Snippet;
-		meta?: Snippet;
+		badges?: Snippet;
 		variant?: 'default' | 'wide';
 	} = $props();
 </script>
@@ -43,13 +43,13 @@
 				</div>
 				<div class="min-w-0 flex-1">
 					<h3 class="line-clamp-1 text-sm font-medium group-hover/card:underline">{title}</h3>
-					{@render meta?.()}
+					{@render badges?.()}
 				</div>
 			</CardContent>
 		{:else}
 			<CardContent class="p-3">
 				<h3 class="line-clamp-2 text-sm font-medium group-hover/card:underline">{title}</h3>
-				{@render meta?.()}
+				{@render badges?.()}
 			</CardContent>
 		{/if}
 	</a>

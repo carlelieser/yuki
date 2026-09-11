@@ -15,7 +15,7 @@
 	href={resolve('/(app)/listings/[slug]', { slug: entry.slug })}
 	image={media ? image : undefined}
 	icon={entry.iconUrl ? icon : undefined}
-	{meta}
+	{badges}
 />
 
 {#snippet image()}
@@ -26,6 +26,6 @@
 	<img src={entry.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
 {/snippet}
 
-{#snippet meta()}
+{#snippet badges()}
 	<p class="truncate text-xs text-muted-foreground">{entry.author}</p>
 {/snippet}
