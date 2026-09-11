@@ -22,6 +22,8 @@ object YukiSize {
     val ScreenshotWidth = 220.dp
     val MinimumTouchTarget = 48.dp
     val HeaderHeight = 64.dp
+    val SectionHeaderHeight = 56.dp
+    val OverlineHeaderHeight = 28.dp
 }
 
 object YukiRatio {
