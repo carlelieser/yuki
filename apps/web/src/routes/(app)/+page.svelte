@@ -8,7 +8,6 @@
 		CategoryMenu,
 		ListingCard,
 		ListingFeed,
-		ProductCard,
 		ProductCarousel,
 		Section
 	} from '$lib/components/storefront/index.ts';
@@ -46,23 +45,7 @@
 {/snippet}
 
 {#snippet wideCard(entry: ListingSummary)}
-	<ProductCard
-		variant="wide"
-		title={entry.title}
-		href={resolve('/(app)/listings/[slug]', { slug: entry.slug })}
-		image={entry.bannerUrl ? banner : undefined}
-		icon={entry.iconUrl ? icon : undefined}
-		{meta}
-	/>
-	{#snippet banner()}
-		<img src={entry.bannerUrl} alt="" class="size-full object-cover" loading="lazy" />
-	{/snippet}
-	{#snippet icon()}
-		<img src={entry.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
-	{/snippet}
-	{#snippet meta()}
-		<p class="truncate text-xs text-muted-foreground">{entry.author}</p>
-	{/snippet}
+	<ListingCard {entry} variant="wide" />
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
