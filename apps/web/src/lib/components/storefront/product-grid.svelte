@@ -7,7 +7,7 @@
 
 	const LAYOUTS = {
 		grid: 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4',
-		list: 'flex flex-col gap-3'
+		list: 'grid grid-cols-1 gap-3 lg:grid-cols-2'
 	} as const;
 
 	let {

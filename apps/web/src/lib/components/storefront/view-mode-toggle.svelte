@@ -10,7 +10,6 @@
 
 <ToggleGroup
 	type="single"
-	size="sm"
 	value={views.mode}
 	onValueChange={(value) => views.choose(parseViewMode(value))}
 	aria-label="Change layout"
