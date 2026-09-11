@@ -140,10 +140,11 @@ class SearchScreenTest {
     }
 
     @Test
-    fun theAllOptionLeadsTheCategoryFilter() {
+    fun theFilterOffersEveryCategoryAndNoAllOption() {
         render(browsing())
 
-        composeRule.onNodeWithText(ALL_CATEGORIES_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithText("All").assertDoesNotExist()
+        composeRule.onNodeWithText(ListingCategory.Media.label).assertIsDisplayed()
     }
 
     @Test
