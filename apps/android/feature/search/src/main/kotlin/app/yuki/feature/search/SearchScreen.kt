@@ -59,9 +59,19 @@ internal fun SearchScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val content = (state as? UiState.Success)?.data
+
     YukiScreen(
         title = SEARCH_TITLE,
         modifier = modifier.testTag(SEARCH_SCREEN_TAG),
+        trailing = content?.let { active ->
+            {
+                SortSelector(
+                    selected = active.sort,
+                    onSortSelected = callbacks.onSortSelected,
+                )
+            }
+        },
     ) {
         BrowseScaffold(
             state = state,
@@ -75,7 +85,6 @@ internal fun SearchScreen(
 private fun SearchCallbacks.toBrowseCallbacks(): BrowseCallbacks = BrowseCallbacks(
     onQueryChange = onQueryChange,
     onRecentRemoved = onRecentRemoved,
-    onSortSelected = onSortSelected,
     onListingSelected = onListingSelected,
     categoryFilter = { content -> CategoryFilter(content.category, onCategorySelected) },
 )
