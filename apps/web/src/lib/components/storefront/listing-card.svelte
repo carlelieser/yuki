@@ -4,8 +4,10 @@
 	import ProductCard, { type ProductCardVariant } from './product-card.svelte';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
-	let { entry, variant = 'default' }: { entry: ListingSummary; variant?: ProductCardVariant } =
-		$props();
+	let {
+		entry,
+		variant = 'default'
+	}: { entry: ListingSummary; variant?: Exclude<ProductCardVariant, 'detail'> } = $props();
 
 	const media = $derived(variant === 'wide' ? entry.bannerUrl : entry.iconUrl);
 </script>
