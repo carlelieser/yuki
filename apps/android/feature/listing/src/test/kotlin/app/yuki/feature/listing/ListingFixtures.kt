@@ -11,6 +11,7 @@ import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
 import java.time.Instant
 
 internal const val SLUG = "aurora"
@@ -78,7 +79,7 @@ internal class FakeListingRepository(
     override suspend fun sections(limit: Int): Result<List<CategorySection>> =
         error("sections is not used by the listing screen")
 
-    override suspend fun search(query: String): Result<List<ListingSummary>> =
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
         error("search is not used by the listing screen")
 
     override suspend fun detail(slug: String): Result<ListingDetail> {

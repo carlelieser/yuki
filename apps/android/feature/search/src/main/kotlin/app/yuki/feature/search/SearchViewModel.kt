@@ -12,6 +12,7 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -76,16 +78,17 @@ class SearchViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     private fun results(): Flow<UiState<List<ListingSummary>>?> =
-        query.debounce(SEARCH_DEBOUNCE_MILLIS)
-            .flatMapLatest { value -> resultsFor(normalize(value)) }
+        combine(query.debounce(SEARCH_DEBOUNCE_MILLIS), filter, ::searchRequest)
+            .distinctUntilChanged()
+            .flatMapLatest { request -> resultsFor(request) }
 
-    private fun resultsFor(value: String): Flow<UiState<List<ListingSummary>>?> {
-        if (value.length < MINIMUM_QUERY_LENGTH) return flowOf(null)
+    private fun resultsFor(request: SearchQuery): Flow<UiState<List<ListingSummary>>?> {
+        if (request.term.length < MINIMUM_QUERY_LENGTH) return flowOf(null)
 
         return flow {
             emit(UiState.Loading)
-            val outcome = repository.search(value).toUiState()
-            if (outcome is UiState.Success) recentSearches.remember(value)
+            val outcome = repository.search(request).toUiState()
+            if (outcome is UiState.Success) recentSearches.remember(request.term)
             emit(outcome)
         }
     }
@@ -94,6 +97,12 @@ class SearchViewModel @Inject constructor(
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 private fun normalize(query: String): String = query.trim().take(MAXIMUM_QUERY_LENGTH)
+
+private fun searchRequest(query: String, filter: BrowseFilter): SearchQuery = SearchQuery(
+    term = normalize(query),
+    sort = filter.sort.key.wireValue,
+    order = filter.sort.order.wireValue,
+)
 
 private fun content(
     query: String,

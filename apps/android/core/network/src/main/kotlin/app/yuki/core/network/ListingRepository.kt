@@ -14,7 +14,7 @@ interface ListingRepository {
 
     suspend fun sections(limit: Int): Result<List<CategorySection>>
 
-    suspend fun search(query: String): Result<List<ListingSummary>>
+    suspend fun search(query: SearchQuery): Result<List<ListingSummary>>
 
     suspend fun detail(slug: String): Result<ListingDetail>
 }
@@ -38,8 +38,8 @@ internal class NetworkListingRepository @Inject constructor(
             remote.sections(limit).toDomain()
         }
 
-    override suspend fun search(query: String): Result<List<ListingSummary>> =
-        runRemote("Search listings for q=$query") {
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
+        runRemote("Search listings for q=${query.term} (sort=${query.sort})") {
             remote.search(query).results.map(ListingSummaryDto::toDomain)
         }
 

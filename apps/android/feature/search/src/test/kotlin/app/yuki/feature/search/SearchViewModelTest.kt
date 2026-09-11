@@ -213,6 +213,49 @@ class SearchViewModelTest {
     }
 
     @Test
+    fun `changing the sort refetches the active search with the new sort`() = runTest {
+        repository.searchResult = Result.success(listOf(listing("beta")))
+
+        val model = viewModel()
+        model.state.test {
+            awaitContent()
+
+            model.onQueryChange("beta")
+            advanceTimeBy(SEARCH_DEBOUNCE_MILLIS + 1)
+            awaitSearchResults()
+
+            assertEquals(listOf("stars-desc"), repository.searchedSorts)
+
+            model.onSortChange(BrowseSortOption.NameAscending)
+            advanceTimeBy(SEARCH_DEBOUNCE_MILLIS + 1)
+            awaitSearchResults()
+
+            assertEquals(listOf("stars-desc", "name-asc"), repository.searchedSorts)
+            assertEquals(listOf("beta", "beta"), repository.searchedQueries)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `the active sort travels with the search request`() = runTest {
+        repository.searchResult = Result.success(listOf(listing("beta")))
+
+        val model = viewModel()
+        model.onSortChange(BrowseSortOption.NewestFirst)
+
+        model.state.test {
+            awaitContent()
+
+            model.onQueryChange("beta")
+            advanceTimeBy(SEARCH_DEBOUNCE_MILLIS + 1)
+            awaitSearchResults()
+
+            assertEquals(listOf("newest-desc"), repository.searchedSorts)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a removed recent search is forgotten`() = runTest {
         recentSearches.remember("beta")
 

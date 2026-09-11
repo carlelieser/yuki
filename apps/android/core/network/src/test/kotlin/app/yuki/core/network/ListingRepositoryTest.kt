@@ -106,10 +106,25 @@ class ListingRepositorySearchTest {
         val requests = mutableListOf<HttpRequestData>()
         val repository = repositoryRecording(requests, SEARCH_RESULTS_JSON)
 
-        val results = repository.search("example").getOrThrow()
+        val results = repository.search(SearchQuery(term = "example")).getOrThrow()
 
         assertEquals("example", requests.single().url.parameters["q"])
         assertEquals("Example App", results.single().title)
+    }
+
+    @Test
+    fun `sends the requested sort order and limit`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repository = repositoryRecording(requests, SEARCH_RESULTS_JSON)
+
+        repository.search(
+            SearchQuery(term = "example", sort = "name", order = "asc", limit = 24),
+        ).getOrThrow()
+
+        val parameters = requests.single().url.parameters
+        assertEquals("name", parameters["sort"])
+        assertEquals("asc", parameters["order"])
+        assertEquals("24", parameters["limit"])
     }
 }
 
@@ -224,7 +239,8 @@ class ListingRepositoryFailureTest {
 
     @Test
     fun `malformed json becomes an unexpected failure naming the operation`() = runTest {
-        val result = repositoryReturning("""{"results":"not-a-list"}""").search("example")
+        val result = repositoryReturning("""{"results":"not-a-list"}""")
+            .search(SearchQuery(term = "example"))
 
         val error = result.exceptionOrNull()!!
         assertTrue(error.failureReason() is FailureReason.Unexpected)
