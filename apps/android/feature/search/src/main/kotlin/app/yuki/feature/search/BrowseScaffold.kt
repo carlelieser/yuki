@@ -7,7 +7,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -161,6 +163,8 @@ private fun BrowseListing(
 
     Column(modifier = Modifier.fillMaxSize()) {
         callbacks.categoryFilter?.invoke(content)
+
+        Spacer(modifier = Modifier.height(YukiSpacing.Small))
 
         if (isScrolled) {
             HorizontalDivider(modifier = Modifier.testTag(BROWSE_DIVIDER_TAG))
