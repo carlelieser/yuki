@@ -35,9 +35,14 @@
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="ghost" aria-label="Filter listings by category">
+			<Button
+				{...props}
+				variant="ghost"
+				class="w-9 px-0 sm:w-auto sm:px-2.5"
+				aria-label="Filter listings by category"
+			>
 				<TriggerIcon aria-hidden="true" />
-				{label}
+				<span class="hidden sm:inline">{label}</span>
 			</Button>
 		{/snippet}
 	</DropdownMenuTrigger>
