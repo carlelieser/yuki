@@ -59,4 +59,13 @@ object YukiIcons {
 
     val Asterisk: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_asterisk)
+
+    val Repository: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_fork_right)
+
+    val Homepage: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_home)
+
+    val License: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_balance)
 }
