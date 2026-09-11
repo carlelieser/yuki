@@ -6,11 +6,11 @@
 </script>
 
 {#if variant === 'list'}
-	<Card class="overflow-hidden py-0">
-		<div class="flex items-center gap-3 p-3">
+	<Card class="h-full overflow-hidden py-0">
+		<div class="flex h-full items-start gap-3 p-3">
 			<Skeleton class="size-12 shrink-0 rounded-lg" />
-			<div class="flex min-w-0 flex-1 flex-col gap-1.5">
-				<div class="flex flex-col gap-0.5">
+			<div class="flex h-full min-w-0 flex-1 flex-col gap-1.5">
+				<div class="flex flex-1 flex-col gap-0.5">
 					<Skeleton class="h-4 w-1/3" />
 					<Skeleton class="h-3 w-2/3" />
 				</div>
@@ -19,15 +19,15 @@
 		</div>
 	</Card>
 {:else}
-	<Card class="overflow-hidden py-0">
+	<Card class="h-full overflow-hidden py-0">
 		<AspectRatio ratio={variant === 'wide' ? 16 / 9 : 1}>
 			<Skeleton class="size-full rounded-none" />
 		</AspectRatio>
 		{#if variant === 'wide'}
-			<CardContent class="flex items-center gap-3 p-3">
+			<CardContent class="flex flex-1 items-start gap-3 p-3">
 				<Skeleton class="size-10 shrink-0 rounded-lg" />
-				<div class="flex min-w-0 flex-1 flex-col gap-2">
-					<div class="flex flex-col gap-0.5">
+				<div class="flex h-full min-w-0 flex-1 flex-col gap-2">
+					<div class="flex flex-1 flex-col gap-0.5">
 						<Skeleton class="h-4 w-3/4" />
 						<Skeleton class="h-3 w-full" />
 					</div>
@@ -35,8 +35,8 @@
 				</div>
 			</CardContent>
 		{:else}
-			<CardContent class="flex flex-col gap-2 p-3">
-				<div class="flex flex-col gap-0.5">
+			<CardContent class="flex flex-1 flex-col gap-2 p-3">
+				<div class="flex flex-1 flex-col gap-0.5">
 					<Skeleton class="h-4 w-3/4" />
 					<Skeleton class="h-3 w-full" />
 				</div>
