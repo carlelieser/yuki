@@ -2,6 +2,7 @@ package app.yuki.feature.settings
 
 import android.Manifest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -36,12 +37,9 @@ class PermissionRowTest {
             "Install apps when Shizuku is unavailable",
             permissions.getValue(Manifest.permission.REQUEST_INSTALL_PACKAGES).reason,
         )
+        assertNull(permissions.getValue(Manifest.permission.POST_NOTIFICATIONS).reason)
         assertEquals(
-            "Notify when a download or install finishes",
-            permissions.getValue(Manifest.permission.POST_NOTIFICATIONS).reason,
-        )
-        assertEquals(
-            "Install silently through Shizuku",
+            "Required to install apps without confirmation",
             permissions.getValue(SHIZUKU_PERMISSION).reason,
         )
     }

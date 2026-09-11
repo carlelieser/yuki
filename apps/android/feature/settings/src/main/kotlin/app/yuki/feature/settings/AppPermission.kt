@@ -10,8 +10,8 @@ enum class PermissionKind {
 data class AppPermission(
     val permission: String,
     val label: String,
-    val reason: String,
     val isRequired: Boolean,
+    val reason: String? = null,
     val kind: PermissionKind = PermissionKind.Runtime,
 )
 
@@ -34,13 +34,12 @@ val YUKI_PERMISSIONS: List<AppPermission> = listOf(
     AppPermission(
         permission = Manifest.permission.POST_NOTIFICATIONS,
         label = "Notifications",
-        reason = "Notify when a download or install finishes",
         isRequired = false,
     ),
     AppPermission(
         permission = SHIZUKU_PERMISSION,
         label = "Shizuku",
-        reason = "Install silently through Shizuku",
+        reason = "Required to install apps without confirmation",
         isRequired = false,
     ),
 )
