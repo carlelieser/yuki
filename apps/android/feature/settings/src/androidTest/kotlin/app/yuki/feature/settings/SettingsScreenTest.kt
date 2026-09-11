@@ -53,14 +53,22 @@ class SettingsScreenTest {
 
     @Test
     fun aGrantedPermissionRendersAGrantedChip() {
-        setContent(ShizukuState.Ready, permissionStatus = PermissionStatus.Granted)
+        setContent(
+            ShizukuState.Ready,
+            permissionStatus = PermissionStatus.Granted,
+            permissions = listOf(requiredPermission()),
+        )
 
         composeRule.onNodeWithText(CHIP_GRANTED).assertIsDisplayed()
     }
 
     @Test
     fun aDeniedPermissionRendersADeniedChip() {
-        setContent(ShizukuState.NotInstalled, permissionStatus = PermissionStatus.Denied)
+        setContent(
+            ShizukuState.NotInstalled,
+            permissionStatus = PermissionStatus.Denied,
+            permissions = listOf(requiredPermission()),
+        )
 
         composeRule.onNodeWithText(CHIP_DENIED).assertIsDisplayed()
     }
