@@ -44,4 +44,7 @@ object YukiIcons {
 
     val Sort: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_sort)
+
+    val History: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_history)
 }
