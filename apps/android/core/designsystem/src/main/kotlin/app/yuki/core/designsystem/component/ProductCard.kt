@@ -103,6 +103,7 @@ private fun CardCaption(listing: ListingSummary) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+        ProductDescription(description = listing.description)
         ListingBadgeRow(badges = listing.toBadges())
     }
 }

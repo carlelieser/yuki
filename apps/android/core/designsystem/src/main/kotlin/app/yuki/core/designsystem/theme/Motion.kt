@@ -7,6 +7,7 @@ object YukiMotion {
     const val ScreenMillis = 220
     const val ScreenExitMillis = 180
     const val FadeMillis = 140
+    const val ResizeMillis = 200
 
     val Emphasized = CubicBezierEasing(0.2f, 0f, 0f, 1f)
     val Accelerate = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
@@ -16,4 +17,6 @@ object YukiMotion {
     fun <T> exit() = tween<T>(durationMillis = ScreenExitMillis, easing = Accelerate)
 
     fun <T> fade() = tween<T>(durationMillis = FadeMillis, easing = Emphasized)
+
+    fun <T> resize() = tween<T>(durationMillis = ResizeMillis, easing = Emphasized)
 }

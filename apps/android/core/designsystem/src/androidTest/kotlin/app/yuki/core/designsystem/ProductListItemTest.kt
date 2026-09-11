@@ -26,13 +26,14 @@ class ProductListItemTest {
     private fun summary(
         category: ListingCategory? = ListingCategory.Gaming,
         ratingAverage: Double? = 4.6,
+        description: String? = null,
     ) = ListingSummary(
         id = "6f1d0f3a-0000-4000-8000-000000000001",
         githubRepoId = 1L,
         slug = "example-app",
         title = "Example App",
         author = "octocat",
-        description = null,
+        description = description,
         iconUrl = null,
         bannerUrl = null,
         category = category,
@@ -73,6 +74,28 @@ class ProductListItemTest {
 
         composeRule.onNodeWithText("Gaming").assertDoesNotExist()
         composeRule.onNodeWithText("octocat").assertIsDisplayed()
+    }
+
+    @Test
+    fun aListingRowShowsItsRepoDescription() {
+        render { summary(description = "Keeps your chaos in check").toProductListItemContent() }
+
+        composeRule.onNodeWithText("Keeps your chaos in check").assertIsDisplayed()
+    }
+
+    @Test
+    fun aListingRowWithoutADescriptionOmitsIt() {
+        render { summary(description = null).toProductListItemContent() }
+
+        composeRule.onNodeWithText("Example App").assertIsDisplayed()
+        composeRule.onNodeWithText("octocat").assertIsDisplayed()
+    }
+
+    @Test
+    fun aBlankDescriptionIsTreatedAsAbsent() {
+        render { summary(description = "   ").toProductListItemContent() }
+
+        composeRule.onNodeWithText("   ").assertDoesNotExist()
     }
 
     @Test

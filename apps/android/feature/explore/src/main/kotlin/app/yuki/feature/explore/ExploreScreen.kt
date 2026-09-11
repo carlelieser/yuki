@@ -26,7 +26,10 @@ const val EXPLORE_SCREEN_TAG = "exploreScreen"
 
 internal const val EXPLORE_TITLE = "Explore"
 internal const val EXPLORE_MISSING_MESSAGE = "There are no apps to show right now."
+internal const val FEATURED_TITLE = "Featured"
 private const val SETTINGS_DESCRIPTION = "Settings"
+private const val FEATURED_HEADER_KEY = "featuredHeader"
+private const val FEATURED_ROW_KEY = "featuredRow"
 
 @Composable
 fun ExploreRoute(
@@ -136,15 +139,20 @@ private fun LazyListScope.featuredSection(
     content: ExploreContent,
     callbacks: ExploreCallbacks,
 ) {
-    val featured = content.featured as? UiState.Success ?: return
-    if (featured.data.isEmpty()) return
+    val featured = content.featured
+    if (featured is UiState.Failure) return
+    if (featured is UiState.Success && featured.data.isEmpty()) return
 
-    item { SectionHeader(title = "Featured") }
-    item {
-        FeaturedRow(
-            listings = featured.data,
-            onSelect = callbacks.onListingSelected,
-            modifier = Modifier.fillMaxWidth(),
-        )
+    item(key = FEATURED_HEADER_KEY) { SectionHeader(title = FEATURED_TITLE) }
+    item(key = FEATURED_ROW_KEY) {
+        when (featured) {
+            is UiState.Success -> FeaturedRow(
+                listings = featured.data,
+                onSelect = callbacks.onListingSelected,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            else -> FeaturedRowPlaceholder(modifier = Modifier.fillMaxWidth())
+        }
     }
 }
