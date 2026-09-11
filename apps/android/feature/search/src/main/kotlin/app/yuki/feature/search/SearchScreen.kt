@@ -16,7 +16,7 @@ import app.yuki.core.model.UiState
 
 const val SEARCH_SCREEN_TAG = "searchScreen"
 
-internal const val SEARCH_TITLE = "Browse"
+internal const val SEARCH_TITLE = "Search"
 
 @Composable
 fun SearchRoute(

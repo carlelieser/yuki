@@ -15,7 +15,7 @@ internal enum class YukiTab(
     val route: KClass<*>,
 ) {
     Explore("Explore", ExploreRoute::class),
-    Browse("Browse", SearchRoute::class),
+    Search("Search", SearchRoute::class),
     Library("Library", LibraryRoute::class),
     Updates("Updates", UpdatesRoute::class),
 }
@@ -23,8 +23,8 @@ internal enum class YukiTab(
 @Composable
 private fun YukiTab.icon(): ImageVector = when (this) {
     YukiTab.Explore -> YukiIcons.Explore
-    YukiTab.Browse -> YukiIcons.GridView
-    YukiTab.Library -> YukiIcons.Library
+    YukiTab.Search -> YukiIcons.Search
+    YukiTab.Library -> YukiIcons.GridView
     YukiTab.Updates -> YukiIcons.Update
 }
 
@@ -39,7 +39,7 @@ internal fun YukiTab.toNavDestination(): YukiNavDestination {
 
 internal fun YukiTab.startRoute(): Any = when (this) {
     YukiTab.Explore -> ExploreRoute
-    YukiTab.Browse -> SearchRoute
+    YukiTab.Search -> SearchRoute
     YukiTab.Library -> LibraryRoute
     YukiTab.Updates -> UpdatesRoute
 }
