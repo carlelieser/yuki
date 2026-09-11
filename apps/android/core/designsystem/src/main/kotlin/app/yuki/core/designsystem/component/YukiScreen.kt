@@ -42,6 +42,7 @@ fun YukiScreen(
     title: String,
     modifier: Modifier = Modifier,
     action: ScreenAction? = null,
+    trailing: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -49,14 +50,18 @@ fun YukiScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            YukiScreenHeader(title = title, action = action)
+            YukiScreenHeader(title = title, action = action, trailing = trailing)
             Box(modifier = Modifier.fillMaxSize()) { content() }
         }
     }
 }
 
 @Composable
-private fun YukiScreenHeader(title: String, action: ScreenAction?) {
+private fun YukiScreenHeader(
+    title: String,
+    action: ScreenAction?,
+    trailing: (@Composable () -> Unit)?,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -73,6 +78,7 @@ private fun YukiScreenHeader(title: String, action: ScreenAction?) {
                 .weight(1f)
                 .semantics { heading() },
         )
+        trailing?.invoke()
         ScreenActionButton(action = action)
     }
 }

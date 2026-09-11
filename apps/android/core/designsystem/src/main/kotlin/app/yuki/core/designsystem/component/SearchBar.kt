@@ -1,6 +1,5 @@
 package app.yuki.core.designsystem.component
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -10,30 +9,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import app.yuki.core.designsystem.theme.YukiShape
 
 const val SEARCH_CLEAR_DESCRIPTION = "Clear search"
+const val SEARCH_PLACEHOLDER = "Search apps"
 
 data class SearchBarState(
     val query: String,
-    val placeholder: String = "Search apps",
+    val placeholder: String = SEARCH_PLACEHOLDER,
 )
 
-@Composable
-private fun TrailingActions(
-    state: SearchBarState,
-    onQueryChange: (String) -> Unit,
-    trailing: (@Composable () -> Unit)?,
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        ClearAction(query = state.query, onQueryChange = onQueryChange)
-        trailing?.invoke()
-    }
-}
+data class SearchBarFocus(
+    val onFocusChange: (Boolean) -> Unit,
+)
 
 @Composable
 private fun ClearAction(query: String, onQueryChange: (String) -> Unit) {
@@ -49,7 +41,7 @@ fun SearchBar(
     state: SearchBarState,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    trailing: (@Composable () -> Unit)? = null,
+    focus: SearchBarFocus? = null,
 ) {
     TextField(
         value = state.query,
@@ -68,13 +60,7 @@ fun SearchBar(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
-        trailingIcon = {
-            TrailingActions(
-                state = state,
-                onQueryChange = onQueryChange,
-                trailing = trailing,
-            )
-        },
+        trailingIcon = { ClearAction(query = state.query, onQueryChange = onQueryChange) },
         singleLine = true,
         shape = YukiShape.Pill,
         textStyle = MaterialTheme.typography.bodyLarge,
@@ -87,6 +73,14 @@ fun SearchBar(
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent,
         ),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .searchBarFocus(focus),
     )
+}
+
+private fun Modifier.searchBarFocus(focus: SearchBarFocus?): Modifier {
+    if (focus == null) return this
+
+    return onFocusChanged { state -> focus.onFocusChange(state.isFocused) }
 }

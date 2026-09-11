@@ -11,11 +11,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 
+const val SEARCH_RESULT_LIMIT = 24
+
 data class BrowseQuery(
     val sort: String = "stars",
     val order: String = "desc",
     val offset: Int = 0,
     val category: ListingCategory? = null,
+)
+
+data class SearchQuery(
+    val term: String,
+    val sort: String = "stars",
+    val order: String = "desc",
+    val limit: Int = SEARCH_RESULT_LIMIT,
 )
 
 @Singleton
@@ -43,9 +52,15 @@ internal class ListingRemoteDataSource @Inject constructor(
         return response.decode("Load listing sections (limit=$limit)")
     }
 
-    suspend fun search(query: String): SearchResultsDto {
-        val response = client.get("api/search") { parameter("q", query) }
-        return response.decode("Search listings for q=$query")
+    suspend fun search(query: SearchQuery): SearchResultsDto {
+        val response = client.get("api/search") {
+            parameter("q", query.term)
+            parameter("sort", query.sort)
+            parameter("order", query.order)
+            parameter("limit", query.limit)
+        }
+
+        return response.decode("Search listings for q=${query.term}")
     }
 
     suspend fun detail(slug: String): ListingDetailDto {

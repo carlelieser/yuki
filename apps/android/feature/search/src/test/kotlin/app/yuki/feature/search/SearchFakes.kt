@@ -10,6 +10,7 @@ import app.yuki.core.model.ListingPage
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -37,6 +38,7 @@ internal class FakeListingRepository : ListingRepository {
     val browsedCategories = mutableListOf<ListingCategory?>()
     val browsedSorts = mutableListOf<String>()
     val searchedQueries = mutableListOf<String>()
+    val searchedSorts = mutableListOf<String>()
 
     override suspend fun browse(query: BrowseQuery): Result<ListingPage> {
         browsedOffsets += query.offset
@@ -50,8 +52,9 @@ internal class FakeListingRepository : ListingRepository {
     override suspend fun sections(limit: Int): Result<List<CategorySection>> =
         Result.success(emptyList())
 
-    override suspend fun search(query: String): Result<List<ListingSummary>> {
-        searchedQueries += query
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> {
+        searchedQueries += query.term
+        searchedSorts += "${query.sort}-${query.order}"
         return searchResult
     }
 

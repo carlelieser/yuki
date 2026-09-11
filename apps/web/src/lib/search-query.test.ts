@@ -7,9 +7,12 @@ import {
 	isRelevanceSort,
 	MAX_QUERY_LENGTH,
 	MAX_SEARCH_OFFSET,
+	MAX_SEARCH_PAGE_SIZE,
 	normalizeSearchQuery,
 	readOffset,
+	readSearchLimit,
 	readSearchSorting,
+	SEARCH_PAGE_SIZE,
 	SEARCH_RELEVANCE_SORT,
 	SEARCH_SORT_OPTIONS,
 	toPrefixTsQuery,
@@ -82,6 +85,24 @@ describe('hasEnoughLengthForTrigram', () => {
 	it('accepts queries of three characters or more', () => {
 		expect(hasEnoughLengthForTrigram('abc')).toBe(true);
 		expect(hasEnoughLengthForTrigram('abcd')).toBe(true);
+	});
+});
+
+describe('readSearchLimit', () => {
+	it('reads a valid positive limit', () => {
+		expect(readSearchLimit('12')).toBe(12);
+	});
+
+	it('falls back to the default page size for missing and unparseable values', () => {
+		expect(readSearchLimit(null)).toBe(SEARCH_PAGE_SIZE);
+		expect(readSearchLimit('')).toBe(SEARCH_PAGE_SIZE);
+		expect(readSearchLimit('abc')).toBe(SEARCH_PAGE_SIZE);
+		expect(readSearchLimit('0')).toBe(SEARCH_PAGE_SIZE);
+		expect(readSearchLimit('-5')).toBe(SEARCH_PAGE_SIZE);
+	});
+
+	it('clamps a limit beyond the maximum', () => {
+		expect(readSearchLimit('999999')).toBe(MAX_SEARCH_PAGE_SIZE);
 	});
 });
 

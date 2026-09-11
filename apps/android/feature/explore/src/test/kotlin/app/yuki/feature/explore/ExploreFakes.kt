@@ -9,6 +9,7 @@ import app.yuki.core.model.ListingPage
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
 
 internal class TypedFailure(override val reason: FailureReason) :
     Exception("Explore test failure"), FailureAware
@@ -56,8 +57,8 @@ internal class FakeListingRepository : ListingRepository {
         return sectionsResult
     }
 
-    override suspend fun search(query: String): Result<List<ListingSummary>> {
-        searchedQueries += query
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> {
+        searchedQueries += query.term
         return searchResult
     }
 

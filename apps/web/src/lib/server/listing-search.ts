@@ -24,6 +24,12 @@ type SearchPageRequest = {
 	category?: ListingCategory | null;
 };
 
+type TypeaheadRequest = {
+	limit: number;
+	sorting?: SearchSorting;
+	category?: ListingCategory | null;
+};
+
 function fullTextMatch(tsQuery: SQL): SQL {
 	return sql`${schema.listings.searchVector} @@ ${tsQuery}`;
 }
@@ -88,17 +94,19 @@ function searchOrderBy(sorting: SearchSorting, rank: SQL): SQL[] {
 export async function searchListingsTypeahead(
 	db: Database,
 	query: string,
-	limit: number
+	request: TypeaheadRequest
 ): Promise<ListingSummary[]> {
 	const match = buildTypeaheadMatch(query);
 	if (match === null) return [];
 
+	const sorting = request.sorting ?? DEFAULT_SEARCH_SORTING;
+
 	return db
 		.select(summaryColumns)
 		.from(schema.listings)
-		.where(publishedAnd(match.condition))
-		.orderBy(...relevanceOrderBy(match.rank))
-		.limit(limit);
+		.where(publishedAnd(match.condition, request.category ?? null))
+		.orderBy(...searchOrderBy(sorting, match.rank))
+		.limit(request.limit);
 }
 
 export async function searchListingsPage(

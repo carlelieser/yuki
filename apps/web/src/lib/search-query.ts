@@ -10,6 +10,8 @@ import {
 export const MAX_QUERY_LENGTH = 100;
 export const MIN_TRIGRAM_LENGTH = 3;
 export const MAX_SEARCH_OFFSET = 500;
+export const SEARCH_PAGE_SIZE = 8;
+export const MAX_SEARCH_PAGE_SIZE = 24;
 
 const TOKEN_ALLOWED_CHARACTERS = /[^A-Za-z0-9._-]/g;
 
@@ -33,6 +35,12 @@ export function toPrefixTsQuery(normalized: string): string {
 
 export function hasEnoughLengthForTrigram(normalized: string): boolean {
 	return normalized.length >= MIN_TRIGRAM_LENGTH;
+}
+
+export function readSearchLimit(raw: string | null): number {
+	const parsed = Number(raw);
+	if (!Number.isFinite(parsed) || parsed <= 0) return SEARCH_PAGE_SIZE;
+	return Math.min(Math.floor(parsed), MAX_SEARCH_PAGE_SIZE);
 }
 
 export function readOffset(raw: string | null): number {

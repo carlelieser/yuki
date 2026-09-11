@@ -13,6 +13,7 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +58,7 @@ internal class FakeListingRepository(
     override suspend fun sections(limit: Int): Result<List<CategorySection>> =
         Result.failure(IllegalStateException("sections is not used by Updates"))
 
-    override suspend fun search(query: String): Result<List<ListingSummary>> =
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
         Result.failure(IllegalStateException("search is not used by Updates"))
 
     override suspend fun detail(slug: String): Result<ListingDetail> {

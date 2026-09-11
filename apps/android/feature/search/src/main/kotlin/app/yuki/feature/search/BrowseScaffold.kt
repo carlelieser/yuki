@@ -1,5 +1,10 @@
 package app.yuki.feature.search
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,20 +12,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.paging.compose.LazyPagingItems
 import app.yuki.core.designsystem.component.SearchBar
+import app.yuki.core.designsystem.component.SearchBarFocus
 import app.yuki.core.designsystem.component.SearchBarState
+import app.yuki.core.designsystem.component.SectionHeader
+import app.yuki.core.designsystem.component.SectionHeaderVariant
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiScreenCenter
+import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
+internal const val BROWSE_LIST_TITLE = "Apps"
+
+private const val BROWSE_MODE_LABEL = "browseMode"
+
 internal data class BrowseCallbacks(
     val onQueryChange: (String) -> Unit,
     val onRecentRemoved: (String) -> Unit,
-    val onSortSelected: (BrowseSortOption) -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val categoryFilter: (@Composable (SearchContent) -> Unit)? = null,
 )
@@ -32,20 +49,40 @@ internal fun BrowseScaffold(
     callbacks: BrowseCallbacks,
     contentPadding: PaddingValues,
 ) {
+    val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+    val content = (state as? UiState.Success)?.data
+    val hasQuery = !content?.query.isNullOrEmpty()
+    val isSearchMode = isFocused || hasQuery
+
+    BackHandler(enabled = isSearchMode) {
+        focusManager.clearFocus()
+        callbacks.onQueryChange("")
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        BrowseSearchBar(state = state, callbacks = callbacks)
+        BrowseSearchBar(
+            state = state,
+            callbacks = callbacks,
+            focus = SearchBarFocus(onFocusChange = { focused -> isFocused = focused }),
+        )
 
         BrowseBody(
             state = state,
             listings = listings,
             callbacks = callbacks,
             contentPadding = contentPadding,
+            isSearchMode = isSearchMode,
         )
     }
 }
 
 @Composable
-private fun BrowseSearchBar(state: UiState<SearchContent>, callbacks: BrowseCallbacks) {
+private fun BrowseSearchBar(
+    state: UiState<SearchContent>,
+    callbacks: BrowseCallbacks,
+    focus: SearchBarFocus,
+) {
     val content = (state as? UiState.Success)?.data
 
     SearchBar(
@@ -55,14 +92,7 @@ private fun BrowseSearchBar(state: UiState<SearchContent>, callbacks: BrowseCall
             horizontal = YukiSpacing.Large,
             vertical = YukiSpacing.Small,
         ),
-        trailing = content?.let { active ->
-            {
-                SortSelector(
-                    selected = active.sort,
-                    onSortSelected = callbacks.onSortSelected,
-                )
-            }
-        },
+        focus = focus,
     )
 }
 
@@ -72,21 +102,47 @@ private fun BrowseBody(
     listings: LazyPagingItems<ListingSummary>,
     callbacks: BrowseCallbacks,
     contentPadding: PaddingValues,
+    isSearchMode: Boolean,
 ) {
     val content = (state as? UiState.Success)?.data
         ?: return YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
+    AnimatedContent(
+        targetState = isSearchMode,
+        transitionSpec = { fadeIn(YukiMotion.fade()) togetherWith fadeOut(YukiMotion.fade()) },
+        label = BROWSE_MODE_LABEL,
+    ) { searching ->
+        if (searching) {
+            SearchMode(content = content, callbacks = callbacks, contentPadding = contentPadding)
+            return@AnimatedContent
+        }
+
+        BrowseListing(
+            content = content,
+            listings = listings,
+            callbacks = callbacks,
+            contentPadding = contentPadding,
+        )
+    }
+}
+
+@Composable
+private fun SearchMode(
+    content: SearchContent,
+    callbacks: BrowseCallbacks,
+    contentPadding: PaddingValues,
+) {
     if (content.isSearching) {
         SearchResults(state = content, onSelect = callbacks.onListingSelected)
         return
     }
 
-    BrowseListing(
-        content = content,
-        listings = listings,
-        callbacks = callbacks,
+    LazyColumn(
         contentPadding = contentPadding,
-    )
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        recentSection(content = content, callbacks = callbacks)
+    }
 }
 
 @Composable
@@ -103,10 +159,21 @@ private fun BrowseListing(
             contentPadding = contentPadding,
             modifier = Modifier.fillMaxSize(),
         ) {
-            recentSection(content = content, callbacks = callbacks)
+            browseListHeader(listings = listings)
             browseRefreshState(listings = listings)
             browseList(listings = listings, onSelect = callbacks.onListingSelected)
         }
+    }
+}
+
+private fun LazyListScope.browseListHeader(listings: LazyPagingItems<ListingSummary>) {
+    if (listings.itemCount == 0) return
+
+    item {
+        SectionHeader(
+            title = BROWSE_LIST_TITLE,
+            variant = SectionHeaderVariant.Overline,
+        )
     }
 }
 

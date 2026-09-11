@@ -15,6 +15,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.BACK_ACTION_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.SEARCH_PLACEHOLDER
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -33,6 +34,15 @@ class SearchScreenTest {
         onCategorySelected = {},
         onSortSelected = {},
         onListingSelected = {},
+    )
+
+    private fun browsingWithRecent(recent: List<String>) = UiState.Success(
+        SearchContent(
+            query = "",
+            recent = recent,
+            results = null,
+            filter = BrowseFilter(),
+        ),
     )
 
     private fun browsing(
@@ -77,11 +87,45 @@ class SearchScreenTest {
     }
 
     @Test
-    fun theSortControlSitsInTheSearchBarAndNamesTheActiveSort() {
+    fun theSortControlSitsInTheScreenHeaderAndNamesTheActiveSort() {
         render(browsing(sort = BrowseSortOption.NameAscending))
 
         composeRule.onNodeWithContentDescription("$SORT_DESCRIPTION Name A-Z")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun theSortControlStaysAvailableWhileSearchResultsShow() {
+        render(searching(UiState.Success(listOf(listing("beta")))))
+
+        composeRule.onNodeWithTag(SORT_SELECTOR_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun recentSearchesStayHiddenUntilTheSearchBarIsFocused() {
+        render(browsingWithRecent(listOf("beta")))
+
+        composeRule.onNodeWithTag(RECENT_SEARCHES_TAG).assertDoesNotExist()
+        composeRule.onNodeWithTag(CATEGORY_FILTER_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun focusingTheSearchBarRevealsRecentSearchesAndHidesTheBrowseList() {
+        render(browsingWithRecent(listOf("beta")))
+
+        composeRule.onNodeWithText(SEARCH_PLACEHOLDER).performClick()
+
+        composeRule.onNodeWithTag(RECENT_SEARCHES_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText(RECENT_SEARCHES_TITLE.uppercase()).assertIsDisplayed()
+        composeRule.onNodeWithTag(CATEGORY_FILTER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aQueryKeepsSearchModeOpenWithoutFocus() {
+        render(searching(UiState.Success(listOf(listing("beta")))))
+
+        composeRule.onNodeWithTag(SEARCH_RESULTS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(CATEGORY_FILTER_TAG).assertDoesNotExist()
     }
 
     @Test
