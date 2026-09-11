@@ -1,12 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { schema, type Database } from '@yuki/db';
 import type { ListingCategory } from '$lib/categories.ts';
-import {
-	getListingBySlug,
-	groupIntoSections,
-	summaryColumns,
-	type RankedRow
-} from './listings.ts';
+import type { RankedRow } from './listings.ts';
+
+const { getRatingSummary } = vi.hoisted(() => ({ getRatingSummary: vi.fn() }));
+
+vi.mock('./reviews.ts', () => ({ getRatingSummary }));
+
+const { getListingBySlug, groupIntoSections, summaryColumns } = await import('./listings.ts');
+
+function ratingOf(average: number, total: number) {
+	return { average, total, distribution: [] };
+}
 
 function rowFor(overrides: Record<string, unknown> = {}) {
 	return {
@@ -45,14 +51,27 @@ function databaseReturning(row: unknown) {
 	} as unknown as Database;
 }
 
+function summarySelectSql(): string {
+	return new QueryBuilder().select(summaryColumns).from(schema.listings).toSQL().sql;
+}
+
 describe('summaryColumns', () => {
 	it('selects the github repo id clients key installs by', () => {
 		expect(summaryColumns.githubRepoId).toBe(schema.listings.githubRepoId);
+	});
+
+	it('correlates the rating subqueries to the listing row being selected', () => {
+		const rendered = summarySelectSql();
+
+		expect(rendered).toContain('"listing_id" = "listings"."id"');
+		expect(rendered).not.toContain('"listing_id" = "id"');
 	});
 });
 
 describe('getListingBySlug', () => {
 	it('maps a published listing onto the detail shape', async () => {
+		getRatingSummary.mockResolvedValue(ratingOf(4.6, 12));
+
 		const listing = await getListingBySlug(databaseReturning(rowFor()), 'acme-tools');
 
 		expect(listing).toEqual({
@@ -66,6 +85,8 @@ describe('getListingBySlug', () => {
 			iconUrl: 'https://example.com/icon.png',
 			bannerUrl: 'https://example.com/banner.png',
 			stars: 128,
+			ratingAverage: 4.6,
+			ratingCount: 12,
 			repositoryUrl: 'https://github.com/acme/tools',
 			homepageUrl: null,
 			license: 'MIT',
@@ -82,6 +103,15 @@ describe('getListingBySlug', () => {
 				}
 			]
 		});
+	});
+
+	it('leaves the average unset when a listing has no reviews', async () => {
+		getRatingSummary.mockResolvedValue(ratingOf(0, 0));
+
+		const listing = await getListingBySlug(databaseReturning(rowFor()), 'acme-tools');
+
+		expect(listing?.ratingAverage).toBeNull();
+		expect(listing?.ratingCount).toBe(0);
 	});
 
 	it('returns null when no published listing matches the slug', async () => {
@@ -101,6 +131,8 @@ function rankedRowFor(overrides: Partial<RankedRow> = {}): RankedRow {
 		bannerUrl: 'https://example.com/banner.png',
 		stars: 128,
 		category: 'gaming',
+		ratingAverage: 4.6,
+		ratingCount: 12,
 		rank: 1,
 		...overrides
 	};
@@ -141,6 +173,23 @@ describe('groupIntoSections', () => {
 
 		expect(section?.results).toHaveLength(3);
 		expect(section?.results.map((listing) => listing.stars)).toEqual([90, 80, 70]);
+	});
+
+	it('carries the rating onto each section result', () => {
+		const [section] = groupIntoSections(rankedSection('gaming', [90]), 3);
+
+		expect(section?.results[0]?.ratingAverage).toBe(4.6);
+		expect(section?.results[0]?.ratingCount).toBe(12);
+	});
+
+	it('keeps an unrated listing without an average', () => {
+		const [section] = groupIntoSections(
+			[rankedRowFor({ category: 'gaming', ratingAverage: null, ratingCount: 0 })],
+			3
+		);
+
+		expect(section?.results[0]?.ratingAverage).toBeNull();
+		expect(section?.results[0]?.ratingCount).toBe(0);
 	});
 
 	it('excludes listings with no category', () => {

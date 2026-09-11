@@ -78,7 +78,9 @@ function summaryOf(row: ListingSummary & { total: number }): ListingSummary {
 		iconUrl: row.iconUrl,
 		bannerUrl: row.bannerUrl,
 		category: row.category,
-		stars: row.stars
+		stars: row.stars,
+		ratingAverage: row.ratingAverage,
+		ratingCount: row.ratingCount
 	};
 }
 

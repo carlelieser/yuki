@@ -40,6 +40,8 @@ function summary(overrides: Partial<ListingSummary> = {}): ListingSummary {
 		bannerUrl: 'https://example.com/banner.png',
 		category: null,
 		stars: 128,
+		ratingAverage: 4.6,
+		ratingCount: 12,
 		...overrides
 	};
 }
@@ -139,6 +141,20 @@ describe('GET /api/listings', () => {
 		const page = (await response.json()) as { results: ListingSummary[] };
 
 		expect(page.results[0]?.githubRepoId).toBe(909);
+	});
+
+	it('exposes the rating on every summary', async () => {
+		getListingsPage.mockResolvedValue({
+			results: [summary(), summary({ ratingAverage: null, ratingCount: 0 })],
+			hasMore: false
+		});
+
+		const response = await listings(listingsEvent(''));
+		const page = (await response.json()) as { results: ListingSummary[] };
+
+		expect(page.results[0]?.ratingAverage).toBe(4.6);
+		expect(page.results[0]?.ratingCount).toBe(12);
+		expect(page.results[1]?.ratingAverage).toBeNull();
 	});
 });
 
