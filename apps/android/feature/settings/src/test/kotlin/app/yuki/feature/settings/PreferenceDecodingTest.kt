@@ -16,17 +16,15 @@ class PreferenceDecodingTest {
     }
 
     @Test
-    fun theInstallModeSwitchMapsBothWays() {
-        assertEquals(InstallMode.Automatic, installModeFor(isAutomatic = true))
-        assertEquals(InstallMode.AlwaysAsk, installModeFor(isAutomatic = false))
-        assertEquals(InstallMode.AlwaysAsk, nextMode(InstallMode.Automatic))
-        assertEquals(InstallMode.Automatic, nextMode(InstallMode.AlwaysAsk))
+    fun eachInstallModeOffersAName() {
+        assertEquals("Silent", InstallMode.Automatic.label)
+        assertEquals("Always ask", InstallMode.AlwaysAsk.label)
     }
 
     @Test
-    fun eachInstallModeExplainsItself() {
-        assertEquals(INSTALL_MODE_AUTOMATIC, installModeSupporting(InstallMode.Automatic))
-        assertEquals(INSTALL_MODE_ALWAYS_ASK, installModeSupporting(InstallMode.AlwaysAsk))
+    fun theStoredNameIsIndependentOfTheDisplayedLabel() {
+        assertEquals("Automatic", InstallMode.Automatic.name)
+        assertEquals("AlwaysAsk", InstallMode.AlwaysAsk.name)
     }
 
     @Test

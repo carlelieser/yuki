@@ -2,6 +2,10 @@ package app.yuki.feature.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.yuki.core.model.UiState
@@ -87,11 +91,41 @@ class SettingsScreenTest {
         composeRule.onNodeWithText(REQUIRED_LABEL).assertDoesNotExist()
     }
 
+    @Test
+    fun theInstallModeRowNamesTheActiveMode() {
+        setContent(ShizukuState.Ready)
+
+        composeRule.onNodeWithText(InstallMode.Automatic.label).assertIsDisplayed()
+    }
+
+    @Test
+    fun theInstallModeSelectorOffersEveryMode() {
+        setContent(ShizukuState.Ready)
+
+        composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
+
+        InstallMode.entries.forEach { mode ->
+            composeRule.onAllNodesWithText(mode.label).onFirst().assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun choosingAModeReportsIt() {
+        val modes = mutableListOf<InstallMode>()
+        setContent(ShizukuState.Ready, onInstallModeChange = modes::add)
+
+        composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
+        composeRule.onAllNodesWithText(InstallMode.AlwaysAsk.label).onLast().performClick()
+
+        assertEquals(listOf(InstallMode.AlwaysAsk), modes)
+    }
+
     private fun setContent(
         state: ShizukuState,
         permissionStatus: PermissionStatus = PermissionStatus.Denied,
         permissions: List<AppPermission> = YUKI_PERMISSIONS,
         onShizukuAction: (ShizukuActionKind) -> Unit = {},
+        onInstallModeChange: (InstallMode) -> Unit = {},
     ) {
         val content = SettingsContent(
             shizuku = detailFor(state),
@@ -104,19 +138,22 @@ class SettingsScreenTest {
         composeRule.setContent {
             SettingsContentScreen(
                 state = UiState.Success(content),
-                actions = actionsWith(onShizukuAction),
+                actions = actionsWith(onShizukuAction, onInstallModeChange),
             )
         }
     }
 }
 
-private fun actionsWith(onShizukuAction: (ShizukuActionKind) -> Unit): SettingsActions =
+private fun actionsWith(
+    onShizukuAction: (ShizukuActionKind) -> Unit,
+    onInstallModeChange: (InstallMode) -> Unit = {},
+): SettingsActions =
     SettingsActions(
         onShizukuAction = onShizukuAction,
         onPermissionClick = {},
         preferences = PreferenceActions(
             onIncludePrereleasesChange = {},
-            onInstallModeChange = {},
+            onInstallModeChange = onInstallModeChange,
             onDynamicColorChange = {},
         ),
     )

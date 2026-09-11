@@ -68,4 +68,7 @@ object YukiIcons {
 
     val License: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_balance)
+
+    val ArrowDropDown: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_arrow_drop_down)
 }
