@@ -24,8 +24,11 @@
 	} = $props();
 
 	const current = $derived(selected ?? ALL_CATEGORIES);
-	const label = $derived(selected === null ? 'Category' : categoryLabel(selected));
-	const TriggerIcon = $derived(selected === null ? FunnelIcon : categoryIcon(selected));
+	const triggerLabel = $derived(
+		selected === null
+			? 'Filter listings by category'
+			: `Filter listings by category, ${categoryLabel(selected)} selected`
+	);
 
 	function select(value: string): void {
 		onSelect(value === ALL_CATEGORIES ? null : (value as ListingCategory));
@@ -35,14 +38,8 @@
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button
-				{...props}
-				variant="ghost"
-				class="w-9 px-0 sm:w-auto sm:px-2.5"
-				aria-label="Filter listings by category"
-			>
-				<TriggerIcon aria-hidden="true" />
-				<span class="hidden sm:inline">{label}</span>
+			<Button {...props} variant="ghost" size="icon" aria-label={triggerLabel}>
+				<FunnelIcon aria-hidden="true" />
 			</Button>
 		{/snippet}
 	</DropdownMenuTrigger>

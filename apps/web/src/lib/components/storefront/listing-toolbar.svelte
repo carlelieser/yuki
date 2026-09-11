@@ -20,8 +20,8 @@
 </script>
 
 <div class="flex items-center gap-1">
+	<ViewModeToggle />
 	<CategoryMenu {categories} {selected} {onSelect} />
 	{@render sort()}
-	<ViewModeToggle />
 	{@render action?.()}
 </div>
