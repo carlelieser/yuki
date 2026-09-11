@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -126,28 +125,6 @@ fun ProductCard(
 }
 
 @Composable
-private fun WideCaption(listing: ListingSummary) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = YukiSpacing.Medium),
-        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AppIcon(iconUrl = listing.iconUrl, size = YukiSize.IconMedium)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = listing.title,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            ListingBadgeRow(badges = listing.toBadges())
-        }
-    }
-}
-
-@Composable
 fun FeaturedCard(
     listing: ListingSummary,
     onClick: () -> Unit,
@@ -160,6 +137,9 @@ fun FeaturedCard(
         modifier = modifier.width(YukiSize.BannerWidth),
     ) {
         CardMedia(imageUrl = listing.bannerUrl, kind = CardMediaKind.Banner)
-        WideCaption(listing = listing)
+        ListingIdentity(
+            listing = listing,
+            modifier = Modifier.padding(vertical = YukiSpacing.Medium),
+        )
     }
 }
