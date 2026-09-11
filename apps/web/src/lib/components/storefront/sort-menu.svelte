@@ -21,20 +21,17 @@
 		onSelect: (value: string) => void;
 	} = $props();
 
-	const label = $derived(options.find((option) => option.value === value)?.label ?? 'Sort');
+	const label = $derived(options.find((option) => option.value === value)?.label);
+	const triggerLabel = $derived(
+		label === undefined ? 'Change sort order' : `Change sort order, ${label} selected`
+	);
 </script>
 
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button
-				{...props}
-				variant="ghost"
-				class="w-9 px-0 sm:w-auto sm:px-2.5"
-				aria-label="Change sort order"
-			>
+			<Button {...props} variant="ghost" size="icon" aria-label={triggerLabel}>
 				<ArrowUpDownIcon aria-hidden="true" />
-				<span class="hidden sm:inline">{label}</span>
 			</Button>
 		{/snippet}
 	</DropdownMenuTrigger>

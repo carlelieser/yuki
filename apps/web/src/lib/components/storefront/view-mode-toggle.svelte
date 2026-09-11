@@ -1,31 +1,24 @@
 <script lang="ts">
-	import { Button, ButtonGroup } from '@yuki/ui';
+	import { ToggleGroup, ToggleGroupItem } from '@yuki/ui';
 	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import { getViewModeStore } from '$lib/view-mode-store.svelte.ts';
+	import { parseViewMode } from '$lib/view-mode.ts';
 
 	const views = getViewModeStore();
 </script>
 
-<ButtonGroup aria-label="Change layout">
-	<Button
-		variant="outline"
-		size="icon-sm"
-		aria-pressed={views.mode === 'grid'}
-		class="aria-pressed:bg-muted aria-pressed:text-foreground"
-		onclick={() => views.choose('grid')}
-	>
+<ToggleGroup
+	type="single"
+	size="sm"
+	value={views.mode}
+	onValueChange={(value) => views.choose(parseViewMode(value))}
+	aria-label="Change layout"
+>
+	<ToggleGroupItem value="grid" aria-label="Grid view">
 		<LayoutGridIcon aria-hidden="true" />
-		<span class="sr-only">Grid view</span>
-	</Button>
-	<Button
-		variant="outline"
-		size="icon-sm"
-		aria-pressed={views.mode === 'list'}
-		class="aria-pressed:bg-muted aria-pressed:text-foreground"
-		onclick={() => views.choose('list')}
-	>
+	</ToggleGroupItem>
+	<ToggleGroupItem value="list" aria-label="List view">
 		<ListIcon aria-hidden="true" />
-		<span class="sr-only">List view</span>
-	</Button>
-</ButtonGroup>
+	</ToggleGroupItem>
+</ToggleGroup>
