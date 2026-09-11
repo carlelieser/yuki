@@ -13,13 +13,14 @@
 			<Skeleton class="size-10 shrink-0 rounded-lg" />
 			<div class="min-w-0 flex-1 space-y-2">
 				<Skeleton class="h-4 w-3/4" />
-				<Skeleton class="h-4 w-1/2" />
+				<Skeleton class="h-5 w-full rounded-4xl" />
 			</div>
 		</CardContent>
 	{:else}
 		<CardContent class="space-y-2 p-3">
 			<Skeleton class="h-4 w-3/4" />
-			<Skeleton class="h-4 w-1/2" />
+			<Skeleton class="h-5 w-full rounded-4xl" />
+			<Skeleton class="h-5 w-2/3 rounded-4xl" />
 		</CardContent>
 	{/if}
 </Card>

@@ -3,6 +3,7 @@ export { default as CategoryMenu } from './category-menu.svelte';
 export { default as CollectionEmpty } from './collection-empty.svelte';
 export { default as DownloadButton } from './download-button.svelte';
 export { default as ImageCarousel } from './image-carousel.svelte';
+export { default as ListingBadges } from './listing-badges.svelte';
 export { default as ListingCard } from './listing-card.svelte';
 export { default as ListingFeed } from './listing-feed.svelte';
 export { default as ProductCard } from './product-card.svelte';

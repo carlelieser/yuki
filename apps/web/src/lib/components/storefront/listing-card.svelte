@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import ListingBadges from './listing-badges.svelte';
 	import ProductCard from './product-card.svelte';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
@@ -27,5 +28,5 @@
 {/snippet}
 
 {#snippet badges()}
-	<p class="truncate text-xs text-muted-foreground">{entry.author}</p>
+	<ListingBadges {entry} />
 {/snippet}
