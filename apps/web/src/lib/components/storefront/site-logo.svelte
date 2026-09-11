@@ -7,12 +7,14 @@
 		href = resolve('/'),
 		size = 'md',
 		showLabel = true,
+		hasResponsiveLabel = false,
 		label = 'Yuki',
 		class: className
 	}: {
 		href?: ResolvedPathname | null;
 		size?: 'sm' | 'md' | 'lg';
 		showLabel?: boolean;
+		hasResponsiveLabel?: boolean;
 		label?: string;
 		class?: string;
 	} = $props();
@@ -43,7 +45,15 @@
 		)}
 	/>
 	{#if showLabel}
-		<span class={cn('font-semibold tracking-tight', labelSizes[size])}>{label}</span>
+		<span
+			class={cn(
+				'font-semibold tracking-tight',
+				labelSizes[size],
+				hasResponsiveLabel && 'sr-only sm:not-sr-only'
+			)}
+		>
+			{label}
+		</span>
 	{/if}
 {/snippet}
 
