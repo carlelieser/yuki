@@ -140,6 +140,13 @@ class SearchScreenTest {
     }
 
     @Test
+    fun theDividerStaysHiddenUntilTheListScrolls() {
+        render(browsing())
+
+        composeRule.onNodeWithTag(BROWSE_DIVIDER_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun theFilterOffersEveryCategoryAndNoAllOption() {
         render(browsing())
 
