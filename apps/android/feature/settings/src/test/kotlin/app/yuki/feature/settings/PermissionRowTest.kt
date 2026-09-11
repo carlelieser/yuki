@@ -1,34 +1,26 @@
 package app.yuki.feature.settings
 
 import android.Manifest
-import app.yuki.core.designsystem.component.StatusTone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PermissionRowTest {
     @Test
-    fun aGrantedPermissionReadsAsGrantedAndPositive() {
+    fun aGrantedPermissionDescribesItselfAsGranted() {
         val row = rowFor(requiredPermission(), PermissionStatus.Granted)
 
-        assertEquals(CHIP_GRANTED, row.chipLabel)
-        assertEquals(StatusTone.Positive, row.chipTone)
+        assertTrue(row.isGranted)
+        assertEquals(STATUS_GRANTED, row.statusLabel)
     }
 
     @Test
-    fun aDeniedRequiredPermissionReadsAsDeniedAndDemandsAttention() {
-        val row = rowFor(requiredPermission(), PermissionStatus.Denied)
+    fun aDeniedPermissionDescribesItselfAsDeniedWhetherOrNotItIsRequired() {
+        val required = rowFor(requiredPermission(), PermissionStatus.Denied)
+        val optional = rowFor(optionalPermission(), PermissionStatus.Denied)
 
-        assertEquals(CHIP_DENIED, row.chipLabel)
-        assertEquals(StatusTone.Attention, row.chipTone)
-    }
-
-    @Test
-    fun aDeniedOptionalPermissionIsNeutralNotAnError() {
-        val row = rowFor(optionalPermission(), PermissionStatus.Denied)
-
-        assertEquals(CHIP_DENIED, row.chipLabel)
-        assertEquals(StatusTone.Neutral, row.chipTone)
+        assertEquals(STATUS_DENIED, required.statusLabel)
+        assertEquals(STATUS_DENIED, optional.statusLabel)
     }
 
     @Test

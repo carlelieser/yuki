@@ -71,4 +71,10 @@ object YukiIcons {
 
     val ArrowDropDown: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_arrow_drop_down)
+
+    val Check: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_check)
+
+    val PriorityHigh: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_priority_high)
 }

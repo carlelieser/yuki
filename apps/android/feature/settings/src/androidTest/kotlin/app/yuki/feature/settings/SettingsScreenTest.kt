@@ -3,6 +3,7 @@ package app.yuki.feature.settings
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
@@ -63,7 +64,7 @@ class SettingsScreenTest {
             permissions = listOf(requiredPermission()),
         )
 
-        composeRule.onNodeWithText(CHIP_GRANTED).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(STATUS_GRANTED).assertIsDisplayed()
     }
 
     @Test
@@ -74,7 +75,7 @@ class SettingsScreenTest {
             permissions = listOf(requiredPermission()),
         )
 
-        composeRule.onNodeWithText(CHIP_DENIED).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(STATUS_DENIED).assertIsDisplayed()
     }
 
     @Test

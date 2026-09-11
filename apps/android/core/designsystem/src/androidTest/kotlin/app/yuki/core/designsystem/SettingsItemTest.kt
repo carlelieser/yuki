@@ -2,6 +2,7 @@ package app.yuki.core.designsystem
 
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
@@ -12,8 +13,6 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.designsystem.component.SettingsItem
 import app.yuki.core.designsystem.component.SettingsItemContent
-import app.yuki.core.designsystem.component.StatusChip
-import app.yuki.core.designsystem.component.StatusTone
 import app.yuki.core.designsystem.theme.YukiTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -33,11 +32,7 @@ class SettingsItemTest {
         }
     }
 
-    private fun grantedChip(): @Composable () -> Unit =
-        { StatusChip(label = "Granted", tone = StatusTone.Positive) }
-
-    private fun deniedChip(): @Composable () -> Unit =
-        { StatusChip(label = "Denied", tone = StatusTone.Attention) }
+    private fun trailingLabel(label: String): @Composable () -> Unit = { Text(text = label) }
 
     @Test
     fun grantedPermissionShowsReasonAndStatus() {
@@ -45,7 +40,7 @@ class SettingsItemTest {
             SettingsItemContent(
                 title = "Install apps",
                 supporting = "Install apps when Shizuku is unavailable",
-                trailing = grantedChip(),
+                trailing = trailingLabel("Granted"),
             ),
         )
 
@@ -60,7 +55,7 @@ class SettingsItemTest {
             SettingsItemContent(
                 title = "Notifications",
                 supporting = "Notify when a download or install finishes",
-                trailing = deniedChip(),
+                trailing = trailingLabel("Denied"),
             ),
         )
 

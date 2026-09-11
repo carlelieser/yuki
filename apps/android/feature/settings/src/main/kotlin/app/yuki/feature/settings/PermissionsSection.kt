@@ -2,14 +2,18 @@ package app.yuki.feature.settings
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.SettingsItem
 import app.yuki.core.designsystem.component.SettingsItemContent
-import app.yuki.core.designsystem.component.StatusChip
 import app.yuki.core.designsystem.component.YukiBadge
 import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.theme.YukiSize
 
 internal fun LazyListScope.permissionsSection(
     rows: List<PermissionRow>,
@@ -22,7 +26,7 @@ internal fun LazyListScope.permissionsSection(
             content = SettingsItemContent(
                 title = row.permission.label,
                 supporting = row.permission.reason,
-                trailing = { PermissionChip(row) },
+                trailing = { PermissionStatusIcon(row) },
                 belowText = requiredBadgeFor(row),
             ),
             onClick = { onPermissionClick(row) },
@@ -37,8 +41,13 @@ private fun requiredBadgeFor(row: PermissionRow): (@Composable () -> Unit)? {
 }
 
 @Composable
-private fun PermissionChip(row: PermissionRow) {
-    StatusChip(label = row.chipLabel, tone = row.chipTone)
+private fun PermissionStatusIcon(row: PermissionRow) {
+    Icon(
+        imageVector = if (row.isGranted) YukiIcons.Check else YukiIcons.PriorityHigh,
+        contentDescription = row.statusLabel,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(YukiSize.IconSmall),
+    )
 }
 
 @Composable

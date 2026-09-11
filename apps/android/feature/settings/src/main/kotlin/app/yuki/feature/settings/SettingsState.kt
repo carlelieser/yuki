@@ -26,13 +26,7 @@ data class PermissionRow(
 ) {
     val isGranted: Boolean get() = status == PermissionStatus.Granted
 
-    val chipLabel: String get() = if (isGranted) CHIP_GRANTED else CHIP_DENIED
-
-    val chipTone: StatusTone get() = when {
-        isGranted -> StatusTone.Positive
-        permission.isRequired -> StatusTone.Attention
-        else -> StatusTone.Neutral
-    }
+    val statusLabel: String get() = if (isGranted) STATUS_GRANTED else STATUS_DENIED
 }
 
 data class SettingsContent(
@@ -93,8 +87,8 @@ internal fun modeLabelFor(detail: ShizukuDetail): String = when (detail.mode) {
 internal fun apiVersionLabelFor(apiVersion: Int): String =
     if (apiVersion == UNKNOWN_API_VERSION) API_UNKNOWN else "API $apiVersion"
 
-internal const val CHIP_GRANTED = "Granted"
-internal const val CHIP_DENIED = "Denied"
+internal const val STATUS_GRANTED = "Granted"
+internal const val STATUS_DENIED = "Denied"
 
 internal const val CARD_NOT_INSTALLED_TITLE = "Silent install unavailable"
 internal const val CARD_NOT_INSTALLED_DESCRIPTION =
