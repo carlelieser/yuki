@@ -14,6 +14,8 @@ internal data class ListingSummaryDto(
     val bannerUrl: String? = null,
     val category: String? = null,
     val stars: Int,
+    val ratingAverage: Double? = null,
+    val ratingCount: Int = 0,
 )
 
 @Serializable
@@ -28,6 +30,8 @@ internal data class ListingDetailDto(
     val bannerUrl: String? = null,
     val category: String? = null,
     val stars: Int,
+    val ratingAverage: Double? = null,
+    val ratingCount: Int = 0,
     val authorUrl: String,
     val repositoryUrl: String,
     val homepageUrl: String? = null,
