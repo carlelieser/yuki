@@ -21,10 +21,16 @@ data class ProductListItemContent(
     val title: String,
     val supporting: String,
     val iconUrl: String?,
+    val badges: ListingBadges = ListingBadges(emptyList()),
 )
 
-fun ListingSummary.toProductListItemContent(): ProductListItemContent =
-    ProductListItemContent(title = title, supporting = author, iconUrl = iconUrl)
+@Composable
+fun ListingSummary.toProductListItemContent(): ProductListItemContent = ProductListItemContent(
+    title = title,
+    supporting = author,
+    iconUrl = iconUrl,
+    badges = toBadges(),
+)
 
 @Composable
 private fun ProductListItemText(content: ProductListItemContent, modifier: Modifier = Modifier) {
@@ -38,14 +44,24 @@ private fun ProductListItemText(content: ProductListItemContent, modifier: Modif
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = content.supporting,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        ProductListItemSupporting(content = content)
     }
+}
+
+@Composable
+private fun ProductListItemSupporting(content: ProductListItemContent) {
+    if (content.badges.items.isNotEmpty()) {
+        ListingBadgeRow(badges = content.badges)
+        return
+    }
+
+    Text(
+        text = content.supporting,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Composable

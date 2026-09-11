@@ -39,7 +39,14 @@ fun ProductCardSkeleton(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(YukiSpacing.Small),
         ) {
             ShimmerBox(modifier = Modifier.fillMaxWidth(fraction = 0.75f).height(14.dp))
-            ShimmerBox(modifier = Modifier.fillMaxWidth(fraction = 0.5f).height(12.dp))
+            ShimmerBox(
+                modifier = Modifier.fillMaxWidth().height(YukiSize.BadgeHeight),
+                shape = YukiShape.Pill,
+            )
+            ShimmerBox(
+                modifier = Modifier.fillMaxWidth(fraction = 0.6f).height(YukiSize.BadgeHeight),
+                shape = YukiShape.Pill,
+            )
         }
     }
 }

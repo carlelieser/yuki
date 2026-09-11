@@ -36,7 +36,7 @@ fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .defaultMinSize(minHeight = YukiSize.BadgeHeight)
             .padding(horizontal = YukiSpacing.Small)
-            .semantics { contentDescription = content.description },
+            .semantics(mergeDescendants = true) { contentDescription = content.description },
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -54,7 +54,6 @@ fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clearAndSetSemantics { },
         )
     }
 }

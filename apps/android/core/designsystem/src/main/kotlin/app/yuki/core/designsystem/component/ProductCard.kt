@@ -104,13 +104,7 @@ private fun CardCaption(listing: ListingSummary) {
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = listing.author,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        ListingBadgeRow(badges = listing.toBadges())
     }
 }
 
@@ -148,13 +142,7 @@ private fun WideCaption(listing: ListingSummary) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = listing.author,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            ListingBadgeRow(badges = listing.toBadges())
         }
     }
 }
