@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
+import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.StatusCard
-import app.yuki.core.designsystem.component.StatusChip
 import app.yuki.core.designsystem.component.StatusContent
 import app.yuki.core.designsystem.component.StatusTone
+import app.yuki.core.designsystem.component.YukiBadge
+import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
@@ -27,6 +29,9 @@ const val ARCHIVED_WARNING_TAG = "listingArchivedWarning"
 const val NO_INSTALLABLE_VERSION_TAG = "listingNoInstallableVersion"
 const val ARCHIVED_TITLE = "This project is archived"
 const val NO_INSTALLABLE_VERSION_TITLE = "No installable release"
+
+internal const val PRERELEASE_LABEL = "Prerelease"
+internal const val NO_ASSET_LABEL = "No asset"
 
 private val archivedContent = StatusContent(
     title = ARCHIVED_TITLE,
@@ -100,11 +105,25 @@ internal fun ListingLinkItem(row: ListingLinkRow, onOpen: () -> Unit) {
 @Composable
 private fun VersionTone(version: ListingVersion) {
     if (version.isPrerelease) {
-        StatusChip(label = "Prerelease", tone = StatusTone.Attention)
+        YukiBadge(
+            content = BadgeContent(
+                label = PRERELEASE_LABEL,
+                icon = YukiIcons.History,
+                description = PRERELEASE_LABEL,
+            ),
+        )
         return
     }
 
-    if (version.downloadUrl == null) StatusChip(label = "No asset", tone = StatusTone.Neutral)
+    if (version.downloadUrl != null) return
+
+    YukiBadge(
+        content = BadgeContent(
+            label = NO_ASSET_LABEL,
+            icon = YukiIcons.Error,
+            description = NO_ASSET_LABEL,
+        ),
+    )
 }
 
 @Composable

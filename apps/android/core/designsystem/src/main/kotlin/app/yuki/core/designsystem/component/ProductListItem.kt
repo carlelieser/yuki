@@ -17,10 +17,13 @@ import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 
+private const val DESCRIPTION_MAX_LINES = 2
+
 data class ProductListItemContent(
     val title: String,
     val supporting: String,
     val iconUrl: String?,
+    val description: String? = null,
     val badges: ListingBadges = ListingBadges(emptyList()),
 )
 
@@ -29,6 +32,7 @@ fun ListingSummary.toProductListItemContent(): ProductListItemContent = ProductL
     title = title,
     supporting = author,
     iconUrl = iconUrl,
+    description = description,
     badges = toBadges(),
 )
 
@@ -44,8 +48,25 @@ private fun ProductListItemText(content: ProductListItemContent, modifier: Modif
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        ProductDescription(description = content.description)
         ProductListItemSupporting(content = content)
     }
+}
+
+@Composable
+internal fun ProductDescription(
+    description: String?,
+    maxLines: Int = DESCRIPTION_MAX_LINES,
+) {
+    if (description.isNullOrBlank()) return
+
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Composable

@@ -26,6 +26,8 @@ object YukiSize {
     val SectionHeaderHeight = 56.dp
     val OverlineHeaderHeight = 28.dp
     val BadgeHeight = 22.dp
+    val BadgeWidth = 64.dp
+    val TitleLineHeight = 20.dp
 }
 
 object YukiRatio {

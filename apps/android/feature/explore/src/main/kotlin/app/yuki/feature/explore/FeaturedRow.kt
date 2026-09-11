@@ -1,5 +1,6 @@
 package app.yuki.feature.explore
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyRow
@@ -10,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.FeaturedCard
+import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import kotlinx.coroutines.delay
@@ -29,7 +31,9 @@ internal fun FeaturedRow(
 
     LazyRow(
         state = listState,
-        modifier = modifier.testTag(FEATURED_ROW_TAG),
+        modifier = modifier
+            .testTag(FEATURED_ROW_TAG)
+            .animateContentSize(animationSpec = YukiMotion.resize()),
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
     ) {

@@ -59,6 +59,9 @@ fun ListingIdentity(
                 maxLines = identityTitleLines(variant),
                 overflow = TextOverflow.Ellipsis,
             )
+            if (variant == ListingIdentityVariant.Compact) {
+                ProductDescription(description = listing.description, maxLines = 1)
+            }
             ListingBadgeRow(badges = listing.toBadges())
         }
     }

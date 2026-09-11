@@ -3,6 +3,9 @@ package app.yuki.feature.explore
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assertIsEqualTo
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -122,6 +125,67 @@ class ExploreScreenTest {
         render(UiState.Failure(FailureReason.Server(500)))
 
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun loadingFeaturedReservesTheSlotWithAPlaceholder() {
+        render(
+            browsing(
+                featured = UiState.Loading,
+                sections = UiState.Success(
+                    listOf(section(ListingCategory.SystemTweaks, listOf("alpha"))),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText(FEATURED_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithTag(FEATURED_ROW_PLACEHOLDER_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun aFailedFeaturedDropsTheSlotEntirely() {
+        render(
+            browsing(
+                featured = UiState.Failure(FailureReason.Offline),
+                sections = UiState.Success(
+                    listOf(section(ListingCategory.SystemTweaks, listOf("alpha"))),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText(FEATURED_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithTag(FEATURED_ROW_PLACEHOLDER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun theFirstSectionKeepsItsPositionWhenFeaturedResolves() {
+        val sections = UiState.Success(
+            listOf(section(ListingCategory.SystemTweaks, listOf("alpha"))),
+        )
+        val featured = mutableStateOf<UiState<List<ListingSummary>>>(UiState.Loading)
+
+        composeRule.setContent {
+            ExploreScreen(
+                state = browsing(featured = featured.value, sections = sections),
+                callbacks = noCallbacks,
+                contentPadding = PaddingValues(),
+            )
+        }
+
+        val whileLoading = composeRule
+            .onNodeWithText(ListingCategory.SystemTweaks.label)
+            .getUnclippedBoundsInRoot()
+            .top
+
+        composeRule.runOnIdle { featured.value = UiState.Success(listOf(listing("alpha"))) }
+        composeRule.waitForIdle()
+
+        val afterResolving = composeRule
+            .onNodeWithText(ListingCategory.SystemTweaks.label)
+            .getUnclippedBoundsInRoot()
+            .top
+
+        afterResolving.assertIsEqualTo(whileLoading, "first section top")
     }
 }
 
