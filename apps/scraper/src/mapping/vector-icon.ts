@@ -201,5 +201,5 @@ export function composeAdaptiveSvg(input: {
 }
 
 export function toDataUri(svg: string): string {
-	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+	return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
 }
