@@ -3,6 +3,8 @@
 	import ProductCardSkeleton from './product-card-skeleton.svelte';
 	import type { Snippet } from 'svelte';
 
+	const GRID_LAYOUT = 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4';
+
 	let {
 		items,
 		item,
@@ -19,7 +21,7 @@
 </script>
 
 {#if isLoading}
-	<ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+	<ul role="list" class={GRID_LAYOUT}>
 		{#each { length: skeletonCount }, index (index)}
 			<li><ProductCardSkeleton /></li>
 		{/each}
@@ -31,7 +33,7 @@
 		<CollectionEmpty />
 	{/if}
 {:else}
-	<ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+	<ul role="list" class={GRID_LAYOUT}>
 		{#each items as entry, index (index)}
 			<li>{@render item(entry)}</li>
 		{/each}

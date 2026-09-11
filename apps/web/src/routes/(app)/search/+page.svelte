@@ -2,9 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
-		CategoryMenu,
 		CollectionEmpty,
 		ListingCard,
+		ListingToolbar,
 		ProductGrid,
 		SearchSort,
 		Section
@@ -41,6 +41,10 @@
 	<ListingCard {entry} />
 {/snippet}
 
+{#snippet sortMenu()}
+	<SearchSort query={data.query} sorting={data.sorting} category={data.category} />
+{/snippet}
+
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
 	{#if data.query === ''}
 		<CollectionEmpty
@@ -50,14 +54,12 @@
 	{:else}
 		<Section title={heading}>
 			{#snippet action()}
-				<div class="flex items-center gap-1">
-					<CategoryMenu
-						categories={data.categories}
-						selected={data.category}
-						onSelect={selectCategory}
-					/>
-					<SearchSort query={data.query} sorting={data.sorting} category={data.category} />
-				</div>
+				<ListingToolbar
+					categories={data.categories}
+					selected={data.category}
+					onSelect={selectCategory}
+					sort={sortMenu}
+				/>
 			{/snippet}
 			<ProductGrid items={data.results} item={card}>
 				{#snippet empty()}

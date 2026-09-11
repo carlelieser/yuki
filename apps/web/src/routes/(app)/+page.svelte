@@ -5,9 +5,9 @@
 	import { goto } from '$app/navigation';
 	import {
 		BrowseSort,
-		CategoryMenu,
 		ListingCard,
 		ListingFeed,
+		ListingToolbar,
 		ProductCarousel,
 		Section
 	} from '$lib/components/storefront/index.ts';
@@ -48,6 +48,17 @@
 	<ListingCard {entry} variant="wide" />
 {/snippet}
 
+{#snippet sortMenu()}
+	<BrowseSort sort={data.sort} order={data.order} />
+{/snippet}
+
+{#snippet browseAll()}
+	<a href={browseHref} class={buttonVariants({ variant: 'ghost' })}>
+		Browse all
+		<ArrowRightIcon aria-hidden="true" />
+	</a>
+{/snippet}
+
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
 	<Section title="Featured">
 		<ProductCarousel
@@ -67,14 +78,12 @@
 
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
-			<div class="flex items-center gap-1">
-				<CategoryMenu categories={data.categories} onSelect={selectCategory} />
-				<BrowseSort sort={data.sort} order={data.order} />
-				<a href={browseHref} class={buttonVariants({ variant: 'ghost' })}>
-					Browse all
-					<ArrowRightIcon aria-hidden="true" />
-				</a>
-			</div>
+			<ListingToolbar
+				categories={data.categories}
+				onSelect={selectCategory}
+				sort={sortMenu}
+				action={browseAll}
+			/>
 		{/snippet}
 		{#key `${data.sort}-${data.order}`}
 			<ListingFeed
