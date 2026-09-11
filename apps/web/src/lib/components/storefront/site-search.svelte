@@ -9,5 +9,5 @@
 
 <Button variant="secondary" class={cn(className)} onclick={onopen}>
 	<SearchIcon class="size-4 shrink-0" aria-hidden="true" />
-	<Shortcut>⌘K</Shortcut>
+	<Shortcut class="hidden lg:block">⌘K</Shortcut>
 </Button>

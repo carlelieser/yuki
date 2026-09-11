@@ -15,7 +15,7 @@
 </script>
 
 <header class="sticky top-0 z-50 w-full border-b bg-background">
-	<div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
+	<div class="mx-auto flex h-14 w-full max-w-6xl items-center gap-1 px-4">
 		<SiteLogo />
 		<SiteSearch class="ms-auto" onopen={onopensearch} />
 
@@ -24,7 +24,7 @@
 		{#if user}
 			<UserMenu {user} />
 		{:else}
-			<nav class="flex items-center gap-2">
+			<nav class="flex items-center gap-1">
 				<a href={resolve('/signin')} class={buttonVariants({ variant: 'ghost', size: 'sm' })}>
 					Sign in
 				</a>
