@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { vectorToSvg } from './vector-icon.ts';
+import { composeAdaptiveSvg, vectorToSvg } from './vector-icon.ts';
 
 const identity = (raw: string | null) => raw;
 
@@ -54,8 +54,28 @@ describe('gradient fills', () => {
 		expect(svg).toContain('r="128"');
 	});
 
+	it('produces the same svg every time it converts the same icon', () => {
+		expect(vectorToSvg(GRADIENT_PATH, new Map())).toBe(vectorToSvg(GRADIENT_PATH, new Map()));
+	});
+
+	it('keeps background and foreground gradient ids apart when composed', () => {
+		const composed =
+			composeAdaptiveSvg({
+				background: { kind: 'vector', value: GRADIENT_PATH },
+				foreground: GRADIENT_PATH,
+				colors: new Map()
+			}) ?? '';
+
+		const ids = [...composed.matchAll(/id="([^"]+)"/g)].map((match) => match[1]);
+		const references = [...composed.matchAll(/url\(#([^)]+)\)/g)].map((match) => match[1]);
+
+		expect(new Set(ids).size).toBe(ids.length);
+		expect(references.every((reference) => ids.includes(reference))).toBe(true);
+	});
+
 	it('gives each gradient in one document a distinct id', () => {
-		const doubled = GRADIENT_PATH.replace('</vector>', '') + GRADIENT_PATH.replace(/^[\s\S]*?<path/, '<path');
+		const doubled =
+			GRADIENT_PATH.replace('</vector>', '') + GRADIENT_PATH.replace(/^[\s\S]*?<path/, '<path');
 		const svg = vectorToSvg(doubled, new Map()) ?? '';
 
 		const ids = [...svg.matchAll(/<linearGradient id="([^"]+)"/g)].map((match) => match[1]);

@@ -1,7 +1,7 @@
 package app.yuki.feature.settings
 
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -16,10 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.SettingsItem
 import app.yuki.core.designsystem.component.SettingsItemContent
+import app.yuki.core.designsystem.component.YukiIcons
 
 internal fun LazyListScope.preferencesSection(
     preferences: YukiPreferences,

@@ -69,7 +69,7 @@ export function parseGradient(
 		centerX: numeric(tag, 'centerX', 0),
 		centerY: numeric(tag, 'centerY', 0),
 		radius: numeric(tag, 'gradientRadius', 0),
-		stops,
+		stops
 	};
 }
 
