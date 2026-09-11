@@ -19,7 +19,6 @@ object YukiSize {
     val IconLarge = 56.dp
     val IconExtraLarge = 72.dp
     val CardWidth = 156.dp
-    val BannerWidth = 288.dp
     val ScreenshotWidth = 220.dp
     val MinimumTouchTarget = 48.dp
     val HeaderHeight = 64.dp

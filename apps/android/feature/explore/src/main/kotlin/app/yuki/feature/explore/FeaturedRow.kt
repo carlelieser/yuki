@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.FeaturedCard
-import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import kotlinx.coroutines.delay
@@ -43,7 +42,7 @@ internal fun FeaturedRow(
         state = pagerState,
         modifier = modifier.testTag(FEATURED_ROW_TAG),
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
-        pageSize = PageSize.Fixed(YukiSize.BannerWidth),
+        pageSize = PageSize.Fill,
         pageSpacing = YukiSpacing.Medium,
     ) { page ->
         val listing = listings[page % count]

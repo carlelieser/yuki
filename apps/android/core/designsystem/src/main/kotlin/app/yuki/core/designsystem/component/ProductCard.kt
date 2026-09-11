@@ -134,7 +134,7 @@ fun FeaturedCard(
         onClick = onClick,
         shape = YukiShape.Card,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        modifier = modifier.width(YukiSize.BannerWidth),
+        modifier = modifier.fillMaxWidth(),
     ) {
         CardMedia(imageUrl = listing.bannerUrl, kind = CardMediaKind.Banner)
         ListingIdentity(
