@@ -13,6 +13,7 @@ object YukiSpacing {
 }
 
 object YukiSize {
+    val IconTiny = 14.dp
     val IconSmall = 24.dp
     val IconMedium = 40.dp
     val IconLarge = 56.dp
@@ -24,6 +25,7 @@ object YukiSize {
     val HeaderHeight = 64.dp
     val SectionHeaderHeight = 56.dp
     val OverlineHeaderHeight = 28.dp
+    val BadgeHeight = 22.dp
 }
 
 object YukiRatio {

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNotNull, sql, type AnyColumn, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { ListingCategory } from '$lib/categories.ts';
+import { getRatingSummary } from './reviews.ts';
 import {
 	DEFAULT_BROWSE_SORT,
 	defaultOrderFor,
@@ -19,6 +20,8 @@ export type ListingSummary = {
 	bannerUrl: string | null;
 	stars: number;
 	category: ListingCategory | null;
+	ratingAverage: number | null;
+	ratingCount: number;
 };
 
 export type ListingDetail = ListingSummary & {
@@ -38,6 +41,18 @@ export type ListingDetail = ListingSummary & {
 	}[];
 };
 
+const ratingAverage = sql<number | null>`(
+	select round(avg(${schema.listingReviews.rating})::numeric, 1)
+	from ${schema.listingReviews}
+	where ${schema.listingReviews.listingId} = ${sql`${schema.listings}.${sql.identifier('id')}`}
+)`.mapWith(Number);
+
+const ratingCount = sql<number>`(
+	select count(*)
+	from ${schema.listingReviews}
+	where ${schema.listingReviews.listingId} = ${sql`${schema.listings}.${sql.identifier('id')}`}
+)`.mapWith(Number);
+
 export const summaryColumns = {
 	id: schema.listings.id,
 	githubRepoId: schema.listings.githubRepoId,
@@ -48,7 +63,9 @@ export const summaryColumns = {
 	iconUrl: schema.listings.iconUrl,
 	bannerUrl: schema.listings.bannerUrl,
 	stars: schema.listings.stars,
-	category: schema.listings.category
+	category: schema.listings.category,
+	ratingAverage,
+	ratingCount
 };
 
 export async function getFeaturedListings(db: Database, limit: number): Promise<ListingSummary[]> {
@@ -86,6 +103,8 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 
 	if (listing === undefined) return null;
 
+	const rating = await getRatingSummary(db, listing.id);
+
 	return {
 		id: listing.id,
 		githubRepoId: listing.githubRepoId,
@@ -98,6 +117,8 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 		bannerUrl: listing.bannerUrl,
 		stars: listing.stars,
 		category: listing.category,
+		ratingAverage: rating.total === 0 ? null : rating.average,
+		ratingCount: rating.total,
 		repositoryUrl: listing.repositoryUrl,
 		homepageUrl: listing.homepageUrl,
 		license: listing.license,
@@ -140,7 +161,9 @@ function summaryOf(row: RankedRow): ListingSummary {
 		iconUrl: row.iconUrl,
 		bannerUrl: row.bannerUrl,
 		category: row.category,
-		stars: row.stars
+		stars: row.stars,
+		ratingAverage: row.ratingAverage,
+		ratingCount: row.ratingCount
 	};
 }
 
@@ -206,13 +229,12 @@ export async function getListingsPage(
 	return { results, hasMore: rows.length > page.limit };
 }
 
-export async function getCategorySections(
-	db: Database,
-	limit: number
-): Promise<CategorySection[]> {
+export async function getCategorySections(db: Database, limit: number): Promise<CategorySection[]> {
 	const ranked = db
 		.select({
 			...summaryColumns,
+			ratingAverage: ratingAverage.as('rating_average'),
+			ratingCount: ratingCount.as('rating_count'),
 			rank: sql<number>`row_number() over (
 				partition by ${schema.listings.category}
 				order by ${schema.listings.stars} desc, ${schema.listings.id} asc

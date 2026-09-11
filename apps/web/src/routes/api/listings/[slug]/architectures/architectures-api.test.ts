@@ -28,6 +28,8 @@ function detail(overrides: Partial<ListingDetail> = {}): ListingDetail {
 		bannerUrl: null,
 		category: null,
 		stars: 128,
+		ratingAverage: 4.6,
+		ratingCount: 12,
 		authorUrl: 'https://github.com/acme',
 		repositoryUrl: 'https://github.com/acme/tools',
 		homepageUrl: null,

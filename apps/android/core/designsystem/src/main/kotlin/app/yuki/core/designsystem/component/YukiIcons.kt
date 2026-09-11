@@ -47,4 +47,13 @@ object YukiIcons {
 
     val History: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_history)
+
+    val Star: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_star)
+
+    val ThumbUp: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_thumb_up)
+
+    val Person: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_person)
 }

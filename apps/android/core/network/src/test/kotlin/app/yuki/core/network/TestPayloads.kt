@@ -11,7 +11,9 @@ internal const val SUMMARY_JSON = """
   "iconUrl": null,
   "bannerUrl": null,
   "category": "developer_tools",
-  "stars": 42
+  "stars": 42,
+  "ratingAverage": 4.6,
+  "ratingCount": 12
 }
 """
 

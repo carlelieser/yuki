@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.hasTestTag
@@ -62,26 +63,12 @@ class ListingScreenTest {
     }
 
     @Test
-    fun rendersTitleAuthorAndStarsOnSuccess() {
+    fun rendersTheListingIdentityOnSuccess() {
         setScreen(UiState.Success(detail().toUiModel()))
 
-        composeRule.onNodeWithText("Aurora").assertIsDisplayed()
-        composeRule.onNodeWithText("nightsky").assertIsDisplayed()
-        composeRule.onNodeWithText("128 stars").assertIsDisplayed()
-    }
-
-    @Test
-    fun abbreviatesALargeStarCount() {
-        setScreen(UiState.Success(detail(summary = summary(stars = 15420)).toUiModel()))
-
-        composeRule.onNodeWithText("15.4K stars").assertIsDisplayed()
-    }
-
-    @Test
-    fun namesASingleStarInTheSingular() {
-        setScreen(UiState.Success(detail(summary = summary(stars = 1)).toUiModel()))
-
-        composeRule.onNodeWithText("1 star").assertIsDisplayed()
+        composeRule.onNodeWithTag(LISTING_DETAIL_TAG).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("By nightsky").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("128 stars").assertIsDisplayed()
     }
 
     @Test

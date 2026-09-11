@@ -29,6 +29,24 @@ class ListingRepositoryBrowseTest {
     }
 
     @Test
+    fun `maps the rating a listing was sent with`() = runTest {
+        val page = repositoryReturning(BROWSE_PAGE_JSON).browse(BrowseQuery()).getOrThrow()
+
+        val summary = page.results.single()
+        assertEquals(4.6, summary.ratingAverage!!, 0.001)
+        assertEquals(12, summary.ratingCount)
+    }
+
+    @Test
+    fun `a listing sent without a rating has none`() = runTest {
+        val page = repositoryReturning(UNCATEGORISED_PAGE_JSON).browse(BrowseQuery()).getOrThrow()
+
+        val summary = page.results.single()
+        assertNull(summary.ratingAverage)
+        assertEquals(0, summary.ratingCount)
+    }
+
+    @Test
     fun `a listing sent without a category has none`() = runTest {
         val page = repositoryReturning(UNCATEGORISED_PAGE_JSON).browse(BrowseQuery()).getOrThrow()
 

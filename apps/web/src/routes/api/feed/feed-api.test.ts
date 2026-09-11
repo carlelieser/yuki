@@ -24,6 +24,8 @@ function summary(overrides: Partial<ListingSummary> = {}): ListingSummary {
 		bannerUrl: 'https://example.com/banner.png',
 		category: 'gaming',
 		stars: 128,
+		ratingAverage: 4.6,
+		ratingCount: 12,
 		...overrides
 	};
 }

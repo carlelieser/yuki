@@ -13,6 +13,8 @@ data class ListingSummary(
     val bannerUrl: String?,
     val category: ListingCategory?,
     val stars: Int,
+    val ratingAverage: Double? = null,
+    val ratingCount: Int = 0,
 )
 
 data class ListingDetail(

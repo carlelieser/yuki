@@ -22,6 +22,8 @@ internal fun ListingSummaryDto.toDomain(): ListingSummary = ListingSummary(
     bannerUrl = bannerUrl,
     category = readListingCategory(category),
     stars = stars,
+    ratingAverage = ratingAverage,
+    ratingCount = ratingCount,
 )
 
 internal fun ListingPageDto.toDomain(): ListingPage = ListingPage(
@@ -61,6 +63,8 @@ private fun ListingDetailDto.toSummary(): ListingSummary = ListingSummary(
     bannerUrl = bannerUrl,
     category = readListingCategory(category),
     stars = stars,
+    ratingAverage = ratingAverage,
+    ratingCount = ratingCount,
 )
 
 internal fun ScreenshotDto.toDomain(): Screenshot = Screenshot(url, alt)
