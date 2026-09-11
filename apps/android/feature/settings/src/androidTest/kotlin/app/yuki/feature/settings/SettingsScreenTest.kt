@@ -65,14 +65,29 @@ class SettingsScreenTest {
         composeRule.onNodeWithText(CHIP_DENIED).assertIsDisplayed()
     }
 
+    @Test
+    fun aRequiredPermissionRendersTheRequiredBadge() {
+        setContent(ShizukuState.Ready, permissions = listOf(requiredPermission()))
+
+        composeRule.onNodeWithText(REQUIRED_LABEL).assertIsDisplayed()
+    }
+
+    @Test
+    fun anOptionalPermissionRendersNoIndicator() {
+        setContent(ShizukuState.Ready, permissions = listOf(optionalPermission()))
+
+        composeRule.onNodeWithText(REQUIRED_LABEL).assertDoesNotExist()
+    }
+
     private fun setContent(
         state: ShizukuState,
         permissionStatus: PermissionStatus = PermissionStatus.Denied,
+        permissions: List<AppPermission> = YUKI_PERMISSIONS,
         onShizukuAction: (ShizukuActionKind) -> Unit = {},
     ) {
         val content = SettingsContent(
             shizuku = detailFor(state),
-            permissions = YUKI_PERMISSIONS.map { permission ->
+            permissions = permissions.map { permission ->
                 PermissionRow(permission = permission, status = permissionStatus)
             },
             preferences = YukiPreferences.Defaults,
@@ -102,3 +117,9 @@ private fun detailFor(state: ShizukuState): ShizukuDetail = when (state) {
     ShizukuState.Ready -> ShizukuDetail(state, ShizukuMode.AdbShell, apiVersion = 13)
     else -> ShizukuDetail(state, ShizukuMode.Unknown, UNKNOWN_API_VERSION)
 }
+
+private fun requiredPermission(): AppPermission =
+    YUKI_PERMISSIONS.first { permission -> permission.isRequired }
+
+private fun optionalPermission(): AppPermission =
+    YUKI_PERMISSIONS.first { permission -> !permission.isRequired }

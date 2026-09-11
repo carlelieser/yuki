@@ -3,10 +3,13 @@ package app.yuki.feature.settings
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.SettingsItem
 import app.yuki.core.designsystem.component.SettingsItemContent
 import app.yuki.core.designsystem.component.StatusChip
+import app.yuki.core.designsystem.component.YukiBadge
+import app.yuki.core.designsystem.component.YukiIcons
 
 internal fun LazyListScope.permissionsSection(
     rows: List<PermissionRow>,
@@ -18,12 +21,19 @@ internal fun LazyListScope.permissionsSection(
         SettingsItem(
             content = SettingsItemContent(
                 title = row.permission.label,
-                supporting = supportingFor(row),
+                supporting = row.permission.reason,
                 trailing = { PermissionChip(row) },
+                belowText = requiredBadgeFor(row),
             ),
             onClick = { onPermissionClick(row) },
         )
     }
+}
+
+private fun requiredBadgeFor(row: PermissionRow): (@Composable () -> Unit)? {
+    if (!row.permission.isRequired) return null
+
+    return { RequiredBadge() }
 }
 
 @Composable
@@ -31,14 +41,16 @@ private fun PermissionChip(row: PermissionRow) {
     StatusChip(label = row.chipLabel, tone = row.chipTone)
 }
 
-internal fun supportingFor(row: PermissionRow): String =
-    if (row.permission.isRequired) {
-        "${row.permission.reason} $REASON_SEPARATOR $REQUIRED_LABEL"
-    } else {
-        "${row.permission.reason} $REASON_SEPARATOR $OPTIONAL_LABEL"
-    }
+@Composable
+private fun RequiredBadge() {
+    YukiBadge(
+        content = BadgeContent(
+            label = REQUIRED_LABEL,
+            icon = YukiIcons.Asterisk,
+            description = REQUIRED_LABEL,
+        ),
+    )
+}
 
 internal const val PERMISSIONS_SECTION_TITLE = "Permissions"
-internal const val REASON_SEPARATOR = "·"
 internal const val REQUIRED_LABEL = "Required"
-internal const val OPTIONAL_LABEL = "Optional"
