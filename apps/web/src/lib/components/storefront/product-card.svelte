@@ -7,6 +7,7 @@
 		title,
 		href,
 		badge,
+		description,
 		image,
 		icon,
 		badges,
@@ -15,6 +16,7 @@
 		title: string;
 		href: ResolvedPathname;
 		badge?: string;
+		description?: string | null;
 		image?: Snippet;
 		icon?: Snippet;
 		badges?: Snippet;
@@ -41,14 +43,24 @@
 				<div class="size-10 shrink-0 overflow-hidden rounded-lg border bg-muted">
 					{@render icon?.()}
 				</div>
-				<div class="min-w-0 flex-1">
-					<h3 class="line-clamp-1 text-sm font-medium group-hover/card:underline">{title}</h3>
+				<div class="flex min-w-0 flex-1 flex-col gap-2">
+					<div class="flex flex-col gap-0.5">
+						<h3 class="line-clamp-1 text-sm font-medium group-hover/card:underline">{title}</h3>
+						{#if description}
+							<p class="line-clamp-1 text-xs text-muted-foreground">{description}</p>
+						{/if}
+					</div>
 					{@render badges?.()}
 				</div>
 			</CardContent>
 		{:else}
-			<CardContent class="p-3">
-				<h3 class="line-clamp-2 text-sm font-medium group-hover/card:underline">{title}</h3>
+			<CardContent class="flex flex-col gap-2 p-3">
+				<div class="flex flex-col gap-0.5">
+					<h3 class="line-clamp-2 text-sm font-medium group-hover/card:underline">{title}</h3>
+					{#if description}
+						<p class="line-clamp-2 text-xs text-muted-foreground">{description}</p>
+					{/if}
+				</div>
 				{@render badges?.()}
 			</CardContent>
 		{/if}

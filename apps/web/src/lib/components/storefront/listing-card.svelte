@@ -13,6 +13,7 @@
 <ProductCard
 	{variant}
 	title={entry.title}
+	description={entry.description}
 	href={resolve('/(app)/listings/[slug]', { slug: entry.slug })}
 	image={media ? image : undefined}
 	icon={entry.iconUrl ? icon : undefined}

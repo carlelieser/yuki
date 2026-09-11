@@ -1,7 +1,6 @@
 package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -93,10 +92,7 @@ private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
 
 @Composable
 private fun CardCaption(listing: ListingSummary) {
-    Column(
-        modifier = Modifier.padding(vertical = YukiSpacing.Medium),
-        verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
-    ) {
+    Column(modifier = Modifier.padding(vertical = YukiSpacing.Medium)) {
         Text(
             text = listing.title,
             style = MaterialTheme.typography.titleSmall,
@@ -104,7 +100,10 @@ private fun CardCaption(listing: ListingSummary) {
             overflow = TextOverflow.Ellipsis,
         )
         ProductDescription(description = listing.description)
-        ListingBadgeRow(badges = listing.toBadges())
+        ListingBadgeRow(
+            badges = listing.toBadges(),
+            modifier = badgeSpacing(),
+        )
     }
 }
 

@@ -38,10 +38,7 @@ fun ListingSummary.toProductListItemContent(): ProductListItemContent = ProductL
 
 @Composable
 private fun ProductListItemText(content: ProductListItemContent, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
-    ) {
+    Column(modifier = modifier) {
         Text(
             text = content.title,
             style = MaterialTheme.typography.titleSmall,
@@ -52,6 +49,8 @@ private fun ProductListItemText(content: ProductListItemContent, modifier: Modif
         ProductListItemSupporting(content = content)
     }
 }
+
+internal fun badgeSpacing(): Modifier = Modifier.padding(top = YukiSpacing.ExtraSmall)
 
 @Composable
 internal fun ProductDescription(
@@ -71,8 +70,10 @@ internal fun ProductDescription(
 
 @Composable
 private fun ProductListItemSupporting(content: ProductListItemContent) {
+    val spacing = badgeSpacing()
+
     if (content.badges.items.isNotEmpty()) {
-        ListingBadgeRow(badges = content.badges)
+        ListingBadgeRow(badges = content.badges, modifier = spacing)
         return
     }
 
@@ -82,6 +83,7 @@ private fun ProductListItemSupporting(content: ProductListItemContent) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
+        modifier = spacing,
     )
 }
 

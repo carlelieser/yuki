@@ -37,6 +37,11 @@ private fun identityTitleLines(variant: ListingIdentityVariant): Int = when (var
     ListingIdentityVariant.Detail -> 2
 }
 
+private fun identityDescription(
+    listing: ListingSummary,
+    variant: ListingIdentityVariant,
+): String? = listing.description.takeIf { variant == ListingIdentityVariant.Compact }
+
 @Composable
 fun ListingIdentity(
     listing: ListingSummary,
@@ -49,20 +54,21 @@ fun ListingIdentity(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AppIcon(iconUrl = listing.iconUrl, size = identityIconSize(variant))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = listing.title,
                 style = identityTitleStyle(variant),
                 maxLines = identityTitleLines(variant),
                 overflow = TextOverflow.Ellipsis,
             )
-            if (variant == ListingIdentityVariant.Compact) {
-                ProductDescription(description = listing.description, maxLines = 1)
-            }
-            ListingBadgeRow(badges = listing.toBadges())
+            ProductDescription(
+                description = identityDescription(listing, variant),
+                maxLines = 1,
+            )
+            ListingBadgeRow(
+                badges = listing.toBadges(),
+                modifier = badgeSpacing(),
+            )
         }
     }
 }

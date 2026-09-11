@@ -22,16 +22,12 @@ import androidx.paging.compose.LazyPagingItems
 import app.yuki.core.designsystem.component.SearchBar
 import app.yuki.core.designsystem.component.SearchBarFocus
 import app.yuki.core.designsystem.component.SearchBarState
-import app.yuki.core.designsystem.component.SectionHeader
-import app.yuki.core.designsystem.component.SectionHeaderVariant
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
-
-internal const val BROWSE_LIST_TITLE = "Apps"
 
 private const val BROWSE_MODE_LABEL = "browseMode"
 
@@ -159,21 +155,9 @@ private fun BrowseListing(
             contentPadding = contentPadding,
             modifier = Modifier.fillMaxSize(),
         ) {
-            browseListHeader(listings = listings)
             browseRefreshState(listings = listings)
             browseList(listings = listings, onSelect = callbacks.onListingSelected)
         }
-    }
-}
-
-private fun LazyListScope.browseListHeader(listings: LazyPagingItems<ListingSummary>) {
-    if (listings.itemCount == 0) return
-
-    item {
-        SectionHeader(
-            title = BROWSE_LIST_TITLE,
-            variant = SectionHeaderVariant.Overline,
-        )
     }
 }
 
