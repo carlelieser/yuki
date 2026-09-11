@@ -45,9 +45,6 @@ object YukiCategoryIcons {
 
     val Utilities: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_handyman)
-
-    val AllCategories: ImageVector
-        @Composable get() = ImageVector.vectorResource(R.drawable.ic_grid_view)
 }
 
 val ListingCategory.icon: ImageVector

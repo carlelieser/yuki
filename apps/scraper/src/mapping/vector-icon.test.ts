@@ -131,10 +131,20 @@ describe('composeAdaptiveSvg', () => {
 });
 
 describe('toDataUri', () => {
-	it('produces an inline svg source a browser can render', () => {
-		const uri = toDataUri('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0,0"/></svg>');
+	it('produces a base64 source both browsers and android image loaders accept', () => {
+		const svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0,0"/></svg>';
 
-		expect(uri.startsWith('data:image/svg+xml;charset=utf-8,')).toBe(true);
+		const uri = toDataUri(svg);
+
+		expect(uri.startsWith('data:image/svg+xml;base64,')).toBe(true);
 		expect(uri).not.toContain('#');
+	});
+
+	it('round-trips the svg it encodes', () => {
+		const svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0,0" fill="#ff0000"/></svg>';
+
+		const encoded = toDataUri(svg).slice('data:image/svg+xml;base64,'.length);
+
+		expect(Buffer.from(encoded, 'base64').toString('utf8')).toBe(svg);
 	});
 });

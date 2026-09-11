@@ -5,13 +5,21 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+enum class ListingLinkKind(val label: String) {
+    Repository("Repository"),
+    Author("Author"),
+    Homepage("Homepage"),
+    License("License"),
+}
+
 data class ListingLinkRow(
-    val label: String,
+    val kind: ListingLinkKind,
     val supporting: String,
     val url: String,
-)
+) {
+    val label: String get() = kind.label
+}
 
-private const val LICENSE_LABEL = "License"
 private const val LICENSE_BASE_URL = "https://choosealicense.com/licenses/"
 
 fun licenseUrl(license: String): String =
@@ -20,14 +28,14 @@ fun licenseUrl(license: String): String =
 fun linkRows(detail: ListingDetail): List<ListingLinkRow> = buildList {
     add(
         ListingLinkRow(
-            label = "Repository",
+            kind = ListingLinkKind.Repository,
             supporting = detail.links.repositoryUrl,
             url = detail.links.repositoryUrl,
         ),
     )
     add(
         ListingLinkRow(
-            label = "Author",
+            kind = ListingLinkKind.Author,
             supporting = detail.summary.author,
             url = detail.links.authorUrl,
         ),
@@ -35,12 +43,24 @@ fun linkRows(detail: ListingDetail): List<ListingLinkRow> = buildList {
 
     val homepage = detail.links.homepageUrl
     if (homepage != null) {
-        add(ListingLinkRow(label = "Homepage", supporting = homepage, url = homepage))
+        add(
+            ListingLinkRow(
+                kind = ListingLinkKind.Homepage,
+                supporting = homepage,
+                url = homepage,
+            ),
+        )
     }
 
     val license = detail.license
     if (license != null) {
-        add(ListingLinkRow(label = LICENSE_LABEL, supporting = license, url = licenseUrl(license)))
+        add(
+            ListingLinkRow(
+                kind = ListingLinkKind.License,
+                supporting = license,
+                url = licenseUrl(license),
+            ),
+        )
     }
 }
 

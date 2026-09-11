@@ -295,12 +295,12 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(layout, read);
 
 		expect(icon).not.toBeNull();
-		expect(icon?.startsWith('data:image/svg+xml;charset=utf-8,')).toBe(true);
+		expect(icon?.startsWith('data:image/svg+xml;base64,')).toBe(true);
 	});
 
 	it('resolves colour references from the values directory', async () => {
 		const icon = await buildVectorIcon(layout, read);
-		const svg = decodeURIComponent(icon?.split(',')[1] ?? '');
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');

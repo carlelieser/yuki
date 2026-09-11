@@ -60,6 +60,7 @@ androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "
 
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilCompose" }
+coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilCompose" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }

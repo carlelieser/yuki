@@ -10,9 +10,9 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-enum class InstallMode {
-    Automatic,
-    AlwaysAsk,
+enum class InstallMode(val label: String) {
+    Automatic("Silent"),
+    AlwaysAsk("Always ask"),
 }
 
 data class YukiPreferences(

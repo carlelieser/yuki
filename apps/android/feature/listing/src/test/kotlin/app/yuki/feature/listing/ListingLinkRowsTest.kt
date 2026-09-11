@@ -33,6 +33,13 @@ class ListingLinkRowsTest {
     }
 
     @Test
+    fun `carries the kind that selects each row's icon`() {
+        val kinds = linkRows(detail()).map(ListingLinkRow::kind)
+
+        assertEquals(ListingLinkKind.entries, kinds)
+    }
+
+    @Test
     fun `renders an unreleased version without a published date`() {
         assertEquals("Unreleased", formatPublished(null))
     }

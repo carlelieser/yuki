@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.component.BadgeContent
@@ -32,6 +34,7 @@ const val NO_INSTALLABLE_VERSION_TITLE = "No installable release"
 
 internal const val PRERELEASE_LABEL = "Prerelease"
 internal const val NO_ASSET_LABEL = "No asset"
+internal const val VERSION_ICON_DESCRIPTION = "Release"
 
 private val archivedContent = StatusContent(
     title = ARCHIVED_TITLE,
@@ -97,9 +100,20 @@ internal fun ListingLinkItem(row: ListingLinkRow, onOpen: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        RowLeadingIcon(icon = row.kind.icon, description = row.label)
         LinkRowText(row = row, modifier = Modifier.weight(1f))
         ExternalLinkIcon(modifier = Modifier.size(YukiSize.IconSmall))
     }
+}
+
+@Composable
+private fun RowLeadingIcon(icon: ImageVector, description: String) {
+    Icon(
+        imageVector = icon,
+        contentDescription = description,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(YukiSize.IconSmall),
+    )
 }
 
 @Composable
@@ -158,6 +172,7 @@ internal fun ListingVersionItem(version: ListingVersion, modifier: Modifier = Mo
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        RowLeadingIcon(icon = YukiIcons.DeployedCode, description = VERSION_ICON_DESCRIPTION)
         VersionText(version = version, modifier = Modifier.weight(1f))
         VersionTone(version = version)
     }

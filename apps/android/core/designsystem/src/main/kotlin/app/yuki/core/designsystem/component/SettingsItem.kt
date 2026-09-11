@@ -21,6 +21,7 @@ data class SettingsItemContent(
     val supporting: String? = null,
     val leading: (@Composable () -> Unit)? = null,
     val trailing: (@Composable () -> Unit)? = null,
+    val belowText: (@Composable () -> Unit)? = null,
 )
 
 @Composable
@@ -36,14 +37,17 @@ private fun SettingsItemText(content: SettingsItemContent, modifier: Modifier = 
             overflow = TextOverflow.Ellipsis,
         )
 
-        val supporting = content.supporting ?: return@Column
-        Text(
-            text = supporting,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (content.supporting != null) {
+            Text(
+                text = content.supporting,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+
+        content.belowText?.invoke()
     }
 }
 

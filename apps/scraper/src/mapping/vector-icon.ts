@@ -1,7 +1,9 @@
+import { gradientToSvg, parseGradient } from './vector-gradient.ts';
+
 const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(color|drawable|mipmap)\/([^"]+)"/g;
 const VECTOR_TAG = /<vector\b[^>]*>/;
-const PATH_TAG = /<path\b[^>]*?\/>/gs;
+const PATH_TAG = /<path\b[^>]*?(?:\/>|>([\s\S]*?)<\/path>)/g;
 const GROUP_TAG = /<group\b[^>]*>/;
 const COLOR_ENTRY = /<color\s+name="([^"]+)"\s*>\s*([^<\s]+)\s*<\/color>/g;
 
@@ -103,8 +105,14 @@ function groupTransform(vector: string): string | null {
 	return parts.length === 0 ? null : parts.join(' ');
 }
 
-function convertPaths(vector: string, colors: Map<string, string>, fallbackFill: string): string {
+function convertPaths(
+	vector: string,
+	colors: Map<string, string>,
+	fallbackFill: string,
+	idPrefix: string
+): string {
 	const rendered: string[] = [];
+	const definitions: string[] = [];
 
 	for (const match of vector.matchAll(PATH_TAG)) {
 		if (rendered.length >= MAX_PATHS) break;
@@ -113,12 +121,26 @@ function convertPaths(vector: string, colors: Map<string, string>, fallbackFill:
 		const data = attribute(tag, 'pathData');
 		if (data === null || data.trim() === '') continue;
 
+		const gradient = parseGradient(match[1] ?? '', (raw) => resolveColor(raw, colors));
 		const fill = resolveColor(attribute(tag, 'fillColor'), colors);
 		const stroke = resolveColor(attribute(tag, 'strokeColor'), colors);
 		const strokeWidth = numeric(tag, 'strokeWidth', 0);
 
 		const attributes = [`d="${escapeXml(data.trim())}"`];
-		attributes.push(`fill="${fill ?? (stroke === null ? fallbackFill : 'none')}"`);
+
+		if (gradient !== null) {
+			const id = `${idPrefix}${definitions.length}`;
+			const definition = gradientToSvg(gradient, id);
+
+			if (definition === '') {
+				attributes.push(`fill="${gradient.stops[0]?.color ?? fallbackFill}"`);
+			} else {
+				definitions.push(definition);
+				attributes.push(`fill="url(#${id})"`);
+			}
+		} else {
+			attributes.push(`fill="${fill ?? (stroke === null ? fallbackFill : 'none')}"`);
+		}
 
 		if (stroke !== null && strokeWidth > 0) {
 			attributes.push(`stroke="${stroke}"`, `stroke-width="${strokeWidth}"`);
@@ -137,17 +159,21 @@ function convertPaths(vector: string, colors: Map<string, string>, fallbackFill:
 
 	if (rendered.length === 0) return '';
 
+	const defs = definitions.length === 0 ? '' : `<defs>${definitions.join('')}</defs>`;
 	const transform = groupTransform(vector);
 	return transform === null
-		? rendered.join('')
-		: `<g transform="${transform}">${rendered.join('')}</g>`;
+		? `${defs}${rendered.join('')}`
+		: `${defs}<g transform="${transform}">${rendered.join('')}</g>`;
 }
 
 export function vectorToSvg(
 	vector: string,
 	colors: Map<string, string>,
-	fallbackFill = '#000000'
+	options: { fallbackFill?: string; idPrefix?: string } = {}
 ): string | null {
+	const fallbackFill = options.fallbackFill ?? '#000000';
+	const idPrefix = options.idPrefix ?? 'g';
+
 	if (vector.length > MAX_SOURCE_BYTES) return null;
 
 	const header = vector.match(VECTOR_TAG)?.[0];
@@ -157,7 +183,7 @@ export function vectorToSvg(
 	const height = numeric(header, 'viewportHeight', CANVAS);
 	if (width <= 0 || height <= 0) return null;
 
-	const body = convertPaths(vector, colors, fallbackFill);
+	const body = convertPaths(vector, colors, fallbackFill, idPrefix);
 	if (body === '') return null;
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${body}</svg>`;
@@ -168,7 +194,10 @@ export function composeAdaptiveSvg(input: {
 	foreground: string | null;
 	colors: Map<string, string>;
 }): string | null {
-	const foreground = input.foreground === null ? null : vectorToSvg(input.foreground, input.colors);
+	const foreground =
+		input.foreground === null
+			? null
+			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg' });
 	if (foreground === null) return null;
 
 	const inner = foreground.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
@@ -185,7 +214,9 @@ export function composeAdaptiveSvg(input: {
 			if (color !== null)
 				layers.push(`<rect width="${width}" height="${height}" fill="${color}"/>`);
 		} else {
-			const backgroundSvg = vectorToSvg(input.background.value, input.colors);
+			const backgroundSvg = vectorToSvg(input.background.value, input.colors, {
+				idPrefix: 'bg'
+			});
 			if (backgroundSvg !== null) {
 				layers.push(backgroundSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''));
 			}
@@ -201,5 +232,5 @@ export function composeAdaptiveSvg(input: {
 }
 
 export function toDataUri(svg: string): string {
-	return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+	return `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
 }

@@ -140,10 +140,18 @@ class SearchScreenTest {
     }
 
     @Test
-    fun theAllOptionLeadsTheCategoryFilter() {
+    fun theDividerStaysHiddenUntilTheListScrolls() {
         render(browsing())
 
-        composeRule.onNodeWithText(ALL_CATEGORIES_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithTag(BROWSE_DIVIDER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun theFilterOffersEveryCategoryAndNoAllOption() {
+        render(browsing())
+
+        composeRule.onNodeWithText("All").assertDoesNotExist()
+        composeRule.onNodeWithText(ListingCategory.Media.label).assertIsDisplayed()
     }
 
     @Test

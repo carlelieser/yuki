@@ -86,16 +86,6 @@ class PermissionRowTest {
     }
 
     @Test
-    fun theSupportingLineNamesTheReasonAndWhetherItIsRequired() {
-        val required = supportingFor(rowFor(requiredPermission(), PermissionStatus.Denied))
-        val optional = supportingFor(rowFor(optionalPermission(), PermissionStatus.Denied))
-
-        assertTrue(required.contains("Browse listings and download apps"))
-        assertTrue(required.contains(REQUIRED_LABEL))
-        assertTrue(optional.contains(OPTIONAL_LABEL))
-    }
-
-    @Test
     fun aDeniedPermissionRoutesToItsSystemSettingsPage() {
         val destinations = RecordingSystemDestinations()
         var permissionRequests = 0

@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.YukiIcons
-import app.yuki.core.designsystem.component.YukiCategoryIcons
 import app.yuki.core.designsystem.component.icon
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingCategory
@@ -30,11 +29,6 @@ import app.yuki.core.model.ListingCategory
 const val CATEGORY_FILTER_TAG = "categoryFilter"
 const val SORT_SELECTOR_TAG = "sortSelector"
 const val SORT_DESCRIPTION = "Sort by"
-
-internal const val ALL_CATEGORIES_LABEL = "All"
-
-private val CategoryFilterEntries: List<ListingCategory?> =
-    listOf(null) + ListingCategory.entries
 
 @Composable
 internal fun CategoryFilter(
@@ -47,34 +41,42 @@ internal fun CategoryFilter(
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Small),
     ) {
-        items(items = CategoryFilterEntries, key = { category -> category?.wireValue ?: "all" }) {
+        items(
+            items = ListingCategory.entries,
+            key = { category -> category.wireValue },
+        ) { category ->
             CategoryChip(
-                category = it,
-                isSelected = it == selected,
-                onSelect = { onCategorySelected(it) },
+                category = category,
+                isSelected = category == selected,
+                onSelect = { onCategorySelected(toggled(category, selected)) },
             )
         }
     }
 }
 
+internal fun toggled(
+    category: ListingCategory,
+    selected: ListingCategory?,
+): ListingCategory? = if (category == selected) null else category
+
 @Composable
 private fun CategoryChip(
-    category: ListingCategory?,
+    category: ListingCategory,
     isSelected: Boolean,
     onSelect: () -> Unit,
 ) {
     FilterChip(
         selected = isSelected,
         onClick = onSelect,
-        label = { Text(text = category?.label ?: ALL_CATEGORIES_LABEL) },
+        label = { Text(text = category.label) },
         leadingIcon = { CategoryChipIcon(category = category) },
     )
 }
 
 @Composable
-private fun CategoryChipIcon(category: ListingCategory?) {
+private fun CategoryChipIcon(category: ListingCategory) {
     Icon(
-        imageVector = category?.icon ?: YukiCategoryIcons.AllCategories,
+        imageVector = category.icon,
         contentDescription = null,
         modifier = Modifier.size(FilterChipDefaults.IconSize),
     )
