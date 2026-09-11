@@ -10,11 +10,15 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toSearchQueryString } from '$lib/search-query.ts';
+	import { getViewModeStore } from '$lib/view-mode-store.svelte.ts';
+	import { cardVariantFor } from '$lib/components/storefront/product-card.svelte';
 	import type { ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
 	let { data }: { data: PageData } = $props();
+
+	const views = getViewModeStore();
 
 	const title = $derived(data.query === '' ? 'Search · Yuki' : `${data.query} · Yuki`);
 
@@ -38,7 +42,7 @@
 <svelte:head><title>{title}</title></svelte:head>
 
 {#snippet card(entry: ListingSummary)}
-	<ListingCard {entry} />
+	<ListingCard {entry} variant={cardVariantFor(views.mode)} />
 {/snippet}
 
 {#snippet sortMenu()}

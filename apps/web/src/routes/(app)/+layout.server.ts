@@ -1,7 +1,8 @@
 import type { LayoutServerLoad } from './$types';
 import { parseArchitecturePreference } from '$lib/architecture-preference.ts';
+import { parseViewMode, VIEW_MODE_COOKIE } from '$lib/view-mode.ts';
 
-export const load: LayoutServerLoad = ({ locals }) => {
+export const load: LayoutServerLoad = ({ cookies, locals }) => {
 	const user = locals.user;
 
 	return {
@@ -13,6 +14,7 @@ export const load: LayoutServerLoad = ({ locals }) => {
 					image: user.image ?? null,
 					architecture: parseArchitecturePreference(user.architecture ?? null)
 				}
-			: null
+			: null,
+		viewMode: parseViewMode(cookies.get(VIEW_MODE_COOKIE) ?? null)
 	};
 };

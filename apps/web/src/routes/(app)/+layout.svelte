@@ -2,6 +2,7 @@
 	import SearchDialog from '$lib/components/storefront/search-dialog.svelte';
 	import SiteHeader from '$lib/components/storefront/site-header.svelte';
 	import { createArchitectureStore } from '$lib/architecture-store.svelte.ts';
+	import { createViewModeStore } from '$lib/view-mode-store.svelte.ts';
 
 	let { children, data } = $props();
 
@@ -9,6 +10,8 @@
 		() => data.user?.architecture ?? null,
 		() => data.user !== null
 	);
+
+	createViewModeStore(() => data.viewMode);
 
 	$effect(() => {
 		architectures.loadLocal();

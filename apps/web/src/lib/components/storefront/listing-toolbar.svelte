@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CategoryMenu from './category-menu.svelte';
+	import ViewModeToggle from './view-mode-toggle.svelte';
 	import type { CategoryOption, ListingCategory } from '$lib/categories.ts';
 	import type { Snippet } from 'svelte';
 
@@ -21,5 +22,6 @@
 <div class="flex items-center gap-1">
 	<CategoryMenu {categories} {selected} {onSelect} />
 	{@render sort()}
+	<ViewModeToggle />
 	{@render action?.()}
 </div>

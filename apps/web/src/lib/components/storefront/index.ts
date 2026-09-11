@@ -22,3 +22,4 @@ export { default as SiteHeader } from './site-header.svelte';
 export { default as SiteLogo } from './site-logo.svelte';
 export { default as SiteSearch } from './site-search.svelte';
 export { default as SortMenu } from './sort-menu.svelte';
+export { default as ViewModeToggle } from './view-mode-toggle.svelte';
