@@ -1,9 +1,18 @@
+import { gradientToSvg, parseGradient } from './vector-gradient.ts';
+
 const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(color|drawable|mipmap)\/([^"]+)"/g;
 const VECTOR_TAG = /<vector\b[^>]*>/;
-const PATH_TAG = /<path\b[^>]*?\/>/gs;
+const PATH_TAG = /<path\b[^>]*?(?:\/>|>([\s\S]*?)<\/path>)/g;
 const GROUP_TAG = /<group\b[^>]*>/;
 const COLOR_ENTRY = /<color\s+name="([^"]+)"\s*>\s*([^<\s]+)\s*<\/color>/g;
+
+let gradientSequence = 0;
+
+function nextGradientId(): number {
+	gradientSequence += 1;
+	return gradientSequence;
+}
 
 const MAX_SOURCE_BYTES = 64 * 1024;
 const MAX_PATHS = 64;
@@ -105,6 +114,7 @@ function groupTransform(vector: string): string | null {
 
 function convertPaths(vector: string, colors: Map<string, string>, fallbackFill: string): string {
 	const rendered: string[] = [];
+	const definitions: string[] = [];
 
 	for (const match of vector.matchAll(PATH_TAG)) {
 		if (rendered.length >= MAX_PATHS) break;
@@ -113,12 +123,26 @@ function convertPaths(vector: string, colors: Map<string, string>, fallbackFill:
 		const data = attribute(tag, 'pathData');
 		if (data === null || data.trim() === '') continue;
 
+		const gradient = parseGradient(match[1] ?? '', (raw) => resolveColor(raw, colors));
 		const fill = resolveColor(attribute(tag, 'fillColor'), colors);
 		const stroke = resolveColor(attribute(tag, 'strokeColor'), colors);
 		const strokeWidth = numeric(tag, 'strokeWidth', 0);
 
 		const attributes = [`d="${escapeXml(data.trim())}"`];
-		attributes.push(`fill="${fill ?? (stroke === null ? fallbackFill : 'none')}"`);
+
+		if (gradient !== null) {
+			const id = `g${nextGradientId()}`;
+			const definition = gradientToSvg(gradient, id);
+
+			if (definition === '') {
+				attributes.push(`fill="${gradient.stops[0]?.color ?? fallbackFill}"`);
+			} else {
+				definitions.push(definition);
+				attributes.push(`fill="url(#${id})"`);
+			}
+		} else {
+			attributes.push(`fill="${fill ?? (stroke === null ? fallbackFill : 'none')}"`);
+		}
 
 		if (stroke !== null && strokeWidth > 0) {
 			attributes.push(`stroke="${stroke}"`, `stroke-width="${strokeWidth}"`);
@@ -137,10 +161,11 @@ function convertPaths(vector: string, colors: Map<string, string>, fallbackFill:
 
 	if (rendered.length === 0) return '';
 
+	const defs = definitions.length === 0 ? '' : `<defs>${definitions.join('')}</defs>`;
 	const transform = groupTransform(vector);
 	return transform === null
-		? rendered.join('')
-		: `<g transform="${transform}">${rendered.join('')}</g>`;
+		? `${defs}${rendered.join('')}`
+		: `${defs}<g transform="${transform}">${rendered.join('')}</g>`;
 }
 
 export function vectorToSvg(
