@@ -2,19 +2,23 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
-		CategoryMenu,
 		CollectionEmpty,
 		ListingCard,
+		ListingToolbar,
 		ProductGrid,
 		SearchSort,
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toSearchQueryString } from '$lib/search-query.ts';
+	import { getViewModeStore } from '$lib/view-mode-store.svelte.ts';
+	import { cardVariantFor } from '$lib/components/storefront/product-card.svelte';
 	import type { ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
 	let { data }: { data: PageData } = $props();
+
+	const views = getViewModeStore();
 
 	const title = $derived(data.query === '' ? 'Search · Yuki' : `${data.query} · Yuki`);
 
@@ -38,7 +42,11 @@
 <svelte:head><title>{title}</title></svelte:head>
 
 {#snippet card(entry: ListingSummary)}
-	<ListingCard {entry} />
+	<ListingCard {entry} variant={cardVariantFor(views.mode)} />
+{/snippet}
+
+{#snippet sortMenu()}
+	<SearchSort query={data.query} sorting={data.sorting} category={data.category} />
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
@@ -50,14 +58,12 @@
 	{:else}
 		<Section title={heading}>
 			{#snippet action()}
-				<div class="flex items-center gap-1">
-					<CategoryMenu
-						categories={data.categories}
-						selected={data.category}
-						onSelect={selectCategory}
-					/>
-					<SearchSort query={data.query} sorting={data.sorting} category={data.category} />
-				</div>
+				<ListingToolbar
+					categories={data.categories}
+					selected={data.category}
+					onSelect={selectCategory}
+					sort={sortMenu}
+				/>
 			{/snippet}
 			<ProductGrid items={data.results} item={card}>
 				{#snippet empty()}

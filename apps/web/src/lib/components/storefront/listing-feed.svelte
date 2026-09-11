@@ -3,6 +3,8 @@
 	import CollectionEmpty from './collection-empty.svelte';
 	import ListingCard from './listing-card.svelte';
 	import ProductGrid from './product-grid.svelte';
+	import { cardVariantFor } from './product-card.svelte';
+	import { getViewModeStore } from '$lib/view-mode-store.svelte.ts';
 	import type { ListingPage, ListingSummary } from '$lib/server/listings.ts';
 	import { toBrowseQueryString, type BrowseOrder, type BrowseSort } from '$lib/browse.ts';
 	import type { ListingCategory } from '$lib/categories.ts';
@@ -31,6 +33,8 @@
 	let isLoading = $state(false);
 	let hasLoadedOnce = $state(seed !== undefined);
 	let sentinel = $state<HTMLDivElement | null>(null);
+
+	const views = getViewModeStore();
 
 	let requestId = 0;
 
@@ -78,7 +82,7 @@
 </script>
 
 {#snippet card(entry: ListingSummary)}
-	<ListingCard {entry} />
+	<ListingCard {entry} variant={cardVariantFor(views.mode)} />
 {/snippet}
 
 <div class="space-y-4">

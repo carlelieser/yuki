@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import ListingBadges from './listing-badges.svelte';
-	import ProductCard from './product-card.svelte';
+	import ProductCard, { type ProductCardVariant } from './product-card.svelte';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 
-	let { entry, variant = 'default' }: { entry: ListingSummary; variant?: 'default' | 'wide' } =
-		$props();
+	let {
+		entry,
+		variant = 'default'
+	}: { entry: ListingSummary; variant?: Exclude<ProductCardVariant, 'detail'> } = $props();
 
 	const media = $derived(variant === 'wide' ? entry.bannerUrl : entry.iconUrl);
 </script>

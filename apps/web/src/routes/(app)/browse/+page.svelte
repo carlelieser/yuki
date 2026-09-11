@@ -3,8 +3,8 @@
 	import { resolve } from '$app/paths';
 	import {
 		BrowseSort,
-		CategoryMenu,
 		ListingFeed,
+		ListingToolbar,
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toBrowseQueryString } from '$lib/browse.ts';
@@ -22,17 +22,19 @@
 
 <svelte:head><title>Browse · Yuki</title></svelte:head>
 
+{#snippet sortMenu()}
+	<BrowseSort sort={data.sort} order={data.order} category={data.category} target="browse" />
+{/snippet}
+
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
-			<div class="flex items-center gap-1">
-				<CategoryMenu
-					categories={data.categories}
-					selected={data.category}
-					onSelect={selectCategory}
-				/>
-				<BrowseSort sort={data.sort} order={data.order} category={data.category} target="browse" />
-			</div>
+			<ListingToolbar
+				categories={data.categories}
+				selected={data.category}
+				onSelect={selectCategory}
+				sort={sortMenu}
+			/>
 		{/snippet}
 		{#key `${data.sort}-${data.order}-${data.category ?? 'all'}`}
 			<ListingFeed

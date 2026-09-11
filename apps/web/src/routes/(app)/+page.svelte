@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { buttonVariants } from '@yuki/ui';
+	import { buttonVariants, cn } from '@yuki/ui';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import { goto } from '$app/navigation';
 	import {
 		BrowseSort,
-		CategoryMenu,
 		ListingCard,
 		ListingFeed,
+		ListingToolbar,
 		ProductCarousel,
 		Section
 	} from '$lib/components/storefront/index.ts';
@@ -48,6 +48,21 @@
 	<ListingCard {entry} variant="wide" />
 {/snippet}
 
+{#snippet sortMenu()}
+	<BrowseSort sort={data.sort} order={data.order} />
+{/snippet}
+
+{#snippet browseAll()}
+	<a
+		href={browseHref}
+		class={cn(buttonVariants({ variant: 'ghost' }), 'w-9 px-0 sm:w-auto sm:px-2.5')}
+		aria-label="Browse all apps"
+	>
+		<span class="hidden sm:inline">Browse all</span>
+		<ArrowRightIcon aria-hidden="true" />
+	</a>
+{/snippet}
+
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
 	<Section title="Featured">
 		<ProductCarousel
@@ -67,14 +82,12 @@
 
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
-			<div class="flex items-center gap-1">
-				<CategoryMenu categories={data.categories} onSelect={selectCategory} />
-				<BrowseSort sort={data.sort} order={data.order} />
-				<a href={browseHref} class={buttonVariants({ variant: 'ghost' })}>
-					Browse all
-					<ArrowRightIcon aria-hidden="true" />
-				</a>
-			</div>
+			<ListingToolbar
+				categories={data.categories}
+				onSelect={selectCategory}
+				sort={sortMenu}
+				action={browseAll}
+			/>
 		{/snippet}
 		{#key `${data.sort}-${data.order}`}
 			<ListingFeed

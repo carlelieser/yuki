@@ -68,17 +68,17 @@
 		setApi={restartAutoplayOnManualScroll}
 		class="-ml-1"
 	>
-		<CarouselContent class="-ms-2">
+		<CarouselContent class="-ms-2 items-stretch">
 			{#if isLoading}
 				{#each { length: skeletonCount }, index (index)}
 					<CarouselItem class={itemClass}>
-						<div class="p-1"><ProductCardSkeleton {variant} /></div>
+						<div class="h-full p-1"><ProductCardSkeleton {variant} /></div>
 					</CarouselItem>
 				{/each}
 			{:else}
 				{#each items as entry, index (index)}
 					<CarouselItem class={itemClass}>
-						<div class="p-1">{@render item(entry)}</div>
+						<div class="h-full p-1">{@render item(entry)}</div>
 					</CarouselItem>
 				{/each}
 			{/if}

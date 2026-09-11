@@ -146,4 +146,6 @@ export {
 	FormLegend
 } from './components/ui/form/index.ts';
 export { StarRating, StarRatingInput } from './components/ui/star-rating/index.ts';
+export { Toggle, toggleVariants } from './components/ui/toggle/index.ts';
+export { ToggleGroup, ToggleGroupItem } from './components/ui/toggle-group/index.ts';
 export { UserAvatar } from './components/ui/user-avatar/index.ts';

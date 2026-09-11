@@ -11,13 +11,14 @@
 		ItemDescription,
 		ItemGroup,
 		ItemMedia,
-		ItemTitle,
-		Number
+		ItemTitle
 	} from '@yuki/ui';
 	import {
 		CollectionEmpty,
 		DownloadButton,
 		ImageCarousel,
+		ListingBadges,
+		ProductCard,
 		RatingSummary,
 		ReviewCard,
 		ReviewForm,
@@ -25,7 +26,7 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
-	import { SquareTextIcon, StarIcon, BoxIcon } from '@lucide/svelte';
+	import { StarIcon, BoxIcon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -36,6 +37,18 @@
 	let reviewsOpen = $state(false);
 </script>
 
+{#snippet banner()}
+	<img src={listing.bannerUrl} alt="" class="size-full object-cover" loading="lazy" />
+{/snippet}
+
+{#snippet icon()}
+	<img src={listing.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
+{/snippet}
+
+{#snippet badges()}
+	<ListingBadges entry={listing} />
+{/snippet}
+
 <svelte:head>
 	<title>{listing.title} · Yuki</title>
 	{#if listing.description}
@@ -44,44 +57,17 @@
 </svelte:head>
 
 <main class="mx-auto w-full max-w-4xl space-y-8 px-4 py-8">
-	{#if listing.bannerUrl}
-		<img
-			src={listing.bannerUrl}
-			alt=""
-			class="h-auto w-full rounded-xl border object-cover"
-			decoding="async"
-			referrerpolicy="no-referrer"
-		/>
-	{/if}
+	<ProductCard
+		variant="detail"
+		title={listing.title}
+		description={listing.description}
+		badge={listing.isArchived ? 'Archived' : undefined}
+		image={listing.bannerUrl ? banner : undefined}
+		icon={listing.iconUrl ? icon : undefined}
+		{badges}
+	/>
 
-	<header class="flex flex-wrap items-start gap-4">
-		{#if listing.iconUrl}
-			<img
-				src={listing.iconUrl}
-				alt=""
-				class="size-16 shrink-0 rounded-xl object-cover"
-				loading="lazy"
-			/>
-		{:else}
-			<div class="size-16 shrink-0 rounded-xl border bg-muted flex items-center justify-center">
-				<BoxIcon />
-			</div>
-		{/if}
-
-		<div class="min-w-0 flex-1 space-y-1">
-			<h1 class="text-2xl font-semibold tracking-tight">{listing.title}</h1>
-			<p class="text-sm text-muted-foreground">
-				by <a href={listing.authorUrl} rel="external noreferrer" class="hover:underline"
-					>{listing.author}</a
-				>
-			</p>
-			{#if listing.description}
-				<p class="text-sm text-muted-foreground">{listing.description}</p>
-			{/if}
-		</div>
-	</header>
-
-	<div class="flex items-center flex-wrap gap-2">
+	<div class="flex flex-wrap items-center gap-2">
 		{#if latestVersion?.downloadUrl}
 			<DownloadButton
 				slug={listing.slug}
@@ -93,21 +79,6 @@
 			<GithubIcon />
 			Source
 		</Button>
-		<div class="flex items-center gap-2 ml-auto">
-			<Badge variant="ghost">
-				<StarIcon />
-				<Number value={listing.stars} preset="compact" /> stars
-			</Badge>
-			{#if listing.license}
-				<Badge variant="ghost">
-					<SquareTextIcon />
-					{listing.license}
-				</Badge>
-			{/if}
-			{#if listing.isArchived}
-				<Badge variant="ghost">Archived</Badge>
-			{/if}
-		</div>
 	</div>
 
 	{#if listing.screenshots.length > 0}

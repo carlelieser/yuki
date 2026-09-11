@@ -7,7 +7,7 @@
 		DropdownMenuRadioItem,
 		DropdownMenuTrigger
 	} from '@yuki/ui';
-	import LayoutGridIcon from '@lucide/svelte/icons/layout-grid';
+	import FunnelIcon from '@lucide/svelte/icons/funnel';
 	import { categoryLabel, type CategoryOption, type ListingCategory } from '$lib/categories.ts';
 	import { categoryIcon } from '$lib/category-icons.ts';
 
@@ -24,8 +24,11 @@
 	} = $props();
 
 	const current = $derived(selected ?? ALL_CATEGORIES);
-	const label = $derived(selected === null ? 'Category' : categoryLabel(selected));
-	const TriggerIcon = $derived(selected === null ? LayoutGridIcon : categoryIcon(selected));
+	const triggerLabel = $derived(
+		selected === null
+			? 'Filter listings by category'
+			: `Filter listings by category, ${categoryLabel(selected)} selected`
+	);
 
 	function select(value: string): void {
 		onSelect(value === ALL_CATEGORIES ? null : (value as ListingCategory));
@@ -35,9 +38,8 @@
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="ghost" aria-label="Filter listings by category">
-				<TriggerIcon aria-hidden="true" />
-				{label}
+			<Button {...props} variant="ghost" size="icon" aria-label={triggerLabel}>
+				<FunnelIcon aria-hidden="true" />
 			</Button>
 		{/snippet}
 	</DropdownMenuTrigger>
@@ -45,7 +47,7 @@
 	<DropdownMenuContent align="end" class="w-52">
 		<DropdownMenuRadioGroup value={current} onValueChange={select}>
 			<DropdownMenuRadioItem value={ALL_CATEGORIES}>
-				<LayoutGridIcon aria-hidden="true" class="text-muted-foreground" />
+				<FunnelIcon aria-hidden="true" class="text-muted-foreground" />
 				All
 			</DropdownMenuRadioItem>
 			{#each categories as category (category.value)}
