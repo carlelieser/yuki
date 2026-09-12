@@ -185,3 +185,68 @@ describe('runNightly', () => {
 		expect(summary.updatedCount).toBe(1);
 	});
 });
+
+describe('self-declared candidates', () => {
+	function discoveringClient(paths: string[], repo: GithubRepository): GithubClient {
+		return {
+			stats: { requestCount: 0, notModifiedCount: 0 },
+			searchCode: async () => ({ isModified: true, body: { total_count: 0, items: [] } }),
+			searchRepositories: async (q: string) => ({
+				isModified: true,
+				body: {
+					total_count: q.includes('topic:shizuku') ? 1 : 0,
+					items: q.includes('topic:shizuku') ? [repo] : []
+				}
+			}),
+			getRepository: async () => ({ isModified: true, body: repo, etag: 'W/"a"' }),
+			getReadme: async () => ({ isModified: false }),
+			getReleases: async () => ({ isModified: true, body: [], etag: null }),
+			getTree: async () => ({
+				isModified: true,
+				body: { tree: paths.map((path) => ({ path, type: 'blob' })), truncated: false },
+				etag: 'W/"t"'
+			})
+		} as unknown as GithubClient;
+	}
+
+	const discovery = { shouldDiscover: true, maxRepos: 10, maxRefresh: 10 };
+
+	it('does not index a tagged repository that builds no android app', async () => {
+		const shaderPack = repository({ id: 42, name: 'shaders', full_name: 'uzvarUA/shaders' });
+		const runPorts = ports({ client: discoveringClient(['README.md', 'pack.mcmeta'], shaderPack) });
+
+		const summary = await runNightly(runPorts, discovery);
+
+		expect(runPorts.persisted).toHaveLength(0);
+		expect(summary.skippedCount).toBe(1);
+	});
+
+	it('still indexes a tagged repository that does build an android app', async () => {
+		const realApp = repository({ id: 43, name: 'Sui', full_name: 'XiaoTong6666/Sui' });
+		const runPorts = ports({
+			client: discoveringClient(['app/src/main/AndroidManifest.xml'], realApp)
+		});
+
+		await runNightly(runPorts, discovery);
+
+		expect(runPorts.persisted).toHaveLength(1);
+	});
+});
+
+describe('renamed repositories', () => {
+	it('carries the repo id so a rename updates the stored row', async () => {
+		const runPorts = ports({
+			client: fakeClient({
+				getRepository: async () => ({ isModified: false }),
+				getReleases: async () => ({ isModified: true, body: [], etag: null })
+			}),
+			etags: { read: async () => 'main W/"a"', write: async () => {} },
+			listTargets: async () => [knownListing]
+		});
+
+		await runNightly(runPorts, options);
+
+		expect(runPorts.persisted).toHaveLength(1);
+		expect(runPorts.persisted[0]?.githubRepoId).toBe(knownListing.githubRepoId);
+	});
+});

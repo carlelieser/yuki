@@ -1,4 +1,9 @@
-import { mergeEvidence, scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
+import {
+	hasAndroidStructure,
+	mergeEvidence,
+	scoreConfidence,
+	type DetectedEvidence
+} from '../detection/evidence.ts';
 import { GithubSkip, type GithubClient } from '@yuki/github';
 import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
@@ -18,6 +23,7 @@ export type RefreshOutcome =
 export type RefreshTarget = {
 	owner: string;
 	name: string;
+	githubRepoId?: number;
 	evidence?: DetectedEvidence[];
 	repo?: GithubRepository;
 };
@@ -68,12 +74,14 @@ export async function refreshListing(
 					: mapReleases(releases.body);
 		const readmeBody = readme.state === 'fresh' ? readme.body : null;
 		const bannerUrl = readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch);
+		const isAndroidApp = androidVerdict(tree);
 
 		return {
 			kind: 'updated',
 			input: {
 				owner,
 				name,
+				githubRepoId: target.githubRepoId,
 				listing:
 					repo.state === 'fresh'
 						? mapRepository(repo.body, scoreConfidence(evidence), readmeBody)
@@ -89,6 +97,7 @@ export async function refreshListing(
 							: extractReadmeImages(readmeBody, owner, name, branch, bannerUrl),
 				versions,
 				hasApk: versions === null ? null : hasDistributableApk(versions),
+				isAndroidApp,
 				evidence
 			}
 		};
@@ -98,6 +107,15 @@ export async function refreshListing(
 		}
 		throw cause;
 	}
+}
+
+function androidVerdict(tree: Resource<GithubTree>): boolean | null {
+	if (tree.state !== 'fresh') return null;
+
+	const paths = tree.body.tree.map((entry) => entry.path);
+	if (hasAndroidStructure(paths)) return true;
+
+	return tree.body.truncated ? null : false;
 }
 
 type RepoResource =

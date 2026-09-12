@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeEvidence, scoreConfidence } from './evidence.ts';
+import { hasAndroidStructure, mergeEvidence, scoreConfidence } from './evidence.ts';
 
 describe('scoreConfidence', () => {
 	it('rates the provider class as strong', () => {
@@ -20,6 +20,10 @@ describe('scoreConfidence', () => {
 
 	it('rates a bare topic as weak', () => {
 		expect(scoreConfidence([{ kind: 'repository_topic', detail: null }])).toBe('weak');
+	});
+
+	it('rates a readme mention as weak', () => {
+		expect(scoreConfidence([{ kind: 'readme_mention', detail: null }])).toBe('weak');
 	});
 
 	it('takes the strongest signal present', () => {
@@ -48,5 +52,35 @@ describe('mergeEvidence', () => {
 			{ kind: 'gradle_dependency', detail: 'build.gradle' },
 			{ kind: 'provider_class', detail: 'AndroidManifest.xml' }
 		]);
+	});
+});
+
+describe('hasAndroidStructure', () => {
+	it('accepts a manifest', () => {
+		expect(hasAndroidStructure(['app/src/main/AndroidManifest.xml'])).toBe(true);
+	});
+
+	it('accepts a groovy build script', () => {
+		expect(hasAndroidStructure(['app/build.gradle'])).toBe(true);
+	});
+
+	it('accepts a kotlin build script', () => {
+		expect(hasAndroidStructure(['app/build.gradle.kts'])).toBe(true);
+	});
+
+	it('accepts a version catalog', () => {
+		expect(hasAndroidStructure(['gradle/libs.versions.toml'])).toBe(true);
+	});
+
+	it('rejects a repository that only ships prose', () => {
+		expect(hasAndroidStructure(['README.md', 'docs/index.html', 'LICENSE'])).toBe(false);
+	});
+
+	it('rejects an empty tree', () => {
+		expect(hasAndroidStructure([])).toBe(false);
+	});
+
+	it('does not mistake a similarly named file for a build script', () => {
+		expect(hasAndroidStructure(['notes/build.gradle.md', 'AndroidManifest.xml.bak'])).toBe(false);
 	});
 });

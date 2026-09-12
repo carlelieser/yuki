@@ -2,7 +2,7 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
-import type { DetectedEvidence } from '../detection/evidence.ts';
+import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
 import type { MappedListing } from '../mapping/listing.ts';
 import type { MappedVersion } from '@yuki/github';
 import type { ReadmeImage } from '../mapping/readme-images.ts';
@@ -18,11 +18,13 @@ export type PersistInput = {
 	listing: MappedListing | null;
 	owner: string;
 	name: string;
+	githubRepoId?: number;
 	iconUrl: string | null;
 	bannerUrl: string | null;
 	screenshots: ReadmeImage[] | null;
 	versions: MappedVersion[] | null;
 	hasApk: boolean | null;
+	isAndroidApp: boolean | null;
 	evidence: DetectedEvidence[];
 };
 
@@ -91,8 +93,21 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 				});
 		}
 
+		await settleConfidence(tx, listingId);
+
 		return listingId;
 	});
+}
+
+async function settleConfidence(tx: Transaction, listingId: string): Promise<void> {
+	const stored = await tx
+		.select({ kind: schema.listingEvidence.kind })
+		.from(schema.listingEvidence)
+		.where(eq(schema.listingEvidence.listingId, listingId));
+
+	const confidence = scoreConfidence(stored.map((row) => ({ kind: row.kind, detail: null })));
+
+	await tx.update(schema.listings).set({ confidence }).where(eq(schema.listings.id, listingId));
 }
 
 async function insertOrUpdate(
@@ -109,7 +124,7 @@ async function insertOrUpdate(
 			slug,
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
-			isPublished: input.hasApk === true,
+			isPublished: input.hasApk === true && scoreConfidence(input.evidence) !== 'weak',
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
@@ -129,12 +144,10 @@ async function insertOrUpdate(
 				homepageUrl: listing.homepageUrl,
 				license: listing.license,
 				stars: listing.stars,
-				confidence: listing.confidence,
 				...(listing.category === null ? {} : { category: listing.category }),
 				isFork: listing.isFork,
 				isArchived: listing.isArchived,
 				repoPushedAt: listing.repoPushedAt,
-				...(input.hasApk === null ? {} : { isPublished: input.hasApk }),
 				lastScrapedAt: new Date(),
 				updatedAt: new Date()
 			}
@@ -151,11 +164,14 @@ async function updateExisting(tx: Transaction, input: PersistInput): Promise<str
 		.set({
 			...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 			...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
-			...(input.hasApk === null ? {} : { isPublished: input.hasApk }),
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
-		.where(and(eq(schema.listings.owner, input.owner), eq(schema.listings.name, input.name)))
+		.where(
+			input.githubRepoId === undefined
+				? and(eq(schema.listings.owner, input.owner), eq(schema.listings.name, input.name))
+				: eq(schema.listings.githubRepoId, input.githubRepoId)
+		)
 		.returning({ id: schema.listings.id });
 
 	if (!row) throw new Error(`No stored listing for ${input.owner}/${input.name}`);

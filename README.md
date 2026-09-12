@@ -46,6 +46,7 @@ already running on the host default.
 | `bun run db:studio`   | Open Drizzle Studio                          |
 | `bun run scrape`      | Refresh listings from GitHub                 |
 | `bun run listings`    | Review, publish, and unpublish listings      |
+| `bun run backfill`    | One-off repair of stored confidence          |
 
 ## Scraper
 
@@ -74,6 +75,14 @@ separately, repeating until every partition fits. Completed partitions are recor
 in `scrape_partitions`, so an interrupted seed resumes instead of restarting, and a
 weekly run skips ground it has already covered.
 
+Only repository search accepts a date range; code search has no `created:`
+qualifier and silently returns zero results if given one. A code partition
+therefore covers all of time and cannot be narrowed, which means recording one as
+permanently complete would retire that query forever — after a seed, discovery
+would issue no code searches at all and report nothing new. Code partitions
+instead expire after 30 days, long enough that a seed spanning several dispatches
+still resumes rather than rewalking itself.
+
 Code search is capped at 10 requests per minute, which is why seed takes hours and
 runs by hand. The nightly refresh instead issues conditional requests against the
 5000/hour core quota, where `304 Not Modified` responses do not count against the
@@ -82,9 +91,18 @@ readme, and its tree, so a listing is only skipped when all four are unchanged. 
 repository's metadata does not change when a maintainer publishes a release, which
 is why releases are checked independently.
 
-Newly discovered listings go live immediately. Detection has measured false
-positives (wikis and awesome-lists that merely mention Shizuku), so unpublishing
-is the correction mechanism:
+A repository is only indexed when its tree holds an `AndroidManifest.xml` or a
+Gradle build file. `topic:shizuku` and a readme mention are self-assigned labels,
+so on their own they describe an interest in Shizuku rather than an app that uses
+it — an awesome-list, a shell script collection, and a shader pack all carry the
+topic. Those two signals now need that structural proof before a listing exists.
+The check reads the tree the refresh already fetches for the icon, so it costs no
+extra requests, and it withholds a verdict when the tree came back `304` or
+truncated rather than guessing.
+
+A newly discovered listing goes live when it ships a downloadable APK _and_ its
+evidence is better than weak. Self-declared evidence alone leaves it waiting in
+the review queue:
 
 ```sh
 bun run listings pending              # candidates, with the evidence behind each
@@ -95,6 +113,19 @@ bun run listings published            # what is live right now
 
 Publishing happens on insert only, never on refresh. A nightly run therefore
 cannot resurrect something you unpublished, so taking a listing down sticks.
+
+Confidence is derived from the evidence stored against a listing, recomputed
+after each refresh writes its evidence. A refresh that rediscovers nothing new
+therefore leaves a listing's grade alone instead of flattening it to `weak`.
+
+`bun run backfill` repairs listings stored before that was true, and unpublishes
+a hand-audited set of entries that carry the topic but build no Android app. It
+prints what it would change and writes nothing until passed `--apply`:
+
+```sh
+bun run backfill            # report only
+bun run backfill --apply    # write the changes
+```
 
 Each run records its counters in `scrape_runs` — including `request_count`
 versus `not_modified_count`, which is how you tell the conditional requests are
