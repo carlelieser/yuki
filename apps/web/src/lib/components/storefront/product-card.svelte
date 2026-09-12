@@ -51,7 +51,7 @@
 					<div class="size-full overflow-hidden rounded-xl border">{@render image()}</div>
 				{:else}
 					<div
-						class="flex size-full items-center justify-center rounded-xl border bg-muted text-muted-foreground"
+						class="flex size-full items-center justify-center rounded-xl bg-muted text-muted-foreground"
 					>
 						<BoxIcon class="size-10" />
 					</div>
@@ -63,7 +63,7 @@
 		</div>
 		<div class="flex items-start gap-3">
 			<div
-				class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted text-muted-foreground"
+				class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted text-muted-foreground"
 			>
 				{#if icon}
 					{@render icon()}
@@ -86,7 +86,7 @@
 	<Card class="group/card h-full overflow-hidden py-0">
 		<a {href} class="flex h-full items-start gap-3 p-3 focus-visible:outline-none">
 			<div
-				class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-muted-foreground"
+				class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground"
 			>
 				{#if icon}
 					{@render icon()}
@@ -125,7 +125,7 @@
 			{#if variant === 'wide'}
 				<CardContent class="flex flex-1 items-start gap-3 p-3">
 					<div
-						class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-muted-foreground"
+						class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground"
 					>
 						{#if icon}
 							{@render icon()}
