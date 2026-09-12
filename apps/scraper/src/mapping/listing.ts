@@ -95,7 +95,24 @@ const GENERIC_HEADINGS = new Set([
 	'contributing',
 	'disclaimer',
 	'notes',
-	'todo'
+	'todo',
+	'简介',
+	'介绍',
+	'说明',
+	'前言',
+	'写在前面',
+	'注意',
+	'安装',
+	'安装方法',
+	'使用方法',
+	'使用说明',
+	'功能',
+	'特性',
+	'下载',
+	'注意事项',
+	'免责声明',
+	'克隆仓库',
+	'进入客户端目录'
 ]);
 
 const VERSION_HEADING = /^v?\d+[\d.\-_]*(\s|$)/i;
@@ -106,6 +123,13 @@ function stripEdgeEmoji(value: string): string {
 	return value
 		.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍\s]+/u, '')
 		.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍\s]+$/u, '')
+		.trim();
+}
+
+function normalizeHeading(value: string): string {
+	return value
+		.toLowerCase()
+		.replace(/[\s!?！？。.:：,，、_~-]+$/u, '')
 		.trim();
 }
 
@@ -124,10 +148,22 @@ function significantWords(value: string): Set<string> {
 
 function initialsOf(value: string): string {
 	return value
-		.split(/\s+/)
+		.split(/[^\p{L}\p{N}]+/u)
+		.filter((word) => word !== '')
 		.map((word) => word[0] ?? '')
 		.join('')
 		.toLowerCase();
+}
+
+function lettersOnly(value: string): string {
+	return fold(value).replace(/[0-9]/g, '');
+}
+
+function isAcronymOf(short: string, long: string): boolean {
+	const folded = fold(short);
+	if (folded.length < 2) return false;
+
+	return folded === initialsOf(long) || folded === lettersOnly(initialsOf(long));
 }
 
 function namesTheRepo(heading: string, name: string): boolean {
@@ -137,7 +173,13 @@ function namesTheRepo(heading: string, name: string): boolean {
 	if (foldedHeading === foldedName) return true;
 	if (foldedName !== '' && foldedHeading.includes(foldedName)) return true;
 	if (foldedHeading !== '' && foldedName.includes(foldedHeading)) return true;
-	if (initialsOf(heading) === foldedName && foldedName !== '') return true;
+
+	const headingLetters = lettersOnly(heading);
+	const nameLetters = lettersOnly(name);
+	if (nameLetters !== '' && headingLetters.includes(nameLetters)) return true;
+	if (headingLetters !== '' && nameLetters.includes(headingLetters)) return true;
+
+	if (isAcronymOf(heading, name) || isAcronymOf(name, heading)) return true;
 
 	const fromName = significantWords(name);
 	if (fromName.size === 0) return true;
@@ -149,7 +191,7 @@ function namesTheRepo(heading: string, name: string): boolean {
 export function titleFromHeading(heading: string, name: string): string | null {
 	const cleaned = stripEdgeEmoji(heading);
 	if (cleaned === '') return null;
-	if (GENERIC_HEADINGS.has(cleaned.toLowerCase().replace(/:$/, ''))) return null;
+	if (GENERIC_HEADINGS.has(normalizeHeading(cleaned))) return null;
 	if (VERSION_HEADING.test(cleaned)) return null;
 	if (cleaned.length > MAX_TITLE_LENGTH) return null;
 
@@ -164,11 +206,22 @@ export function titleFromHeading(heading: string, name: string): string | null {
 	return namesTheRepo(candidate, name) ? candidate : null;
 }
 
-export function buildTitle(name: string, readme: string | null): string {
-	const heading = readme === null ? null : extractReadmeHeading(readme);
-	const title = heading === null ? null : titleFromHeading(heading, name);
+const REVERSE_DOMAIN_NAME = /^[a-z0-9]+(\.[a-z0-9_]+){2,}$/i;
 
-	return title ?? humanizeRepoName(name);
+export function resolveTitle(heading: string | null, name: string): string {
+	const title = heading === null ? null : titleFromHeading(heading, name);
+	if (title !== null) return title;
+
+	const cleaned = heading === null ? '' : stripEdgeEmoji(heading);
+	if (cleaned !== '' && REVERSE_DOMAIN_NAME.test(name) && cleaned.length <= MAX_TITLE_LENGTH) {
+		return cleaned;
+	}
+
+	return humanizeRepoName(name);
+}
+
+export function buildTitle(name: string, readme: string | null): string {
+	return resolveTitle(readme === null ? null : extractReadmeHeading(readme), name);
 }
 
 export function mapRepository(

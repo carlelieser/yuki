@@ -30,18 +30,21 @@ export async function lastSuccessfulRunAt(db: Database): Promise<Date | null> {
 	return row?.finishedAt ?? null;
 }
 
+export type RunOutcome = 'succeeded' | 'failed';
+
 export async function finishRun(
 	db: Database,
 	runId: string,
 	totals: RunTotals,
-	error: string | null
+	notes: string | null,
+	outcome: RunOutcome = 'succeeded'
 ): Promise<void> {
 	await db
 		.update(schema.scrapeRuns)
 		.set({
-			status: error === null ? 'succeeded' : 'failed',
+			status: outcome,
 			...totals,
-			error,
+			error: notes,
 			finishedAt: new Date()
 		})
 		.where(eq(schema.scrapeRuns.id, runId));
