@@ -69,11 +69,106 @@ export function extractReadmeHeading(markdown: string): string | null {
 	return null;
 }
 
+const GENERIC_HEADINGS = new Set([
+	'about',
+	'overview',
+	'introduction',
+	'intro',
+	'description',
+	'features',
+	'installation',
+	'install',
+	'usage',
+	'getting started',
+	'readme',
+	'documentation',
+	'docs',
+	'license',
+	'changelog',
+	'download',
+	'downloads',
+	'screenshots',
+	'requirements',
+	'setup',
+	'build',
+	'credits',
+	'contributing',
+	'disclaimer',
+	'notes',
+	'todo'
+]);
+
+const VERSION_HEADING = /^v?\d+[\d.\-_]*(\s|$)/i;
+const TAGLINE_SEPARATOR = /\s+[-–—·:|]\s+/;
+const MAX_TITLE_WORDS = 5;
+
+function stripEdgeEmoji(value: string): string {
+	return value
+		.replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍\s]+/u, '')
+		.replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍\s]+$/u, '')
+		.trim();
+}
+
+function fold(value: string): string {
+	return value
+		.normalize('NFKD')
+		.replace(/\p{Diacritic}/gu, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]/g, '');
+}
+
+function significantWords(value: string): Set<string> {
+	const spaced = value.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+	return new Set(spaced.split(/[^a-z0-9]+/).filter((word) => word.length > 2));
+}
+
+function initialsOf(value: string): string {
+	return value
+		.split(/\s+/)
+		.map((word) => word[0] ?? '')
+		.join('')
+		.toLowerCase();
+}
+
+function namesTheRepo(heading: string, name: string): boolean {
+	const foldedHeading = fold(heading);
+	const foldedName = fold(name);
+
+	if (foldedHeading === foldedName) return true;
+	if (foldedName !== '' && foldedHeading.includes(foldedName)) return true;
+	if (foldedHeading !== '' && foldedName.includes(foldedHeading)) return true;
+	if (initialsOf(heading) === foldedName && foldedName !== '') return true;
+
+	const fromName = significantWords(name);
+	if (fromName.size === 0) return true;
+
+	const fromHeading = significantWords(heading);
+	return [...fromName].some((word) => fromHeading.has(word));
+}
+
+export function titleFromHeading(heading: string, name: string): string | null {
+	const cleaned = stripEdgeEmoji(heading);
+	if (cleaned === '') return null;
+	if (GENERIC_HEADINGS.has(cleaned.toLowerCase().replace(/:$/, ''))) return null;
+	if (VERSION_HEADING.test(cleaned)) return null;
+	if (cleaned.length > MAX_TITLE_LENGTH) return null;
+
+	if (cleaned.split(/\s+/).length <= MAX_TITLE_WORDS) {
+		return namesTheRepo(cleaned, name) ? cleaned : null;
+	}
+
+	const [lead] = cleaned.split(TAGLINE_SEPARATOR);
+	const candidate = stripEdgeEmoji(lead ?? '');
+	if (candidate === '' || candidate.split(/\s+/).length > MAX_TITLE_WORDS) return null;
+
+	return namesTheRepo(candidate, name) ? candidate : null;
+}
+
 export function buildTitle(name: string, readme: string | null): string {
 	const heading = readme === null ? null : extractReadmeHeading(readme);
-	if (heading !== null && heading.length <= MAX_TITLE_LENGTH) return heading;
+	const title = heading === null ? null : titleFromHeading(heading, name);
 
-	return humanizeRepoName(name);
+	return title ?? humanizeRepoName(name);
 }
 
 export function mapRepository(

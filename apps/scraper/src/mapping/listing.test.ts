@@ -76,6 +76,42 @@ describe('buildTitle', () => {
 	it('humanizes the repo name when there is no readme', () => {
 		expect(buildTitle('aurora-store', null)).toBe('Aurora Store');
 	});
+
+	it('falls back when the heading is a readme section rather than a name', () => {
+		expect(buildTitle('Tweaker', '# About')).toBe('Tweaker');
+		expect(buildTitle('gama', '# Overview')).toBe('Gama');
+	});
+
+	it('falls back when the heading is a release version', () => {
+		expect(buildTitle('AutoJs6', '# v6.7.0')).toBe('Auto Js6');
+	});
+
+	it('falls back when the heading describes the project without naming it', () => {
+		expect(buildTitle('ShizuWall', '# Enable firewall framework')).toBe('Shizu Wall');
+		expect(buildTitle('opendroid', '# Clone the repository')).toBe('Opendroid');
+	});
+
+	it('keeps the name and drops the tagline after it', () => {
+		expect(buildTitle('Florid', '# Florid — A Modern F-Droid Client for Android')).toBe('Florid');
+		expect(buildTitle('wadb', '# WADB - A simple switch for wireless ADB')).toBe('WADB');
+	});
+
+	it('strips decorative emoji from the edges', () => {
+		expect(buildTitle('morphe-manager', '# 💊 Morphe')).toBe('Morphe');
+		expect(buildTitle('Jarngreipr', '# Járngreipr 🧤')).toBe('Járngreipr');
+	});
+
+	it('keeps an accented spelling of the repo name', () => {
+		expect(buildTitle('yokai', '# Yōkai')).toBe('Yōkai');
+	});
+
+	it('keeps an expansion whose initials spell the repo name', () => {
+		expect(buildTitle('SAI', '# Split APKs Installer')).toBe('Split APKs Installer');
+	});
+
+	it('keeps a heading that the repo name merely qualifies', () => {
+		expect(buildTitle('botdrop-android', '# BotDrop')).toBe('BotDrop');
+	});
 });
 
 describe('mapRepository', () => {
