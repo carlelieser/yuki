@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,12 +21,11 @@ import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
+import java.time.Instant
 
 internal const val PRERELEASE_LABEL = "Prerelease"
 internal const val NO_ASSET_LABEL = "No asset"
 internal const val VERSION_ICON_DESCRIPTION = "Release"
-
-private val VERSION_INSTALL_WIDTH = YukiSize.MinimumTouchTarget * 2.5f
 
 @Composable
 private fun PrereleaseBadge() {
@@ -51,19 +50,41 @@ private fun NoAssetBadge() {
 }
 
 @Composable
+private fun TagBadge(tag: String, modifier: Modifier = Modifier) {
+    YukiBadge(
+        content = BadgeContent(
+            label = tag,
+            icon = YukiIcons.Info,
+            description = tag,
+        ),
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun PublishedBadge(publishedAt: Instant?) {
+    val label = formatPublished(publishedAt)
+
+    YukiBadge(
+        content = BadgeContent(
+            label = label,
+            icon = YukiIcons.Event,
+            description = label,
+        ),
+    )
+}
+
+@Composable
 private fun VersionMetadata(version: ListingVersion) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "${version.tag} · ${formatPublished(version.publishedAt)}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+        TagBadge(
+            tag = version.tag,
             modifier = Modifier.weight(weight = 1f, fill = false),
         )
+        PublishedBadge(publishedAt = version.publishedAt)
         if (version.isPrerelease) PrereleaseBadge()
     }
 }
@@ -98,8 +119,9 @@ private fun VersionInstallControl(
     InstallButton(
         state = installState.state,
         onAction = onAction,
-        modifier = Modifier.width(VERSION_INSTALL_WIDTH),
+        modifier = Modifier.wrapContentWidth(),
         isEnabled = installState.isEnabled,
+        isGhost = true,
     )
 }
 
