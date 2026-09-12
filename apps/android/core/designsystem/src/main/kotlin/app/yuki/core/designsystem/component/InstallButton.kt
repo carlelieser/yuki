@@ -116,8 +116,18 @@ private fun InstallControl(
     state: InstallState,
     onAction: InstallActionHandler,
     isEnabled: Boolean,
+    isGhost: Boolean,
 ) {
     val action = actionFor(state)
+
+    if (isGhost) {
+        YukiTextButton(
+            label = labelFor(state),
+            onClick = { onAction.onAction(action) },
+            isEnabled = isEnabled,
+        )
+        return
+    }
 
     if (isFilled(state)) {
         YukiButton(
@@ -139,12 +149,12 @@ private fun InstallControl(
 fun InstallButton(
     state: InstallState,
     onAction: InstallActionHandler,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxWidth(),
     isEnabled: Boolean = true,
+    isGhost: Boolean = false,
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
             .semantics { contentDescription = describe(state) },
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
@@ -153,6 +163,7 @@ fun InstallButton(
             state = state,
             onAction = onAction,
             isEnabled = isEnabled && state !is InstallState.PendingUserAction,
+            isGhost = isGhost,
         )
 
         if (state is InstallState.Downloading) DownloadProgress(state.size)
