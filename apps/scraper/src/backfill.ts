@@ -1,6 +1,7 @@
 import { createDatabase, schema } from '@yuki/db';
 import { eq, inArray } from 'drizzle-orm';
 import { isSelfDeclaredOnly, scoreConfidence } from './detection/evidence.ts';
+import { resolveTitle } from './mapping/listing.ts';
 import type { ListingConfidence } from '@yuki/db/schema';
 
 const AUDITED_NON_APPS = [
@@ -30,12 +31,21 @@ function key(listing: { owner: string; name: string }): string {
 }
 
 const listings = await db.query.listings.findMany({
-	columns: { id: true, owner: true, name: true, confidence: true, isPublished: true, stars: true },
+	columns: {
+		id: true,
+		owner: true,
+		name: true,
+		title: true,
+		confidence: true,
+		isPublished: true,
+		stars: true
+	},
 	with: { evidence: { columns: { kind: true } } }
 });
 
 const regraded = new Map<ListingConfidence, string[]>();
 const unpublish: { id: string; label: string; stars: number }[] = [];
+const retitled: { id: string; from: string; to: string; stars: number }[] = [];
 
 for (const listing of listings) {
 	const evidence = listing.evidence.map((entry) => ({ kind: entry.kind, detail: null }));
@@ -49,6 +59,11 @@ for (const listing of listings) {
 
 	if (listing.isPublished && isSelfDeclaredOnly(evidence) && nonApps.has(key(listing))) {
 		unpublish.push({ id: listing.id, label: key(listing), stars: listing.stars });
+	}
+
+	const title = resolveTitle(listing.title, listing.name);
+	if (title !== listing.title) {
+		retitled.push({ id: listing.id, from: listing.title, to: title, stars: listing.stars });
 	}
 }
 
@@ -69,6 +84,11 @@ for (const entry of [...unpublish].sort((left, right) => right.stars - left.star
 	console.log(`    ${entry.stars}* ${entry.label}`);
 }
 
+console.log(`  retitle: ${retitled.length}`);
+for (const entry of [...retitled].sort((left, right) => right.stars - left.stars).slice(0, 20)) {
+	console.log(`    ${entry.stars}* ${JSON.stringify(entry.from)} -> ${JSON.stringify(entry.to)}`);
+}
+
 if (!apply) {
 	console.log('\nDry run. Re-run with --apply to write these changes.');
 	process.exit(0);
@@ -83,6 +103,10 @@ for (const entry of unpublish) {
 		.update(schema.listings)
 		.set({ isPublished: false })
 		.where(eq(schema.listings.id, entry.id));
+}
+
+for (const entry of retitled) {
+	await db.update(schema.listings).set({ title: entry.to }).where(eq(schema.listings.id, entry.id));
 }
 
 console.log('\nApplied.');

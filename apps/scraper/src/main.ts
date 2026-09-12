@@ -75,7 +75,13 @@ try {
 	);
 
 	const { warnings, ...totals } = summary;
-	await finishRun(db, runId, totals, warnings.length === 0 ? null : warnings.join('\n'));
+	await finishRun(
+		db,
+		runId,
+		totals,
+		warnings.length === 0 ? null : warnings.join('\n'),
+		'succeeded'
+	);
 
 	console.log(
 		`Run ${runId}: discovered ${totals.discoveredCount}, updated ${totals.updatedCount}, ` +
@@ -99,7 +105,8 @@ try {
 			requestCount: client.stats.requestCount,
 			notModifiedCount: client.stats.notModifiedCount
 		},
-		reason
+		reason,
+		'failed'
 	);
 
 	console.error(`Run ${runId} failed: ${reason}`);

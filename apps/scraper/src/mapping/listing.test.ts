@@ -112,6 +112,19 @@ describe('buildTitle', () => {
 	it('keeps a heading that the repo name merely qualifies', () => {
 		expect(buildTitle('botdrop-android', '# BotDrop')).toBe('BotDrop');
 	});
+
+	it('keeps a name punctuated differently from the repo', () => {
+		expect(buildTitle('sdmaid-se', '# SD Maid 2/SE')).toBe('SD Maid 2/SE');
+	});
+
+	it('rejects a section heading written in chinese', () => {
+		expect(buildTitle('roubao', '# 克隆仓库')).toBe('Roubao');
+		expect(buildTitle('hlbmerge_flutter', '# 注意 ! ! !')).toBe('Hlbmerge Flutter');
+	});
+
+	it('keeps a heading when the repo is named after its package', () => {
+		expect(buildTitle('com.liuml.apptimelimiter', '# Time Stop')).toBe('Time Stop');
+	});
 });
 
 describe('mapRepository', () => {
