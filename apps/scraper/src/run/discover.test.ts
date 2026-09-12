@@ -162,3 +162,54 @@ describe('query construction', () => {
 		}
 	});
 });
+
+describe('a newly added repository query', () => {
+	function repoClient(seen: string[]): GithubClient {
+		return {
+			stats: { requestCount: 0, notModifiedCount: 0 },
+			searchCode: async () => ({ isModified: true, body: { total_count: 0, items: [] } }),
+			searchRepositories: async (q: string) => {
+				seen.push(q);
+				return { isModified: true, body: { total_count: 1, items: [repoItem(1)] } };
+			}
+		} as unknown as GithubClient;
+	}
+
+	function repoItem(id: number) {
+		return { id, name: `repo-${id}`, owner: { login: 'acme' } };
+	}
+
+	const watermark = { since: new Date('2026-09-01T00:00:00.000Z'), until: fullRange.until };
+
+	it('searches from the beginning the first time it runs', async () => {
+		const seen: string[] = [];
+
+		await discover(repoClient(seen), () => false, {
+			maxNewRepos: 50,
+			range: watermark,
+			partitions: { isComplete: async () => false, markComplete: async () => {} }
+		});
+
+		const readmeQueries = seen.filter((q) => q.includes('in:name,description,readme'));
+
+		expect(readmeQueries.length).toBeGreaterThan(0);
+		expect(readmeQueries.every((q) => q.includes('created:2008-01-01'))).toBe(true);
+	});
+
+	it('uses the watermark once it has been searched before', async () => {
+		const seen: string[] = [];
+
+		await discover(repoClient(seen), () => false, {
+			maxNewRepos: 50,
+			range: watermark,
+			partitions: {
+				isComplete: async (partition) => partition.startsWith('repo-query-seen:'),
+				markComplete: async () => {}
+			}
+		});
+
+		const readmeQueries = seen.filter((q) => q.includes('in:name,description,readme'));
+
+		expect(readmeQueries.every((q) => q.includes('created:2026-09-01'))).toBe(true);
+	});
+});

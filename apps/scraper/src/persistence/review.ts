@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { EvidenceKind, ListingConfidence } from '@yuki/db/schema';
 
@@ -21,11 +21,11 @@ export type ReviewCandidate = {
 	versionCount: number;
 };
 
-const CONFIDENCE_ORDER: Record<ListingConfidence, number> = {
-	strong: 0,
-	probable: 1,
-	weak: 2
-};
+const confidenceRank = sql`case ${schema.listings.confidence}
+	when 'strong' then 0
+	when 'probable' then 1
+	else 2
+end`;
 
 export async function listCandidates(
 	db: Database,
@@ -34,7 +34,7 @@ export async function listCandidates(
 ): Promise<ReviewCandidate[]> {
 	const rows = await db.query.listings.findMany({
 		where: eq(schema.listings.isPublished, isPublished),
-		orderBy: [desc(schema.listings.stars)],
+		orderBy: [confidenceRank, desc(schema.listings.stars)],
 		limit,
 		with: {
 			evidence: true,
@@ -43,30 +43,24 @@ export async function listCandidates(
 		}
 	});
 
-	return rows
-		.map((row) => ({
-			slug: row.slug,
-			title: row.title,
-			owner: row.owner,
-			name: row.name,
-			description: row.description,
-			stars: row.stars,
-			confidence: row.confidence,
-			license: row.license,
-			repositoryUrl: row.repositoryUrl,
-			isArchived: row.isArchived,
-			isFork: row.isFork,
-			iconUrl: row.iconUrl,
-			bannerUrl: row.bannerUrl,
-			evidence: row.evidence.map((entry) => ({ kind: entry.kind, detail: entry.detail })),
-			screenshotCount: row.screenshots.length,
-			versionCount: row.versions.length
-		}))
-		.sort(
-			(left, right) =>
-				CONFIDENCE_ORDER[left.confidence] - CONFIDENCE_ORDER[right.confidence] ||
-				right.stars - left.stars
-		);
+	return rows.map((row) => ({
+		slug: row.slug,
+		title: row.title,
+		owner: row.owner,
+		name: row.name,
+		description: row.description,
+		stars: row.stars,
+		confidence: row.confidence,
+		license: row.license,
+		repositoryUrl: row.repositoryUrl,
+		isArchived: row.isArchived,
+		isFork: row.isFork,
+		iconUrl: row.iconUrl,
+		bannerUrl: row.bannerUrl,
+		evidence: row.evidence.map((entry) => ({ kind: entry.kind, detail: entry.detail })),
+		screenshotCount: row.screenshots.length,
+		versionCount: row.versions.length
+	}));
 }
 
 export async function setPublished(

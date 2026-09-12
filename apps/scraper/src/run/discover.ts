@@ -1,5 +1,6 @@
 import {
 	FULL_SIZE_RANGE,
+	GITHUB_EPOCH,
 	MAX_PAGES,
 	RESULTS_PER_PAGE,
 	buildCodeSearchQueries,
@@ -47,6 +48,11 @@ export type DiscoveryOptions = {
 };
 
 type CodeQuery = { q: string; evidence: DetectedEvidence['kind']; detail: string };
+type RepoQuery = CodeQuery;
+
+function coverageKey(query: RepoQuery): string {
+	return `repo-query-seen:${query.q}`;
+}
 
 const MAX_SPLIT_DEPTH = 12;
 
@@ -88,7 +94,8 @@ export async function discover(
 
 	for (const query of buildRepoSearchQueries()) {
 		if (found.size >= options.maxNewRepos) break;
-		await walkRepositories(query, options.range);
+		const covered = await walkRepositories(query, await rangeFor(query));
+		if (covered) await options.partitions?.markComplete(coverageKey(query));
 	}
 
 	return { repos: [...found.values()].slice(0, options.maxNewRepos), warnings };
@@ -147,24 +154,34 @@ export async function discover(
 		await options.partitions?.markComplete(key);
 	}
 
+	async function rangeFor(query: RepoQuery): Promise<DateRange> {
+		if (options.partitions === undefined) return options.range;
+
+		const everSearched = await options.partitions.isComplete(coverageKey(query));
+		if (everSearched) return options.range;
+
+		log(`First run of "${query.q}"; searching from the beginning rather than the watermark`);
+		return { since: GITHUB_EPOCH, until: options.range.until };
+	}
+
 	async function walkRepositories(
 		query: { q: string; evidence: DetectedEvidence['kind']; detail: string },
 		range: DateRange
-	): Promise<void> {
-		if (found.size >= options.maxNewRepos) return;
+	): Promise<boolean> {
+		if (found.size >= options.maxNewRepos) return false;
 
 		const key = `repo:${query.q}:${range.since.toISOString()}..${range.until.toISOString()}`;
-		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return;
+		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return true;
 
 		const scoped = withCreatedRange(query.q, range);
 		const first = await client.searchRepositories(scoped, 1, RESULTS_PER_PAGE);
-		if (!first.isModified) return;
+		if (!first.isModified) return false;
 
 		const totalCount = first.body.total_count;
 
 		if (totalCount === 0) {
 			warnings.push(`Query "${scoped}" matched nothing; not recording it as searched`);
-			return;
+			return false;
 		}
 
 		if (isSliceTruncated(totalCount)) {
@@ -175,9 +192,9 @@ export async function discover(
 			} else {
 				const [left, right] = splitRange(range);
 				log(`Splitting "${query.q}" at ${totalCount} results`);
-				await walkRepositories(query, left);
-				await walkRepositories(query, right);
-				return;
+				const leftCovered = await walkRepositories(query, left);
+				const rightCovered = await walkRepositories(query, right);
+				return leftCovered && rightCovered;
 			}
 		}
 
@@ -185,7 +202,7 @@ export async function discover(
 		let lastPageSize = first.body.items.length;
 
 		for (let page = 2; page <= MAX_PAGES && lastPageSize === RESULTS_PER_PAGE; page += 1) {
-			if (found.size >= options.maxNewRepos) return;
+			if (found.size >= options.maxNewRepos) return false;
 
 			const next = await client.searchRepositories(scoped, page, RESULTS_PER_PAGE);
 			if (!next.isModified) break;
@@ -195,6 +212,7 @@ export async function discover(
 		}
 
 		await options.partitions?.markComplete(key);
+		return true;
 	}
 
 	function absorbCode(
