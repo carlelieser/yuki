@@ -15,7 +15,6 @@ import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 
 const val LISTING_LOADING_TAG = "listingLoading"
@@ -33,10 +32,10 @@ fun ListingRoute(
 ) {
     val viewModel: ListingViewModel = hiltViewModel(key = slug)
     val listing by viewModel.listing.collectAsStateWithLifecycle()
-    val installState by viewModel.installState.collectAsStateWithLifecycle()
+    val installStatus by viewModel.installStatus.collectAsStateWithLifecycle()
 
     ListingScreen(
-        state = ListingScreenState(listing = listing, installState = installState),
+        state = ListingScreenState(listing = listing, installStatus = installStatus),
         callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
         onBackClick = navigation.onBackClick,
         modifier = modifier,
@@ -55,6 +54,7 @@ private fun rememberListingCallbacks(
             onInstallAction = InstallActionHandler(viewModel::onInstallAction),
             onOpenLink = opener,
             onScreenshotSelected = onScreenshotSelected,
+            onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
         ),
         onRetry = viewModel::refresh,
     )
@@ -67,7 +67,7 @@ data class ListingScreenCallbacks(
 
 data class ListingScreenState(
     val listing: UiState<ListingUiModel>,
-    val installState: InstallState,
+    val installStatus: ListingInstallStatus,
 )
 
 @Composable
@@ -99,7 +99,7 @@ internal fun ListingScreen(
                 UiState.Loading -> ListingLoading()
                 is UiState.Success -> ListingDetailBody(
                     model = listing.data,
-                    installState = state.installState,
+                    status = state.installStatus,
                     callbacks = callbacks.callbacks,
                 )
                 is UiState.Failure -> FailureState(

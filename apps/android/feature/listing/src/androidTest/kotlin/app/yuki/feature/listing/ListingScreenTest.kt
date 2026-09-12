@@ -13,11 +13,17 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performScrollToNode
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.ListingVersion
+import app.yuki.core.model.Screenshot
+import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -29,12 +35,12 @@ class ListingScreenTest {
 
     private fun setScreen(
         listing: UiState<ListingUiModel>,
-        installState: InstallState = InstallState.NotInstalled,
+        status: ListingInstallStatus = idleStatus(),
         callbacks: ListingScreenCallbacks = noopCallbacks(),
     ) {
         composeRule.setContent {
             ListingScreen(
-                state = ListingScreenState(listing = listing, installState = installState),
+                state = ListingScreenState(listing = listing, installStatus = status),
                 callbacks = callbacks,
                 onBackClick = {},
             )
@@ -104,8 +110,7 @@ class ListingScreenTest {
     fun showsInstallButtonWhenAVersionIsInstallable() {
         setScreen(UiState.Success(detail().toUiModel()))
 
-        composeRule.scrollToText("Install")
-        composeRule.onNodeWithText("Install").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Install").onFirst().assertIsDisplayed()
     }
 
     @Test
@@ -115,6 +120,86 @@ class ListingScreenTest {
         composeRule.scrollToText(NO_INSTALLABLE_VERSION_TITLE)
         composeRule.onNode(hasTestTag(NO_INSTALLABLE_VERSION_TAG)).assertIsDisplayed()
         composeRule.onAllNodesWithText("Install").assertCountEquals(0)
+    }
+
+    @Test
+    fun showsTheAppTitleOnlyOnceOnTheDetailScreen() {
+        setScreen(UiState.Success(detail().toUiModel()))
+
+        composeRule.onAllNodesWithText("Aurora").assertCountEquals(1)
+    }
+
+    @Test
+    fun reportsTheTappedScreenshotIndex() {
+        val selected = mutableListOf<Int>()
+        val screenshots = listOf(
+            Screenshot("https://cdn.test/one.png", "Home"),
+            Screenshot("https://cdn.test/two.png", "Settings"),
+        )
+        setScreen(
+            listing = UiState.Success(detail(screenshots = screenshots).toUiModel()),
+            callbacks = withScreenshotHandler { index -> selected.add(index) },
+        )
+
+        composeRule.scrollToText("Screenshots")
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+
+        assertEquals(listOf(1), selected)
+    }
+
+    @Test
+    fun installsTheExactVersionWhoseRowWasTapped() {
+        val requested = mutableListOf<String>()
+        val versions = listOf(version("v2.0.0"), version("v1.0.0"))
+        setScreen(
+            listing = UiState.Success(detail(versions = versions).toUiModel()),
+            callbacks = withVersionInstallHandler { _, version -> requested.add(version.tag) },
+        )
+
+        composeRule.scrollToText("Aurora v1.0.0")
+        composeRule.onAllNodesWithText("Install").onLast().performClick()
+
+        assertEquals(listOf("v1.0.0"), requested)
+    }
+
+    @Test
+    fun offersNoInstallButtonForAVersionWithoutAnAsset() {
+        val versions = listOf(version("v2.0.0"), version("v1.0.0", downloadUrl = null))
+        setScreen(UiState.Success(detail(versions = versions).toUiModel()))
+
+        composeRule.scrollToText(NO_ASSET_LABEL)
+        composeRule.onNodeWithContentDescription(NO_ASSET_LABEL).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Install").assertCountEquals(1)
+    }
+
+    @Test
+    fun installsAPrereleaseFromItsOwnRow() {
+        val requested = mutableListOf<String>()
+        val versions = listOf(version("v2.0.0"), version("v1.5.0-rc", isPrerelease = true))
+        setScreen(
+            listing = UiState.Success(detail(versions = versions).toUiModel()),
+            callbacks = withVersionInstallHandler { _, version -> requested.add(version.tag) },
+        )
+
+        composeRule.scrollToText("Aurora v1.5.0-rc")
+        composeRule.onAllNodesWithText("Install").onLast().performClick()
+
+        assertEquals(listOf("v1.5.0-rc"), requested)
+    }
+
+    @Test
+    fun disablesOtherVersionRowsWhileOneVersionInstalls() {
+        val versions = listOf(version("v2.0.0"), version("v1.0.0"))
+        setScreen(
+            listing = UiState.Success(detail(versions = versions).toUiModel()),
+            status = ListingInstallStatus(
+                state = InstallState.Downloading(HALF_DOWNLOADED),
+                versionTag = "v2.0.0",
+            ),
+        )
+
+        composeRule.scrollToText("Aurora v1.0.0")
+        composeRule.onAllNodesWithText("Install").onLast().assertIsNotEnabled()
     }
 
     @Test
@@ -168,6 +253,9 @@ class ListingScreenTest {
     }
 }
 
+private fun idleStatus(): ListingInstallStatus =
+    ListingInstallStatus(state = InstallState.NotInstalled, versionTag = null)
+
 private fun ComposeContentTestRule.scrollToText(text: String) {
     onNode(hasTestTag(LISTING_DETAIL_TAG)).performScrollToNode(hasText(text))
 }
@@ -177,6 +265,7 @@ private fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
         onInstallAction = InstallActionHandler { },
         onOpenLink = LinkOpener { },
         onScreenshotSelected = { },
+        onVersionInstallAction = VersionInstallHandler { _, _ -> },
     ),
     onRetry = { },
 )
@@ -194,3 +283,21 @@ private fun withLinkOpener(onOpen: (String) -> Unit): ListingScreenCallbacks {
     val base = noopCallbacks()
     return base.copy(callbacks = base.callbacks.copy(onOpenLink = LinkOpener(onOpen)))
 }
+
+private fun withScreenshotHandler(onSelect: (Int) -> Unit): ListingScreenCallbacks {
+    val base = noopCallbacks()
+    return base.copy(callbacks = base.callbacks.copy(onScreenshotSelected = onSelect))
+}
+
+private fun withVersionInstallHandler(
+    onAction: (app.yuki.core.designsystem.component.InstallAction, ListingVersion) -> Unit,
+): ListingScreenCallbacks {
+    val base = noopCallbacks()
+    return base.copy(
+        callbacks = base.callbacks.copy(
+            onVersionInstallAction = VersionInstallHandler(onAction),
+        ),
+    )
+}
+
+private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)

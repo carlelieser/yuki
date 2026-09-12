@@ -17,24 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
-import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.StatusCard
 import app.yuki.core.designsystem.component.StatusContent
 import app.yuki.core.designsystem.component.StatusTone
-import app.yuki.core.designsystem.component.YukiBadge
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.model.ListingVersion
 
 const val ARCHIVED_WARNING_TAG = "listingArchivedWarning"
 const val NO_INSTALLABLE_VERSION_TAG = "listingNoInstallableVersion"
 const val ARCHIVED_TITLE = "This project is archived"
 const val NO_INSTALLABLE_VERSION_TITLE = "No installable release"
-
-internal const val PRERELEASE_LABEL = "Prerelease"
-internal const val NO_ASSET_LABEL = "No asset"
-internal const val VERSION_ICON_DESCRIPTION = "Release"
 
 private val archivedContent = StatusContent(
     title = ARCHIVED_TITLE,
@@ -107,73 +100,11 @@ internal fun ListingLinkItem(row: ListingLinkRow, onOpen: () -> Unit) {
 }
 
 @Composable
-private fun RowLeadingIcon(icon: ImageVector, description: String) {
+internal fun RowLeadingIcon(icon: ImageVector, description: String) {
     Icon(
         imageVector = icon,
         contentDescription = description,
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.size(YukiSize.IconSmall),
     )
-}
-
-@Composable
-private fun VersionTone(version: ListingVersion) {
-    if (version.isPrerelease) {
-        YukiBadge(
-            content = BadgeContent(
-                label = PRERELEASE_LABEL,
-                icon = YukiIcons.History,
-                description = PRERELEASE_LABEL,
-            ),
-        )
-        return
-    }
-
-    if (version.downloadUrl != null) return
-
-    YukiBadge(
-        content = BadgeContent(
-            label = NO_ASSET_LABEL,
-            icon = YukiIcons.Error,
-            description = NO_ASSET_LABEL,
-        ),
-    )
-}
-
-@Composable
-private fun VersionText(version: ListingVersion, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
-    ) {
-        Text(
-            text = version.name ?: version.tag,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = "${version.tag} · ${formatPublished(version.publishedAt)}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-internal fun ListingVersionItem(version: ListingVersion, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)
-            .padding(horizontal = YukiSpacing.Large, vertical = YukiSpacing.Medium),
-        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RowLeadingIcon(icon = YukiIcons.DeployedCode, description = VERSION_ICON_DESCRIPTION)
-        VersionText(version = version, modifier = Modifier.weight(1f))
-        VersionTone(version = version)
-    }
 }

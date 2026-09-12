@@ -6,21 +6,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 
 internal class RecordingInstallGateway : ListingInstallGateway {
-    private val observed = MutableStateFlow<InstallState?>(null)
+    private val observed = MutableStateFlow<ListingInstallStatus?>(null)
 
     val requests: MutableList<ListingInstallRequest> = mutableListOf()
     val cancelled: MutableList<Long> = mutableListOf()
     val opened: MutableList<Long> = mutableListOf()
 
-    fun emitObserved(next: InstallState) {
-        observed.value = next
+    fun emitObserved(next: InstallState, versionTag: String? = null) {
+        observed.value = ListingInstallStatus(state = next, versionTag = versionTag)
     }
 
     override suspend fun install(request: ListingInstallRequest) {
         requests.add(request)
     }
 
-    override fun observe(githubRepoId: Long): Flow<InstallState> = observed.filterNotNull()
+    override fun observe(githubRepoId: Long): Flow<ListingInstallStatus> =
+        observed.filterNotNull()
 
     override suspend fun cancel(githubRepoId: Long) {
         cancelled.add(githubRepoId)

@@ -15,10 +15,15 @@ data class ListingInstallRequest(
         }
 }
 
+data class ListingInstallStatus(
+    val state: InstallState,
+    val versionTag: String?,
+)
+
 interface ListingInstallGateway {
     suspend fun install(request: ListingInstallRequest)
 
-    fun observe(githubRepoId: Long): Flow<InstallState>
+    fun observe(githubRepoId: Long): Flow<ListingInstallStatus>
 
     suspend fun cancel(githubRepoId: Long)
 

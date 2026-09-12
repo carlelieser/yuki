@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -161,7 +162,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.installState.test {
+        viewModel.installStatus.map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
 
             viewModel.onInstallAction(InstallAction.Install)
@@ -182,7 +183,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.installState.test {
+        viewModel.installStatus.map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
             viewModel.onInstallAction(InstallAction.Install)
             dispatcher.scheduler.advanceUntilIdle()
@@ -196,11 +197,73 @@ class ListingViewModelTest {
     }
 
     @Test
+    fun `installs the exact version the row asked for`() = runTest {
+        val versions = listOf(version("v3.0.0"), version("v1.0.0"))
+        val viewModel = viewModelWith(Result.success(detail(versions = versions)))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onVersionInstallAction(InstallAction.Install, version("v1.0.0"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("v1.0.0"), installGateway.requests.map { it.version.tag })
+    }
+
+    @Test
+    fun `installs a prerelease when its own row asks for it`() = runTest {
+        val prerelease = version("v4.0.0-rc", isPrerelease = true)
+        val versions = listOf(prerelease, version("v3.0.0"))
+        val viewModel = viewModelWith(Result.success(detail(versions = versions)))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onVersionInstallAction(InstallAction.Install, prerelease)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("v4.0.0-rc"), installGateway.requests.map { it.version.tag })
+    }
+
+    @Test
+    fun `ignores a row install for a version without an asset`() = runTest {
+        val missing = version("v2.0.0", downloadUrl = null)
+        val viewModel = viewModelWith(Result.success(detail(versions = listOf(missing))))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onVersionInstallAction(InstallAction.Install, missing)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(emptyList<ListingInstallRequest>(), installGateway.requests)
+    }
+
+    @Test
+    fun `cancels the listing install when a version row cancels`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onVersionInstallAction(InstallAction.Cancel, version("v2.0.0"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf(42L), installGateway.cancelled)
+    }
+
+    @Test
+    fun `reports which version the gateway is installing`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.installStatus.test {
+            assertEquals(null, awaitItem().versionTag)
+
+            installGateway.emitObserved(InstallState.Downloading(HALF_DOWNLOADED), "v2.0.0")
+            dispatcher.scheduler.advanceUntilIdle()
+            assertEquals("v2.0.0", awaitItem().versionTag)
+        }
+    }
+
+    @Test
     fun `install state follows the gateway once the listing loads`() = runTest {
         installGateway.emitObserved(InstallState.Installed("v2.0.0"))
         val viewModel = viewModelWith(Result.success(detail()))
 
-        viewModel.installState.test {
+        viewModel.installStatus.map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
             assertEquals(InstallState.Installed("v2.0.0"), awaitItem())
         }
