@@ -81,7 +81,7 @@ internal fun ListingScreen(
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = state.listing.titleOrEmpty(),
+        title = "",
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
@@ -105,8 +105,5 @@ internal fun ListingScreen(
         }
     }
 }
-
-private fun UiState<ListingUiModel>.titleOrEmpty(): String =
-    (this as? UiState.Success)?.data?.detail?.title.orEmpty()
 
 internal const val LISTING_MISSING_MESSAGE = "This app is no longer available."
