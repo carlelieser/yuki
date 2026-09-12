@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { composeAdaptiveSvg, vectorToSvg } from './vector-icon.ts';
 
-const identity = (raw: string | null) => raw;
-
 const GRADIENT_PATH = `<vector xmlns:android="http://schemas.android.com/apk/res/android"
 	android:viewportWidth="512" android:viewportHeight="512">
 	<path android:pathData="M0,0h10v10h-10z">

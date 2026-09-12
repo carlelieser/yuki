@@ -30,6 +30,7 @@ export default ts.config(
 			'**/.svelte-kit/',
 			'**/build/',
 			'**/dist/',
+			'.claude/',
 			'packages/db/drizzle/'
 		]
 	}
