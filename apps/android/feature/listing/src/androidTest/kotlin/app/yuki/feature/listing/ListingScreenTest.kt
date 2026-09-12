@@ -176,6 +176,7 @@ private fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
     callbacks = ListingCallbacks(
         onInstallAction = InstallActionHandler { },
         onOpenLink = LinkOpener { },
+        onScreenshotSelected = { },
     ),
     onRetry = { },
 )

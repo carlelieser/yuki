@@ -22,6 +22,7 @@ const val LISTING_DETAIL_TAG = "listingDetail"
 data class ListingCallbacks(
     val onInstallAction: InstallActionHandler,
     val onOpenLink: LinkOpener,
+    val onScreenshotSelected: (Int) -> Unit,
 )
 
 private fun LazyListScope.bannerSection(model: ListingUiModel) {
@@ -65,12 +66,15 @@ private fun LazyListScope.descriptionSection(model: ListingUiModel) {
     item { ListingDescription(description = description) }
 }
 
-private fun LazyListScope.screenshotSection(model: ListingUiModel) {
+private fun LazyListScope.screenshotSection(
+    model: ListingUiModel,
+    onScreenshotSelected: (Int) -> Unit,
+) {
     val screenshots = model.detail.screenshots
     if (screenshots.isEmpty()) return
 
     item { SectionHeader(title = "Screenshots") }
-    item { ScreenshotCarousel(screenshots = screenshots) }
+    item { ScreenshotCarousel(screenshots = screenshots, onSelect = onScreenshotSelected) }
 }
 
 private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpener) {
@@ -108,7 +112,7 @@ internal fun ListingDetailBody(
         installSection(model, installState, callbacks.onInstallAction)
         warningSection(model)
         descriptionSection(model)
-        screenshotSection(model)
+        screenshotSection(model, callbacks.onScreenshotSelected)
         linkSection(model, callbacks.onOpenLink)
         versionSection(model)
     }

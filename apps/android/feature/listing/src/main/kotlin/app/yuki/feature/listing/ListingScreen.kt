@@ -20,10 +20,15 @@ import app.yuki.core.model.UiState
 
 const val LISTING_LOADING_TAG = "listingLoading"
 
+data class ListingNavigation(
+    val onBackClick: () -> Unit,
+    val onScreenshotSelected: (Int) -> Unit,
+)
+
 @Composable
 fun ListingRoute(
     slug: String,
-    onBackClick: () -> Unit,
+    navigation: ListingNavigation,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ListingViewModel = hiltViewModel(key = slug)
@@ -32,20 +37,24 @@ fun ListingRoute(
 
     ListingScreen(
         state = ListingScreenState(listing = listing, installState = installState),
-        callbacks = rememberListingCallbacks(viewModel),
-        onBackClick = onBackClick,
+        callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
+        onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
 }
 
 @Composable
-private fun rememberListingCallbacks(viewModel: ListingViewModel): ListingScreenCallbacks {
+private fun rememberListingCallbacks(
+    viewModel: ListingViewModel,
+    onScreenshotSelected: (Int) -> Unit,
+): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 
     return ListingScreenCallbacks(
         callbacks = ListingCallbacks(
             onInstallAction = InstallActionHandler(viewModel::onInstallAction),
             onOpenLink = opener,
+            onScreenshotSelected = onScreenshotSelected,
         ),
         onRetry = viewModel::refresh,
     )
