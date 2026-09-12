@@ -16,6 +16,7 @@ import app.yuki.core.designsystem.component.ScreenAction
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.model.ListingCategory
@@ -41,9 +42,14 @@ fun ExploreRoute(
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     ExploreScreen(
         state = state,
+        refresh = ExploreRefresh(
+            isRefreshing = isRefreshing,
+            onPullToRefresh = viewModel::onPullToRefresh,
+        ),
         callbacks = ExploreCallbacks(
             onRetry = viewModel::refresh,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
@@ -62,9 +68,15 @@ data class ExploreCallbacks(
     val onSettingsClick: () -> Unit,
 )
 
+data class ExploreRefresh(
+    val isRefreshing: Boolean,
+    val onPullToRefresh: () -> Unit,
+)
+
 @Composable
 internal fun ExploreScreen(
     state: UiState<ExploreContent>,
+    refresh: ExploreRefresh,
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -78,11 +90,16 @@ internal fun ExploreScreen(
         ),
         modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {
-        ExploreBody(
-            state = state,
-            callbacks = callbacks,
-            contentPadding = contentPadding,
-        )
+        YukiPullToRefresh(
+            isRefreshing = refresh.isRefreshing,
+            onRefresh = refresh.onPullToRefresh,
+        ) {
+            ExploreBody(
+                state = state,
+                callbacks = callbacks,
+                contentPadding = contentPadding,
+            )
+        }
     }
 }
 

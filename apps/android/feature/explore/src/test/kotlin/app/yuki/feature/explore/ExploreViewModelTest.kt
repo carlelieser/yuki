@@ -7,14 +7,18 @@ import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -185,6 +189,113 @@ class ExploreViewModelTest {
             assertTrue(loaded.sections is UiState.Success)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `a pull keeps the loaded content on screen for the whole refresh`() = runTest {
+        repository.featuredResult = Result.success(listOf(listing("alpha")))
+        repository.sectionsResult = Result.success(
+            listOf(section(ListingCategory.Gaming, listOf("one"))),
+        )
+
+        val model = viewModel()
+        model.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitSettledContent()
+
+            val gate = CompletableDeferred<Unit>()
+            repository.featuredGate = gate
+            model.onPullToRefresh()
+            runCurrent()
+
+            expectNoEvents()
+            assertTrue(model.state.value is UiState.Success)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertTrue(model.state.value is UiState.Success)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a pull reports refreshing until both sources settle`() = runTest {
+        repository.featuredResult = Result.success(listOf(listing("alpha")))
+
+        val model = viewModel()
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        repository.featuredGate = gate
+        model.onPullToRefresh()
+        runCurrent()
+
+        assertTrue(model.isRefreshing.value)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertFalse(model.isRefreshing.value)
+    }
+
+    @Test
+    fun `a failed pull keeps the previous content and stops refreshing`() = runTest {
+        repository.featuredResult = Result.success(listOf(listing("alpha")))
+        repository.sectionsResult = Result.success(
+            listOf(section(ListingCategory.Gaming, listOf("one"))),
+        )
+
+        val model = viewModel()
+        model.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitSettledContent()
+
+            repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
+            repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+            model.onPullToRefresh()
+            advanceUntilIdle()
+
+            assertFalse(model.isRefreshing.value)
+            assertTrue(model.state.value is UiState.Success)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `a pull requests featured and sections concurrently`() = runTest {
+        val model = viewModel()
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        repository.featuredGate = gate
+        repository.startedCalls.clear()
+        model.onPullToRefresh()
+        runCurrent()
+
+        assertEquals(listOf(FEATURED_CALL, SECTIONS_CALL), repository.startedCalls)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun `a second pull is ignored while one is already running`() = runTest {
+        val model = viewModel()
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        repository.featuredGate = gate
+        model.onPullToRefresh()
+        runCurrent()
+
+        repository.startedCalls.clear()
+        model.onPullToRefresh()
+        runCurrent()
+
+        assertTrue(repository.startedCalls.isEmpty())
+
+        gate.complete(Unit)
+        advanceUntilIdle()
     }
 
     @Test

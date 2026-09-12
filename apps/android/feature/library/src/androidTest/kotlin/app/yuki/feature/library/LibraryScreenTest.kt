@@ -4,11 +4,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.InstallState
@@ -65,10 +68,15 @@ class LibraryScreenTest {
         state: UiState<LibraryContent>,
         onListingClick: (String) -> Unit = {},
         onExploreClick: () -> Unit = {},
+        onPullToRefresh: () -> Unit = {},
     ) {
         composeRule.setContent {
             LibraryContentScreen(
                 state = state,
+                refresh = LibraryRefresh(
+                    isRefreshing = false,
+                    onPullToRefresh = onPullToRefresh,
+                ),
                 actions = LibraryActions(
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
@@ -76,6 +84,34 @@ class LibraryScreenTest {
                 contentPadding = PaddingValues(),
             )
         }
+    }
+
+    @Test
+    fun pullingDownTheLibraryRequestsARefresh() {
+        var refreshes = 0
+        setContent(
+            UiState.Success(LibraryContent(listOf(item()))),
+            onPullToRefresh = { refreshes += 1 },
+        )
+
+        composeRule.onNodeWithTag(PULL_TO_REFRESH_TAG).performTouchInput { swipeDown() }
+        composeRule.waitForIdle()
+
+        assertEquals(1, refreshes)
+    }
+
+    @Test
+    fun pullingDownTheEmptyLibraryRequestsARefresh() {
+        var refreshes = 0
+        setContent(
+            UiState.Success(LibraryContent(emptyList())),
+            onPullToRefresh = { refreshes += 1 },
+        )
+
+        composeRule.onNodeWithTag(PULL_TO_REFRESH_TAG).performTouchInput { swipeDown() }
+        composeRule.waitForIdle()
+
+        assertEquals(1, refreshes)
     }
 }
 

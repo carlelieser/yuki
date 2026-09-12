@@ -24,11 +24,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import app.yuki.core.designsystem.component.SearchBar
 import app.yuki.core.designsystem.component.SearchBarFocus
 import app.yuki.core.designsystem.component.SearchBarState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -38,6 +40,8 @@ import app.yuki.core.model.UiState
 private const val BROWSE_MODE_LABEL = "browseMode"
 
 const val BROWSE_DIVIDER_TAG = "browseDivider"
+
+const val BROWSE_LIST_TAG = "browseList"
 
 internal data class BrowseCallbacks(
     val onQueryChange: (String) -> Unit,
@@ -170,16 +174,26 @@ private fun BrowseListing(
             HorizontalDivider(modifier = Modifier.testTag(BROWSE_DIVIDER_TAG))
         }
 
-        LazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            modifier = Modifier.fillMaxSize(),
+        YukiPullToRefresh(
+            isRefreshing = listings.isRefreshing,
+            onRefresh = listings::refresh,
         ) {
-            browseRefreshState(listings = listings)
-            browseList(listings = listings, onSelect = callbacks.onListingSelected)
+            LazyColumn(
+                state = listState,
+                contentPadding = contentPadding,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(BROWSE_LIST_TAG),
+            ) {
+                browseRefreshState(listings = listings)
+                browseList(listings = listings, onSelect = callbacks.onListingSelected)
+            }
         }
     }
 }
+
+internal val LazyPagingItems<ListingSummary>.isRefreshing: Boolean
+    get() = loadState.refresh is LoadState.Loading && itemCount > 0
 
 private fun LazyListScope.recentSection(
     content: SearchContent,

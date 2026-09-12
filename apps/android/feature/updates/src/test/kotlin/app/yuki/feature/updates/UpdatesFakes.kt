@@ -14,6 +14,7 @@ import app.yuki.core.model.ListingVersion
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.SearchQuery
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,9 +46,11 @@ internal class FakeInstallStore(private val initial: List<InstalledApp>) : Insta
 }
 
 internal class FakeListingRepository(
-    private val details: Map<String, Result<ListingDetail>>,
+    var details: Map<String, Result<ListingDetail>>,
 ) : ListingRepository {
     val requested: MutableList<String> = mutableListOf()
+
+    var detailGate: CompletableDeferred<Unit>? = null
 
     override suspend fun browse(query: BrowseQuery): Result<ListingPage> =
         Result.failure(IllegalStateException("browse is not used by Updates"))
@@ -63,6 +66,7 @@ internal class FakeListingRepository(
 
     override suspend fun detail(slug: String): Result<ListingDetail> {
         requested += slug
+        detailGate?.await()
         return details[slug] ?: Result.failure(IllegalStateException("No fake detail for $slug"))
     }
 }

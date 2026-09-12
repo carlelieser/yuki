@@ -21,7 +21,7 @@ import app.yuki.core.model.failureReason
 
 private val NothingToBrowse = EmptyContent(
     title = "No apps yet",
-    description = "There is nothing to browse right now. Pull to refresh shortly.",
+    description = "There is nothing to browse right now. Pull down to refresh.",
 )
 
 internal fun LazyListScope.browseList(

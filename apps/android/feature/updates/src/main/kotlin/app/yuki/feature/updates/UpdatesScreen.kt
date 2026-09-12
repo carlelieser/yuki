@@ -14,6 +14,7 @@ import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.model.UiState
@@ -28,9 +29,14 @@ fun UpdatesScreen(
 ) {
     val viewModel: UpdatesViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     UpdatesContentScreen(
         state = state,
+        refresh = UpdatesRefresh(
+            isRefreshing = isRefreshing,
+            onPullToRefresh = viewModel::onPullToRefresh,
+        ),
         actions = UpdatesActions(
             onListingClick = onListingClick,
             onInstallAction = viewModel::onInstallAction,
@@ -41,31 +47,51 @@ fun UpdatesScreen(
     )
 }
 
+data class UpdatesRefresh(
+    val isRefreshing: Boolean,
+    val onPullToRefresh: () -> Unit,
+)
+
 @Composable
 internal fun UpdatesContentScreen(
     state: UiState<UpdatesContent>,
+    refresh: UpdatesRefresh,
     actions: UpdatesActions,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     YukiScreen(title = UPDATES_TITLE, modifier = modifier) {
-        when (state) {
-            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+        YukiPullToRefresh(
+            isRefreshing = refresh.isRefreshing,
+            onRefresh = refresh.onPullToRefresh,
+        ) {
+            UpdatesBody(state = state, actions = actions, contentPadding = contentPadding)
+        }
+    }
+}
 
-            is UiState.Failure -> YukiScreenCenter(contentPadding) {
-                FailureState(
-                    reason = state.reason,
-                    missingMessage = UPDATES_MISSING_MESSAGE,
-                    onRetry = actions.onRetry,
-                )
-            }
+@Composable
+private fun UpdatesBody(
+    state: UiState<UpdatesContent>,
+    actions: UpdatesActions,
+    contentPadding: PaddingValues,
+) {
+    when (state) {
+        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-            is UiState.Success -> UpdatesList(
-                content = state.data,
-                actions = actions,
-                contentPadding = contentPadding,
+        is UiState.Failure -> YukiScreenCenter(contentPadding) {
+            FailureState(
+                reason = state.reason,
+                missingMessage = UPDATES_MISSING_MESSAGE,
+                onRetry = actions.onRetry,
             )
         }
+
+        is UiState.Success -> UpdatesList(
+            content = state.data,
+            actions = actions,
+            contentPadding = contentPadding,
+        )
     }
 }
 
