@@ -33,6 +33,10 @@ internal class YukiNavigator(
         navController.navigate(CategoryRoute(category = category.wireValue))
     }
 
+    fun openScreenshots(slug: String, startIndex: Int) {
+        navController.navigate(ScreenshotRoute(slug = slug, startIndex = startIndex))
+    }
+
     fun navigateUp() {
         navController.navigateUp()
     }

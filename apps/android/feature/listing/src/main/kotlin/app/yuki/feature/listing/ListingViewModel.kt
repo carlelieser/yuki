@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
 import app.yuki.core.network.ListingRepository
@@ -38,12 +39,12 @@ class ListingViewModel @Inject constructor(
     val listing: StateFlow<UiState<ListingUiModel>> = mutableListing.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val installState: StateFlow<InstallState> = mutableListing
-        .flatMapLatest(::installStateFor)
+    val installStatus: StateFlow<ListingInstallStatus> = mutableListing
+        .flatMapLatest(::installStatusFor)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = InstallState.NotInstalled,
+            initialValue = IDLE_STATUS,
         )
 
     init {
@@ -68,18 +69,37 @@ class ListingViewModel @Inject constructor(
         }
     }
 
+    fun onVersionInstallAction(action: InstallAction, version: ListingVersion) {
+        val model = successOrNull() ?: return
+
+        when (action) {
+            InstallAction.Install, InstallAction.Update, InstallAction.Retry ->
+                startInstall(model, version)
+            InstallAction.Cancel -> viewModelScope.launch { installGateway.cancel(model.repoId) }
+            InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
+        }
+    }
+
     private fun startInstall(model: ListingUiModel) {
         val version = model.installableVersion ?: return
+
+        startInstall(model, version)
+    }
+
+    private fun startInstall(model: ListingUiModel, version: ListingVersion) {
+        if (version.downloadUrl == null) return
+
         val request = ListingInstallRequest(detail = model.detail, version = version)
 
         viewModelScope.launch { installGateway.install(request) }
     }
 
-    private fun installStateFor(state: UiState<ListingUiModel>): Flow<InstallState> =
-        when (state) {
-            is UiState.Success -> installGateway.observe(state.data.repoId)
-            else -> flowOf(InstallState.NotInstalled)
-        }
+    private fun installStatusFor(
+        state: UiState<ListingUiModel>,
+    ): Flow<ListingInstallStatus> = when (state) {
+        is UiState.Success -> installGateway.observe(state.data.repoId)
+        else -> flowOf(IDLE_STATUS)
+    }
 
     private fun successOrNull(): ListingUiModel? =
         (mutableListing.value as? UiState.Success)?.data
@@ -88,5 +108,7 @@ class ListingViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
+
+        val IDLE_STATUS = ListingInstallStatus(InstallState.NotInstalled, versionTag = null)
     }
 }

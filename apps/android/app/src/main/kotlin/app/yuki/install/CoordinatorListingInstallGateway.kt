@@ -6,6 +6,7 @@ import app.yuki.core.installer.InstallScheduler
 import app.yuki.core.model.InstallState
 import app.yuki.feature.listing.ListingInstallGateway
 import app.yuki.feature.listing.ListingInstallRequest
+import app.yuki.feature.listing.ListingInstallStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,9 +22,10 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     override suspend fun install(request: ListingInstallRequest) =
         scheduler.start(request.toInstallRequest(installs.baseUrl))
 
-    override fun observe(githubRepoId: Long): Flow<InstallState> =
+    override fun observe(githubRepoId: Long): Flow<ListingInstallStatus> =
         scheduler.observe(githubRepoId).map { progress ->
-            progress?.state ?: installedStateOf(githubRepoId)
+            progress?.let { ListingInstallStatus(it.state, it.versionTag) }
+                ?: ListingInstallStatus(installedStateOf(githubRepoId), versionTag = null)
         }
 
     override suspend fun cancel(githubRepoId: Long) = scheduler.cancel(githubRepoId)

@@ -112,9 +112,12 @@ private fun FailureNote(reason: InstallFailure) {
 }
 
 @Composable
-private fun InstallControl(state: InstallState, onAction: InstallActionHandler) {
+private fun InstallControl(
+    state: InstallState,
+    onAction: InstallActionHandler,
+    isEnabled: Boolean,
+) {
     val action = actionFor(state)
-    val isEnabled = state !is InstallState.PendingUserAction
 
     if (isFilled(state)) {
         YukiButton(
@@ -137,6 +140,7 @@ fun InstallButton(
     state: InstallState,
     onAction: InstallActionHandler,
     modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
 ) {
     Row(
         modifier = modifier
@@ -145,7 +149,11 @@ fun InstallButton(
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InstallControl(state = state, onAction = onAction)
+        InstallControl(
+            state = state,
+            onAction = onAction,
+            isEnabled = isEnabled && state !is InstallState.PendingUserAction,
+        )
 
         if (state is InstallState.Downloading) DownloadProgress(state.size)
         if (state is InstallState.Failed) FailureNote(state.reason)

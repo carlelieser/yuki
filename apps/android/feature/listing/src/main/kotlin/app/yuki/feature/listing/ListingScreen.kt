@@ -15,37 +15,46 @@ import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 
 const val LISTING_LOADING_TAG = "listingLoading"
 
+data class ListingNavigation(
+    val onBackClick: () -> Unit,
+    val onScreenshotSelected: (Int) -> Unit,
+)
+
 @Composable
 fun ListingRoute(
     slug: String,
-    onBackClick: () -> Unit,
+    navigation: ListingNavigation,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ListingViewModel = hiltViewModel(key = slug)
     val listing by viewModel.listing.collectAsStateWithLifecycle()
-    val installState by viewModel.installState.collectAsStateWithLifecycle()
+    val installStatus by viewModel.installStatus.collectAsStateWithLifecycle()
 
     ListingScreen(
-        state = ListingScreenState(listing = listing, installState = installState),
-        callbacks = rememberListingCallbacks(viewModel),
-        onBackClick = onBackClick,
+        state = ListingScreenState(listing = listing, installStatus = installStatus),
+        callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
+        onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
 }
 
 @Composable
-private fun rememberListingCallbacks(viewModel: ListingViewModel): ListingScreenCallbacks {
+private fun rememberListingCallbacks(
+    viewModel: ListingViewModel,
+    onScreenshotSelected: (Int) -> Unit,
+): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 
     return ListingScreenCallbacks(
         callbacks = ListingCallbacks(
             onInstallAction = InstallActionHandler(viewModel::onInstallAction),
             onOpenLink = opener,
+            onScreenshotSelected = onScreenshotSelected,
+            onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
         ),
         onRetry = viewModel::refresh,
     )
@@ -58,7 +67,7 @@ data class ListingScreenCallbacks(
 
 data class ListingScreenState(
     val listing: UiState<ListingUiModel>,
-    val installState: InstallState,
+    val installStatus: ListingInstallStatus,
 )
 
 @Composable
@@ -81,7 +90,7 @@ internal fun ListingScreen(
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = state.listing.titleOrEmpty(),
+        title = "",
         onBackClick = onBackClick,
         modifier = modifier,
     ) {
@@ -90,7 +99,7 @@ internal fun ListingScreen(
                 UiState.Loading -> ListingLoading()
                 is UiState.Success -> ListingDetailBody(
                     model = listing.data,
-                    installState = state.installState,
+                    status = state.installStatus,
                     callbacks = callbacks.callbacks,
                 )
                 is UiState.Failure -> FailureState(
@@ -105,8 +114,5 @@ internal fun ListingScreen(
         }
     }
 }
-
-private fun UiState<ListingUiModel>.titleOrEmpty(): String =
-    (this as? UiState.Success)?.data?.detail?.title.orEmpty()
 
 internal const val LISTING_MISSING_MESSAGE = "This app is no longer available."

@@ -10,19 +10,27 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
 import app.yuki.core.designsystem.component.ScreenshotCarousel
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.ListingVersion
 
 const val LISTING_DETAIL_TAG = "listingDetail"
 
 data class ListingCallbacks(
     val onInstallAction: InstallActionHandler,
     val onOpenLink: LinkOpener,
+    val onScreenshotSelected: (Int) -> Unit,
+    val onVersionInstallAction: VersionInstallHandler,
 )
+
+fun interface VersionInstallHandler {
+    fun onAction(action: InstallAction, version: ListingVersion)
+}
 
 private fun LazyListScope.bannerSection(model: ListingUiModel) {
     val bannerUrl = model.detail.summary.bannerUrl ?: return
@@ -65,12 +73,15 @@ private fun LazyListScope.descriptionSection(model: ListingUiModel) {
     item { ListingDescription(description = description) }
 }
 
-private fun LazyListScope.screenshotSection(model: ListingUiModel) {
+private fun LazyListScope.screenshotSection(
+    model: ListingUiModel,
+    onScreenshotSelected: (Int) -> Unit,
+) {
     val screenshots = model.detail.screenshots
     if (screenshots.isEmpty()) return
 
     item { SectionHeader(title = "Screenshots") }
-    item { ScreenshotCarousel(screenshots = screenshots) }
+    item { ScreenshotCarousel(screenshots = screenshots, onSelect = onScreenshotSelected) }
 }
 
 private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpener) {
@@ -82,18 +93,30 @@ private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpe
     }
 }
 
-private fun LazyListScope.versionSection(model: ListingUiModel) {
+private fun LazyListScope.versionSection(
+    model: ListingUiModel,
+    status: ListingInstallStatus,
+    onVersionInstallAction: VersionInstallHandler,
+) {
     val versions = model.detail.versions
     if (versions.isEmpty()) return
 
     item { SectionHeader(title = "Versions") }
-    items(items = versions, key = { it.tag }) { version -> ListingVersionItem(version = version) }
+    items(items = versions, key = { it.tag }) { version ->
+        ListingVersionItem(
+            version = version,
+            installState = versionInstallState(version = version, status = status),
+            onAction = InstallActionHandler { action ->
+                onVersionInstallAction.onAction(action, version)
+            },
+        )
+    }
 }
 
 @Composable
 internal fun ListingDetailBody(
     model: ListingUiModel,
-    installState: InstallState,
+    status: ListingInstallStatus,
     callbacks: ListingCallbacks,
 ) {
     LazyColumn(
@@ -105,11 +128,11 @@ internal fun ListingDetailBody(
     ) {
         bannerSection(model)
         headerSection(model)
-        installSection(model, installState, callbacks.onInstallAction)
+        installSection(model, status.state, callbacks.onInstallAction)
         warningSection(model)
         descriptionSection(model)
-        screenshotSection(model)
+        screenshotSection(model, callbacks.onScreenshotSelected)
         linkSection(model, callbacks.onOpenLink)
-        versionSection(model)
+        versionSection(model, status, callbacks.onVersionInstallAction)
     }
 }

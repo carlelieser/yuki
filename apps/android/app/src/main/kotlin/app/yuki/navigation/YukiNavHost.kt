@@ -10,7 +10,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
+import app.yuki.feature.listing.ListingNavigation
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
+import app.yuki.feature.listing.ScreenshotViewerRoute
 import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
 import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
@@ -36,6 +38,7 @@ internal fun YukiNavHost(
         libraryDestination(navigator, bottomBarPadding)
         updatesDestination(navigator, bottomBarPadding)
         listingDestination(navigator)
+        screenshotDestination(navigator)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         settingsDestination(navigator)
@@ -98,10 +101,21 @@ private fun NavGraphBuilder.updatesDestination(
 
 private fun NavGraphBuilder.listingDestination(navigator: YukiNavigator) {
     composable<ListingRoute> { entry ->
+        val slug = entry.toRoute<ListingRoute>().slug
+
         ListingScreenRoute(
-            slug = entry.toRoute<ListingRoute>().slug,
-            onBackClick = navigator::navigateUp,
+            slug = slug,
+            navigation = ListingNavigation(
+                onBackClick = navigator::navigateUp,
+                onScreenshotSelected = { index -> navigator.openScreenshots(slug, index) },
+            ),
         )
+    }
+}
+
+private fun NavGraphBuilder.screenshotDestination(navigator: YukiNavigator) {
+    composable<ScreenshotRoute> {
+        ScreenshotViewerRoute(onBackClick = navigator::navigateUp)
     }
 }
 
