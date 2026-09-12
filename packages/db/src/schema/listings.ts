@@ -74,7 +74,7 @@ export const listings = pgTable(
 		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 		searchVector: tsvector('search_vector').generatedAlwaysAs(
 			(): SQL =>
-				sql`setweight(to_tsvector('english', ${listings.title}), 'A') || setweight(to_tsvector('english', ${listings.author}), 'B') || setweight(to_tsvector('english', coalesce(${listings.description}, '')), 'C')`
+				sql`setweight(to_tsvector('english', ${listings.title}), 'A') || setweight(to_tsvector('english', ${listings.name}), 'A') || setweight(to_tsvector('english', ${listings.author}), 'B') || setweight(to_tsvector('english', coalesce(${listings.description}, '')), 'C')`
 		)
 	},
 	(table) => [
