@@ -242,3 +242,65 @@ describe('apk requirement', () => {
 		expect(outcome.input.hasApk).toBeNull();
 	});
 });
+
+describe('android structure', () => {
+	function treeOf(paths: string[], truncated = false) {
+		return {
+			isModified: true as const,
+			body: { tree: paths.map((path) => ({ path, type: 'blob' })), truncated },
+			etag: 'W/"tree"'
+		};
+	}
+
+	it('recognises a repository that builds an android app', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => treeOf(['app/src/main/AndroidManifest.xml', 'app/build.gradle.kts'])
+		});
+
+		const outcome = await refreshListing(client, storedEtags(), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.isAndroidApp).toBe(true);
+	});
+
+	it('rejects a repository that only ships prose', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => treeOf(['README.md', 'docs/privacy.html'])
+		});
+
+		const outcome = await refreshListing(client, storedEtags(), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.isAndroidApp).toBe(false);
+	});
+
+	it('withholds a verdict when the tree was not refetched', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => ({ isModified: false })
+		});
+
+		const outcome = await refreshListing(client, storedEtags(), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.isAndroidApp).toBeNull();
+	});
+
+	it('withholds a verdict when a truncated tree hid the build files', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => treeOf(['README.md'], true)
+		});
+
+		const outcome = await refreshListing(client, storedEtags(), target);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.isAndroidApp).toBeNull();
+	});
+});

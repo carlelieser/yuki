@@ -41,7 +41,8 @@ export const evidenceKind = pgEnum('evidence_kind', [
 	'gradle_dependency',
 	'legacy_gradle_dependency',
 	'source_filename',
-	'repository_topic'
+	'repository_topic',
+	'readme_mention'
 ]);
 
 export const listings = pgTable(

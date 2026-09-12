@@ -1,4 +1,5 @@
 import { discover, type PartitionStore } from './discover.ts';
+import { isSelfDeclaredOnly } from '../detection/evidence.ts';
 import { GITHUB_EPOCH, type DateRange } from '../detection/queries.ts';
 import { refreshListing, type EtagStore, type RefreshTarget } from './refresh.ts';
 import type { GithubClient } from '@yuki/github';
@@ -63,7 +64,11 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 	const known = await ports.listTargets(options.maxRefresh);
 	for (const listing of known) {
 		if (seenRepoIds.has(listing.githubRepoId)) continue;
-		targets.push({ owner: listing.owner, name: listing.name });
+		targets.push({
+			owner: listing.owner,
+			name: listing.name,
+			githubRepoId: listing.githubRepoId
+		});
 	}
 
 	for (const target of targets) {
@@ -76,6 +81,12 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 				skippedCount += 1;
 				await touchKnown(ports, known, target);
 				log(`Skipped ${label}: ${outcome.reason}`);
+				continue;
+			}
+
+			if (isUnprovenCandidate(outcome.input, seenRepoIds)) {
+				skippedCount += 1;
+				log(`Skipped ${label}: self-declared shizuku with no Android project`);
 				continue;
 			}
 
@@ -104,6 +115,14 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		notModifiedCount: ports.client.stats.notModifiedCount,
 		warnings
 	};
+}
+
+function isUnprovenCandidate(input: PersistInput, discovered: Set<number>): boolean {
+	if (input.listing === null) return false;
+	if (!discovered.has(input.listing.githubRepoId)) return false;
+	if (input.isAndroidApp !== false) return false;
+
+	return isSelfDeclaredOnly(input.evidence);
 }
 
 async function touchKnown(

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."evidence_kind" ADD VALUE 'readme_mention';

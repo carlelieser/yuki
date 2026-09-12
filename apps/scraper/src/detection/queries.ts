@@ -52,7 +52,22 @@ export function buildCodeSearchQueries(): CodeSearchQuery[] {
 }
 
 export function buildRepoSearchQueries(): RepoSearchQuery[] {
-	return [{ q: 'topic:shizuku', evidence: 'repository_topic', detail: 'topic:shizuku' }];
+	return [
+		{ q: 'topic:shizuku', evidence: 'repository_topic', detail: 'topic:shizuku' },
+		{
+			q: 'shizuku in:name,description,readme',
+			evidence: 'readme_mention',
+			detail: 'shizuku in name, description, or readme'
+		}
+	];
+}
+
+const ANDROID_BUILD_FILENAMES = ['build.gradle', 'build.gradle.kts', 'libs.versions.toml'];
+
+export function isAndroidStructurePath(path: string): boolean {
+	const filename = path.split('/').pop() ?? '';
+	if (filename === 'AndroidManifest.xml') return true;
+	return ANDROID_BUILD_FILENAMES.includes(filename);
 }
 
 const MARKDOWN_EXTENSIONS = ['.md', '.markdown', '.mdx', '.rst', '.txt'];
