@@ -9,10 +9,12 @@ import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -26,6 +28,9 @@ class LibraryViewModel @Inject internal constructor(
     private val dependencies: LibraryDependencies,
 ) : ViewModel() {
     private val resumes = MutableStateFlow(0)
+    private val refreshing = MutableStateFlow(false)
+
+    val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
 
     val state: StateFlow<UiState<LibraryContent>> =
         combine(presentInstalls(store), activeProgress()) { installed, active ->
@@ -37,8 +42,26 @@ class LibraryViewModel @Inject internal constructor(
         )
 
     fun onResume() {
+        viewModelScope.launch { reconcile() }
+    }
+
+    fun onPullToRefresh() {
+        if (refreshing.value) return
+
+        refreshing.value = true
+        viewModelScope.launch {
+            try {
+                reconcile()
+                delay(MINIMUM_REFRESH_MILLIS)
+            } finally {
+                refreshing.value = false
+            }
+        }
+    }
+
+    private suspend fun reconcile() {
         resumes.value += 1
-        viewModelScope.launch { progress.clearSettled() }
+        progress.clearSettled()
     }
 
     private fun presentInstalls(store: InstallStore): Flow<List<InstalledApp>> =
@@ -54,5 +77,6 @@ class LibraryViewModel @Inject internal constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val MINIMUM_REFRESH_MILLIS = 400L
     }
 }

@@ -7,10 +7,13 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.InstallAction
+import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
@@ -97,13 +100,46 @@ class UpdatesScreenTest {
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertDoesNotExist()
     }
 
+    @Test
+    fun pullingDownTheUpdateListRequestsARefresh() {
+        var refreshes = 0
+        setContent(
+            UiState.Success(UpdatesContent(listOf(termuxRow()), emptyList())),
+            onPullToRefresh = { refreshes += 1 },
+        )
+
+        composeRule.onNodeWithTag(UPDATES_LIST_TAG).performTouchInput { swipeDown() }
+        composeRule.waitForIdle()
+
+        assertEquals(1, refreshes)
+    }
+
+    @Test
+    fun pullingDownTheUpToDateStateRequestsARefresh() {
+        var refreshes = 0
+        setContent(
+            UiState.Success(UpdatesContent(emptyList(), emptyList())),
+            onPullToRefresh = { refreshes += 1 },
+        )
+
+        composeRule.onNodeWithTag(PULL_TO_REFRESH_TAG).performTouchInput { swipeDown() }
+        composeRule.waitForIdle()
+
+        assertEquals(1, refreshes)
+    }
+
     private fun setContent(
         state: UiState<UpdatesContent>,
         onInstallAction: (Long, InstallAction) -> Unit = { _, _ -> },
+        onPullToRefresh: () -> Unit = {},
     ) {
         composeRule.setContent {
             UpdatesContentScreen(
                 state = state,
+                refresh = UpdatesRefresh(
+                    isRefreshing = false,
+                    onPullToRefresh = onPullToRefresh,
+                ),
                 actions = UpdatesActions(
                     onListingClick = {},
                     onInstallAction = onInstallAction,

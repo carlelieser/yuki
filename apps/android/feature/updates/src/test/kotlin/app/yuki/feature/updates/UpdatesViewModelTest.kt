@@ -10,15 +10,19 @@ import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.UiState
 import app.yuki.core.network.RemoteRequestException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -207,14 +211,116 @@ class UpdatesViewModelTest {
         installs: List<InstalledApp>,
         details: Map<String, Result<ListingDetail>>,
         includePrereleases: Boolean = false,
+    ): UpdatesViewModel = viewModelWith(
+        repository = FakeListingRepository(details),
+        installs = installs,
+        includePrereleases = includePrereleases,
+    )
+
+    private fun viewModelWith(
+        repository: FakeListingRepository,
+        installs: List<InstalledApp>,
+        includePrereleases: Boolean = false,
     ): UpdatesViewModel = UpdatesViewModel(
         store = FakeInstallStore(installs),
         dependencies = UpdatesDependencies(
-            check = UpdateCheck(FakeListingRepository(details)),
+            check = UpdateCheck(repository),
             installer = installer,
             preference = { flowOf(includePrereleases) },
         ),
     )
+
+    @Test
+    fun aPullKeepsTheCheckedListOnScreenForTheWholeRefresh() = runTest {
+        val repository = FakeListingRepository(
+            mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+        val viewModel = viewModelWith(repository = repository, installs = listOf(TERMUX))
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(1, successOf(awaitItem()).updates.size)
+
+            val gate = CompletableDeferred<Unit>()
+            repository.detailGate = gate
+            viewModel.onPullToRefresh()
+            runCurrent()
+
+            expectNoEvents()
+            assertTrue(viewModel.state.value is UiState.Success)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value is UiState.Success)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aPullReportsRefreshingUntilTheCheckSettles() = runTest {
+        val repository = FakeListingRepository(
+            mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+        val viewModel = viewModelWith(repository = repository, installs = listOf(TERMUX))
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        repository.detailGate = gate
+        viewModel.onPullToRefresh()
+        runCurrent()
+
+        assertTrue(viewModel.isRefreshing.value)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.isRefreshing.value)
+    }
+
+    @Test
+    fun aPullPicksUpAVersionPublishedSinceTheLastCheck() = runTest {
+        val repository = FakeListingRepository(
+            mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.118.0")))),
+        )
+        val viewModel = viewModelWith(repository = repository, installs = listOf(TERMUX))
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(successOf(awaitItem()).hasNoUpdates)
+
+            repository.details = mapOf(
+                TERMUX.slug to Result.success(termuxWith(version("v0.119.0"))),
+            )
+            viewModel.onPullToRefresh()
+            advanceUntilIdle()
+
+            assertEquals("v0.119.0", successOf(viewModel.state.value).updates.single().update.version.tag)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aSecondPullIsIgnoredWhileOneIsAlreadyRunning() = runTest {
+        val repository = FakeListingRepository(
+            mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+        val viewModel = viewModelWith(repository = repository, installs = listOf(TERMUX))
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        repository.detailGate = gate
+        viewModel.onPullToRefresh()
+        runCurrent()
+
+        repository.requested.clear()
+        viewModel.onPullToRefresh()
+        runCurrent()
+
+        assertTrue(repository.requested.isEmpty())
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+    }
 }
 
 private fun successOf(state: UiState<UpdatesContent>): UpdatesContent =

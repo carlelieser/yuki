@@ -10,6 +10,7 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.SearchQuery
+import kotlinx.coroutines.CompletableDeferred
 
 internal class TypedFailure(override val reason: FailureReason) :
     Exception("Explore test failure"), FailureAware
@@ -44,15 +45,23 @@ internal class FakeListingRepository : ListingRepository {
     val browsedOffsets = mutableListOf<Int>()
     val sectionLimits = mutableListOf<Int>()
     val searchedQueries = mutableListOf<String>()
+    val startedCalls = mutableListOf<String>()
+
+    var featuredGate: CompletableDeferred<Unit>? = null
 
     override suspend fun browse(query: BrowseQuery): Result<ListingPage> {
         browsedOffsets += query.offset
         return browseResult
     }
 
-    override suspend fun featured(): Result<List<ListingSummary>> = featuredResult
+    override suspend fun featured(): Result<List<ListingSummary>> {
+        startedCalls += FEATURED_CALL
+        featuredGate?.await()
+        return featuredResult
+    }
 
     override suspend fun sections(limit: Int): Result<List<CategorySection>> {
+        startedCalls += SECTIONS_CALL
         sectionLimits += limit
         return sectionsResult
     }
@@ -66,3 +75,5 @@ internal class FakeListingRepository : ListingRepository {
         Result.failure(TypedFailure(FailureReason.NotFound))
 }
 
+internal const val FEATURED_CALL = "featured"
+internal const val SECTIONS_CALL = "sections"

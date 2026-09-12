@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.YukiDetailScreen
+import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 
@@ -68,12 +69,19 @@ internal fun CategoryScreen(
             )
         },
     ) {
-        LazyColumn(
-            contentPadding = contentPadding,
-            modifier = Modifier.fillMaxSize(),
+        YukiPullToRefresh(
+            isRefreshing = listings.isRefreshing,
+            onRefresh = listings::refresh,
         ) {
-            browseRefreshState(listings = listings)
-            browseList(listings = listings, onSelect = callbacks.onListingSelected)
+            LazyColumn(
+                contentPadding = contentPadding,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(BROWSE_LIST_TAG),
+            ) {
+                browseRefreshState(listings = listings)
+                browseList(listings = listings, onSelect = callbacks.onListingSelected)
+            }
         }
     }
 }

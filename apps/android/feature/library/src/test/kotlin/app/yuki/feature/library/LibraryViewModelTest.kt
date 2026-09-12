@@ -14,11 +14,14 @@ import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -330,6 +333,79 @@ class LibraryViewModelTest {
         }
 
         assertTrue(progress.settledClearances > 0)
+    }
+
+    @Test
+    fun aPullReconcilesAgainWhenAnAppDisappeared() = runTest {
+        val store = FakeInstallStore(listOf(TERMUX))
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val viewModel = viewModelFor(store, packages)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+
+            packages.uninstall(TERMUX.packageName)
+            viewModel.onPullToRefresh()
+
+            assertEquals(emptyList<InstalledApp>(), successApps(awaitItem()))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aPullKeepsTheIndicatorUpLongEnoughToBeSeen() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages)
+        advanceUntilIdle()
+
+        viewModel.onPullToRefresh()
+        runCurrent()
+
+        assertTrue(viewModel.isRefreshing.value)
+
+        advanceUntilIdle()
+
+        assertFalse(viewModel.isRefreshing.value)
+    }
+
+    @Test
+    fun aPullKeepsTheInstalledAppsOnScreenThroughout() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+
+            viewModel.onPullToRefresh()
+            runCurrent()
+
+            assertTrue(viewModel.state.value is UiState.Success)
+
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value is UiState.Success)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aSecondPullIsIgnoredWhileOneIsAlreadyRunning() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+        advanceUntilIdle()
+
+        viewModel.onPullToRefresh()
+        runCurrent()
+        val afterFirst = progress.settledClearances
+
+        viewModel.onPullToRefresh()
+        runCurrent()
+
+        assertEquals(afterFirst, progress.settledClearances)
+
+        advanceUntilIdle()
     }
 
     private fun viewModelFor(

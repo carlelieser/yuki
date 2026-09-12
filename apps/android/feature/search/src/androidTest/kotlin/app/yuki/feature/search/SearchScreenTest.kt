@@ -8,11 +8,14 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.performClick
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.BACK_ACTION_TAG
+import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.SEARCH_PLACEHOLDER
@@ -75,6 +78,24 @@ class SearchScreenTest {
                 contentPadding = PaddingValues(),
             )
         }
+    }
+
+    @Test
+    fun theBrowseListHostsThePullToRefreshGesture() {
+        render(browsing())
+
+        composeRule.onNodeWithTag(PULL_TO_REFRESH_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(BROWSE_LIST_TAG).performTouchInput { swipeDown() }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithTag(BROWSE_LIST_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun theSearchResultsListDoesNotOfferPullToRefresh() {
+        render(searching(results = UiState.Success(listOf(listing("alpha")))))
+
+        composeRule.onNodeWithTag(PULL_TO_REFRESH_TAG).assertDoesNotExist()
     }
 
     @Test

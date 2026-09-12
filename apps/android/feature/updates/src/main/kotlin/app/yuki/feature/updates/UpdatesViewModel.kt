@@ -24,9 +24,12 @@ class UpdatesViewModel @Inject internal constructor(
 ) : ViewModel() {
     private val mutableState = MutableStateFlow<UiState<UpdatesContent>>(UiState.Loading)
     private val installs = MutableStateFlow<Map<Long, InstallState>>(emptyMap())
+    private val refreshing = MutableStateFlow(false)
     private val jobs = mutableMapOf<Long, Job>()
 
     val state: StateFlow<UiState<UpdatesContent>> = mutableState.asStateFlow()
+
+    val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
 
     init {
         refresh()
@@ -34,11 +37,26 @@ class UpdatesViewModel @Inject internal constructor(
 
     fun refresh() {
         mutableState.value = UiState.Loading
+        viewModelScope.launch { load() }
+    }
+
+    fun onPullToRefresh() {
+        if (refreshing.value) return
+
+        refreshing.value = true
         viewModelScope.launch {
-            val includePrereleases = dependencies.preference.includePrereleases().first()
-            val checked = dependencies.check.run(store.installs(), includePrereleases)
-            mutableState.value = UiState.Success(checked.withInstallStates(installs.value))
+            try {
+                load()
+            } finally {
+                refreshing.value = false
+            }
         }
+    }
+
+    private suspend fun load() {
+        val includePrereleases = dependencies.preference.includePrereleases().first()
+        val checked = dependencies.check.run(store.installs(), includePrereleases)
+        mutableState.value = UiState.Success(checked.withInstallStates(installs.value))
     }
 
     fun onInstallAction(githubRepoId: Long, action: InstallAction) {

@@ -18,6 +18,7 @@ import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.model.InstallState
@@ -34,11 +35,16 @@ fun LibraryScreen(
 ) {
     val viewModel: LibraryViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     ResumeEffect(viewModel::onResume)
 
     LibraryContentScreen(
         state = state,
+        refresh = LibraryRefresh(
+            isRefreshing = isRefreshing,
+            onPullToRefresh = viewModel::onPullToRefresh,
+        ),
         actions = LibraryActions(onListingClick = onListingClick, onExploreClick = onExploreClick),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -50,27 +56,47 @@ data class LibraryActions(
     val onExploreClick: () -> Unit,
 )
 
+data class LibraryRefresh(
+    val isRefreshing: Boolean,
+    val onPullToRefresh: () -> Unit,
+)
+
 @Composable
 internal fun LibraryContentScreen(
     state: UiState<LibraryContent>,
+    refresh: LibraryRefresh,
     actions: LibraryActions,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     YukiScreen(title = LIBRARY_TITLE, modifier = modifier) {
-        when (state) {
-            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
-
-            is UiState.Failure -> YukiScreenCenter(contentPadding) {
-                FailureState(reason = state.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
-            }
-
-            is UiState.Success -> LibraryList(
-                content = state.data,
-                actions = actions,
-                contentPadding = contentPadding,
-            )
+        YukiPullToRefresh(
+            isRefreshing = refresh.isRefreshing,
+            onRefresh = refresh.onPullToRefresh,
+        ) {
+            LibraryBody(state = state, actions = actions, contentPadding = contentPadding)
         }
+    }
+}
+
+@Composable
+private fun LibraryBody(
+    state: UiState<LibraryContent>,
+    actions: LibraryActions,
+    contentPadding: PaddingValues,
+) {
+    when (state) {
+        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+
+        is UiState.Failure -> YukiScreenCenter(contentPadding) {
+            FailureState(reason = state.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+        }
+
+        is UiState.Success -> LibraryList(
+            content = state.data,
+            actions = actions,
+            contentPadding = contentPadding,
+        )
     }
 }
 
