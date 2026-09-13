@@ -14,6 +14,7 @@ class AndroidApplicationPlugin : Plugin<Project> {
             configureAndroid(this)
             defaultConfig.targetSdk = libs.version("targetSdk").toInt()
             configureReleaseBuildType(this)
+            configureReleaseSigning(this)
         }
     }
 
