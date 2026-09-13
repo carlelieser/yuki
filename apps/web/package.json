@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@lucide/svelte": "1.41.0",
+		"@svelte-put/qr": "^2.1.3",
 		"@yuki/auth": "workspace:*",
 		"@yuki/db": "workspace:*",
 		"@yuki/github": "workspace:*",
@@ -23,7 +24,6 @@
 		"mode-watcher": "1.1.0",
 		"svelte-sonner": "1.2.1",
 		"sveltekit-superforms": "2.30.2",
-		"uqr": "0.1.3",
 		"zod": "4.5.4"
 	},
 	"devDependencies": {

@@ -11,8 +11,9 @@
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '@yuki/ui';
+	import QR from '@svelte-put/qr/svg/QR.svelte';
 	import { toast } from 'svelte-sonner';
-	import { copyToClipboard, qrCodeFor, shareUrl } from './share-menu.ts';
+	import { copyToClipboard, shareUrl } from './share-menu.ts';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import QrCodeIcon from '@lucide/svelte/icons/qr-code';
 	import Share2Icon from '@lucide/svelte/icons/share-2';
@@ -25,7 +26,6 @@
 	let isQrOpen = $state(false);
 
 	const url = $derived(shareUrl(page.url));
-	const qr = $derived(qrCodeFor(url));
 
 	async function copy(): Promise<void> {
 		const result = await copyToClipboard(
@@ -63,7 +63,7 @@
 		</DropdownMenuItem>
 		<DropdownMenuItem onSelect={() => (isQrOpen = true)}>
 			<QrCodeIcon aria-hidden="true" />
-			QR code
+			QR
 		</DropdownMenuItem>
 	</DropdownMenuContent>
 </DropdownMenu>
@@ -76,15 +76,18 @@
 		</DialogDescription>
 
 		<div class="flex justify-center">
-			<svg
-				viewBox="0 0 {qr.size} {qr.size}"
-				shape-rendering="crispEdges"
+			<QR
+				data={url}
+				shape="circle"
+				correction="H"
+				logo="/logo.png"
+				logoRatio={1}
+				moduleFill="#000000"
+				anchorOuterFill="#000000"
+				anchorInnerFill="#000000"
 				aria-hidden="true"
-				class="size-56 rounded-lg"
-			>
-				<rect width={qr.size} height={qr.size} fill="#ffffff" />
-				<path d={qr.path} fill="#000000" />
-			</svg>
+				class="size-64 rounded-lg bg-white p-3"
+			/>
 		</div>
 	</DialogContent>
 </Dialog>
