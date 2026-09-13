@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +15,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.InstallProgressPosition
+import app.yuki.core.designsystem.component.InstallProgressShape
 import app.yuki.core.designsystem.component.YukiBadge
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
@@ -119,9 +120,10 @@ private fun VersionInstallControl(
     InstallButton(
         state = installState.state,
         onAction = onAction,
-        modifier = Modifier.wrapContentWidth(),
         isEnabled = installState.isEnabled,
         isGhost = true,
+        progressShape = InstallProgressShape.Circular,
+        progressPosition = InstallProgressPosition.Leading,
     )
 }
 

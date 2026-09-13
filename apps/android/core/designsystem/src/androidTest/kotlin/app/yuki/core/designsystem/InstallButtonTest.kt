@@ -5,12 +5,15 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.InstallProgressPosition
+import app.yuki.core.designsystem.component.InstallProgressShape
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
@@ -31,6 +34,42 @@ class InstallButtonTest {
                 InstallButton(state = state, onAction = onAction)
             }
         }
+    }
+
+    private fun renderCircular(state: InstallState, position: InstallProgressPosition) {
+        composeRule.setContent {
+            YukiTheme(isDynamicColorEnabled = false) {
+                InstallButton(
+                    state = state,
+                    onAction = InstallActionHandler { },
+                    progressShape = InstallProgressShape.Circular,
+                    progressPosition = position,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun aCircularDownloadDropsTheSizeLabel() {
+        renderCircular(
+            state = InstallState.Downloading(PARTLY_DOWNLOADED),
+            position = InstallProgressPosition.Leading,
+        )
+
+        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
+        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+    }
+
+    @Test
+    fun aCircularDownloadStillDescribesProgress() {
+        renderCircular(
+            state = InstallState.Downloading(PARTLY_DOWNLOADED),
+            position = InstallProgressPosition.Trailing,
+        )
+
+        composeRule
+            .onNodeWithContentDescription("Downloading, 33 percent, 4.1 MB / 12.1 MB")
+            .assertExists()
     }
 
     @Test

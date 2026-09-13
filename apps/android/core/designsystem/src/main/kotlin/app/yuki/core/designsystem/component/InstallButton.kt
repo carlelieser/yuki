@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
@@ -29,6 +32,16 @@ enum class InstallAction {
     Cancel,
     Retry,
     Open,
+}
+
+enum class InstallProgressShape {
+    Linear,
+    Circular,
+}
+
+enum class InstallProgressPosition {
+    Leading,
+    Trailing,
 }
 
 private fun failureLabel(reason: InstallFailure): String = when (reason) {
@@ -79,7 +92,7 @@ private fun describeDownload(size: DownloadSize): String {
 }
 
 @Composable
-private fun DownloadProgress(size: DownloadSize) {
+private fun LinearDownloadProgress(size: DownloadSize) {
     val fraction = size.fraction
     val progressModifier = Modifier.width(YukiSpacing.Section * 3)
 
@@ -97,6 +110,26 @@ private fun DownloadProgress(size: DownloadSize) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun CircularDownloadProgress(size: DownloadSize) {
+    val fraction = size.fraction
+    val progressModifier = Modifier.size(YukiSize.ProgressCircular)
+
+    if (fraction == null) {
+        CircularProgressIndicator(modifier = progressModifier)
+    } else {
+        CircularProgressIndicator(progress = { fraction }, modifier = progressModifier)
+    }
+}
+
+@Composable
+private fun DownloadProgress(size: DownloadSize, shape: InstallProgressShape) {
+    when (shape) {
+        InstallProgressShape.Linear -> LinearDownloadProgress(size = size)
+        InstallProgressShape.Circular -> CircularDownloadProgress(size = size)
     }
 }
 
@@ -149,16 +182,28 @@ private fun InstallControl(
 fun InstallButton(
     state: InstallState,
     onAction: InstallActionHandler,
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     isGhost: Boolean = false,
+    progressShape: InstallProgressShape = InstallProgressShape.Linear,
+    progressPosition: InstallProgressPosition = InstallProgressPosition.Trailing,
 ) {
+    val accessory: @Composable () -> Unit = {
+        if (state is InstallState.Downloading) {
+            DownloadProgress(size = state.size, shape = progressShape)
+        }
+        if (state is InstallState.Failed) FailureNote(state.reason)
+        if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
+    }
+
     Row(
         modifier = modifier
             .semantics { contentDescription = describe(state) },
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (progressPosition == InstallProgressPosition.Leading) accessory()
+
         InstallControl(
             state = state,
             onAction = onAction,
@@ -166,8 +211,6 @@ fun InstallButton(
             isGhost = isGhost,
         )
 
-        if (state is InstallState.Downloading) DownloadProgress(state.size)
-        if (state is InstallState.Failed) FailureNote(state.reason)
-        if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
+        if (progressPosition == InstallProgressPosition.Trailing) accessory()
     }
 }

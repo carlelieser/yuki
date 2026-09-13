@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.InstallProgressPosition
+import app.yuki.core.designsystem.component.InstallProgressShape
 import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -37,6 +39,8 @@ internal fun LazyListScope.updateRows(content: UpdatesContent, actions: UpdatesA
                     onAction = InstallActionHandler { action ->
                         actions.onInstallAction(row.githubRepoId, action)
                     },
+                    progressShape = InstallProgressShape.Circular,
+                    progressPosition = InstallProgressPosition.Leading,
                 )
             },
         )
