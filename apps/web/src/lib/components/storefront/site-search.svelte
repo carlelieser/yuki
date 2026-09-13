@@ -7,7 +7,15 @@
 	let { class: className, onopen }: { class?: string; onopen: () => void } = $props();
 </script>
 
-<Button variant="secondary" class={cn(className)} onclick={onopen}>
+<Button
+	variant="ghost"
+	class={cn(
+		'sm:bg-secondary sm:text-secondary-foreground sm:hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] sm:hover:text-secondary-foreground dark:sm:hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]',
+		className
+	)}
+	aria-label="Search"
+	onclick={onopen}
+>
 	<SearchIcon class="size-4 shrink-0" aria-hidden="true" />
 	<Shortcut class="hidden lg:block">⌘K</Shortcut>
 </Button>
