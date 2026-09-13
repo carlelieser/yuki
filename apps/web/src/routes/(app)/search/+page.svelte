@@ -11,6 +11,8 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toSearchQueryString } from '$lib/search-query.ts';
+	import { SeoHead } from '$lib/components/seo/index.ts';
+	import { searchMeta } from '$lib/seo/page-meta.ts';
 	import { getViewModeStore } from '$lib/view-mode-store.svelte.ts';
 	import { cardVariantFor } from '$lib/components/storefront/product-card.svelte';
 	import type { ListingCategory } from '$lib/categories.ts';
@@ -20,8 +22,6 @@
 	let { data }: { data: PageData } = $props();
 
 	const views = getViewModeStore();
-
-	const title = $derived(data.query === '' ? 'Search · Yuki' : `${data.query} · Yuki`);
 
 	const heading = $derived(
 		`${data.total} ${data.total === 1 ? 'result' : 'results'} for “${data.query}”`
@@ -40,7 +40,7 @@
 	}
 </script>
 
-<svelte:head><title>{title}</title></svelte:head>
+<SeoHead {...searchMeta(data.query, data.total)} />
 
 {#snippet card(entry: ListingSummary)}
 	<ListingCard {entry} variant={cardVariantFor(views.mode)} />
@@ -57,6 +57,8 @@
 			description="Type a name, author, or keyword to find a listing."
 		/>
 	{:else}
+		<h1 class="sr-only">{heading}</h1>
+
 		<Section title={heading}>
 			{#snippet action()}
 				<ListingToolbar

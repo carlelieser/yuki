@@ -8,10 +8,16 @@
 		Section
 	} from '$lib/components/storefront/index.ts';
 	import { toBrowseQueryString } from '$lib/browse.ts';
-	import type { ListingCategory } from '$lib/categories.ts';
+	import { SeoHead } from '$lib/components/seo/index.ts';
+	import { browseMeta } from '$lib/seo/page-meta.ts';
+	import { categoryLabel, type ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const heading = $derived(
+		data.category === null ? 'Browse apps' : `${categoryLabel(data.category)} apps`
+	);
 
 	function selectCategory(category: ListingCategory | null): void {
 		const query = toBrowseQueryString({ sort: data.sort, order: data.order }, 0, category);
@@ -20,13 +26,15 @@
 	}
 </script>
 
-<svelte:head><title>Browse · Yuki</title></svelte:head>
+<SeoHead {...browseMeta(data.category)} />
 
 {#snippet sortMenu()}
 	<BrowseSort sort={data.sort} order={data.order} category={data.category} target="browse" />
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-8 px-4 py-8">
+	<h1 class="text-2xl font-semibold tracking-tight">{heading}</h1>
+
 	<Section title="Apps" isHeaderSticky>
 		{#snippet action()}
 			<ListingToolbar
