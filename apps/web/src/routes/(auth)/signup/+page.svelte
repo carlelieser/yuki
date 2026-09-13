@@ -15,7 +15,8 @@
 		FormField,
 		FormFieldErrors,
 		FormLabel,
-		Input
+		Input,
+		Link
 	} from '@yuki/ui';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -42,9 +43,7 @@
 				</CardDescription>
 			</CardHeader>
 			<CardFooter class="px-0">
-				<a href={resolve('/signin')} class="text-sm underline underline-offset-4">
-					Back to sign in
-				</a>
+				<Link href={resolve('/signin')}>Back to sign in</Link>
 			</CardFooter>
 		</Card>
 	{:else}
@@ -120,10 +119,17 @@
 					<Button type="submit" class="w-full">Create account</Button>
 					<p class="text-center text-sm text-muted-foreground">
 						Already have an account?
-						<a href={resolve('/signin')} class="underline underline-offset-4">Sign in</a>
+						<Link href={resolve('/signin')}>Sign in</Link>
 					</p>
 				</CardFooter>
 			</form>
 		</Card>
+
+		<p class="text-center text-sm text-muted-foreground mt-12">
+			By creating an account, you agree to our
+			<Link href={resolve('/(docs)/terms')}>Terms of Service</Link>
+			and
+			<Link href={resolve('/(docs)/privacy')}>Privacy Policy</Link>.
+		</p>
 	{/if}
 </main>

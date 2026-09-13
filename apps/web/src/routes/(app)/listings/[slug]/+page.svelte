@@ -11,7 +11,8 @@
 		ItemDescription,
 		ItemGroup,
 		ItemMedia,
-		ItemTitle
+		ItemTitle,
+		Link
 	} from '@yuki/ui';
 	import {
 		CollectionEmpty,
@@ -137,11 +138,8 @@
 
 		{#if data.user === null}
 			<p class="text-sm text-muted-foreground">
-				<a
-					href={resolve('/(auth)/signin')}
-					class="underline underline-offset-4"
-					data-sveltekit-preload-data="off">Sign in</a
-				> to write a review.
+				<Link href={resolve('/(auth)/signin')} data-sveltekit-preload-data="off">Sign in</Link> to write
+				a review.
 			</p>
 		{:else if data.canReview}
 			<ReviewForm data={data.form} user={data.user} isEditing={data.hasReviewed} />

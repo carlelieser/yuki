@@ -14,7 +14,8 @@
 		FormField,
 		FormFieldErrors,
 		FormLabel,
-		Input
+		Input,
+		Link
 	} from '@yuki/ui';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -71,12 +72,9 @@
 							{#snippet children({ props })}
 								<div class="flex items-center justify-between">
 									<FormLabel>Password</FormLabel>
-									<a
-										href={resolve('/forgot-password')}
-										class="text-sm text-muted-foreground underline underline-offset-4"
-									>
+									<Link href={resolve('/forgot-password')} class="text-muted-foreground">
 										Forgot password?
-									</a>
+									</Link>
 								</div>
 								<Input
 									{...props}
@@ -96,7 +94,7 @@
 				<Button type="submit" class="w-full">Sign in</Button>
 				<p class="text-center text-sm text-muted-foreground">
 					New to Yuki?
-					<a href={resolve('/signup')} class="underline underline-offset-4">Create an account</a>
+					<Link href={resolve('/signup')}>Create an account</Link>
 				</p>
 			</CardFooter>
 		</form>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { Link } from '@yuki/ui';
 	import {
 		CollectionEmpty,
 		ListingCard,
@@ -77,12 +78,7 @@
 
 		{#if data.hasMore}
 			<div class="flex justify-center">
-				<a
-					href={nextPageHref}
-					class="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-				>
-					Load more
-				</a>
+				<Link href={nextPageHref} class="text-muted-foreground">Load more</Link>
 			</div>
 		{/if}
 	{/if}

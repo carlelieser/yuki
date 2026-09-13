@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { cn } from '@yuki/ui';
+	import { Button } from '@yuki/ui';
 	import ModeToggle from './mode-toggle.svelte';
 	import SiteLogo from './site-logo.svelte';
 
@@ -17,19 +17,15 @@
 
 		<nav class="ms-auto flex items-center gap-1">
 			{#each links as link (link.href)}
-				<a
+				{@const isActive = page.url.pathname === link.href}
+				<Button
 					href={link.href}
-					aria-current={page.url.pathname === link.href ? 'page' : undefined}
-					class={cn(
-						'rounded-sm px-3 py-1.5 text-sm transition-colors',
-						'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-						page.url.pathname === link.href
-							? 'font-medium text-foreground'
-							: 'text-muted-foreground hover:text-foreground'
-					)}
+					variant="ghost"
+					aria-current={isActive ? 'page' : undefined}
+					class={isActive ? 'text-foreground' : 'text-muted-foreground'}
 				>
 					{link.label}
-				</a>
+				</Button>
 			{/each}
 		</nav>
 

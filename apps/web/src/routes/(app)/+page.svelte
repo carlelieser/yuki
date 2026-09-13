@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { buttonVariants, cn } from '@yuki/ui';
+	import { Button } from '@yuki/ui';
 	import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
 	import { goto } from '$app/navigation';
 	import {
@@ -53,14 +53,15 @@
 {/snippet}
 
 {#snippet browseAll()}
-	<a
+	<Button
 		href={browseHref}
-		class={cn(buttonVariants({ variant: 'ghost' }), 'w-9 px-0 sm:w-auto sm:px-2.5')}
+		variant="ghost"
+		class="w-9 px-0 sm:w-auto sm:px-2.5"
 		aria-label="Browse all apps"
 	>
 		<span class="hidden sm:inline">Browse all</span>
 		<ArrowRightIcon aria-hidden="true" />
-	</a>
+	</Button>
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">

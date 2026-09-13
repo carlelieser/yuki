@@ -10,7 +10,7 @@
 	<div class="flex flex-col">
 		<header class="flex items-center justify-between px-6 py-6 lg:px-10">
 			<SiteLogo showLabel={false} size="md" />
-			<ModeToggle/>
+			<ModeToggle />
 		</header>
 
 		<div class="flex flex-1 flex-col justify-center px-6 pb-12 lg:px-10">

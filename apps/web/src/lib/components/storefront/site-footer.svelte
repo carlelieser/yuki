@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { cn } from '@yuki/ui';
+	import { cn, Link } from '@yuki/ui';
 	import SiteLogo from './site-logo.svelte';
 
 	let { width = 'wide', class: className }: { width?: 'wide' | 'narrow'; class?: string } =
@@ -15,36 +15,22 @@
 		wide: 'max-w-6xl',
 		narrow: 'max-w-3xl'
 	};
-
-	const year = new Date().getFullYear();
 </script>
 
 <footer class={cn('w-full border-t', className)}>
 	<div
 		class={cn(
-			'mx-auto flex w-full flex-col gap-4 px-4 py-8',
-			'sm:flex-row sm:items-center sm:justify-between',
+			'mx-auto flex w-full gap-4 px-4 py-8',
+			'flex-row items-center justify-between',
 			widths[width]
 		)}
 	>
-		<div class="flex flex-col gap-2 sm:gap-1">
-			<SiteLogo size="sm" />
-			<p class="text-sm text-muted-foreground">
-				© {year} Yuki. Listings link to software published by third parties.
-			</p>
-		</div>
-
-		<nav class="flex items-center gap-4">
+		<SiteLogo size="sm" />
+		<nav class="flex items-center gap-4 text-sm">
 			{#each links as link (link.href)}
-				<a
-					href={link.href}
-					class={cn(
-						'rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground',
-						'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-					)}
-				>
+				<Link href={link.href} class="text-muted-foreground hover:text-foreground">
 					{link.label}
-				</a>
+				</Link>
 			{/each}
 		</nav>
 	</div>

@@ -26,12 +26,10 @@
 			<UserMenu {user} />
 		{:else}
 			<nav class="flex items-center gap-1">
-				<Button class="md:hidden" size="icon" href={resolve("/signin")}>
+				<Button class="md:hidden" size="icon" href={resolve('/signin')}>
 					<LogInIcon />
 				</Button>
-				<Button class="hidden md:flex" href={resolve("/signin")}>
-					Get started
-				</Button>
+				<Button class="hidden md:flex" href={resolve('/signin')}>Get started</Button>
 			</nav>
 		{/if}
 	</div>

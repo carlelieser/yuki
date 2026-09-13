@@ -1,13 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import {
-		buttonVariants,
-		Card,
-		CardDescription,
-		CardFooter,
-		CardHeader,
-		CardTitle
-	} from '@yuki/ui';
+	import { Button, Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@yuki/ui';
 	import { authCardClass } from '$lib/auth-card.ts';
 
 	let { data } = $props();
@@ -23,7 +16,7 @@
 				<CardDescription>Your email address is confirmed. You're all set.</CardDescription>
 			</CardHeader>
 			<CardFooter class="px-0">
-				<a href={resolve('/')} class={buttonVariants({ variant: 'default' })}>Browse apps</a>
+				<Button href={resolve('/')}>Browse apps</Button>
 			</CardFooter>
 		{:else}
 			<CardHeader class="px-0">
@@ -33,7 +26,7 @@
 				</CardDescription>
 			</CardHeader>
 			<CardFooter class="px-0">
-				<a href={resolve('/signin')} class={buttonVariants({ variant: 'default' })}>Sign in</a>
+				<Button href={resolve('/signin')}>Sign in</Button>
 			</CardFooter>
 		{/if}
 	</Card>

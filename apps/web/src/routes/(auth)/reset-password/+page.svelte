@@ -15,7 +15,8 @@
 		FormField,
 		FormFieldErrors,
 		FormLabel,
-		Input
+		Input,
+		Link
 	} from '@yuki/ui';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -89,7 +90,7 @@
 			<CardFooter class="flex flex-col items-stretch gap-3 px-0">
 				<Button type="submit" class="w-full">Update password</Button>
 				<p class="text-center text-sm text-muted-foreground">
-					<a href={resolve('/signin')} class="underline underline-offset-4">Back to sign in</a>
+					<Link href={resolve('/signin')}>Back to sign in</Link>
 				</p>
 			</CardFooter>
 		</form>
