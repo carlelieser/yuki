@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { buttonVariants, cn } from '@yuki/ui';
+	import LogInIcon from '@lucide/svelte/icons/log-in';
 	import ModeToggle from './mode-toggle.svelte';
 	import SiteLogo from './site-logo.svelte';
 	import SiteSearch from './site-search.svelte';
@@ -31,7 +32,13 @@
 				>
 					Sign in
 				</a>
-				<a href={resolve('/signup')} class={buttonVariants({ size: 'sm' })}>Get started</a>
+				<a
+					href={resolve('/signup')}
+					class={cn(buttonVariants({ size: 'icon-sm' }), 'sm:w-auto sm:gap-1 sm:px-2.5')}
+				>
+					<LogInIcon aria-hidden="true" />
+					<span class="sr-only sm:not-sr-only">Get started</span>
+				</a>
 			</nav>
 		{/if}
 	</div>
