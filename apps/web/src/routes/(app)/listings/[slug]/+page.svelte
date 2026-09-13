@@ -28,7 +28,7 @@
 		ShareMenu
 	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
-	import { StarIcon, BoxIcon } from '@lucide/svelte';
+	import { StarIcon, BoxIcon, Share2Icon } from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -49,6 +49,12 @@
 
 {#snippet badges()}
 	<ListingBadges entry={listing} />
+{/snippet}
+
+{#snippet shareTrigger({ props }: { props: Record<string, unknown> })}
+	<Button {...props} variant="ghost" size="icon" aria-label="Share {listing.title}">
+		<Share2Icon aria-hidden="true" />
+	</Button>
 {/snippet}
 
 <svelte:head>
@@ -77,11 +83,10 @@
 				label="Download {latestVersion.tag}"
 			/>
 		{/if}
-		<Button href={listing.repositoryUrl} variant="ghost">
+		<Button href={listing.repositoryUrl} variant="ghost" size="icon" class="ml-auto">
 			<GithubIcon />
-			Source
 		</Button>
-		<ShareMenu title={listing.title} />
+		<ShareMenu title={listing.title} trigger={shareTrigger} />
 	</div>
 
 	{#if listing.screenshots.length > 0}

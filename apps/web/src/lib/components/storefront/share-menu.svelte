@@ -16,8 +16,11 @@
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import QrCodeIcon from '@lucide/svelte/icons/qr-code';
 	import Share2Icon from '@lucide/svelte/icons/share-2';
+	import type { Snippet } from 'svelte';
 
-	let { title }: { title: string } = $props();
+	type ShareMenuTriggerProps = { props: Record<string, unknown> };
+
+	let { title, trigger }: { title: string; trigger?: Snippet<[ShareMenuTriggerProps]> } = $props();
 
 	let isQrOpen = $state(false);
 
@@ -42,10 +45,14 @@
 <DropdownMenu>
 	<DropdownMenuTrigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="ghost" aria-label="Share {title}">
-				<Share2Icon aria-hidden="true" />
-				Share
-			</Button>
+			{#if trigger}
+				{@render trigger({ props })}
+			{:else}
+				<Button {...props} variant="ghost" aria-label="Share {title}">
+					<Share2Icon aria-hidden="true" />
+					Share
+				</Button>
+			{/if}
 		{/snippet}
 	</DropdownMenuTrigger>
 
