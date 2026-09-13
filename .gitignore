@@ -18,3 +18,8 @@ dist/
 coverage/
 *.tsbuildinfo
 .eslintcache
+
+# Signing
+*.jks
+*.keystore
+keystore.properties
