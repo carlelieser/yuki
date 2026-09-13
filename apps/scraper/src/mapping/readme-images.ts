@@ -47,6 +47,7 @@ const STORE_WORDS = [
 	'liberapay',
 	'opencollective'
 ];
+const STOREFRONT_WORDS = ['github', 'gitlab', 'codeberg', 'sourceforge'];
 const SOCIAL_WORDS = ['tg', 'telegram', 'discord', 'matrix', 'slack', 'mastodon', 'twitter', 'qq'];
 const GROUP_WORDS = ['group', 'chat', 'join', 'channel', 'invite', 'community', 'qr'];
 const RASTER_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif'];
@@ -89,6 +90,15 @@ function isStoreBadge(path: string): boolean {
 	return STORE_WORDS.some((word) => collapsed.includes(word));
 }
 
+function isGetItOnButton(path: string): boolean {
+	const words = wordsOf(path);
+	return words.includes('get') && words.includes('on');
+}
+
+function isStorefrontName(path: string): boolean {
+	return hasWord(path, STOREFRONT_WORDS) && wordsOf(path).length === 1;
+}
+
 function isRejected(url: string): boolean {
 	const lowered = url.toLowerCase();
 	const path = pathOf(url);
@@ -97,6 +107,8 @@ function isRejected(url: string): boolean {
 	if (/\/api\//.test(lowered)) return true;
 	if (hasWord(path, CHROME_WORDS)) return true;
 	if (isStoreBadge(path)) return true;
+	if (isGetItOnButton(path)) return true;
+	if (isStorefrontName(path)) return true;
 	if (isSocialInvite(path)) return true;
 	return BADGE_HOSTS.some((host) => lowered.includes(host));
 }

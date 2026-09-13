@@ -2,6 +2,10 @@ import { eq } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import { MAPPING_VERSION } from '../mapping/version.ts';
 
+export function isEtagUsable(mappingVersion: number): boolean {
+	return mappingVersion === MAPPING_VERSION;
+}
+
 export async function readEtag(db: Database, resource: string): Promise<string | null> {
 	const [row] = await db
 		.select({
@@ -12,7 +16,7 @@ export async function readEtag(db: Database, resource: string): Promise<string |
 		.where(eq(schema.scrapeSources.resource, resource))
 		.limit(1);
 
-	if (row === undefined || row.mappingVersion !== MAPPING_VERSION) return null;
+	if (row === undefined || !isEtagUsable(row.mappingVersion)) return null;
 	return row.etag;
 }
 

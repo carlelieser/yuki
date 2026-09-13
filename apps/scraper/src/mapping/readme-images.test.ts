@@ -109,6 +109,32 @@ describe('extractReadmeImages', () => {
 		]);
 	});
 
+	it('rejects get-it-on store buttons whose store is not a listed store word', () => {
+		const images = extract(`
+			![Get it on GitHub](assets/get-it-on-github.png)
+			![Get it on GitHub](assets/get_it_on_github.png)
+			![Get it on GitHub](fastlane/get-it-on-github.png)
+			![GitHub](.github/resources/github.png)
+			![Home](assets/home.png)
+		`);
+
+		expect(images.map((image) => image.url)).toEqual([
+			'https://raw.githubusercontent.com/acme/app/main/assets/home.png'
+		]);
+	});
+
+	it('keeps screenshots that merely name github as part of the captured screen', () => {
+		const images = extract(`
+			![Issues](docs/github-issues-screen.png)
+			![Actions](docs/github-actions-dashboard.png)
+		`);
+
+		expect(images.map((image) => image.url)).toEqual([
+			'https://raw.githubusercontent.com/acme/app/main/docs/github-issues-screen.png',
+			'https://raw.githubusercontent.com/acme/app/main/docs/github-actions-dashboard.png'
+		]);
+	});
+
 	it('rejects telegram group invites, including theme-swapped pairs', () => {
 		const images = extract(`
 			<img src="./source/tg_group_dark.png#gh-dark-mode-only" />
