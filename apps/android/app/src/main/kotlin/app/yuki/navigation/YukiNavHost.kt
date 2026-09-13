@@ -100,7 +100,7 @@ private fun NavGraphBuilder.updatesDestination(
 }
 
 private fun NavGraphBuilder.listingDestination(navigator: YukiNavigator) {
-    composable<ListingRoute> { entry ->
+    composable<ListingRoute>(deepLinks = listingDeepLinks()) { entry ->
         val slug = entry.toRoute<ListingRoute>().slug
 
         ListingScreenRoute(
