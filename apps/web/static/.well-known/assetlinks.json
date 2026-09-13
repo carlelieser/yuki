@@ -4,7 +4,10 @@
 		"target": {
 			"namespace": "android_app",
 			"package_name": "app.yuki",
-			"sha256_cert_fingerprints": ["REPLACE_WITH_RELEASE_SHA256"]
+			"sha256_cert_fingerprints": [
+				"85:30:2A:2E:BC:5B:E2:E9:9C:9B:F6:6C:47:BD:AC:09:93:05:0A:30:12:14:FC:E6:53:FC:18:CC:45:65:40:5A",
+				"5A:AE:B5:27:3D:7B:EB:6F:31:DE:D3:3E:DA:17:A0:C0:14:D7:2A:31:B9:4A:D9:CD:C6:E9:C3:BA:84:D4:A9:6F"
+			]
 		}
 	}
 ]
