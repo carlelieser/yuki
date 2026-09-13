@@ -43,11 +43,23 @@
 </script>
 
 {#snippet banner()}
-	<img src={listing.bannerUrl} alt="" class="size-full object-cover" loading="lazy" />
+	<img
+		src={listing.bannerUrl}
+		alt=""
+		class="size-full object-cover"
+		decoding="async"
+		referrerpolicy="no-referrer"
+	/>
 {/snippet}
 
 {#snippet icon()}
-	<img src={listing.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
+	<img
+		src={listing.iconUrl}
+		alt=""
+		class="size-full object-cover"
+		decoding="async"
+		referrerpolicy="no-referrer"
+	/>
 {/snippet}
 
 {#snippet badges()}
