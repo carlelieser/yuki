@@ -69,6 +69,7 @@ export {
 } from './components/ui/item/index.ts';
 export { GithubIcon } from './components/ui/icons/index.ts';
 export { Label } from './components/ui/label/index.ts';
+export { Link, type LinkProps } from './components/ui/link/index.ts';
 export { Alert, AlertAction, AlertDescription, AlertTitle } from './components/ui/alert/index.ts';
 export {
 	Avatar,
