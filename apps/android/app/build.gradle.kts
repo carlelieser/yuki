@@ -7,6 +7,9 @@ plugins {
 
 val YUKI_STOREFRONT_URL = "https://yukistore.org/"
 
+val YUKI_VERSION_CODE = providers.gradleProperty("yukiVersionCode").orNull?.toInt() ?: 1
+val YUKI_VERSION_NAME = providers.gradleProperty("yukiVersionName").orNull ?: "0.1.0"
+
 android {
     namespace = "app.yuki"
 
@@ -14,8 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "app.yuki"
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = YUKI_VERSION_CODE
+        versionName = YUKI_VERSION_NAME
         testInstrumentationRunner = "app.yuki.YukiTestRunner"
 
         buildConfigField("String", "YUKI_BASE_URL", "\"$YUKI_STOREFRONT_URL\"")
