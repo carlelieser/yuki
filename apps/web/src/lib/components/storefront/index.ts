@@ -1,6 +1,7 @@
 export { default as BrowseSort } from './browse-sort.svelte';
 export { default as CategoryMenu } from './category-menu.svelte';
 export { default as CollectionEmpty } from './collection-empty.svelte';
+export { default as DocsHeader } from './docs-header.svelte';
 export { default as DownloadButton } from './download-button.svelte';
 export { default as ImageCarousel } from './image-carousel.svelte';
 export { default as ListingBadges } from './listing-badges.svelte';

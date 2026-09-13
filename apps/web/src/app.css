@@ -1,2 +1,3 @@
 @import '@yuki/ui/styles.css';
+@plugin '@tailwindcss/typography';
 @source '../../../packages/ui/src';
