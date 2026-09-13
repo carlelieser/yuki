@@ -23,7 +23,8 @@
 		ReviewCard,
 		ReviewForm,
 		ReviewsDialog,
-		Section
+		Section,
+		ShareMenu
 	} from '$lib/components/storefront/index.ts';
 	import type { PageData } from './$types';
 	import { StarIcon, BoxIcon } from '@lucide/svelte';
@@ -79,6 +80,7 @@
 			<GithubIcon />
 			Source
 		</Button>
+		<ShareMenu title={listing.title} />
 	</div>
 
 	{#if listing.screenshots.length > 0}
