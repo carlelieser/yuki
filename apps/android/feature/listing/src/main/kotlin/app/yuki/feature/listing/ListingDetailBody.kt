@@ -3,6 +3,7 @@ package app.yuki.feature.listing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -56,7 +57,9 @@ private fun LazyListScope.installSection(
         InstallButton(
             state = installState,
             onAction = onInstallAction,
-            modifier = Modifier.padding(horizontal = YukiSpacing.Large),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = YukiSpacing.Large),
         )
     }
 }
