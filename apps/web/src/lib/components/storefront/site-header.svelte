@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { buttonVariants, cn } from '@yuki/ui';
+	import { Button } from '@yuki/ui';
 	import LogInIcon from '@lucide/svelte/icons/log-in';
 	import ModeToggle from './mode-toggle.svelte';
 	import SiteLogo from './site-logo.svelte';
@@ -26,19 +26,12 @@
 			<UserMenu {user} />
 		{:else}
 			<nav class="flex items-center gap-1">
-				<a
-					href={resolve('/signin')}
-					class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'hidden sm:inline-flex')}
-				>
-					Sign in
-				</a>
-				<a
-					href={resolve('/signup')}
-					class={cn(buttonVariants({ size: 'icon-sm' }), 'sm:w-auto sm:gap-1 sm:px-2.5')}
-				>
-					<LogInIcon aria-hidden="true" />
-					<span class="sr-only sm:not-sr-only">Get started</span>
-				</a>
+				<Button class="md:hidden" size="icon" href={resolve("/signin")}>
+					<LogInIcon />
+				</Button>
+				<Button class="hidden md:flex" href={resolve("/signin")}>
+					Get started
+				</Button>
 			</nav>
 		{/if}
 	</div>
