@@ -19,6 +19,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { signInSchema } from '$lib/schemas/auth.ts';
+	import { authCardClass } from '$lib/auth-card.ts';
 
 	let { data } = $props();
 
@@ -29,16 +30,16 @@
 
 <svelte:head><title>Sign in · Yuki</title></svelte:head>
 
-<main class="w-full max-w-md">
-	<Card>
-		<CardHeader>
-			<CardTitle>Sign in</CardTitle>
+<main class="w-full">
+	<Card class={authCardClass}>
+		<CardHeader class="px-0">
+			<CardTitle class="text-2xl">Sign in to Yuki</CardTitle>
 		</CardHeader>
 
 		<form method="POST" use:enhance>
 			<input type="hidden" name="redirectTo" bind:value={$formData.redirectTo} />
 
-			<CardContent class="grid gap-4">
+			<CardContent class="grid gap-4 px-0">
 				{#if $message}
 					<Alert variant="destructive" role="alert">
 						<AlertTitle>Could not sign you in</AlertTitle>
@@ -91,7 +92,7 @@
 				</FormField>
 			</CardContent>
 
-			<CardFooter class="flex flex-col items-stretch gap-3 mt-4">
+			<CardFooter class="mt-4 flex flex-col items-stretch gap-3 px-0">
 				<Button type="submit" class="w-full">Sign in</Button>
 				<p class="text-center text-sm text-muted-foreground">
 					New to Yuki?
