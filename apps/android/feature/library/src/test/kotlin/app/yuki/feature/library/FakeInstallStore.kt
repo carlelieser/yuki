@@ -64,6 +64,9 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
     var settledClearances = 0
         private set
 
+    var failedClearances = 0
+        private set
+
     override fun observe(githubRepoId: Long): Flow<InstallProgress?> =
         rows.map { current -> current.firstOrNull { it.githubRepoId == githubRepoId } }
 
@@ -83,5 +86,10 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
     override suspend fun clearSettled() {
         settledClearances += 1
         rows.value = rows.value.filterNot { row -> row.state is InstallState.Installed }
+    }
+
+    override suspend fun clearFailed() {
+        failedClearances += 1
+        rows.value = rows.value.filterNot { row -> row.state is InstallState.Failed }
     }
 }

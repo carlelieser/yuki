@@ -28,4 +28,6 @@ internal class RoomInstallProgressStore @Inject constructor(
     override suspend fun clear(githubRepoId: Long) = dao.deleteByRepoId(githubRepoId)
 
     override suspend fun clearSettled() = dao.deleteSettledInstalls()
+
+    override suspend fun clearFailed() = dao.deleteFailedInstalls()
 }

@@ -32,4 +32,10 @@ internal class FakeInstallProgressStore : InstallProgressStore {
             progress.state !is InstallState.Installed
         }
     }
+
+    override suspend fun clearFailed() {
+        rows.value = rows.value.filterValues { progress ->
+            progress.state !is InstallState.Failed
+        }
+    }
 }

@@ -23,4 +23,6 @@ interface InstallProgressStore {
     suspend fun clear(githubRepoId: Long)
 
     suspend fun clearSettled()
+
+    suspend fun clearFailed()
 }

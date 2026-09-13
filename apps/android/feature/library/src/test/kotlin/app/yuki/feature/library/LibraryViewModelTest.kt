@@ -336,6 +336,43 @@ class LibraryViewModelTest {
     }
 
     @Test
+    fun aFailedInstallIsClearedOnStartSoItDoesNotStrandTheRowForever() = runTest {
+        val progress = FakeLibraryProgressStore()
+        progress.write(
+            InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
+        )
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(content(awaitItem()).isEmpty)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertTrue(progress.failedClearances > 0)
+    }
+
+    @Test
+    fun aPullClearsAFailedInstallTheUserHasAlreadySeen() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            awaitItem()
+
+            progress.write(
+                InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
+            )
+            assertTrue(singleItem(awaitItem()).isFailed)
+
+            viewModel.onPullToRefresh()
+            assertTrue(content(awaitItem()).isEmpty)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun aPullReconcilesAgainWhenAnAppDisappeared() = runTest {
         val store = FakeInstallStore(listOf(TERMUX))
         val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
@@ -431,6 +468,9 @@ private suspend fun awaitLatestItems(
 
 private fun singleItem(state: UiState<LibraryContent>): LibraryItem =
     (state as UiState.Success).data.items.single()
+
+private fun content(state: UiState<LibraryContent>): LibraryContent =
+    (state as UiState.Success).data
 
 private val OBSIDIAN_APP = InstalledApp(
     githubRepoId = 9_012L,

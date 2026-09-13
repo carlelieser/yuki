@@ -30,4 +30,7 @@ interface InstallProgressDao {
         """,
     )
     suspend fun deleteSettledInstalls()
+
+    @Query("DELETE FROM install_progress WHERE status = 'failed'")
+    suspend fun deleteFailedInstalls()
 }

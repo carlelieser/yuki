@@ -62,13 +62,17 @@ class LibraryViewModel @Inject internal constructor(
     private suspend fun reconcile() {
         resumes.value += 1
         progress.clearSettled()
+        progress.clearFailed()
     }
 
     private fun presentInstalls(store: InstallStore): Flow<List<InstalledApp>> =
         combine(store.observeInstalls(), resumes) { installs, _ -> installs }
             .map { installs -> dependencies.reconciler.reconcile(installs) }
 
-    private fun activeProgress() = progress.observeActive().onStart { progress.clearSettled() }
+    private fun activeProgress() = progress.observeActive().onStart {
+        progress.clearSettled()
+        progress.clearFailed()
+    }
 
     private fun merge(installed: List<InstalledApp>, active: List<InstallProgress>) = mergeLibrary(
         input = LibraryMergeInput(installed, active),
