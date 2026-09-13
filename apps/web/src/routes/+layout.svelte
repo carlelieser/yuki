@@ -9,5 +9,5 @@
 <svelte:head><title>Yuki</title></svelte:head>
 
 <ModeWatcher />
-<Toaster theme={userPrefersMode.current} richColors closeButton />
+<Toaster theme={userPrefersMode.current} />
 {@render children?.()}
