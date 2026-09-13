@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DocsHeader from '$lib/components/storefront/docs-header.svelte';
+	import SiteFooter from '$lib/components/storefront/site-footer.svelte';
 
 	let { children } = $props();
 </script>
@@ -14,4 +15,6 @@
 			{@render children?.()}
 		</article>
 	</main>
+
+	<SiteFooter width="narrow" />
 </div>

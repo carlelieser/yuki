@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SearchDialog from '$lib/components/storefront/search-dialog.svelte';
+	import SiteFooter from '$lib/components/storefront/site-footer.svelte';
 	import SiteHeader from '$lib/components/storefront/site-header.svelte';
 	import { createArchitectureStore } from '$lib/architecture-store.svelte.ts';
 	import { createViewModeStore } from '$lib/view-mode-store.svelte.ts';
@@ -30,7 +31,10 @@
 
 <div class="flex min-h-screen flex-col">
 	<SiteHeader user={data.user} onopensearch={() => (isSearchOpen = true)} />
-	{@render children?.()}
+	<div class="flex flex-1 flex-col">
+		{@render children?.()}
+	</div>
+	<SiteFooter />
 </div>
 
 <SearchDialog bind:open={isSearchOpen} />
