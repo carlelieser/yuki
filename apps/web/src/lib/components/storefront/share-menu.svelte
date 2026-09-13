@@ -1,0 +1,83 @@
+<script lang="ts">
+	import { page } from '$app/state';
+	import {
+		Button,
+		Dialog,
+		DialogContent,
+		DialogDescription,
+		DialogTitle,
+		DropdownMenu,
+		DropdownMenuContent,
+		DropdownMenuItem,
+		DropdownMenuTrigger
+	} from '@yuki/ui';
+	import { toast } from 'svelte-sonner';
+	import { copyToClipboard, qrCodeFor, shareUrl } from './share-menu.ts';
+	import LinkIcon from '@lucide/svelte/icons/link';
+	import QrCodeIcon from '@lucide/svelte/icons/qr-code';
+	import Share2Icon from '@lucide/svelte/icons/share-2';
+
+	let { title }: { title: string } = $props();
+
+	let isQrOpen = $state(false);
+
+	const url = $derived(shareUrl(page.url));
+	const qr = $derived(qrCodeFor(url));
+
+	async function copy(): Promise<void> {
+		const result = await copyToClipboard(
+			url,
+			typeof navigator === 'undefined' ? undefined : navigator.clipboard
+		);
+
+		if (result.ok) {
+			toast.success('Link copied');
+			return;
+		}
+
+		toast.error('Could not copy the link');
+	}
+</script>
+
+<DropdownMenu>
+	<DropdownMenuTrigger>
+		{#snippet child({ props })}
+			<Button {...props} variant="ghost" aria-label="Share {title}">
+				<Share2Icon aria-hidden="true" />
+				Share
+			</Button>
+		{/snippet}
+	</DropdownMenuTrigger>
+
+	<DropdownMenuContent align="end" class="w-44">
+		<DropdownMenuItem onSelect={copy}>
+			<LinkIcon aria-hidden="true" />
+			Copy link
+		</DropdownMenuItem>
+		<DropdownMenuItem onSelect={() => (isQrOpen = true)}>
+			<QrCodeIcon aria-hidden="true" />
+			QR code
+		</DropdownMenuItem>
+	</DropdownMenuContent>
+</DropdownMenu>
+
+<Dialog bind:open={isQrOpen}>
+	<DialogContent hasCloseButton={false} class="max-w-xs">
+		<DialogTitle class="sr-only">QR code for {title}</DialogTitle>
+		<DialogDescription class="sr-only">
+			Scan this QR code to open {title} at {url}
+		</DialogDescription>
+
+		<div class="flex justify-center">
+			<svg
+				viewBox="0 0 {qr.size} {qr.size}"
+				shape-rendering="crispEdges"
+				aria-hidden="true"
+				class="size-56 rounded-lg"
+			>
+				<rect width={qr.size} height={qr.size} fill="#ffffff" />
+				<path d={qr.path} fill="#000000" />
+			</svg>
+		</div>
+	</DialogContent>
+</Dialog>
