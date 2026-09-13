@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { RequestEvent } from './$types';
 
-vi.mock('$env/static/public', () => ({ PUBLIC_SITE_URL: 'https://yukistore.org' }));
+vi.mock('$env/dynamic/public', () => ({ env: { PUBLIC_SITE_URL: 'https://yukistore.org' } }));
 
 const { GET: robots } = await import('./+server.ts');
 

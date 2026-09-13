@@ -6,7 +6,7 @@ import type { SitemapListing } from '$lib/server/sitemap-listings.ts';
 const { getSitemapListings } = vi.hoisted(() => ({ getSitemapListings: vi.fn() }));
 
 vi.mock('$lib/server/sitemap-listings.ts', () => ({ getSitemapListings }));
-vi.mock('$env/static/public', () => ({ PUBLIC_SITE_URL: 'https://yukistore.org' }));
+vi.mock('$env/dynamic/public', () => ({ env: { PUBLIC_SITE_URL: 'https://yukistore.org' } }));
 
 const { GET: sitemap } = await import('./+server.ts');
 

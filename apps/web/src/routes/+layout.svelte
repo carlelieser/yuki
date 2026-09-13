@@ -2,11 +2,15 @@
 	import '../app.css';
 	import { ModeWatcher, userPrefersMode } from 'mode-watcher';
 	import { Toaster } from 'svelte-sonner';
+	import { SeoHead } from '$lib/components/seo/index.ts';
+	import { siteMeta } from '$lib/seo/page-meta.ts';
 
 	let { children } = $props();
+
+	const defaults = siteMeta();
 </script>
 
-<svelte:head><title>Yuki</title></svelte:head>
+<SeoHead {...defaults} />
 
 <ModeWatcher />
 <Toaster theme={userPrefersMode.current} />

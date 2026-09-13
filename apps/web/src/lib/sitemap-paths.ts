@@ -16,9 +16,5 @@ function listingPaths(listings: SitemapListing[]): SitemapEntry[] {
 }
 
 export function toSitemapEntries(listings: SitemapListing[]): SitemapEntry[] {
-	return [
-		...STATIC_PATHS.map((path) => ({ path })),
-		...categoryPaths(),
-		...listingPaths(listings)
-	];
+	return [...STATIC_PATHS.map((path) => ({ path })), ...categoryPaths(), ...listingPaths(listings)];
 }

@@ -6,6 +6,10 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+	<meta name="robots" content="noindex,follow" />
+</svelte:head>
+
 <div class="grid min-h-svh lg:grid-cols-2">
 	<div class="flex flex-col">
 		<header class="flex items-center justify-between px-6 py-6 lg:px-10">
