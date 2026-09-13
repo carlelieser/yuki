@@ -27,6 +27,9 @@
 		Section,
 		ShareMenu
 	} from '$lib/components/storefront/index.ts';
+	import { SeoHead } from '$lib/components/seo/index.ts';
+	import { listingMeta } from '$lib/seo/listing-meta.ts';
+	import { toSoftwareApplicationSchema } from '$lib/seo/listing-schema.ts';
 	import type { PageData } from './$types';
 	import { StarIcon, BoxIcon, Share2Icon } from '@lucide/svelte';
 
@@ -57,12 +60,7 @@
 	</Button>
 {/snippet}
 
-<svelte:head>
-	<title>{listing.title} · Yuki</title>
-	{#if listing.description}
-		<meta name="description" content={listing.description} />
-	{/if}
-</svelte:head>
+<SeoHead {...listingMeta(listing)} jsonLd={toSoftwareApplicationSchema(listing)} />
 
 <main class="mx-auto w-full max-w-4xl space-y-8 px-4 py-8">
 	<ProductCard
