@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/public';
 
 export const SITE_NAME = 'Yuki';
-export const SITE_TAGLINE = 'Open-source Android apps, curated from GitHub';
+export const SITE_TAGLINE = 'Shizuku-powered Android apps, all in one place';
 
 const FALLBACK_ORIGIN = 'http://localhost:5173';
 

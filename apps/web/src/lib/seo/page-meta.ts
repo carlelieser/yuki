@@ -47,7 +47,7 @@ export function browseMeta(category: ListingCategory | null): PageMeta {
 	if (category === null) {
 		return {
 			title: `Browse apps · ${SITE_NAME}`,
-			description: `Browse every open-source Android app on ${SITE_NAME}, sorted by stars, release date, or name.`,
+			description: `Browse every Shizuku-powered Android app on ${SITE_NAME}, sorted by stars, release date, or name.`,
 			canonicalPath: '/browse'
 		};
 	}
@@ -56,7 +56,7 @@ export function browseMeta(category: ListingCategory | null): PageMeta {
 
 	return {
 		title: `${label} apps · ${SITE_NAME}`,
-		description: `Open-source ${label.toLowerCase()} apps for Android, curated from GitHub and free to download on ${SITE_NAME}.`,
+		description: `Shizuku-powered ${label.toLowerCase()} apps for Android, open source and free to download on ${SITE_NAME}.`,
 		canonicalPath: `/browse?category=${category}`
 	};
 }
@@ -66,7 +66,7 @@ export function searchMeta(query: string, total: number): PageMeta {
 
 	return {
 		title,
-		description: `${total} open-source Android ${total === 1 ? 'app' : 'apps'} matching “${query}” on ${SITE_NAME}.`,
+		description: `${total} Shizuku-powered Android ${total === 1 ? 'app' : 'apps'} matching “${query}” on ${SITE_NAME}.`,
 		canonicalPath: '/search',
 		isIndexable: false
 	};
@@ -75,7 +75,7 @@ export function searchMeta(query: string, total: number): PageMeta {
 export function siteMeta(): PageMeta {
 	return {
 		title: `${SITE_NAME} — ${SITE_TAGLINE}`,
-		description: `${SITE_NAME} collects open-source Android apps from GitHub. Browse by category, read reviews, and download the latest release.`,
+		description: `${SITE_NAME} brings together Shizuku-powered Android apps from GitHub. Browse by category, read reviews, and download the latest release.`,
 		canonicalPath: '/'
 	};
 }

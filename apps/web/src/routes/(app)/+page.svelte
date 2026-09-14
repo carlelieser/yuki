@@ -67,7 +67,7 @@
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
-	<h1 class="sr-only">Yuki — open-source Android apps, curated from GitHub</h1>
+	<h1 class="sr-only">Yuki — Shizuku-powered Android apps, all in one place</h1>
 
 	<Section title="Featured">
 		<ProductCarousel
