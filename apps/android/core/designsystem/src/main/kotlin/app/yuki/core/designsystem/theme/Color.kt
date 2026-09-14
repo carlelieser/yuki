@@ -5,10 +5,10 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 internal val YukiLightColors = lightColorScheme(
-    primary = Color(0xFF2B628E),
+    primary = Color(0xFF0056D7),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFCFE5FF),
-    onPrimaryContainer = Color(0xFF004B74),
+    onPrimaryContainer = Color(0xFF002B9F),
     secondary = Color(0xFF4A6078),
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = Color(0xFFC6DCF8),
@@ -36,17 +36,17 @@ internal val YukiLightColors = lightColorScheme(
     surfaceDim = Color(0xFFD5DAE1),
     inverseSurface = Color(0xFF2D3136),
     inverseOnSurface = Color(0xFFECF1F8),
-    inversePrimary = Color(0xFF9BCBFD),
+    inversePrimary = Color(0xFFA0BCFF),
     outline = Color(0xFF6E7884),
     outlineVariant = Color(0xFFBDC7D5),
     scrim = Color(0xFF000003),
 )
 
 internal val YukiDarkColors = darkColorScheme(
-    primary = Color(0xFF9BCBFD),
-    onPrimary = Color(0xFF003352),
-    primaryContainer = Color(0xFF004B74),
-    onPrimaryContainer = Color(0xFFCFE5FF),
+    primary = Color(0xFFA0BCFF),
+    onPrimary = Color(0xFF002B9F),
+    primaryContainer = Color(0xFF0040BA),
+    onPrimaryContainer = Color(0xFFBFD7FF),
     secondary = Color(0xFFB2C9E4),
     onSecondary = Color(0xFF1B3247),
     secondaryContainer = Color(0xFF32495F),
@@ -74,7 +74,7 @@ internal val YukiDarkColors = darkColorScheme(
     surfaceDim = Color(0xFF0F1419),
     inverseSurface = Color(0xFFDEE3EA),
     inverseOnSurface = Color(0xFF2D3136),
-    inversePrimary = Color(0xFF2B628E),
+    inversePrimary = Color(0xFF0056D7),
     outline = Color(0xFF88929E),
     outlineVariant = Color(0xFF3E4853),
     scrim = Color(0xFF000003),

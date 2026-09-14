@@ -39,7 +39,7 @@
 		width="128"
 		height="128"
 		class={cn(
-			'shrink-0 rounded-full bg-secondary object-contain',
+			'shrink-0 rounded-full bg-background object-contain',
 			'transition-transform duration-200 group-hover:-rotate-24',
 			iconSizes[size]
 		)}
