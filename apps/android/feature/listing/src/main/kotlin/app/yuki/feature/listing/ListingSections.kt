@@ -26,8 +26,10 @@ import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val ARCHIVED_WARNING_TAG = "listingArchivedWarning"
 const val NO_INSTALLABLE_VERSION_TAG = "listingNoInstallableVersion"
+const val UNINSTALL_FAILED_TAG = "listingUninstallFailed"
 const val ARCHIVED_TITLE = "This project is archived"
 const val NO_INSTALLABLE_VERSION_TITLE = "No installable release"
+const val UNINSTALL_FAILED_TITLE = "Couldn't uninstall"
 
 private val archivedContent = StatusContent(
     title = ARCHIVED_TITLE,
@@ -40,6 +42,20 @@ private val noInstallableContent = StatusContent(
     description = "This listing has no stable release with a downloadable asset.",
     tone = StatusTone.Attention,
 )
+
+private val uninstallFailedContent = StatusContent(
+    title = UNINSTALL_FAILED_TITLE,
+    description = "The app is still installed. Try again, or remove it from Android settings.",
+    tone = StatusTone.Attention,
+)
+
+@Composable
+internal fun UninstallFailedNotice(modifier: Modifier = Modifier) {
+    StatusCard(
+        content = uninstallFailedContent,
+        modifier = modifier.testTag(UNINSTALL_FAILED_TAG),
+    )
+}
 
 @Composable
 internal fun ArchivedWarning(modifier: Modifier = Modifier) {

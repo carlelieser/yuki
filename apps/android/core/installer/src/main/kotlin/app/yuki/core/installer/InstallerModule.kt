@@ -41,4 +41,9 @@ internal object InstallStrategySelectorModule {
         privileged: Optional<PrivilegedInstaller>,
     ): InstallStrategySelector =
         InstallStrategySelector(identityReader, fallback, privileged.orElse(null))
+
+    @Provides
+    @Singleton
+    fun provideUninstaller(privileged: Optional<PrivilegedInstaller>): Uninstaller =
+        Uninstaller(privileged.orElse(null))
 }

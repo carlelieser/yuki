@@ -17,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -267,6 +269,116 @@ class ListingViewModelTest {
             assertEquals(InstallState.NotInstalled, awaitItem())
             assertEquals(InstallState.Installed("v2.0.0"), awaitItem())
         }
+    }
+
+    @Test
+    fun `asks before a silent uninstall instead of removing straight away`() = runTest {
+        installGateway.isSilent = true
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.isConfirmingUninstall.value)
+        assertTrue(installGateway.uninstalled.isEmpty())
+    }
+
+    @Test
+    fun `uninstalls once the prompt is confirmed`() = runTest {
+        installGateway.isSilent = true
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onUninstallConfirmed()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf(42L), installGateway.uninstalled)
+        assertFalse(viewModel.isConfirmingUninstall.value)
+    }
+
+    @Test
+    fun `keeps the app when the prompt is dismissed`() = runTest {
+        installGateway.isSilent = true
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onUninstallDismissed()
+
+        assertFalse(viewModel.isConfirmingUninstall.value)
+        assertTrue(installGateway.uninstalled.isEmpty())
+    }
+
+    @Test
+    fun `defers to the system prompt without asking twice`() = runTest {
+        installGateway.isSilent = false
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.isConfirmingUninstall.value)
+        assertEquals(listOf(42L), installGateway.uninstalled)
+    }
+
+    @Test
+    fun `a version row never triggers an uninstall`() = runTest {
+        installGateway.isSilent = true
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onVersionInstallAction(InstallAction.Uninstall, version("v1.5.0"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.isConfirmingUninstall.value)
+        assertTrue(installGateway.uninstalled.isEmpty())
+    }
+
+    @Test
+    fun `surfaces a failed uninstall instead of crashing`() = runTest {
+        installGateway.isSilent = true
+        installGateway.uninstallError = IllegalStateException("pm refused")
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onUninstallConfirmed()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.hasUninstallFailed.value)
+        assertEquals(1, installGateway.refreshes)
+    }
+
+    @Test
+    fun `clears an earlier uninstall failure when trying again`() = runTest {
+        installGateway.isSilent = false
+        installGateway.uninstallError = IllegalStateException("pm refused")
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        installGateway.uninstallError = null
+        viewModel.onInstallAction(InstallAction.Uninstall)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertFalse(viewModel.hasUninstallFailed.value)
+    }
+
+    @Test
+    fun `refreshes install state when the screen resumes`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onResumed()
+
+        assertEquals(1, installGateway.refreshes)
     }
 }
 

@@ -70,8 +70,17 @@ internal class FakeInstallRecorder(private val recorded: MutableMap<Long, String
 internal class FakePrivilegedInstaller(
     private val isReady: Boolean,
     private val strategy: InstallStrategy,
+    private val outcome: InstallOutcome = InstallOutcome.Succeeded,
 ) : PrivilegedInstaller {
+    val uninstalled: MutableList<String> = mutableListOf()
+
     override suspend fun isReady(): Boolean = isReady
 
     override fun strategy(): InstallStrategy = strategy
+
+    override suspend fun uninstall(packageName: String): InstallOutcome {
+        uninstalled += packageName
+
+        return outcome
+    }
 }

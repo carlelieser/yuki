@@ -28,4 +28,10 @@ interface ListingInstallGateway {
     suspend fun cancel(githubRepoId: Long)
 
     suspend fun open(githubRepoId: Long)
+
+    suspend fun uninstall(githubRepoId: Long)
+
+    suspend fun isSilentUninstall(): Boolean
+
+    fun refresh()
 }

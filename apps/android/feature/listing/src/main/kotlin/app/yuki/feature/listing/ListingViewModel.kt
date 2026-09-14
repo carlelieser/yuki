@@ -11,6 +11,7 @@ import app.yuki.core.model.toUiState
 import app.yuki.core.network.ListingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,14 @@ class ListingViewModel @Inject constructor(
     private val mutableListing = MutableStateFlow<UiState<ListingUiModel>>(UiState.Loading)
 
     val listing: StateFlow<UiState<ListingUiModel>> = mutableListing.asStateFlow()
+
+    private val mutableConfirmingUninstall = MutableStateFlow(false)
+
+    val isConfirmingUninstall: StateFlow<Boolean> = mutableConfirmingUninstall.asStateFlow()
+
+    private val mutableUninstallFailed = MutableStateFlow(false)
+
+    val hasUninstallFailed: StateFlow<Boolean> = mutableUninstallFailed.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val installStatus: StateFlow<ListingInstallStatus> = mutableListing
@@ -67,6 +76,7 @@ class ListingViewModel @Inject constructor(
             InstallAction.Cancel, InstallAction.Dismiss ->
                 viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
+            InstallAction.Uninstall -> requestUninstall(model)
         }
     }
 
@@ -79,7 +89,45 @@ class ListingViewModel @Inject constructor(
             InstallAction.Cancel, InstallAction.Dismiss ->
                 viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
+            InstallAction.Uninstall -> Unit
         }
+    }
+
+    fun onUninstallConfirmed() {
+        val model = successOrNull() ?: return
+
+        mutableConfirmingUninstall.value = false
+        viewModelScope.launch { uninstall(model) }
+    }
+
+    fun onUninstallDismissed() {
+        mutableConfirmingUninstall.value = false
+    }
+
+    fun onResumed() {
+        installGateway.refresh()
+    }
+
+    private fun requestUninstall(model: ListingUiModel) {
+        viewModelScope.launch {
+            if (installGateway.isSilentUninstall()) {
+                mutableConfirmingUninstall.value = true
+                return@launch
+            }
+
+            uninstall(model)
+        }
+    }
+
+    private suspend fun uninstall(model: ListingUiModel) {
+        mutableUninstallFailed.value = false
+
+        runCatching { installGateway.uninstall(model.repoId) }
+            .onFailure { error ->
+                if (error is CancellationException) throw error
+                mutableUninstallFailed.value = true
+                installGateway.refresh()
+            }
     }
 
     private fun startInstall(model: ListingUiModel) {

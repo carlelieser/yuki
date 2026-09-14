@@ -17,7 +17,7 @@ internal class PrivilegedSessions(private val shell: ShellCommandRunner) {
 
     fun uninstall(packageName: String) {
         val result = shell.run(PackageManagerCommands.uninstall(packageName))
-        if (result.isSuccess) return
+        if (result.isSuccess && result.output.contains(UNINSTALL_SUCCESS)) return
 
         throw PrivilegedInstallException(
             "Failed to uninstall $packageName: ${result.output.trim()}",

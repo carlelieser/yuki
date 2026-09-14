@@ -34,6 +34,7 @@ enum class InstallAction {
     Retry,
     Dismiss,
     Open,
+    Uninstall,
 }
 
 enum class InstallProgressShape {
@@ -76,8 +77,13 @@ private fun describe(state: InstallState): String = when (state) {
     is InstallState.Failed -> installFailureLabel(state.reason)
 }
 
-private fun isFilled(state: InstallState): Boolean =
-    state is InstallState.NotInstalled || state is InstallState.UpdateAvailable
+private fun isFilled(state: InstallState, canUninstall: Boolean): Boolean {
+    val isPromoted = state is InstallState.Installed && canUninstall
+
+    return state is InstallState.NotInstalled ||
+        state is InstallState.UpdateAvailable ||
+        isPromoted
+}
 
 private fun isBlocking(state: InstallState): Boolean = state is InstallState.Installing
 
@@ -136,12 +142,12 @@ private fun InstallControl(
     state: InstallState,
     onAction: InstallActionHandler,
     isEnabled: Boolean,
-    isGhost: Boolean,
+    presentation: InstallControlPresentation,
 ) {
     val action = actionFor(state)
     val isClickable = isEnabled && !isBlocking(state)
 
-    if (isGhost) {
+    if (presentation.isGhost) {
         YukiTextButton(
             label = labelFor(state),
             onClick = { onAction.onAction(action) },
@@ -150,7 +156,7 @@ private fun InstallControl(
         return
     }
 
-    if (isFilled(state)) {
+    if (isFilled(state, presentation.canUninstall)) {
         YukiButton(
             label = labelFor(state),
             onClick = { onAction.onAction(action) },
@@ -166,7 +172,13 @@ private fun InstallControl(
     )
 }
 
+private data class InstallControlPresentation(
+    val isGhost: Boolean,
+    val canUninstall: Boolean,
+)
+
 const val INSTALL_DISMISS_DESCRIPTION = "Dismiss"
+const val INSTALL_UNINSTALL_LABEL = "Uninstall"
 
 @Composable
 private fun DismissControl(onAction: InstallActionHandler) {
@@ -179,12 +191,22 @@ private fun DismissControl(onAction: InstallActionHandler) {
 }
 
 @Composable
+private fun UninstallControl(onAction: InstallActionHandler, isEnabled: Boolean) {
+    YukiSecondaryButton(
+        label = INSTALL_UNINSTALL_LABEL,
+        onClick = { onAction.onAction(InstallAction.Uninstall) },
+        isEnabled = isEnabled,
+    )
+}
+
+@Composable
 fun InstallButton(
     state: InstallState,
     onAction: InstallActionHandler,
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     isGhost: Boolean = false,
+    canUninstall: Boolean = false,
     progressShape: InstallProgressShape = InstallProgressShape.Linear,
     progressPosition: InstallProgressPosition = InstallProgressPosition.Trailing,
 ) {
@@ -208,11 +230,15 @@ fun InstallButton(
     ) {
         if (progressPosition == InstallProgressPosition.Leading) accessory()
 
+        if (canUninstall && state is InstallState.Installed) {
+            UninstallControl(onAction = onAction, isEnabled = isEnabled)
+        }
+
         InstallControl(
             state = state,
             onAction = onAction,
             isEnabled = isEnabled,
-            isGhost = isGhost,
+            presentation = InstallControlPresentation(isGhost, canUninstall),
         )
 
         if (progressPosition == InstallProgressPosition.Trailing) accessory()
