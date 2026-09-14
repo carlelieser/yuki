@@ -15,7 +15,7 @@
 
 	const canonical = $derived(siteUrl(canonicalPath));
 	const image = $derived(imageUrl ?? siteUrl(FALLBACK_IMAGE));
-	const cardType = $derived(imageUrl === null ? 'summary_large_image' : 'summary');
+	const cardType = $derived(imageUrl === null ? 'summary' : 'summary_large_image');
 </script>
 
 <svelte:head>
