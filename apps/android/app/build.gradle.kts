@@ -8,7 +8,7 @@ plugins {
 val YUKI_STOREFRONT_URL = "https://yukistore.org/"
 
 val YUKI_VERSION_CODE = providers.gradleProperty("yukiVersionCode").orNull?.toInt() ?: 1
-val YUKI_VERSION_NAME = providers.gradleProperty("yukiVersionName").orNull ?: "0.1.0"
+val YUKI_VERSION_NAME = providers.gradleProperty("yukiVersionName").orNull ?: "1.0.0"
 
 android {
     namespace = "app.yuki"
