@@ -2,17 +2,14 @@ package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -21,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.theme.YukiRatio
 import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
@@ -88,40 +84,6 @@ private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
             .clip(YukiShape.Card)
             .clearAndSetSemantics { },
     )
-}
-
-@Composable
-private fun CardCaption(listing: ListingSummary) {
-    Column(modifier = Modifier.padding(vertical = YukiSpacing.Medium)) {
-        Text(
-            text = listing.title,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        ProductDescription(description = listing.description)
-        ListingBadgeRow(
-            badges = listing.toBadges(),
-            modifier = badgeSpacing(),
-        )
-    }
-}
-
-@Composable
-fun ProductCard(
-    listing: ListingSummary,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        onClick = onClick,
-        shape = YukiShape.Card,
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        modifier = modifier.width(YukiSize.CardWidth),
-    ) {
-        CardMedia(imageUrl = listing.iconUrl, kind = CardMediaKind.Icon)
-        CardCaption(listing = listing)
-    }
 }
 
 @Composable
