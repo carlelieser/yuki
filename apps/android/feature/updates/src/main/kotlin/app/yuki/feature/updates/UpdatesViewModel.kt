@@ -65,7 +65,7 @@ class UpdatesViewModel @Inject internal constructor(
         when (action) {
             InstallAction.Update, InstallAction.Retry, InstallAction.Install -> start(update)
             InstallAction.Cancel -> cancel(githubRepoId)
-            InstallAction.Open -> Unit
+            InstallAction.Open, InstallAction.Uninstall -> Unit
         }
     }
 

@@ -15,5 +15,6 @@ class ShizukuPrivilegedInstaller @Inject internal constructor(
 
     override fun strategy(): InstallStrategy = silent
 
-    suspend fun uninstall(packageName: String): InstallOutcome = silent.uninstall(packageName)
+    override suspend fun uninstall(packageName: String): InstallOutcome =
+        silent.uninstall(packageName)
 }

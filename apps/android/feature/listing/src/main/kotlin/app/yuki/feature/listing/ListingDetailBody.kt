@@ -17,7 +17,6 @@ import app.yuki.core.designsystem.component.InstallButton
 import app.yuki.core.designsystem.component.ScreenshotCarousel
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingVersion
 
 const val LISTING_DETAIL_TAG = "listingDetail"
@@ -33,6 +32,11 @@ fun interface VersionInstallHandler {
     fun onAction(action: InstallAction, version: ListingVersion)
 }
 
+data class ListingUninstallStatus(
+    val install: ListingInstallStatus,
+    val hasUninstallFailed: Boolean = false,
+)
+
 private fun LazyListScope.bannerSection(model: ListingUiModel) {
     val bannerUrl = model.detail.summary.bannerUrl ?: return
 
@@ -45,9 +49,10 @@ private fun LazyListScope.headerSection(model: ListingUiModel) {
 
 private fun LazyListScope.installSection(
     model: ListingUiModel,
-    installState: InstallState,
+    status: ListingUninstallStatus,
     onInstallAction: InstallActionHandler,
 ) {
+    val hasUninstallFailed = status.hasUninstallFailed
     if (!model.isInstallable) {
         item { NoInstallableVersionNotice(modifier = Modifier.padding(YukiSpacing.Large)) }
         return
@@ -55,13 +60,18 @@ private fun LazyListScope.installSection(
 
     item {
         InstallButton(
-            state = installState,
+            state = status.install.state,
             onAction = onInstallAction,
+            canUninstall = true,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = YukiSpacing.Large),
         )
     }
+
+    if (!hasUninstallFailed) return
+
+    item { UninstallFailedNotice(modifier = Modifier.padding(horizontal = YukiSpacing.Large)) }
 }
 
 private fun LazyListScope.warningSection(model: ListingUiModel) {
@@ -119,7 +129,7 @@ private fun LazyListScope.versionSection(
 @Composable
 internal fun ListingDetailBody(
     model: ListingUiModel,
-    status: ListingInstallStatus,
+    status: ListingUninstallStatus,
     callbacks: ListingCallbacks,
 ) {
     LazyColumn(
@@ -131,11 +141,11 @@ internal fun ListingDetailBody(
     ) {
         bannerSection(model)
         headerSection(model)
-        installSection(model, status.state, callbacks.onInstallAction)
+        installSection(model, status, callbacks.onInstallAction)
         warningSection(model)
         descriptionSection(model)
         screenshotSection(model, callbacks.onScreenshotSelected)
         linkSection(model, callbacks.onOpenLink)
-        versionSection(model, status, callbacks.onVersionInstallAction)
+        versionSection(model, status.install, callbacks.onVersionInstallAction)
     }
 }

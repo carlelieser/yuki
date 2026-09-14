@@ -36,6 +36,17 @@ class InstallButtonTest {
         }
     }
 
+    private fun renderUninstallable(
+        state: InstallState,
+        onAction: InstallActionHandler = InstallActionHandler { },
+    ) {
+        composeRule.setContent {
+            YukiTheme(isDynamicColorEnabled = false) {
+                InstallButton(state = state, onAction = onAction, canUninstall = true)
+            }
+        }
+    }
+
     private fun renderCircular(state: InstallState, position: InstallProgressPosition) {
         composeRule.setContent {
             YukiTheme(isDynamicColorEnabled = false) {
@@ -120,6 +131,41 @@ class InstallButtonTest {
         render(InstallState.Installed(versionTag = "v1.2.0"))
 
         composeRule.onNodeWithText("Open").assertIsEnabled()
+    }
+
+    @Test
+    fun installedOffersUninstallAlongsideOpenWhenAllowed() {
+        renderUninstallable(InstallState.Installed(versionTag = "v1.2.0"))
+
+        composeRule.onNodeWithText("Uninstall").assertIsEnabled()
+        composeRule.onNodeWithText("Open").assertIsEnabled()
+    }
+
+    @Test
+    fun installedHidesUninstallByDefault() {
+        render(InstallState.Installed(versionTag = "v1.2.0"))
+
+        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+    }
+
+    @Test
+    fun uninstallIsNotOfferedBeforeAnAppIsInstalled() {
+        renderUninstallable(InstallState.NotInstalled)
+
+        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+    }
+
+    @Test
+    fun installedEmitsUninstallAction() {
+        val actions = mutableListOf<InstallAction>()
+        renderUninstallable(
+            state = InstallState.Installed(versionTag = "v1.2.0"),
+            onAction = InstallActionHandler { action -> actions.add(action) },
+        )
+
+        composeRule.onNodeWithText("Uninstall").performClick()
+
+        assertEquals(listOf(InstallAction.Uninstall), actions)
     }
 
     @Test

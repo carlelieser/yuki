@@ -5,6 +5,8 @@ internal const val INSTALLER_PACKAGE = "shell"
 internal const val INSTALL_STATUS_SUCCESS = 0
 internal const val INSTALL_STATUS_FAILURE = 1
 
+internal const val UNINSTALL_SUCCESS = "Success"
+
 internal object PackageManagerCommands {
     fun createSession(packageName: String): List<String> = listOf(
         "pm",
@@ -32,7 +34,8 @@ internal object PackageManagerCommands {
     fun abandonSession(sessionId: Int): List<String> =
         listOf("pm", "install-abandon", sessionId.toString())
 
-    fun uninstall(packageName: String): List<String> = listOf("pm", "uninstall", packageName)
+    fun uninstall(packageName: String): List<String> =
+        listOf("pm", "uninstall", "--user", "0", packageName)
 }
 
 private val SESSION_ID = Regex("""\[(\d+)]""")

@@ -11,4 +11,6 @@ interface PrivilegedInstaller {
     suspend fun isReady(): Boolean
 
     fun strategy(): InstallStrategy
+
+    suspend fun uninstall(packageName: String): InstallOutcome
 }

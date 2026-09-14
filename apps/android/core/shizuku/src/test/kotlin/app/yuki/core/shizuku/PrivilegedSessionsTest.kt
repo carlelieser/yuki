@@ -85,6 +85,24 @@ class PrivilegedSessionsTest {
 
         assertEquals(listOf("uninstall"), shell.subcommands())
     }
+
+    @Test
+    fun `removes the package for the primary user`() {
+        sessions.uninstall("com.acme.app")
+
+        assertTrue(shell.commands.first().containsInOrder("--user", "0"))
+    }
+
+    @Test
+    fun `fails when the package manager reports failure without a failing exit code`() {
+        shell.output = "Failure [DELETE_FAILED_INTERNAL_ERROR]"
+
+        val error = assertThrows(PrivilegedInstallException::class.java) {
+            sessions.uninstall("com.acme.app")
+        }
+
+        assertTrue(error.message.orEmpty().contains("DELETE_FAILED_INTERNAL_ERROR"))
+    }
 }
 
 private fun List<String>.containsInOrder(first: String, second: String): Boolean {
@@ -97,6 +115,7 @@ private class FakeShellCommandRunner : ShellCommandRunner {
     val commands: MutableList<List<String>> = mutableListOf()
     var failOn: String? = null
     var writtenInput: String = ""
+    var output: String? = null
 
     override fun run(command: List<String>, input: ((OutputStream) -> Unit)?): ShellResult {
         commands += command
@@ -105,7 +124,7 @@ private class FakeShellCommandRunner : ShellCommandRunner {
         val subcommand = command.getOrNull(1)
         if (subcommand == failOn) return ShellResult(1, "$subcommand failed")
 
-        return ShellResult(0, "Success: created install session [42]")
+        return ShellResult(0, output ?: "Success: created install session [42]")
     }
 
     fun subcommands(): List<String> = commands.mapNotNull { command -> command.getOrNull(1) }

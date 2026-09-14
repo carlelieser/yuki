@@ -11,6 +11,11 @@ internal class RecordingInstallGateway : ListingInstallGateway {
     val requests: MutableList<ListingInstallRequest> = mutableListOf()
     val cancelled: MutableList<Long> = mutableListOf()
     val opened: MutableList<Long> = mutableListOf()
+    val uninstalled: MutableList<Long> = mutableListOf()
+
+    var isSilent: Boolean = false
+    var refreshes: Int = 0
+        private set
 
     fun emitObserved(next: InstallState, versionTag: String? = null) {
         observed.value = ListingInstallStatus(state = next, versionTag = versionTag)
@@ -29,5 +34,18 @@ internal class RecordingInstallGateway : ListingInstallGateway {
 
     override suspend fun open(githubRepoId: Long) {
         opened.add(githubRepoId)
+    }
+
+    var uninstallError: Throwable? = null
+
+    override suspend fun uninstall(githubRepoId: Long) {
+        uninstalled.add(githubRepoId)
+        uninstallError?.let { error -> throw error }
+    }
+
+    override suspend fun isSilentUninstall(): Boolean = isSilent
+
+    override fun refresh() {
+        refreshes += 1
     }
 }
