@@ -43,7 +43,7 @@ private fun requiredBadgeFor(row: PermissionRow): (@Composable () -> Unit)? {
 @Composable
 private fun PermissionStatusIcon(row: PermissionRow) {
     Icon(
-        imageVector = if (row.isGranted) YukiIcons.Check else YukiIcons.PriorityHigh,
+        imageVector = if (row.isGranted) YukiIcons.Check else YukiIcons.Warning,
         contentDescription = row.statusLabel,
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.size(YukiSize.IconSmall),

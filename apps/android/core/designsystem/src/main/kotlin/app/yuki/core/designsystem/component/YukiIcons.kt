@@ -78,6 +78,9 @@ object YukiIcons {
     val PriorityHigh: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_priority_high)
 
+    val Warning: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_warning)
+
     val Event: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_event)
 

@@ -18,6 +18,7 @@ import app.yuki.core.designsystem.theme.YukiSpacing
 enum class StatusTone {
     Positive,
     Neutral,
+    Informative,
     Attention,
 }
 
@@ -37,6 +38,7 @@ data class StatusContent(
 private fun containerFor(tone: StatusTone): Color = when (tone) {
     StatusTone.Positive -> MaterialTheme.colorScheme.tertiaryContainer
     StatusTone.Neutral -> MaterialTheme.colorScheme.surfaceContainerHigh
+    StatusTone.Informative -> MaterialTheme.colorScheme.secondaryContainer
     StatusTone.Attention -> MaterialTheme.colorScheme.errorContainer
 }
 
@@ -44,6 +46,7 @@ private fun containerFor(tone: StatusTone): Color = when (tone) {
 private fun contentFor(tone: StatusTone): Color = when (tone) {
     StatusTone.Positive -> MaterialTheme.colorScheme.onTertiaryContainer
     StatusTone.Neutral -> MaterialTheme.colorScheme.onSurface
+    StatusTone.Informative -> MaterialTheme.colorScheme.onSecondaryContainer
     StatusTone.Attention -> MaterialTheme.colorScheme.onErrorContainer
 }
 

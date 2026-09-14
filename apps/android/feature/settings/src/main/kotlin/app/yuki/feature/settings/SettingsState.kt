@@ -45,7 +45,7 @@ internal fun cardFor(detail: ShizukuDetail): ShizukuCard = when (detail.state) {
     ShizukuState.NotInstalled -> ShizukuCard(
         title = CARD_NOT_INSTALLED_TITLE,
         description = CARD_NOT_INSTALLED_DESCRIPTION,
-        tone = StatusTone.Attention,
+        tone = StatusTone.Informative,
         actionLabel = ACTION_OPEN_WEBSITE,
         actionKind = ShizukuActionKind.OpenWebsite,
     )
@@ -53,7 +53,7 @@ internal fun cardFor(detail: ShizukuDetail): ShizukuCard = when (detail.state) {
     ShizukuState.NotRunning -> ShizukuCard(
         title = CARD_NOT_RUNNING_TITLE,
         description = CARD_NOT_RUNNING_DESCRIPTION,
-        tone = StatusTone.Attention,
+        tone = StatusTone.Informative,
         actionLabel = ACTION_LAUNCH_SHIZUKU,
         actionKind = ShizukuActionKind.LaunchShizuku,
     )
