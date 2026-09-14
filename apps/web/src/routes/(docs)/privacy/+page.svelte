@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { SeoHead } from '$lib/components/seo/index.ts';
 	import {
 		LEGAL_CONTACT_EMAIL,
 		LEGAL_EFFECTIVE_DATE,
@@ -8,10 +9,11 @@
 	} from '$lib/legal.ts';
 </script>
 
-<svelte:head>
-	<title>Privacy Policy · Yuki</title>
-	<meta name="description" content="How Yuki collects, uses, and protects your personal data." />
-</svelte:head>
+<SeoHead
+	title="Privacy Policy · Yuki"
+	description="How Yuki collects, uses, and protects your personal data."
+	canonicalPath="/privacy"
+/>
 
 <h1>Privacy Policy</h1>
 

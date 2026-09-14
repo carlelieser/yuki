@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { SeoHead } from '$lib/components/seo/index.ts';
 	import {
 		LEGAL_CONTACT_EMAIL,
 		LEGAL_EFFECTIVE_DATE,
@@ -8,10 +9,11 @@
 	} from '$lib/legal.ts';
 </script>
 
-<svelte:head>
-	<title>Terms of Service · Yuki</title>
-	<meta name="description" content="The terms governing your use of Yuki." />
-</svelte:head>
+<SeoHead
+	title="Terms of Service · Yuki"
+	description="The terms governing your use of Yuki."
+	canonicalPath="/terms"
+/>
 
 <h1>Terms of Service</h1>
 

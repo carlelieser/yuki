@@ -16,6 +16,8 @@
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
 	import Autoplay from 'embla-carousel-autoplay';
+	import { SeoHead } from '$lib/components/seo/index.ts';
+	import { siteMeta } from '$lib/seo/page-meta.ts';
 
 	const FEATURED_AUTOPLAY_DELAY = 5000;
 
@@ -38,7 +40,7 @@
 	}
 </script>
 
-<svelte:head><title>Yuki</title></svelte:head>
+<SeoHead {...siteMeta()} />
 
 {#snippet card(entry: ListingSummary)}
 	<ListingCard {entry} />
@@ -65,6 +67,8 @@
 {/snippet}
 
 <main class="mx-auto w-full max-w-6xl space-y-12 px-4 py-8">
+	<h1 class="sr-only">Yuki — open-source Android apps, curated from GitHub</h1>
+
 	<Section title="Featured">
 		<ProductCarousel
 			items={data.featured}

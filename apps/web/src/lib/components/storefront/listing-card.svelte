@@ -23,11 +23,25 @@
 />
 
 {#snippet image()}
-	<img src={media} alt="" class="size-full object-cover" loading="lazy" />
+	<img
+		src={media}
+		alt=""
+		class="size-full object-cover"
+		loading="lazy"
+		decoding="async"
+		referrerpolicy="no-referrer"
+	/>
 {/snippet}
 
 {#snippet icon()}
-	<img src={entry.iconUrl} alt="" class="size-full object-cover" loading="lazy" />
+	<img
+		src={entry.iconUrl}
+		alt=""
+		class="size-full object-cover"
+		loading="lazy"
+		decoding="async"
+		referrerpolicy="no-referrer"
+	/>
 {/snippet}
 
 {#snippet badges()}
