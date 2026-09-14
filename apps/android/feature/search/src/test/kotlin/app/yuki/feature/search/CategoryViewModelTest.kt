@@ -31,9 +31,13 @@ class CategoryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(category: ListingCategory = ListingCategory.Gaming) = CategoryViewModel(
+    private fun viewModel(
+        category: ListingCategory = ListingCategory.Gaming,
+        installed: FakeInstalledListings = FakeInstalledListings(),
+    ) = CategoryViewModel(
         savedStateHandle = SavedStateHandle(mapOf(CATEGORY_KEY to category.wireValue)),
         repository = repository,
+        installedListings = installed,
     )
 
     @Test
@@ -56,6 +60,7 @@ class CategoryViewModelTest {
             CategoryViewModel(
                 savedStateHandle = SavedStateHandle(mapOf(CATEGORY_KEY to "not_a_category")),
                 repository = repository,
+                installedListings = FakeInstalledListings(),
             )
         }
 

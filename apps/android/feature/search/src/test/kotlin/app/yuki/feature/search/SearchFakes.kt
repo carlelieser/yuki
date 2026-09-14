@@ -1,6 +1,7 @@
 package app.yuki.feature.search
 
 import app.yuki.core.datastore.RecentSearchStore
+import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
@@ -60,6 +61,16 @@ internal class FakeListingRepository : ListingRepository {
 
     override suspend fun detail(slug: String): Result<ListingDetail> =
         Result.failure(TypedFailure(FailureReason.NotFound))
+}
+
+internal class FakeInstalledListings(installedIds: Set<Long> = emptySet()) : InstalledListings {
+    private val ids = MutableStateFlow(installedIds)
+
+    override fun observeInstalledIds(): Flow<Set<Long>> = ids
+
+    fun install(githubRepoId: Long) {
+        ids.value = ids.value + githubRepoId
+    }
 }
 
 internal class FakeRecentSearchStore : RecentSearchStore {

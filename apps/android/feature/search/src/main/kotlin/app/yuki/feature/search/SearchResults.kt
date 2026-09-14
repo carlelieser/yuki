@@ -52,23 +52,28 @@ internal fun SearchResults(
             )
 
             is UiState.Success -> MatchList(
-                query = state.query,
-                matches = results.data,
+                matches = Matches(query = state.query, listings = results.data),
+                installedIds = state.installedIds,
                 onSelect = onSelect,
             )
         }
     }
 }
 
+private data class Matches(
+    val query: String,
+    val listings: List<ListingSummary>,
+)
+
 @Composable
 private fun MatchList(
-    query: String,
-    matches: List<ListingSummary>,
+    matches: Matches,
+    installedIds: Set<Long>,
     onSelect: (ListingSummary) -> Unit,
 ) {
-    if (matches.isEmpty()) {
+    if (matches.listings.isEmpty()) {
         CollectionEmpty(
-            content = noMatches(query),
+            content = noMatches(matches.query),
             modifier = Modifier.padding(YukiSpacing.Large),
         )
         return
@@ -78,9 +83,10 @@ private fun MatchList(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
     ) {
-        items(items = matches, key = { listing -> listing.id }) { listing ->
+        items(items = matches.listings, key = { listing -> listing.id }) { listing ->
             ClickableProductListItem(
-                content = listing.toProductListItemContent(),
+                content = listing.toProductListItemContent()
+                    .copy(isInstalled = listing.githubRepoId in installedIds),
                 onClick = { onSelect(listing) },
             )
         }

@@ -9,6 +9,7 @@ data class SearchContent(
     val recent: List<String>,
     val results: UiState<List<ListingSummary>>?,
     val filter: BrowseFilter,
+    val installedIds: Set<Long> = emptySet(),
 ) {
     val isSearching: Boolean get() = results != null
 

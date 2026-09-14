@@ -37,7 +37,9 @@ class ExploreViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = ExploreViewModel(repository)
+    private fun viewModel(
+        installed: FakeInstalledListings = FakeInstalledListings(),
+    ) = ExploreViewModel(repository, installed)
 
     @Test
     fun `emits loading then success once featured resolves`() = runTest {
@@ -48,6 +50,42 @@ class ExploreViewModelTest {
 
             val loaded = awaitItem() as UiState.Success
             assertEquals(listOf(listing("alpha")), (loaded.data.featured as UiState.Success).data)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `an installed listing is reported as installed`() = runTest {
+        val installed = listing("alpha")
+        repository.sectionsResult =
+            Result.success(listOf(section(ListingCategory.Gaming, listOf("alpha", "beta"))))
+
+        viewModel(FakeInstalledListings(setOf(installed.githubRepoId))).state.test {
+            assertEquals(UiState.Loading, awaitItem())
+
+            val loaded = awaitTerminal() as UiState.Success
+            assertTrue(installed.githubRepoId in loaded.data.installedIds)
+            assertFalse(listing("beta").githubRepoId in loaded.data.installedIds)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `installing an app updates explore without a refresh`() = runTest {
+        val installed = FakeInstalledListings()
+        val alpha = listing("alpha").githubRepoId
+        repository.sectionsResult =
+            Result.success(listOf(section(ListingCategory.Gaming, listOf("alpha"))))
+
+        viewModel(installed).state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            val before = awaitTerminal() as UiState.Success
+            assertFalse(alpha in before.data.installedIds)
+
+            installed.install(alpha)
+            advanceUntilIdle()
+
+            assertTrue(alpha in awaitInstalled(alpha).installedIds)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -324,6 +362,15 @@ private suspend fun ReceiveTurbine<UiState<ExploreContent>>.awaitLoadedFeatured(
         val content = (awaitItem() as? UiState.Success)?.data ?: continue
         val featured = content.featured
         if (featured is UiState.Success) return featured.data
+    }
+}
+
+private suspend fun ReceiveTurbine<UiState<ExploreContent>>.awaitInstalled(
+    githubRepoId: Long,
+): ExploreContent {
+    while (true) {
+        val content = (awaitItem() as? UiState.Success)?.data ?: continue
+        if (githubRepoId in content.installedIds) return content
     }
 }
 

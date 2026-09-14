@@ -7,6 +7,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.installer)
     implementation(projects.core.network)
 
     androidTestImplementation(libs.androidx.test.ext.junit)

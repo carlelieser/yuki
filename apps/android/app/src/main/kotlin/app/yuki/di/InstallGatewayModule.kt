@@ -1,7 +1,9 @@
 package app.yuki.di
 
+import app.yuki.core.installer.InstalledListings
 import app.yuki.feature.listing.ListingInstallGateway
 import app.yuki.install.CoordinatorListingInstallGateway
+import app.yuki.install.StoreInstalledListings
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,4 +18,8 @@ internal interface InstallGatewayModule {
     fun listingInstallGateway(
         implementation: CoordinatorListingInstallGateway,
     ): ListingInstallGateway
+
+    @Binds
+    @Singleton
+    fun installedListings(implementation: StoreInstalledListings): InstalledListings
 }

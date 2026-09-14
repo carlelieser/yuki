@@ -1,5 +1,6 @@
 package app.yuki.feature.explore
 
+import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
@@ -11,6 +12,8 @@ import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.SearchQuery
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class TypedFailure(override val reason: FailureReason) :
     Exception("Explore test failure"), FailureAware
@@ -73,6 +76,16 @@ internal class FakeListingRepository : ListingRepository {
 
     override suspend fun detail(slug: String): Result<ListingDetail> =
         Result.failure(TypedFailure(FailureReason.NotFound))
+}
+
+internal class FakeInstalledListings(installedIds: Set<Long> = emptySet()) : InstalledListings {
+    private val ids = MutableStateFlow(installedIds)
+
+    override fun observeInstalledIds(): Flow<Set<Long>> = ids
+
+    fun install(githubRepoId: Long) {
+        ids.value = ids.value + githubRepoId
+    }
 }
 
 internal const val FEATURED_CALL = "featured"

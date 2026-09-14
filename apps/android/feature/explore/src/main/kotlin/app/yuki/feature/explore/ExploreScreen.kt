@@ -144,6 +144,7 @@ private fun ExploreContentBody(
 
         categorySections(
             sections = content.sections,
+            installedIds = content.installedIds,
             actions = CategorySectionActions(
                 onListingSelected = callbacks.onListingSelected,
                 onCategorySelected = callbacks.onCategorySelected,
