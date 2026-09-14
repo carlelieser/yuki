@@ -109,10 +109,30 @@ class InstallButtonTest {
     }
 
     @Test
-    fun pendingUserActionIsNotClickable() {
-        render(InstallState.PendingUserAction)
+    fun pendingUserActionCanStillBeCancelled() {
+        val actions = mutableListOf<InstallAction>()
+        render(InstallState.PendingUserAction, InstallActionHandler { action -> actions += action })
 
-        composeRule.onNodeWithText("Waiting for confirmation").assertIsNotEnabled()
+        composeRule.onNodeWithText("Waiting for confirmation").assertIsEnabled().performClick()
+
+        assertEquals(listOf(InstallAction.Cancel), actions)
+    }
+
+    @Test
+    fun installingShowsItsLabel() {
+        render(InstallState.Installing)
+
+        composeRule.onNodeWithText("Installing").assertExists()
+    }
+
+    @Test
+    fun installingCannotBeCancelled() {
+        val actions = mutableListOf<InstallAction>()
+        render(InstallState.Installing, InstallActionHandler { action -> actions += action })
+
+        composeRule.onNodeWithText("Installing").assertIsNotEnabled().performClick()
+
+        assertEquals(emptyList<InstallAction>(), actions)
     }
 
     @Test

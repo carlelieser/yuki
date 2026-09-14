@@ -65,6 +65,8 @@ class InstallCoordinator @Inject constructor(
     ) {
         val strategy = strategies.select()
 
+        emit(InstallState.Installing)
+
         strategy.install(staged.file, staged.identity).collect { outcome ->
             emit(outcome.toInstallState(request.source.versionTag))
             if (outcome is InstallOutcome.Succeeded) {

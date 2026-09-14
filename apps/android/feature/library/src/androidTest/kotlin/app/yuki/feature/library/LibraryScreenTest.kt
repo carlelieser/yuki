@@ -13,6 +13,7 @@ import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.FailureReason
+import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
@@ -57,6 +58,36 @@ class LibraryScreenTest {
     }
 
     @Test
+    fun anInstallingRowShowsAProgressIndicator() {
+        setContent(UiState.Success(LibraryContent(listOf(item(InstallState.Installing)))))
+
+        composeRule.onNodeWithTag(LIBRARY_DOWNLOAD_PROGRESS_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun anInstallingRowSaysInstallingRatherThanTheVersion() {
+        setContent(UiState.Success(LibraryContent(listOf(item(InstallState.Installing)))))
+
+        composeRule.onNodeWithText(LIBRARY_INSTALLING_SUPPORTING).assertIsDisplayed()
+        composeRule.onNodeWithText(TERMUX.versionTag).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFailedRowOffersDismiss() {
+        val dismissed = mutableListOf<Long>()
+        setContent(
+            UiState.Success(
+                LibraryContent(listOf(item(InstallState.Failed(InstallFailure.TimedOut)))),
+            ),
+            onDismiss = dismissed::add,
+        )
+
+        composeRule.onNodeWithTag(LIBRARY_DISMISS_TAG).performClick()
+
+        assertEquals(listOf(TERMUX.githubRepoId), dismissed)
+    }
+
+    @Test
     fun aFailureRendersTheFailureStateAndNotTheEmptyState() {
         setContent(UiState.Failure(FailureReason.Offline))
 
@@ -69,6 +100,7 @@ class LibraryScreenTest {
         onListingClick: (String) -> Unit = {},
         onExploreClick: () -> Unit = {},
         onPullToRefresh: () -> Unit = {},
+        onDismiss: (Long) -> Unit = {},
     ) {
         composeRule.setContent {
             LibraryContentScreen(
@@ -80,6 +112,7 @@ class LibraryScreenTest {
                 actions = LibraryActions(
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
+                    onDismiss = onDismiss,
                 ),
                 contentPadding = PaddingValues(),
             )

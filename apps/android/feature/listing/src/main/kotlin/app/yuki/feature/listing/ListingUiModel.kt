@@ -29,7 +29,10 @@ fun ListingDetail.toUiModel(): ListingUiModel = ListingUiModel(
 )
 
 private fun InstallState.isActive(): Boolean = when (this) {
-    is InstallState.Downloading, InstallState.PendingUserAction -> true
+    is InstallState.Downloading,
+    InstallState.Installing,
+    InstallState.PendingUserAction,
+    -> true
     else -> false
 }
 

@@ -59,10 +59,13 @@ class LibraryViewModel @Inject internal constructor(
         }
     }
 
+    fun onDismiss(githubRepoId: Long) {
+        viewModelScope.launch { progress.clear(githubRepoId) }
+    }
+
     private suspend fun reconcile() {
         resumes.value += 1
         progress.clearSettled()
-        progress.clearFailed()
     }
 
     private fun presentInstalls(store: InstallStore): Flow<List<InstalledApp>> =
@@ -71,7 +74,6 @@ class LibraryViewModel @Inject internal constructor(
 
     private fun activeProgress() = progress.observeActive().onStart {
         progress.clearSettled()
-        progress.clearFailed()
     }
 
     private fun merge(installed: List<InstalledApp>, active: List<InstallProgress>) = mergeLibrary(

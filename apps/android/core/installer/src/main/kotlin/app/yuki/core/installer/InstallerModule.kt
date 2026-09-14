@@ -21,6 +21,11 @@ internal abstract class InstallerModule {
     @Binds
     abstract fun bindFallbackStrategy(strategy: SystemInstallStrategy): InstallStrategy
 
+    @Binds
+    abstract fun bindWorkLiveness(
+        liveness: WorkManagerInstallWorkLiveness,
+    ): InstallWorkLiveness
+
     @BindsOptionalOf
     abstract fun optionalPrivilegedInstaller(): PrivilegedInstaller
 }

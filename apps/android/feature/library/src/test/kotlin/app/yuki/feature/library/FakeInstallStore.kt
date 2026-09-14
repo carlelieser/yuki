@@ -64,9 +64,6 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
     var settledClearances = 0
         private set
 
-    var failedClearances = 0
-        private set
-
     override fun observe(githubRepoId: Long): Flow<InstallProgress?> =
         rows.map { current -> current.firstOrNull { it.githubRepoId == githubRepoId } }
 
@@ -75,8 +72,20 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
     override suspend fun find(githubRepoId: Long): InstallProgress? =
         rows.value.firstOrNull { it.githubRepoId == githubRepoId }
 
+    override suspend fun unsettled(): List<InstallProgress> = rows.value.filter { row ->
+        row.state is InstallState.Downloading ||
+            row.state == InstallState.Installing ||
+            row.state == InstallState.PendingUserAction
+    }
+
     override suspend fun write(progress: InstallProgress) {
-        rows.value = rows.value.filterNot { it.githubRepoId == progress.githubRepoId } + progress
+        val existing = rows.value.indexOfFirst { it.githubRepoId == progress.githubRepoId }
+
+        rows.value = if (existing < 0) {
+            rows.value + progress
+        } else {
+            rows.value.toMutableList().apply { set(existing, progress) }
+        }
     }
 
     override suspend fun clear(githubRepoId: Long) {
@@ -88,8 +97,4 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
         rows.value = rows.value.filterNot { row -> row.state is InstallState.Installed }
     }
 
-    override suspend fun clearFailed() {
-        failedClearances += 1
-        rows.value = rows.value.filterNot { row -> row.state is InstallState.Failed }
-    }
 }

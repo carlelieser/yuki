@@ -4,6 +4,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -46,6 +47,8 @@ internal class DownloadManagerApkDownloader @Inject constructor(
         downloadId: Long,
         source: InstallSource,
     ): DownloadSnapshot {
+        var lastEmitted: DownloadSize? = null
+
         while (true) {
             val snapshot = DownloadCursorReader(manager).read(downloadId)
                 ?: throw InstallException(
@@ -54,9 +57,14 @@ internal class DownloadManagerApkDownloader @Inject constructor(
                 )
 
             if (snapshot.isFailed) throw snapshot.toFailure(source.downloadUrl)
+
+            if (snapshot.shouldEmit(lastEmitted)) {
+                emit(DownloadProgress.Running(snapshot.size))
+                lastEmitted = snapshot.size
+            }
+
             if (snapshot.isComplete) return snapshot
 
-            emit(DownloadProgress.Running(snapshot.size))
             delay(DOWNLOAD_POLL_INTERVAL_MILLIS)
         }
     }
@@ -73,6 +81,9 @@ internal class DownloadManagerApkDownloader @Inject constructor(
                 fileName(),
             )
 }
+
+internal fun DownloadSnapshot.shouldEmit(lastEmitted: DownloadSize?): Boolean =
+    size != lastEmitted
 
 internal fun resolveApk(snapshot: DownloadSnapshot, source: InstallSource): File =
     verifyDownloadedApk(snapshot.localUri?.toLocalPath(), source)

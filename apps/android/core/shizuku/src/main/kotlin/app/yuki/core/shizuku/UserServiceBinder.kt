@@ -44,10 +44,17 @@ internal class ShizukuUserServiceBinder @Inject constructor(
     private fun liveInstaller(): IYukiInstaller? =
         bound?.takeIf { installer -> installer.asBinder().pingBinder() }
 
-    private suspend fun bind(): IYukiInstaller = suspendCancellableCoroutine { continuation ->
-        val connection = ServiceConnectionAdapter(continuation) { bound = null }
-        continuation.invokeOnCancellation { Shizuku.unbindUserService(arguments, connection, true) }
-        Shizuku.bindUserService(arguments, connection)
+    private suspend fun bind(): IYukiInstaller = withInstallTimeout(
+        USER_SERVICE_BIND_TIMEOUT,
+        "The Shizuku installer service did not connect within $USER_SERVICE_BIND_TIMEOUT",
+    ) {
+        suspendCancellableCoroutine { continuation ->
+            val connection = ServiceConnectionAdapter(continuation) { bound = null }
+            continuation.invokeOnCancellation {
+                Shizuku.unbindUserService(arguments, connection, true)
+            }
+            Shizuku.bindUserService(arguments, connection)
+        }
     }
 }
 

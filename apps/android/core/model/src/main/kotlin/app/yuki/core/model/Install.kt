@@ -13,6 +13,8 @@ sealed interface InstallFailure {
 
     data object PackageMismatch : InstallFailure
 
+    data object TimedOut : InstallFailure
+
     data class Rejected(val message: String) : InstallFailure
 }
 
@@ -46,6 +48,8 @@ sealed interface InstallState {
     data object NotInstalled : InstallState
 
     data class Downloading(val size: DownloadSize) : InstallState
+
+    data object Installing : InstallState
 
     data object PendingUserAction : InstallState
 

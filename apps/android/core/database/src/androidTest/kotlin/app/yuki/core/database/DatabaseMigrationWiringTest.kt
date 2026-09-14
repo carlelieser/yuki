@@ -64,6 +64,20 @@ class DatabaseMigrationWiringTest {
         assertTrue(columns.containsAll(listOf("slug", "title", "iconUrl")))
     }
 
+    @Test
+    fun openingAVersionThreeDatabaseReachesTheCreatedAtColumn() {
+        helper.createDatabase(WIRING_DATABASE, 3).close()
+
+        val database = openDatabase()
+        val columns = database.openHelper.writableDatabase
+            .query("SELECT * FROM install_progress LIMIT 0")
+            .use { cursor -> cursor.columnNames.toList() }
+
+        database.close()
+
+        assertTrue(columns.contains("createdAt"))
+    }
+
     private fun progressRowCountAfterOpening(): Int {
         val database = openDatabase()
         val rowCount = database.openHelper.writableDatabase
@@ -84,4 +98,4 @@ class DatabaseMigrationWiringTest {
             .build()
 }
 
-private val SHIPPED_VERSIONS = listOf(1, 2, 3)
+private val SHIPPED_VERSIONS = listOf(1, 2, 3, 4)

@@ -1,5 +1,6 @@
 package app.yuki.core.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,5 +16,6 @@ data class InstallProgressEntity(
     val bytesTotal: Long,
     val failureReason: String?,
     val failureMessage: String?,
+    @ColumnInfo(defaultValue = "0") val createdAt: Long,
     val updatedAt: Long,
 )

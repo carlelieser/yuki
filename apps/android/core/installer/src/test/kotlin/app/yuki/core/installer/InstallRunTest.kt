@@ -23,6 +23,7 @@ class InstallRunTest {
                 InstallState.Downloading(testSize(0L, bytesTotal = 0L)),
                 InstallState.Downloading(testSize(250L)),
                 InstallState.Downloading(testSize(750L)),
+                InstallState.Installing,
                 InstallState.Installed("v1.2.0"),
             ),
             progress.written.map(InstallProgress::state),
@@ -104,6 +105,7 @@ class InstallRetryPolicyTest {
             InstallFailure.Incompatible,
             InstallFailure.PackageMismatch,
             InstallFailure.Aborted,
+            InstallFailure.TimedOut,
         )
 
         permanent.forEach { reason ->

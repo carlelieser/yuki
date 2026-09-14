@@ -18,11 +18,11 @@ interface InstallProgressStore {
 
     suspend fun find(githubRepoId: Long): InstallProgress?
 
+    suspend fun unsettled(): List<InstallProgress>
+
     suspend fun write(progress: InstallProgress)
 
     suspend fun clear(githubRepoId: Long)
 
     suspend fun clearSettled()
-
-    suspend fun clearFailed()
 }

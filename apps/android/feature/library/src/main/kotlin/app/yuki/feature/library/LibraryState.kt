@@ -1,6 +1,8 @@
 package app.yuki.feature.library
 
 import app.yuki.core.designsystem.component.ProductListItemContent
+import app.yuki.core.designsystem.component.installFailureLabel
+import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
 
@@ -19,10 +21,13 @@ data class LibraryItem(
 
     internal val sortRank: Int get() = when {
         isDownloading -> RANK_DOWNLOADING
+        install == InstallState.Installing -> RANK_DOWNLOADING
         install == InstallState.PendingUserAction -> RANK_PENDING
         isFailed -> RANK_FAILED
         else -> RANK_SETTLED
     }
+
+    val failure: InstallFailure? get() = (install as? InstallState.Failed)?.reason
 
     val listItem: ProductListItemContent get() = ProductListItemContent(
         title = app.title,
@@ -32,8 +37,9 @@ data class LibraryItem(
 
     private fun supportingText(): String = when (install) {
         is InstallState.Downloading -> install.size.label
+        InstallState.Installing -> LIBRARY_INSTALLING_SUPPORTING
         InstallState.PendingUserAction -> LIBRARY_PENDING_SUPPORTING
-        is InstallState.Failed -> LIBRARY_FAILED_SUPPORTING
+        is InstallState.Failed -> installFailureLabel(install.reason)
         else -> app.versionTag
     }
 }
@@ -51,5 +57,5 @@ private const val RANK_PENDING = 1
 private const val RANK_FAILED = 2
 private const val RANK_SETTLED = 3
 
+internal const val LIBRARY_INSTALLING_SUPPORTING = "Installing"
 internal const val LIBRARY_PENDING_SUPPORTING = "Waiting for confirmation"
-internal const val LIBRARY_FAILED_SUPPORTING = "Install failed"

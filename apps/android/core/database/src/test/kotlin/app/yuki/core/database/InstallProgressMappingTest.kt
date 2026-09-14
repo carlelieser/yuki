@@ -6,6 +6,7 @@ import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 private const val REPO_ID = 42L
@@ -42,6 +43,21 @@ class InstallProgressMappingTest {
     }
 
     @Test
+    fun `an install in progress round trips`() {
+        assertEquals(InstallState.Installing, roundTrip(InstallState.Installing))
+    }
+
+    @Test
+    fun `an install in progress is persisted distinctly from a pending confirmation`() {
+        val installing = InstallProgress(TARGET, VERSION_TAG, InstallState.Installing)
+            .toEntity(UPDATED_AT)
+        val pending = InstallProgress(TARGET, VERSION_TAG, InstallState.PendingUserAction)
+            .toEntity(UPDATED_AT)
+
+        assertNotEquals(installing.status, pending.status)
+    }
+
+    @Test
     fun `an installed version round trips its tag`() {
         assertEquals(
             InstallState.Installed(VERSION_TAG),
@@ -58,6 +74,7 @@ class InstallProgressMappingTest {
             InstallFailure.InsufficientStorage,
             InstallFailure.Incompatible,
             InstallFailure.PackageMismatch,
+            InstallFailure.TimedOut,
         )
 
         reasons.forEach { reason ->
@@ -114,6 +131,15 @@ class InstallProgressMappingTest {
 
         assertEquals(REPO_ID, entity.githubRepoId)
         assertEquals(VERSION_TAG, entity.versionTag)
+        assertEquals(UPDATED_AT, entity.updatedAt)
+    }
+
+    @Test
+    fun `a freshly mapped row stamps both timestamps`() {
+        val entity = InstallProgress(TARGET, VERSION_TAG, InstallState.Installing)
+            .toEntity(UPDATED_AT)
+
+        assertEquals(UPDATED_AT, entity.createdAt)
         assertEquals(UPDATED_AT, entity.updatedAt)
     }
 }

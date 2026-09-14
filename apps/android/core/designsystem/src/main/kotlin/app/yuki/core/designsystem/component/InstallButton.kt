@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,7 +21,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.DownloadSize
-import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 
 fun interface InstallActionHandler {
@@ -31,6 +32,7 @@ enum class InstallAction {
     Update,
     Cancel,
     Retry,
+    Dismiss,
     Open,
 }
 
@@ -44,19 +46,10 @@ enum class InstallProgressPosition {
     Trailing,
 }
 
-private fun failureLabel(reason: InstallFailure): String = when (reason) {
-    InstallFailure.DownloadFailed -> "Download failed"
-    InstallFailure.DownloadUnreadable -> "Download incomplete"
-    InstallFailure.Aborted -> "Install cancelled"
-    InstallFailure.InsufficientStorage -> "Not enough space"
-    InstallFailure.Incompatible -> "Not compatible"
-    InstallFailure.PackageMismatch -> "Different app"
-    is InstallFailure.Rejected -> "Install failed"
-}
-
 private fun labelFor(state: InstallState): String = when (state) {
     InstallState.NotInstalled -> "Install"
     is InstallState.Downloading -> "Cancel"
+    InstallState.Installing -> "Installing"
     InstallState.PendingUserAction -> "Waiting for confirmation"
     is InstallState.Installed -> "Open"
     is InstallState.UpdateAvailable -> "Update"
@@ -66,6 +59,7 @@ private fun labelFor(state: InstallState): String = when (state) {
 private fun actionFor(state: InstallState): InstallAction = when (state) {
     InstallState.NotInstalled -> InstallAction.Install
     is InstallState.Downloading -> InstallAction.Cancel
+    InstallState.Installing -> InstallAction.Install
     InstallState.PendingUserAction -> InstallAction.Cancel
     is InstallState.Installed -> InstallAction.Open
     is InstallState.UpdateAvailable -> InstallAction.Update
@@ -75,14 +69,17 @@ private fun actionFor(state: InstallState): InstallAction = when (state) {
 private fun describe(state: InstallState): String = when (state) {
     InstallState.NotInstalled -> "Install"
     is InstallState.Downloading -> describeDownload(state.size)
+    InstallState.Installing -> "Installing"
     InstallState.PendingUserAction -> "Waiting for confirmation"
     is InstallState.Installed -> "Installed, version ${state.versionTag}"
     is InstallState.UpdateAvailable -> "Update from ${state.from} to ${state.to}"
-    is InstallState.Failed -> failureLabel(state.reason)
+    is InstallState.Failed -> installFailureLabel(state.reason)
 }
 
 private fun isFilled(state: InstallState): Boolean =
     state is InstallState.NotInstalled || state is InstallState.UpdateAvailable
+
+private fun isBlocking(state: InstallState): Boolean = state is InstallState.Installing
 
 private fun describeDownload(size: DownloadSize): String {
     val fraction = size.fraction
@@ -133,16 +130,6 @@ private fun DownloadProgress(size: DownloadSize, shape: InstallProgressShape) {
     }
 }
 
-@Composable
-private fun FailureNote(reason: InstallFailure) {
-    Text(
-        text = failureLabel(reason),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.error,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
 
 @Composable
 private fun InstallControl(
@@ -152,12 +139,13 @@ private fun InstallControl(
     isGhost: Boolean,
 ) {
     val action = actionFor(state)
+    val isClickable = isEnabled && !isBlocking(state)
 
     if (isGhost) {
         YukiTextButton(
             label = labelFor(state),
             onClick = { onAction.onAction(action) },
-            isEnabled = isEnabled,
+            isEnabled = isClickable,
         )
         return
     }
@@ -166,7 +154,7 @@ private fun InstallControl(
         YukiButton(
             label = labelFor(state),
             onClick = { onAction.onAction(action) },
-            isEnabled = isEnabled,
+            isEnabled = isClickable,
         )
         return
     }
@@ -174,8 +162,20 @@ private fun InstallControl(
     YukiSecondaryButton(
         label = labelFor(state),
         onClick = { onAction.onAction(action) },
-        isEnabled = isEnabled,
+        isEnabled = isClickable,
     )
+}
+
+const val INSTALL_DISMISS_DESCRIPTION = "Dismiss"
+
+@Composable
+private fun DismissControl(onAction: InstallActionHandler) {
+    IconButton(onClick = { onAction.onAction(InstallAction.Dismiss) }) {
+        Icon(
+            imageVector = YukiIcons.Close,
+            contentDescription = INSTALL_DISMISS_DESCRIPTION,
+        )
+    }
 }
 
 @Composable
@@ -192,7 +192,11 @@ fun InstallButton(
         if (state is InstallState.Downloading) {
             DownloadProgress(size = state.size, shape = progressShape)
         }
-        if (state is InstallState.Failed) FailureNote(state.reason)
+        if (state is InstallState.Failed) {
+            InstallFailureBadge(reason = state.reason)
+            DismissControl(onAction = onAction)
+        }
+        if (state is InstallState.Installing) YukiLoadingIndicator()
         if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
     }
 
@@ -207,7 +211,7 @@ fun InstallButton(
         InstallControl(
             state = state,
             onAction = onAction,
-            isEnabled = isEnabled && state !is InstallState.PendingUserAction,
+            isEnabled = isEnabled,
             isGhost = isGhost,
         )
 

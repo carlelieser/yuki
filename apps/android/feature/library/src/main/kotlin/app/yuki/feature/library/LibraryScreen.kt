@@ -1,11 +1,20 @@
 package app.yuki.feature.library
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -16,15 +25,23 @@ import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ListingBadges
 import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.component.installFailureBadge
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
+import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
+import app.yuki.core.model.downloadSizeOf
+
+private val INSTALLING_SIZE = downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L)
 
 const val LIBRARY_LIST_TAG = "libraryList"
+const val LIBRARY_DISMISS_TAG = "libraryDismiss"
+const val LIBRARY_DISMISS_DESCRIPTION = "Dismiss"
 
 @Composable
 fun LibraryScreen(
@@ -45,7 +62,11 @@ fun LibraryScreen(
             isRefreshing = isRefreshing,
             onPullToRefresh = viewModel::onPullToRefresh,
         ),
-        actions = LibraryActions(onListingClick = onListingClick, onExploreClick = onExploreClick),
+        actions = LibraryActions(
+            onListingClick = onListingClick,
+            onExploreClick = onExploreClick,
+            onDismiss = viewModel::onDismiss,
+        ),
         contentPadding = contentPadding,
         modifier = modifier,
     )
@@ -54,6 +75,7 @@ fun LibraryScreen(
 data class LibraryActions(
     val onListingClick: (String) -> Unit,
     val onExploreClick: () -> Unit,
+    val onDismiss: (Long) -> Unit,
 )
 
 data class LibraryRefresh(
@@ -120,21 +142,78 @@ private fun LibraryList(
             .testTag(LIBRARY_LIST_TAG),
     ) {
         items(content.items, key = LibraryItem::githubRepoId) { item ->
-            LibraryRow(item = item, onClick = { actions.onListingClick(item.app.slug) })
+            LibraryRow(
+                item = item,
+                onClick = { actions.onListingClick(item.app.slug) },
+                onDismiss = { actions.onDismiss(item.githubRepoId) },
+            )
         }
     }
 }
 
 @Composable
-private fun LibraryRow(item: LibraryItem, onClick: () -> Unit) {
-    val downloading = item.install as? InstallState.Downloading
-        ?: return ClickableProductListItem(content = item.listItem, onClick = onClick)
+private fun LibraryDismissButton(onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier.size(YukiSize.IconSmall),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .requiredSize(YukiSize.MinimumTouchTarget)
+                .clip(CircleShape)
+                .clickable(
+                    onClick = onDismiss,
+                    role = Role.Button,
+                    interactionSource = null,
+                    indication = ripple(bounded = false, radius = YukiSize.MinimumTouchTarget / 2),
+                )
+                .testTag(LIBRARY_DISMISS_TAG),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = YukiIcons.Close,
+                contentDescription = LIBRARY_DISMISS_DESCRIPTION,
+            )
+        }
+    }
+}
 
-    ProductListItem(
-        content = item.listItem,
-        modifier = Modifier.clickable(onClick = onClick),
-        trailing = { LibraryDownloadIndicator(downloading.size) },
-    )
+@Composable
+private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> Unit) {
+    val install = item.install
+
+    if (install is InstallState.Downloading) {
+        return ProductListItem(
+            content = item.listItem,
+            modifier = Modifier.clickable(onClick = onClick),
+            trailing = { LibraryDownloadIndicator(install.size) },
+        )
+    }
+
+    if (install is InstallState.Installing) {
+        return ProductListItem(
+            content = item.listItem,
+            modifier = Modifier.clickable(onClick = onClick),
+            trailing = {
+                LibraryDownloadIndicator(
+                    size = INSTALLING_SIZE,
+                    description = LIBRARY_INSTALLING_SUPPORTING,
+                )
+            },
+        )
+    }
+
+    if (install is InstallState.Failed) {
+        return ProductListItem(
+            content = item.listItem.copy(
+                badges = ListingBadges(listOf(installFailureBadge(install.reason))),
+            ),
+            modifier = Modifier.clickable(onClick = onClick),
+            trailing = { LibraryDismissButton(onDismiss = onDismiss) },
+        )
+    }
+
+    ClickableProductListItem(content = item.listItem, onClick = onClick)
 }
 
 @Composable

@@ -18,6 +18,12 @@ internal class FakeInstallProgressStore : InstallProgressStore {
 
     override suspend fun find(githubRepoId: Long): InstallProgress? = rows.value[githubRepoId]
 
+    override suspend fun unsettled(): List<InstallProgress> = rows.value.values.filter { progress ->
+        progress.state is InstallState.Downloading ||
+            progress.state == InstallState.Installing ||
+            progress.state == InstallState.PendingUserAction
+    }
+
     override suspend fun write(progress: InstallProgress) {
         written += progress
         rows.value = rows.value + (progress.githubRepoId to progress)
@@ -33,9 +39,4 @@ internal class FakeInstallProgressStore : InstallProgressStore {
         }
     }
 
-    override suspend fun clearFailed() {
-        rows.value = rows.value.filterValues { progress ->
-            progress.state !is InstallState.Failed
-        }
-    }
 }

@@ -22,18 +22,33 @@ import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
+enum class BadgeTone {
+    Neutral,
+    Error,
+}
+
 data class BadgeContent(
     val label: String,
     val icon: ImageVector,
     val description: String,
+    val tone: BadgeTone = BadgeTone.Neutral,
 )
 
 @Composable
 fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
+    val container = when (content.tone) {
+        BadgeTone.Neutral -> MaterialTheme.colorScheme.surfaceContainerHigh
+        BadgeTone.Error -> MaterialTheme.colorScheme.errorContainer
+    }
+    val foreground = when (content.tone) {
+        BadgeTone.Neutral -> MaterialTheme.colorScheme.onSurfaceVariant
+        BadgeTone.Error -> MaterialTheme.colorScheme.onErrorContainer
+    }
+
     Row(
         modifier = modifier
             .clip(YukiShape.Pill)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(container)
             .defaultMinSize(minHeight = YukiSize.BadgeHeight)
             .padding(horizontal = YukiSpacing.Small)
             .semantics(mergeDescendants = true) { contentDescription = content.description },
@@ -43,7 +58,7 @@ fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
         Icon(
             imageVector = content.icon,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = foreground,
             modifier = Modifier
                 .size(YukiSize.IconTiny)
                 .clearAndSetSemantics { },
@@ -51,7 +66,7 @@ fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
         Text(
             text = content.label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = foreground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

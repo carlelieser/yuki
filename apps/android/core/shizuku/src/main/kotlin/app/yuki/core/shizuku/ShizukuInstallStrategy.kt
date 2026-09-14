@@ -42,14 +42,19 @@ internal class ShizukuInstallStrategy @Inject constructor(
 
 internal suspend fun awaitCallback(
     request: (IInstallCallback) -> Unit,
-): InstallOutcome = suspendCancellableCoroutine { continuation ->
-    val callback = object : IInstallCallback.Stub() {
-        override fun onFinished(status: Int, message: String?) {
-            if (continuation.isActive) continuation.resume(toOutcome(status, message))
+): InstallOutcome = withInstallTimeout(
+    PRIVILEGED_INSTALL_TIMEOUT,
+    "The privileged installer did not report a result within $PRIVILEGED_INSTALL_TIMEOUT",
+) {
+    suspendCancellableCoroutine { continuation ->
+        val callback = object : IInstallCallback.Stub() {
+            override fun onFinished(status: Int, message: String?) {
+                if (continuation.isActive) continuation.resume(toOutcome(status, message))
+            }
         }
-    }
 
-    request(callback)
+        request(callback)
+    }
 }
 
 internal fun toOutcome(status: Int, message: String?): InstallOutcome =

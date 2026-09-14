@@ -41,6 +41,16 @@ class VersionInstallStateTest {
     }
 
     @Test
+    fun `disables other versions while one is being installed`() {
+        val status = ListingInstallStatus(
+            state = InstallState.Installing,
+            versionTag = "v2.0.0",
+        )
+
+        assertFalse(versionInstallState(version("v1.0.0"), status).isEnabled)
+    }
+
+    @Test
     fun `keeps other versions enabled once an install settles`() {
         val status = ListingInstallStatus(
             state = InstallState.Installed("v2.0.0"),

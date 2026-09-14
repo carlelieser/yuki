@@ -49,4 +49,14 @@ internal val MIGRATION_2_TO_3 = object : Migration(2, 3) {
     }
 }
 
-internal val YUKI_MIGRATIONS: Array<Migration> = arrayOf(MIGRATION_1_TO_2, MIGRATION_2_TO_3)
+internal val MIGRATION_3_TO_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE `install_progress` ADD COLUMN `createdAt` INTEGER NOT NULL DEFAULT 0",
+        )
+        db.execSQL("UPDATE `install_progress` SET `createdAt` = `updatedAt`")
+    }
+}
+
+internal val YUKI_MIGRATIONS: Array<Migration> =
+    arrayOf(MIGRATION_1_TO_2, MIGRATION_2_TO_3, MIGRATION_3_TO_4)

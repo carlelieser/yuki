@@ -9,6 +9,7 @@ import app.yuki.core.model.downloadSizeOf
 internal object ProgressStatus {
     const val QUEUED = "queued"
     const val DOWNLOADING = "downloading"
+    const val INSTALLING = "installing"
     const val PENDING_USER_ACTION = "pending_user_action"
     const val INSTALLED = "installed"
     const val FAILED = "failed"
@@ -21,10 +22,11 @@ private object FailureName {
     const val INSUFFICIENT_STORAGE = "insufficient_storage"
     const val INCOMPATIBLE = "incompatible"
     const val PACKAGE_MISMATCH = "package_mismatch"
+    const val TIMED_OUT = "timed_out"
     const val REJECTED = "rejected"
 }
 
-internal fun InstallProgress.toEntity(updatedAt: Long): InstallProgressEntity =
+internal fun InstallProgress.toEntity(now: Long): InstallProgressEntity =
     InstallProgressEntity(
         githubRepoId = githubRepoId,
         slug = target.slug,
@@ -36,7 +38,8 @@ internal fun InstallProgress.toEntity(updatedAt: Long): InstallProgressEntity =
         bytesTotal = state.bytesTotal(),
         failureReason = state.failureName(),
         failureMessage = state.rejectionMessage(),
-        updatedAt = updatedAt,
+        createdAt = now,
+        updatedAt = now,
     )
 
 internal fun InstallProgressEntity.toProgress(): InstallProgress = InstallProgress(
@@ -54,6 +57,7 @@ private fun InstallProgressEntity.toState(): InstallState = when (status) {
     ProgressStatus.QUEUED -> InstallState.Downloading(downloadSizeOf(0L, 0L))
     ProgressStatus.DOWNLOADING ->
         InstallState.Downloading(downloadSizeOf(bytesDownloaded, bytesTotal))
+    ProgressStatus.INSTALLING -> InstallState.Installing
     ProgressStatus.PENDING_USER_ACTION -> InstallState.PendingUserAction
     ProgressStatus.INSTALLED -> InstallState.Installed(versionTag)
     ProgressStatus.FAILED -> InstallState.Failed(toFailure())
@@ -69,6 +73,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
     FailureName.INSUFFICIENT_STORAGE -> InstallFailure.InsufficientStorage
     FailureName.INCOMPATIBLE -> InstallFailure.Incompatible
     FailureName.PACKAGE_MISMATCH -> InstallFailure.PackageMismatch
+    FailureName.TIMED_OUT -> InstallFailure.TimedOut
     FailureName.REJECTED -> InstallFailure.Rejected(failureMessage.orEmpty())
     else -> throw IllegalStateException(
         "Unknown install_progress failure '$failureReason' for githubRepoId=$githubRepoId",
@@ -77,6 +82,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
 
 private fun InstallState.statusName(): String = when (this) {
     is InstallState.Downloading -> ProgressStatus.DOWNLOADING
+    InstallState.Installing -> ProgressStatus.INSTALLING
     InstallState.PendingUserAction -> ProgressStatus.PENDING_USER_ACTION
     is InstallState.Installed -> ProgressStatus.INSTALLED
     is InstallState.Failed -> ProgressStatus.FAILED
@@ -104,5 +110,6 @@ private fun InstallFailure.name(): String = when (this) {
     InstallFailure.InsufficientStorage -> FailureName.INSUFFICIENT_STORAGE
     InstallFailure.Incompatible -> FailureName.INCOMPATIBLE
     InstallFailure.PackageMismatch -> FailureName.PACKAGE_MISMATCH
+    InstallFailure.TimedOut -> FailureName.TIMED_OUT
     is InstallFailure.Rejected -> FailureName.REJECTED
 }

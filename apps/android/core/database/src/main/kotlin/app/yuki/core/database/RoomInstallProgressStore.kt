@@ -22,12 +22,29 @@ internal class RoomInstallProgressStore @Inject constructor(
     override suspend fun find(githubRepoId: Long): InstallProgress? =
         dao.findByRepoId(githubRepoId)?.toProgress()
 
-    override suspend fun write(progress: InstallProgress) =
-        dao.upsert(progress.toEntity(clock.millis()))
+    override suspend fun unsettled(): List<InstallProgress> =
+        dao.findUnsettled().map(InstallProgressEntity::toProgress)
+
+    override suspend fun write(progress: InstallProgress) {
+        val now = clock.millis()
+        val entity = progress.toEntity(now)
+
+        dao.upsert(
+            githubRepoId = entity.githubRepoId,
+            slug = entity.slug,
+            title = entity.title,
+            iconUrl = entity.iconUrl,
+            status = entity.status,
+            versionTag = entity.versionTag,
+            bytesDownloaded = entity.bytesDownloaded,
+            bytesTotal = entity.bytesTotal,
+            failureReason = entity.failureReason,
+            failureMessage = entity.failureMessage,
+            now = now,
+        )
+    }
 
     override suspend fun clear(githubRepoId: Long) = dao.deleteByRepoId(githubRepoId)
 
     override suspend fun clearSettled() = dao.deleteSettledInstalls()
-
-    override suspend fun clearFailed() = dao.deleteFailedInstalls()
 }

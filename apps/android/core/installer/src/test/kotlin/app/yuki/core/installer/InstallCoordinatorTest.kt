@@ -29,6 +29,7 @@ class InstallCoordinatorTest {
             listOf(
                 InstallState.Downloading(testSize(250L)),
                 InstallState.Downloading(testSize(750L)),
+                InstallState.Installing,
                 InstallState.Installed("v1.2.0"),
             ),
             states,
@@ -50,6 +51,7 @@ class InstallCoordinatorTest {
         assertEquals(
             listOf(
                 InstallState.Downloading(testSize(500L)),
+                InstallState.Installing,
                 InstallState.PendingUserAction,
                 InstallState.Installed("v1.2.0"),
             ),
@@ -82,6 +84,46 @@ class InstallCoordinatorTest {
         assertEquals(InstallState.Failed(InstallFailure.PackageMismatch), states.last())
         assertEquals(0, strategy.installCount)
         assertTrue(recorder.records.isEmpty())
+    }
+
+    @Test
+    fun `a package mismatch never reports an install in progress`() = runTest {
+        val recorder = FakeInstallRecorder(mutableMapOf(42L to "com.acme.original"))
+        val coordinator = coordinatorOf(
+            recorder = recorder,
+            strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
+        )
+
+        val states = coordinator.install(testRequest(versionTag = "v2.0.0")).toList()
+
+        assertTrue(InstallState.Installing !in states)
+    }
+
+    @Test
+    fun `the install phase is announced before the strategy runs`() = runTest {
+        val strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded))
+        val coordinator = coordinatorOf(strategy = strategy)
+
+        val states = coordinator.install(testRequest()).toList()
+
+        val installing = states.indexOf(InstallState.Installing)
+        val installed = states.indexOf(InstallState.Installed("v1.2.0"))
+
+        assertTrue(installing in 0..<installed)
+    }
+
+    @Test
+    fun `a download failure never reports an install in progress`() = runTest {
+        val coordinator = coordinatorOf(
+            downloader = FakeApkDownloader(
+                failure = InstallException(InstallFailure.DownloadFailed, "boom"),
+            ),
+            strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
+        )
+
+        val states = coordinator.install(testRequest()).toList()
+
+        assertTrue(InstallState.Installing !in states)
     }
 
     @Test

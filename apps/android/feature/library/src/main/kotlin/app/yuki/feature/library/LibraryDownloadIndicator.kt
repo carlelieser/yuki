@@ -13,12 +13,16 @@ import app.yuki.core.model.DownloadSize
 const val LIBRARY_DOWNLOAD_PROGRESS_TAG = "libraryDownloadProgress"
 
 @Composable
-internal fun LibraryDownloadIndicator(size: DownloadSize, modifier: Modifier = Modifier) {
+internal fun LibraryDownloadIndicator(
+    size: DownloadSize,
+    modifier: Modifier = Modifier,
+    description: String = describeDownload(size),
+) {
     val fraction = size.fraction
     val indicatorModifier = modifier
         .size(YukiSize.IconSmall)
         .testTag(LIBRARY_DOWNLOAD_PROGRESS_TAG)
-        .semantics { contentDescription = describeDownload(size) }
+        .semantics { contentDescription = description }
 
     if (fraction == null) {
         CircularProgressIndicator(modifier = indicatorModifier)

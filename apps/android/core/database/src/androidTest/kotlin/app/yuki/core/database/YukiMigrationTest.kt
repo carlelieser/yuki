@@ -164,12 +164,93 @@ class YukiMigrationTest {
         }
     }
 
+    @Test
+    fun migratingToVersionFourBackfillsCreatedAtFromUpdatedAt() {
+        seedVersionThree(
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, updatedAt)
+            VALUES (5, 'aurora', 'Aurora', NULL, 'downloading', 'v4', 500, 1000, NULL, NULL, 2000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionFour()
+
+        migrated.query("SELECT createdAt, updatedAt FROM install_progress").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(2_000L, cursor.getLong(0))
+            assertEquals(2_000L, cursor.getLong(1))
+        }
+    }
+
+    @Test
+    fun migratingToVersionFourKeepsInFlightProgress() {
+        seedVersionThree(
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, updatedAt)
+            VALUES (5, 'aurora', 'Aurora', NULL, 'downloading', 'v4', 500, 1000, NULL, NULL, 2000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionFour()
+
+        migrated.query(
+            "SELECT status, bytesDownloaded, bytesTotal FROM install_progress",
+        ).use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("downloading", cursor.getString(0))
+            assertEquals(500L, cursor.getLong(1))
+            assertEquals(1_000L, cursor.getLong(2))
+        }
+    }
+
+    @Test
+    fun migratingToVersionFourOrdersProgressByWhenEachInstallStarted() {
+        seedVersionThree(
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, updatedAt)
+            VALUES (5, 'aurora', 'Aurora', NULL, 'downloading', 'v4', 500, 1000, NULL, NULL, 9000)
+            """.trimIndent(),
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, updatedAt)
+            VALUES (6, 'termux', 'Termux', NULL, 'downloading', 'v1', 100, 1000, NULL, NULL, 1000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionFour()
+
+        migrated.query(
+            "SELECT githubRepoId FROM install_progress ORDER BY createdAt ASC, githubRepoId ASC",
+        ).use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(6L, cursor.getLong(0))
+            assertTrue(cursor.moveToNext())
+            assertEquals(5L, cursor.getLong(0))
+        }
+    }
+
     private fun seedVersionTwo(vararg statements: String) {
         helper.createDatabase(TEST_DATABASE, 2).use { database ->
             statements.forEach(database::execSQL)
         }
     }
 
+    private fun seedVersionThree(vararg statements: String) {
+        helper.createDatabase(TEST_DATABASE, 3).use { database ->
+            statements.forEach(database::execSQL)
+        }
+    }
+
     private fun runToVersionThree() =
         helper.runMigrationsAndValidate(TEST_DATABASE, 3, true, MIGRATION_2_TO_3)
+
+    private fun runToVersionFour() =
+        helper.runMigrationsAndValidate(TEST_DATABASE, 4, true, MIGRATION_3_TO_4)
 }

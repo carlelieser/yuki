@@ -273,7 +273,7 @@ class LibraryViewModelTest {
 
             val item = singleItem(awaitItem())
             assertTrue(item.isFailed)
-            assertEquals(LIBRARY_FAILED_SUPPORTING, item.listItem.supporting)
+            assertEquals("Not enough space", item.listItem.supporting)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -336,7 +336,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun aFailedInstallIsClearedOnStartSoItDoesNotStrandTheRowForever() = runTest {
+    fun aFailedInstallSurvivesAResumeSoTheUserCanSeeWhatWentWrong() = runTest {
         val progress = FakeLibraryProgressStore()
         progress.write(
             InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
@@ -345,15 +345,18 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertTrue(content(awaitItem()).isEmpty)
+            assertTrue(singleItem(awaitItem()).isFailed)
+
+            viewModel.onResume()
+            advanceUntilIdle()
             cancelAndIgnoreRemainingEvents()
         }
 
-        assertTrue(progress.failedClearances > 0)
+        assertTrue(progress.find(OBSIDIAN.githubRepoId)?.state is InstallState.Failed)
     }
 
     @Test
-    fun aPullClearsAFailedInstallTheUserHasAlreadySeen() = runTest {
+    fun aFailedInstallSurvivesAPullToRefresh() = runTest {
         val progress = FakeLibraryProgressStore()
         val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
 
@@ -367,6 +370,26 @@ class LibraryViewModelTest {
             assertTrue(singleItem(awaitItem()).isFailed)
 
             viewModel.onPullToRefresh()
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertTrue(progress.find(OBSIDIAN.githubRepoId)?.state is InstallState.Failed)
+    }
+
+    @Test
+    fun dismissingAFailedInstallRemovesTheRow() = runTest {
+        val progress = FakeLibraryProgressStore()
+        progress.write(
+            InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
+        )
+        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(singleItem(awaitItem()).isFailed)
+
+            viewModel.onDismiss(OBSIDIAN.githubRepoId)
             assertTrue(content(awaitItem()).isEmpty)
             cancelAndIgnoreRemainingEvents()
         }
@@ -445,6 +468,60 @@ class LibraryViewModelTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun concurrentDownloadsKeepTheOrderTheStoreGaveThem() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val targets = listOf(TERMUX, AURORA, OBSIDIAN_APP)
+        targets.forEach { app ->
+            progress.write(downloadingProgress(app, bytesDownloaded = 100L))
+        }
+        val viewModel = viewModelFor(
+            FakeInstallStore(emptyList()),
+            FakeInstalledPackages(),
+            progress,
+        )
+
+        viewModel.state.test {
+            awaitUntilIds(this, targets.map(InstalledApp::githubRepoId))
+
+            progress.write(downloadingProgress(AURORA, bytesDownloaded = 900L))
+
+            assertEquals(
+                targets.map(InstalledApp::githubRepoId),
+                awaitLatestIds(this),
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aRowStaysInPlaceWhenItsDownloadFinishesAndInstallBegins() = runTest {
+        val progress = FakeLibraryProgressStore()
+        val targets = listOf(TERMUX, AURORA)
+        targets.forEach { app ->
+            progress.write(downloadingProgress(app, bytesDownloaded = 100L))
+        }
+        val viewModel = viewModelFor(
+            FakeInstallStore(emptyList()),
+            FakeInstalledPackages(),
+            progress,
+        )
+
+        viewModel.state.test {
+            awaitUntilIds(this, targets.map(InstalledApp::githubRepoId))
+
+            progress.write(
+                InstallProgress(TERMUX.target, TERMUX.versionTag, InstallState.Installing),
+            )
+
+            assertEquals(
+                targets.map(InstalledApp::githubRepoId),
+                awaitLatestIds(this),
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private fun viewModelFor(
         store: FakeInstallStore,
         packages: FakeInstalledPackages,
@@ -463,6 +540,34 @@ private suspend fun awaitLatestItems(
         val next = turbine.awaitItem() as? UiState.Success ?: continue
         val items = next.data.items
         if (items.isNotEmpty() && items.all { item -> item.isInstalled }) return items
+    }
+}
+
+private fun downloadingProgress(app: InstalledApp, bytesDownloaded: Long): InstallProgress =
+    InstallProgress(
+        target = app.target,
+        versionTag = app.versionTag,
+        state = InstallState.Downloading(
+            downloadSizeOf(bytesDownloaded = bytesDownloaded, bytesTotal = 1_000L),
+        ),
+    )
+
+private suspend fun awaitUntilIds(
+    turbine: ReceiveTurbine<UiState<LibraryContent>>,
+    expected: List<Long>,
+) {
+    while (true) {
+        val next = turbine.awaitItem() as? UiState.Success ?: continue
+        if (next.data.items.map(LibraryItem::githubRepoId) == expected) return
+    }
+}
+
+private suspend fun awaitLatestIds(
+    turbine: ReceiveTurbine<UiState<LibraryContent>>,
+): List<Long> {
+    while (true) {
+        val next = turbine.awaitItem() as? UiState.Success ?: continue
+        return next.data.items.map(LibraryItem::githubRepoId)
     }
 }
 

@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import app.yuki.core.installer.StuckInstallReclaimer
 import app.yuki.feature.updates.SelfInstallReconciler
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -22,6 +23,9 @@ class YukiApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var selfInstalls: SelfInstallReconciler
 
+    @Inject
+    lateinit var stuckInstalls: StuckInstallReclaimer
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val workManagerConfiguration: Configuration
@@ -29,6 +33,12 @@ class YukiApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        scope.launch {
+            stuckInstalls.reclaim().onFailure { error ->
+                Log.w(TAG, "Could not reclaim installs stranded by an earlier run", error)
+            }
+        }
 
         scope.launch {
             selfInstalls.reconcile().onFailure { error ->
