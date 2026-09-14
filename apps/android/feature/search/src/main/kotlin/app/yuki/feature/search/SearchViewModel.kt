@@ -7,6 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import app.yuki.core.datastore.RecentSearchStore
+import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
@@ -38,9 +39,17 @@ const val MAXIMUM_QUERY_LENGTH = 100
 class SearchViewModel @Inject constructor(
     private val repository: ListingRepository,
     private val recentSearches: RecentSearchStore,
+    installedListings: InstalledListings,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(BrowseFilter())
+
+    val installedIds: StateFlow<Set<Long>> = installedListings.observeInstalledIds()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = emptySet(),
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listings: Flow<PagingData<ListingSummary>> = filter
@@ -48,7 +57,7 @@ class SearchViewModel @Inject constructor(
         .cachedIn(viewModelScope)
 
     val state: StateFlow<UiState<SearchContent>> =
-        combine(query, recentSearches.recentSearches, results(), filter, ::content)
+        combine(query, recentSearches.recentSearches, results(), filter, installedIds, ::content)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -109,6 +118,13 @@ private fun content(
     recent: List<String>,
     results: UiState<List<ListingSummary>>?,
     filter: BrowseFilter,
+    installedIds: Set<Long>,
 ): UiState<SearchContent> = UiState.Success(
-    SearchContent(query = query, recent = recent, results = results, filter = filter),
+    SearchContent(
+        query = query,
+        recent = recent,
+        results = results,
+        filter = filter,
+        installedIds = installedIds,
+    ),
 )

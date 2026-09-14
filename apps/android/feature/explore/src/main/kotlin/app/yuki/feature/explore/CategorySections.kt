@@ -37,6 +37,7 @@ internal data class CategorySectionActions(
 
 internal fun LazyListScope.categorySections(
     sections: UiState<List<CategorySection>>,
+    installedIds: Set<Long>,
     actions: CategorySectionActions,
 ) {
     when (sections) {
@@ -44,12 +45,17 @@ internal fun LazyListScope.categorySections(
 
         is UiState.Failure -> item { SectionsFailure(sections) }
 
-        is UiState.Success -> sectionList(entries = sections.data, actions = actions)
+        is UiState.Success -> sectionList(
+            entries = sections.data,
+            installedIds = installedIds,
+            actions = actions,
+        )
     }
 }
 
 private fun LazyListScope.sectionList(
     entries: List<CategorySection>,
+    installedIds: Set<Long>,
     actions: CategorySectionActions,
 ) {
     if (entries.isEmpty()) {
@@ -57,11 +63,14 @@ private fun LazyListScope.sectionList(
         return
     }
 
-    entries.forEach { entry -> categorySection(section = entry, actions = actions) }
+    entries.forEach { entry ->
+        categorySection(section = entry, installedIds = installedIds, actions = actions)
+    }
 }
 
 private fun LazyListScope.categorySection(
     section: CategorySection,
+    installedIds: Set<Long>,
     actions: CategorySectionActions,
 ) {
     val category = section.category
@@ -78,7 +87,8 @@ private fun LazyListScope.categorySection(
         key = { listing -> "${category.wireValue}/${listing.id}" },
     ) { listing ->
         ClickableProductListItem(
-            content = listing.toProductListItemContent(),
+            content = listing.toProductListItemContent()
+                .copy(isInstalled = listing.githubRepoId in installedIds),
             onClick = { actions.onListingSelected(listing) },
         )
     }

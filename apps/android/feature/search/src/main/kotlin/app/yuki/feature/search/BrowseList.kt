@@ -26,11 +26,16 @@ private val NothingToBrowse = EmptyContent(
 
 internal fun LazyListScope.browseList(
     listings: LazyPagingItems<ListingSummary>,
+    installedIds: Set<Long>,
     onSelect: (ListingSummary) -> Unit,
 ) {
     items(count = listings.itemCount) { index ->
         val listing = listings[index] ?: return@items
-        ClickableProductListItem(content = listing.toProductListItemContent(), onClick = { onSelect(listing) })
+        ClickableProductListItem(
+            content = listing.toProductListItemContent()
+                .copy(isInstalled = listing.githubRepoId in installedIds),
+            onClick = { onSelect(listing) },
+        )
     }
 
     item { AppendState(listings = listings) }

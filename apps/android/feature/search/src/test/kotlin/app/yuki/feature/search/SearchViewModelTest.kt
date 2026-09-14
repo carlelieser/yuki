@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -39,10 +40,45 @@ class SearchViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = SearchViewModel(
+    private fun viewModel(
+        installed: FakeInstalledListings = FakeInstalledListings(),
+    ) = SearchViewModel(
         repository = repository,
         recentSearches = recentSearches,
+        installedListings = installed,
     )
+
+    @Test
+    fun `search results know which listings are installed`() = runTest {
+        val alpha = listing("alpha").githubRepoId
+        repository.searchResult = Result.success(listOf(listing("alpha"), listing("beta")))
+
+        val model = viewModel(FakeInstalledListings(setOf(alpha)))
+
+        model.state.test {
+            awaitContent()
+
+            model.onQueryChange("alpha")
+            advanceTimeBy(SEARCH_DEBOUNCE_MILLIS + 1)
+
+            val content = awaitSearched()
+            assertTrue(alpha in content.installedIds)
+            assertFalse(listing("beta").githubRepoId in content.installedIds)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `installed ids are exposed for the paged browse list`() = runTest {
+        val alpha = listing("alpha").githubRepoId
+
+        val model = viewModel(FakeInstalledListings(setOf(alpha)))
+
+        model.installedIds.test {
+            assertEquals(setOf(alpha), awaitNonEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 
     @Test
     fun `browse starts unfiltered by category`() = runTest {
@@ -276,6 +312,20 @@ private suspend fun ReceiveTurbine<UiState<SearchContent>>.awaitContent(): Searc
     while (true) {
         val state = awaitItem()
         if (state is UiState.Success) return state.data
+    }
+}
+
+private suspend fun ReceiveTurbine<UiState<SearchContent>>.awaitSearched(): SearchContent {
+    while (true) {
+        val content = awaitContent()
+        if (content.results is UiState.Success) return content
+    }
+}
+
+private suspend fun ReceiveTurbine<Set<Long>>.awaitNonEmpty(): Set<Long> {
+    while (true) {
+        val ids = awaitItem()
+        if (ids.isNotEmpty()) return ids
     }
 }
 

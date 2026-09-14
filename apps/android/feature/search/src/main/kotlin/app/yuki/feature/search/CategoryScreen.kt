@@ -27,10 +27,11 @@ fun CategoryRoute(
     viewModel: CategoryViewModel = hiltViewModel(),
 ) {
     val sort by viewModel.sort.collectAsStateWithLifecycle()
+    val installedIds by viewModel.installedIds.collectAsStateWithLifecycle()
     val listings = viewModel.listings.collectAsLazyPagingItems()
 
     CategoryScreen(
-        category = viewModel.category,
+        browsed = BrowsedCategory(category = viewModel.category, installedIds = installedIds),
         listings = listings,
         callbacks = CategoryCallbacks(
             sort = sort,
@@ -43,6 +44,11 @@ fun CategoryRoute(
     )
 }
 
+internal data class BrowsedCategory(
+    val category: ListingCategory,
+    val installedIds: Set<Long>,
+)
+
 data class CategoryCallbacks(
     val sort: BrowseSortOption,
     val onSortSelected: (BrowseSortOption) -> Unit,
@@ -52,14 +58,14 @@ data class CategoryCallbacks(
 
 @Composable
 internal fun CategoryScreen(
-    category: ListingCategory,
+    browsed: BrowsedCategory,
     listings: LazyPagingItems<ListingSummary>,
     callbacks: CategoryCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = category.label,
+        title = browsed.category.label,
         onBackClick = callbacks.onBackClick,
         modifier = modifier.testTag(CATEGORY_SCREEN_TAG),
         trailing = {
@@ -80,7 +86,11 @@ internal fun CategoryScreen(
                     .testTag(BROWSE_LIST_TAG),
             ) {
                 browseRefreshState(listings = listings)
-                browseList(listings = listings, onSelect = callbacks.onListingSelected)
+                browseList(
+                    listings = listings,
+                    installedIds = browsed.installedIds,
+                    onSelect = callbacks.onListingSelected,
+                )
             }
         }
     }

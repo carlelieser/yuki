@@ -7,4 +7,5 @@ import app.yuki.core.model.UiState
 data class ExploreContent(
     val featured: UiState<List<ListingSummary>>,
     val sections: UiState<List<CategorySection>>,
+    val installedIds: Set<Long> = emptySet(),
 )

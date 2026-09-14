@@ -34,7 +34,7 @@ class CategoryScreenTest {
     private fun render(category: ListingCategory = ListingCategory.Gaming) {
         composeRule.setContent {
             CategoryScreen(
-                category = category,
+                browsed = BrowsedCategory(category = category, installedIds = emptySet()),
                 listings = emptyListings(),
                 callbacks = noCallbacks,
                 contentPadding = PaddingValues(),

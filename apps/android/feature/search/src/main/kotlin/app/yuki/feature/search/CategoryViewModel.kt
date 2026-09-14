@@ -7,6 +7,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.readListingCategory
@@ -16,22 +17,34 @@ import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 
 const val CATEGORY_KEY = "category"
+
+private const val CATEGORY_STOP_TIMEOUT_MILLIS = 5_000L
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: ListingRepository,
+    installedListings: InstalledListings,
 ) : ViewModel() {
     val category: ListingCategory = requireCategory(savedStateHandle[CATEGORY_KEY])
 
     private val selectedSort = MutableStateFlow(BrowseSortOption.Default)
 
     val sort: StateFlow<BrowseSortOption> = selectedSort.asStateFlow()
+
+    val installedIds: StateFlow<Set<Long>> = installedListings.observeInstalledIds()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(CATEGORY_STOP_TIMEOUT_MILLIS),
+            initialValue = emptySet(),
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val listings: Flow<PagingData<ListingSummary>> = selectedSort

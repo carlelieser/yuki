@@ -186,7 +186,11 @@ private fun BrowseListing(
                     .testTag(BROWSE_LIST_TAG),
             ) {
                 browseRefreshState(listings = listings)
-                browseList(listings = listings, onSelect = callbacks.onListingSelected)
+                browseList(
+                    listings = listings,
+                    installedIds = content.installedIds,
+                    onSelect = callbacks.onListingSelected,
+                )
             }
         }
     }
