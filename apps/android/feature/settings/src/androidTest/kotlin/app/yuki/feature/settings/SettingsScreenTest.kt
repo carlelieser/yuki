@@ -1,7 +1,9 @@
 package app.yuki.feature.settings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onFirst
@@ -95,6 +97,7 @@ class SettingsScreenTest {
     @Test
     fun theInstallModeRowNamesTheActiveMode() {
         setContent(ShizukuState.Ready)
+        scrollToInstallMode()
 
         composeRule.onNodeWithText(InstallMode.Automatic.label).assertIsDisplayed()
     }
@@ -102,6 +105,7 @@ class SettingsScreenTest {
     @Test
     fun theInstallModeSelectorOffersEveryMode() {
         setContent(ShizukuState.Ready)
+        scrollToInstallMode()
 
         composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
 
@@ -114,6 +118,7 @@ class SettingsScreenTest {
     fun choosingAModeReportsIt() {
         val modes = mutableListOf<InstallMode>()
         setContent(ShizukuState.Ready, onInstallModeChange = modes::add)
+        scrollToInstallMode()
 
         composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
         composeRule.onAllNodesWithText(InstallMode.AlwaysAsk.label).onLast().performClick()
@@ -141,6 +146,11 @@ class SettingsScreenTest {
         composeRule.onAllNodesWithText(AppearanceMode.Dark.label).onLast().performClick()
 
         assertEquals(listOf(AppearanceMode.Dark), modes)
+    }
+
+    private fun scrollToInstallMode() {
+        composeRule.onNodeWithTag(SETTINGS_LIST_TAG)
+            .performScrollToNode(hasTestTag(INSTALL_MODE_SELECTOR_TAG))
     }
 
     private fun setContent(

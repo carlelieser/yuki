@@ -20,6 +20,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val OFFLINE_TITLE = "You're offline"
+private const val SERVER_TITLE = "Yuki is having trouble"
+
 @RunWith(AndroidJUnit4::class)
 class EmptyVersusFailureTest {
     @get:Rule
@@ -53,7 +56,7 @@ class EmptyVersusFailureTest {
 
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertDoesNotExist()
-        composeRule.onNodeWithText("No connection").assertIsDisplayed()
+        composeRule.onNodeWithText(OFFLINE_TITLE).assertIsDisplayed()
     }
 
     @Test
@@ -64,8 +67,8 @@ class EmptyVersusFailureTest {
             }
         }
 
-        composeRule.onNodeWithText("Server error").assertIsDisplayed()
-        composeRule.onNodeWithText("No connection").assertDoesNotExist()
+        composeRule.onNodeWithText(SERVER_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(OFFLINE_TITLE).assertDoesNotExist()
     }
 
     @Test
