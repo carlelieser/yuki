@@ -25,6 +25,7 @@ data class ProductListItemContent(
     val iconUrl: String?,
     val description: String? = null,
     val badges: ListingBadges = ListingBadges(emptyList()),
+    val isInstalled: Boolean = false,
 )
 
 @Composable
@@ -47,6 +48,7 @@ private fun ProductListItemText(content: ProductListItemContent, modifier: Modif
         )
         ProductDescription(description = content.description)
         ProductListItemSupporting(content = content)
+        InstalledBadge(isInstalled = content.isInstalled, modifier = badgeSpacing())
     }
 }
 
