@@ -1,2 +1,1 @@
 -keep class rikka.shizuku.** { *; }
--keep interface app.yuki.core.shizuku.aidl.** { *; }
