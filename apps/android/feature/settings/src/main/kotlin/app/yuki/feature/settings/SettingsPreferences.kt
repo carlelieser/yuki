@@ -15,15 +15,23 @@ enum class InstallMode(val label: String) {
     AlwaysAsk("Always ask"),
 }
 
+enum class AppearanceMode(val label: String) {
+    System("System default"),
+    Light("Light"),
+    Dark("Dark"),
+}
+
 data class YukiPreferences(
     val includePrereleases: Boolean,
     val installMode: InstallMode,
+    val appearance: AppearanceMode,
     val isDynamicColorEnabled: Boolean,
 ) {
     companion object {
         val Defaults: YukiPreferences = YukiPreferences(
             includePrereleases = false,
             installMode = InstallMode.Automatic,
+            appearance = AppearanceMode.System,
             isDynamicColorEnabled = true,
         )
     }
@@ -36,17 +44,21 @@ interface PreferenceStore {
 
     suspend fun setInstallMode(mode: InstallMode)
 
+    suspend fun setAppearance(mode: AppearanceMode)
+
     suspend fun setDynamicColorEnabled(isEnabled: Boolean)
 }
 
 private val IncludePrereleasesKey = booleanPreferencesKey("include_prereleases")
 private val InstallModeKey = stringPreferencesKey("install_mode")
+private val AppearanceKey = stringPreferencesKey("appearance")
 private val DynamicColorKey = booleanPreferencesKey("dynamic_color")
 
 internal fun decode(stored: Preferences): YukiPreferences = YukiPreferences(
     includePrereleases = stored[IncludePrereleasesKey]
         ?: YukiPreferences.Defaults.includePrereleases,
     installMode = decodeInstallMode(stored[InstallModeKey]),
+    appearance = decodeAppearance(stored[AppearanceKey]),
     isDynamicColorEnabled = stored[DynamicColorKey]
         ?: YukiPreferences.Defaults.isDynamicColorEnabled,
 )
@@ -54,6 +66,10 @@ internal fun decode(stored: Preferences): YukiPreferences = YukiPreferences(
 private fun decodeInstallMode(raw: String?): InstallMode =
     InstallMode.entries.firstOrNull { mode -> mode.name == raw }
         ?: YukiPreferences.Defaults.installMode
+
+private fun decodeAppearance(raw: String?): AppearanceMode =
+    AppearanceMode.entries.firstOrNull { mode -> mode.name == raw }
+        ?: YukiPreferences.Defaults.appearance
 
 @Singleton
 internal class DataStorePreferenceStore @Inject constructor(
@@ -67,6 +83,10 @@ internal class DataStorePreferenceStore @Inject constructor(
 
     override suspend fun setInstallMode(mode: InstallMode) {
         store.edit { stored -> stored[InstallModeKey] = mode.name }
+    }
+
+    override suspend fun setAppearance(mode: AppearanceMode) {
+        store.edit { stored -> stored[AppearanceKey] = mode.name }
     }
 
     override suspend fun setDynamicColorEnabled(isEnabled: Boolean) {

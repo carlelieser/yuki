@@ -121,12 +121,35 @@ class SettingsScreenTest {
         assertEquals(listOf(InstallMode.AlwaysAsk), modes)
     }
 
+    @Test
+    fun theAppearanceSelectorOffersEveryMode() {
+        setContent(ShizukuState.Ready)
+
+        composeRule.onNodeWithTag(APPEARANCE_SELECTOR_TAG).performClick()
+
+        AppearanceMode.entries.forEach { mode ->
+            composeRule.onAllNodesWithText(mode.label).onFirst().assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun choosingAnAppearanceReportsIt() {
+        val modes = mutableListOf<AppearanceMode>()
+        setContent(ShizukuState.Ready, onAppearanceChange = modes::add)
+
+        composeRule.onNodeWithTag(APPEARANCE_SELECTOR_TAG).performClick()
+        composeRule.onAllNodesWithText(AppearanceMode.Dark.label).onLast().performClick()
+
+        assertEquals(listOf(AppearanceMode.Dark), modes)
+    }
+
     private fun setContent(
         state: ShizukuState,
         permissionStatus: PermissionStatus = PermissionStatus.Denied,
         permissions: List<AppPermission> = YUKI_PERMISSIONS,
         onShizukuAction: (ShizukuActionKind) -> Unit = {},
         onInstallModeChange: (InstallMode) -> Unit = {},
+        onAppearanceChange: (AppearanceMode) -> Unit = {},
     ) {
         val content = SettingsContent(
             shizuku = detailFor(state),
@@ -139,7 +162,7 @@ class SettingsScreenTest {
         composeRule.setContent {
             SettingsContentScreen(
                 state = UiState.Success(content),
-                actions = actionsWith(onShizukuAction, onInstallModeChange),
+                actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange),
             )
         }
     }
@@ -148,6 +171,7 @@ class SettingsScreenTest {
 private fun actionsWith(
     onShizukuAction: (ShizukuActionKind) -> Unit,
     onInstallModeChange: (InstallMode) -> Unit = {},
+    onAppearanceChange: (AppearanceMode) -> Unit = {},
 ): SettingsActions =
     SettingsActions(
         onShizukuAction = onShizukuAction,
@@ -155,6 +179,7 @@ private fun actionsWith(
         preferences = PreferenceActions(
             onIncludePrereleasesChange = {},
             onInstallModeChange = onInstallModeChange,
+            onAppearanceChange = onAppearanceChange,
             onDynamicColorChange = {},
         ),
     )

@@ -46,6 +46,7 @@ internal fun settingsActions(
         preferences = PreferenceActions(
             onIncludePrereleasesChange = viewModel::onIncludePrereleasesChange,
             onInstallModeChange = viewModel::onInstallModeChange,
+            onAppearanceChange = viewModel::onAppearanceChange,
             onDynamicColorChange = viewModel::onDynamicColorChange,
         ),
     )

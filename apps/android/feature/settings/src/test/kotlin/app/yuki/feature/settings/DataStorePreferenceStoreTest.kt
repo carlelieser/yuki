@@ -66,12 +66,14 @@ class DataStorePreferenceStoreTest {
         withStore { store ->
             store.setIncludePrereleases(true)
             store.setInstallMode(InstallMode.AlwaysAsk)
+            store.setAppearance(AppearanceMode.Dark)
             store.setDynamicColorEnabled(false)
 
             assertEquals(
                 YukiPreferences(
                     includePrereleases = true,
                     installMode = InstallMode.AlwaysAsk,
+                    appearance = AppearanceMode.Dark,
                     isDynamicColorEnabled = false,
                 ),
                 store.preferences.first(),

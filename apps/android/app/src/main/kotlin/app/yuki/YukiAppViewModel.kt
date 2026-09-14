@@ -2,24 +2,29 @@ package app.yuki
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.yuki.feature.settings.AppearanceMode
 import app.yuki.feature.settings.YukiPreferenceReader
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
-private const val STOP_TIMEOUT_MILLIS = 5_000L
-private const val DYNAMIC_COLOR_DEFAULT = true
+data class ThemeSettings(
+    val appearance: AppearanceMode,
+    val isDynamicColorEnabled: Boolean,
+)
 
 @HiltViewModel
 class YukiAppViewModel @Inject constructor(
     reader: YukiPreferenceReader,
 ) : ViewModel() {
-    val isDynamicColorEnabled: StateFlow<Boolean> = reader.isDynamicColorEnabled()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = DYNAMIC_COLOR_DEFAULT,
-        )
+    val theme: StateFlow<ThemeSettings?> =
+        combine(reader.appearance(), reader.isDynamicColorEnabled(), ::ThemeSettings)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = null,
+            )
 }

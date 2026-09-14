@@ -12,7 +12,15 @@ class PreferenceDecodingTest {
     fun defaultsFavourStableReleasesAutomaticInstallsAndDynamicColor() {
         assertFalse(YukiPreferences.Defaults.includePrereleases)
         assertEquals(InstallMode.Automatic, YukiPreferences.Defaults.installMode)
+        assertEquals(AppearanceMode.System, YukiPreferences.Defaults.appearance)
         assertTrue(YukiPreferences.Defaults.isDynamicColorEnabled)
+    }
+
+    @Test
+    fun eachAppearanceModeOffersAName() {
+        assertEquals("System default", AppearanceMode.System.label)
+        assertEquals("Light", AppearanceMode.Light.label)
+        assertEquals("Dark", AppearanceMode.Dark.label)
     }
 
     @Test
@@ -34,10 +42,12 @@ class PreferenceDecodingTest {
 
         store.setIncludePrereleases(true)
         store.setInstallMode(InstallMode.AlwaysAsk)
+        store.setAppearance(AppearanceMode.Dark)
         store.setDynamicColorEnabled(false)
 
         assertTrue(reader.includePrereleases().first())
         assertEquals(InstallMode.AlwaysAsk, reader.installMode().first())
+        assertEquals(AppearanceMode.Dark, reader.appearance().first())
         assertFalse(reader.isDynamicColorEnabled().first())
     }
 
@@ -47,6 +57,7 @@ class PreferenceDecodingTest {
 
         assertFalse(reader.includePrereleases().first())
         assertEquals(InstallMode.Automatic, reader.installMode().first())
+        assertEquals(AppearanceMode.System, reader.appearance().first())
         assertTrue(reader.isDynamicColorEnabled().first())
     }
 }

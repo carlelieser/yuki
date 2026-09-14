@@ -1,12 +1,17 @@
 package app.yuki
 
+import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -15,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 import app.yuki.core.designsystem.component.YukiNavBar
 import app.yuki.core.designsystem.component.YukiNavBarItem
 import app.yuki.core.designsystem.theme.YukiTheme
+import app.yuki.feature.settings.AppearanceMode
 import app.yuki.navigation.YukiNavHost
 import app.yuki.navigation.YukiTab
 import app.yuki.navigation.rememberYukiNavigator
@@ -25,11 +31,40 @@ import app.yuki.notifications.rememberNotificationConsent
 
 @Composable
 fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
-    val isDynamicColorEnabled by viewModel.isDynamicColorEnabled.collectAsStateWithLifecycle()
+    val theme by viewModel.theme.collectAsStateWithLifecycle()
+    val settings = theme ?: return
 
-    YukiTheme(isDynamicColorEnabled = isDynamicColorEnabled) {
+    val isDarkTheme = settings.appearance.resolveIsDarkTheme()
+
+    SystemBarsEffect(isDarkTheme = isDarkTheme)
+
+    YukiTheme(
+        isDarkTheme = isDarkTheme,
+        isDynamicColorEnabled = settings.isDynamicColorEnabled,
+    ) {
         YukiScaffold(navController = rememberNavController())
     }
+}
+
+@Composable
+private fun SystemBarsEffect(isDarkTheme: Boolean) {
+    val view = LocalView.current
+    if (view.isInEditMode) return
+
+    LaunchedEffect(isDarkTheme) {
+        val window = (view.context as Activity).window
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !isDarkTheme
+            isAppearanceLightNavigationBars = !isDarkTheme
+        }
+    }
+}
+
+@Composable
+private fun AppearanceMode.resolveIsDarkTheme(): Boolean = when (this) {
+    AppearanceMode.System -> isSystemInDarkTheme()
+    AppearanceMode.Light -> false
+    AppearanceMode.Dark -> true
 }
 
 @Composable

@@ -27,6 +27,19 @@ internal fun LazyListScope.preferencesSection(
 ) {
     item { SectionHeader(title = PREFERENCES_SECTION_TITLE) }
 
+    item { AppearanceRow(mode = preferences.appearance, onChange = actions.onAppearanceChange) }
+
+    item {
+        ToggleRow(
+            content = ToggleContent(
+                title = DYNAMIC_COLOR_TITLE,
+                supporting = DYNAMIC_COLOR_SUPPORTING,
+                isChecked = preferences.isDynamicColorEnabled,
+            ),
+            onCheckedChange = actions.onDynamicColorChange,
+        )
+    }
+
     item {
         ToggleRow(
             content = ToggleContent(
@@ -39,17 +52,6 @@ internal fun LazyListScope.preferencesSection(
     }
 
     item { InstallModeRow(mode = preferences.installMode, onChange = actions.onInstallModeChange) }
-
-    item {
-        ToggleRow(
-            content = ToggleContent(
-                title = DYNAMIC_COLOR_TITLE,
-                supporting = DYNAMIC_COLOR_SUPPORTING,
-                isChecked = preferences.isDynamicColorEnabled,
-            ),
-            onCheckedChange = actions.onDynamicColorChange,
-        )
-    }
 }
 
 internal data class ToggleContent(
@@ -70,6 +72,57 @@ private fun ToggleRow(content: ToggleContent, onCheckedChange: (Boolean) -> Unit
         ),
         onClick = { onCheckedChange(!content.isChecked) },
     )
+}
+
+@Composable
+private fun AppearanceRow(mode: AppearanceMode, onChange: (AppearanceMode) -> Unit) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    SettingsItem(
+        content = SettingsItemContent(
+            title = APPEARANCE_TITLE,
+            supporting = mode.label,
+            trailing = {
+                AppearanceSelector(
+                    isExpanded = isExpanded,
+                    onExpand = { isExpanded = true },
+                    onDismiss = { isExpanded = false },
+                    onSelect = { selected ->
+                        isExpanded = false
+                        onChange(selected)
+                    },
+                )
+            },
+        ),
+        onClick = { isExpanded = true },
+    )
+}
+
+@Composable
+private fun AppearanceSelector(
+    isExpanded: Boolean,
+    onExpand: () -> Unit,
+    onDismiss: () -> Unit,
+    onSelect: (AppearanceMode) -> Unit,
+) {
+    Box {
+        IconButton(onClick = onExpand, modifier = Modifier.testTag(APPEARANCE_SELECTOR_TAG)) {
+            Icon(
+                imageVector = YukiIcons.ArrowDropDown,
+                contentDescription = APPEARANCE_TITLE,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
+            AppearanceMode.entries.forEach { entry ->
+                DropdownMenuItem(
+                    text = { Text(text = entry.label) },
+                    onClick = { onSelect(entry) },
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -128,5 +181,7 @@ internal const val PRERELEASES_TITLE = "Include prereleases"
 internal const val PRERELEASES_SUPPORTING = "Offer beta and release-candidate versions as updates."
 internal const val INSTALL_MODE_TITLE = "Install mode"
 const val INSTALL_MODE_SELECTOR_TAG = "installModeSelector"
+internal const val APPEARANCE_TITLE = "Appearance"
+const val APPEARANCE_SELECTOR_TAG = "appearanceSelector"
 internal const val DYNAMIC_COLOR_TITLE = "Dynamic color"
 internal const val DYNAMIC_COLOR_SUPPORTING = "Match Yuki's palette to your wallpaper."

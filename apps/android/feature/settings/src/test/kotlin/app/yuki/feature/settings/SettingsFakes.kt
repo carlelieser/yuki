@@ -59,6 +59,10 @@ internal class FakePreferenceStore(initial: YukiPreferences = YukiPreferences.De
         stored.value = stored.value.copy(installMode = mode)
     }
 
+    override suspend fun setAppearance(mode: AppearanceMode) {
+        stored.value = stored.value.copy(appearance = mode)
+    }
+
     override suspend fun setDynamicColorEnabled(isEnabled: Boolean) {
         stored.value = stored.value.copy(isDynamicColorEnabled = isEnabled)
     }

@@ -3,6 +3,7 @@ package app.yuki.feature.settings
 data class PreferenceActions(
     val onIncludePrereleasesChange: (Boolean) -> Unit,
     val onInstallModeChange: (InstallMode) -> Unit,
+    val onAppearanceChange: (AppearanceMode) -> Unit,
     val onDynamicColorChange: (Boolean) -> Unit,
 )
 

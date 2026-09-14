@@ -50,6 +50,10 @@ class SettingsViewModel @Inject internal constructor(
         viewModelScope.launch { dependencies.store.setInstallMode(mode) }
     }
 
+    fun onAppearanceChange(mode: AppearanceMode) {
+        viewModelScope.launch { dependencies.store.setAppearance(mode) }
+    }
+
     fun onDynamicColorChange(isEnabled: Boolean) {
         viewModelScope.launch { dependencies.store.setDynamicColorEnabled(isEnabled) }
     }

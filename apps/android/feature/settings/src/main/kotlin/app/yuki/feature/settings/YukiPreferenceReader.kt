@@ -15,6 +15,8 @@ interface YukiPreferenceReader {
 
     fun installMode(): Flow<InstallMode>
 
+    fun appearance(): Flow<AppearanceMode>
+
     fun isDynamicColorEnabled(): Flow<Boolean>
 }
 
@@ -25,6 +27,8 @@ internal class StoreBackedPreferenceReader @Inject constructor(
     override fun includePrereleases(): Flow<Boolean> = read(YukiPreferences::includePrereleases)
 
     override fun installMode(): Flow<InstallMode> = read(YukiPreferences::installMode)
+
+    override fun appearance(): Flow<AppearanceMode> = read(YukiPreferences::appearance)
 
     override fun isDynamicColorEnabled(): Flow<Boolean> =
         read(YukiPreferences::isDynamicColorEnabled)

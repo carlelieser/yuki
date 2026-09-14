@@ -132,6 +132,21 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun appearanceRoundTripsThroughTheStore() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(AppearanceMode.System, successOf(awaitItem()).preferences.appearance)
+
+            viewModel.onAppearanceChange(AppearanceMode.Dark)
+
+            assertEquals(AppearanceMode.Dark, successOf(awaitItem()).preferences.appearance)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun dynamicColorRoundTripsThroughTheStore() = runTest {
         val viewModel = viewModel()
 
