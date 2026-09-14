@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.onNodeWithText
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.INSTALLED_BADGE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureReason
@@ -41,10 +44,12 @@ class ExploreScreenTest {
     private fun browsing(
         featured: UiState<List<ListingSummary>> = UiState.Success(emptyList()),
         sections: UiState<List<CategorySection>> = UiState.Success(emptyList()),
+        installedIds: Set<Long> = emptySet(),
     ) = UiState.Success(
         ExploreContent(
             featured = featured,
             sections = sections,
+            installedIds = installedIds,
         ),
     )
 
@@ -88,6 +93,37 @@ class ExploreScreenTest {
         composeRule.onNodeWithText(ListingCategory.Gaming.label).assertIsDisplayed()
         composeRule.onNodeWithText(ListingCategory.Media.label).assertIsDisplayed()
         composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+    }
+
+    @Test
+    fun anInstalledListingIsMarkedInItsCategorySection() {
+        val alpha = listing("alpha")
+
+        render(
+            browsing(
+                sections = UiState.Success(
+                    listOf(section(ListingCategory.Gaming, listOf("alpha", "beta"))),
+                ),
+                installedIds = setOf(alpha.githubRepoId),
+            ),
+        )
+
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onAllNodesWithTag(INSTALLED_BADGE_TAG).assertCountEquals(1)
+    }
+
+    @Test
+    fun noListingIsMarkedWhenNothingIsInstalled() {
+        render(
+            browsing(
+                sections = UiState.Success(
+                    listOf(section(ListingCategory.Gaming, listOf("alpha", "beta"))),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onAllNodesWithTag(INSTALLED_BADGE_TAG).assertCountEquals(0)
     }
 
     @Test
