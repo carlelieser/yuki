@@ -65,12 +65,6 @@ interface InstallProgressDao {
     @Query("DELETE FROM install_progress WHERE githubRepoId = :githubRepoId")
     suspend fun deleteByRepoId(githubRepoId: Long)
 
-    @Query(
-        """
-        DELETE FROM install_progress
-        WHERE status = 'installed'
-          AND githubRepoId IN (SELECT githubRepoId FROM installs)
-        """,
-    )
+    @Query("DELETE FROM install_progress WHERE status = 'installed'")
     suspend fun deleteSettledInstalls()
 }

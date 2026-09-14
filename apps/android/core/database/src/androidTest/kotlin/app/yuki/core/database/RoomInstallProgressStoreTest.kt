@@ -87,6 +87,31 @@ class RoomInstallProgressStoreTest {
         )
     }
 
+    @Test
+    fun aSettledRowIsClearedEvenWhenItsInstallRecordIsGone() = runTest {
+        store.write(InstallProgress(AURORA, VERSION_TAG, InstallState.Installed(VERSION_TAG)))
+
+        store.clearSettled()
+
+        assertEquals(
+            emptyList<InstallProgressEntity>(),
+            database.installProgressDao().observeAll().first(),
+        )
+    }
+
+    @Test
+    fun clearingSettledRowsKeepsAnInstallThatIsStillRunning() = runTest {
+        store.write(InstallProgress(AURORA, VERSION_TAG, InstallState.Installed(VERSION_TAG)))
+        store.write(progressFor(TERMUX, bytesDownloaded = 100L))
+
+        store.clearSettled()
+
+        assertEquals(
+            listOf(TERMUX.githubRepoId),
+            store.observeActive().first().map(InstallProgress::githubRepoId),
+        )
+    }
+
     private suspend fun rowFor(githubRepoId: Long): InstallProgressEntity =
         database.installProgressDao().observeAll().first()
             .single { entity -> entity.githubRepoId == githubRepoId }

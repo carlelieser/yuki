@@ -41,9 +41,19 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
         githubRepoId: Long,
         progress: InstallProgress?,
     ): ListingInstallStatus {
-        if (progress != null) return ListingInstallStatus(progress.state, progress.versionTag)
+        if (progress != null && !progress.isStaleInstalled()) {
+            return ListingInstallStatus(progress.state, progress.versionTag)
+        }
 
         return ListingInstallStatus(installedStateOf(githubRepoId), versionTag = null)
+    }
+
+    private suspend fun InstallProgress.isStaleInstalled(): Boolean {
+        if (state !is InstallState.Installed) return false
+
+        val packageName = installs.packageNameOf(githubRepoId) ?: return true
+
+        return !installs.isPresent(packageName)
     }
 
     override suspend fun cancel(githubRepoId: Long) = scheduler.cancel(githubRepoId)
@@ -74,6 +84,7 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     }
 
     private suspend fun forget(githubRepoId: Long) {
+        scheduler.forget(githubRepoId)
         dependencies.store.forget(githubRepoId)
         refresh()
     }

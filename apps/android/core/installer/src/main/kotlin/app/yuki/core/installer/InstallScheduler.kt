@@ -33,6 +33,8 @@ class InstallScheduler @Inject internal constructor(
         workManager.cancelUniqueWork(installWorkName(githubRepoId))
         progress.clear(githubRepoId)
     }
+
+    suspend fun forget(githubRepoId: Long) = progress.clear(githubRepoId)
 }
 
 private fun InstallRequest.toWorkRequest() = OneTimeWorkRequestBuilder<InstallWorker>()
