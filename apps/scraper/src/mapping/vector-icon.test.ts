@@ -26,8 +26,14 @@ describe('parseColors', () => {
 		expect(colors.get('bg')).toBe('#FBFCFD');
 	});
 
-	it('ignores theme references that are not literal colours', () => {
+	it('keeps colour references so chains can be followed', () => {
 		const colors = parseColors(`<resources><color name="ref">@color/other</color></resources>`);
+
+		expect(colors.get('ref')).toBe('@color/other');
+	});
+
+	it('ignores values that are neither literals nor colour references', () => {
+		const colors = parseColors(`<resources><color name="ref">?attr/colorPrimary</color></resources>`);
 
 		expect(colors.has('ref')).toBe(false);
 	});
@@ -97,7 +103,128 @@ describe('vectorToSvg', () => {
 	});
 });
 
+describe('colour references', () => {
+	it('follows a chain of colour references to a literal', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/icon_background" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map([
+				['icon_background', '@color/primary'],
+				['primary', '#F2E672']
+			])
+		);
+
+		expect(svg).toContain('fill="#F2E672"');
+	});
+
+	it('resolves fixed framework colours', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@android:color/white" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('fill="#FFFFFFFF"');
+	});
+
+	it('refuses runtime material you colours rather than guessing', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@android:color/system_accent1_100" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('fill="#000000"');
+	});
+
+	it('does not loop on a cyclic reference', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="@color/a" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map([
+				['a', '@color/b'],
+				['b', '@color/a']
+			])
+		);
+
+		expect(svg).toContain('fill="#000000"');
+	});
+});
+
+describe('invisible paths', () => {
+	it('skips a path that declares neither fill nor stroke', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M4,4h16v16h-16z" /><path android:pathData="M0 0h24v24H0z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).not.toContain('#000000');
+		expect(svg).toContain('#FFFFFF');
+	});
+});
+
+describe('framework colour layers', () => {
+	it('parses a background pointing at an android framework colour', () => {
+		const refs = parseAdaptiveIcon(
+			`<adaptive-icon><background android:drawable="@android:color/holo_blue_dark" /><foreground android:drawable="@drawable/fg" /></adaptive-icon>`
+		);
+
+		expect(refs.background).toEqual({ kind: 'color', name: 'android:holo_blue_dark' });
+	});
+});
+
+describe('fill rules', () => {
+	it('carries evenOdd through so knocked-out shapes stay hollow', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('fill-rule="evenodd"');
+	});
+
+	it('leaves the default winding rule alone', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M0,0h24v24h-24z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).not.toContain('fill-rule');
+	});
+});
+
+describe('group transforms', () => {
+	it('scales about the declared pivot', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><group android:pivotX="12" android:pivotY="12" android:scaleX="0.6" android:scaleY="0.6"><path android:fillColor="#FF0000" android:pathData="M0,0h24v24h-24z" /></group></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('transform="translate(12 12) scale(0.6 0.6) translate(-12 -12)"');
+	});
+
+	it('applies rotation before scale, matching android', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="24" android:viewportHeight="24"><group android:pivotX="12" android:pivotY="12" android:rotation="90" android:scaleX="0.5" android:scaleY="0.5"><path android:fillColor="#FF0000" android:pathData="M0,0h24v24h-24z" /></group></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('rotate(90) scale(0.5 0.5)');
+	});
+});
+
 describe('composeAdaptiveSvg', () => {
+	it('normalises layers drawn in different viewports onto one canvas', () => {
+		const svg = composeAdaptiveSvg({
+			background: {
+				kind: 'vector',
+				value: `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#4D5DBA" android:pathData="M0,0h108v108h-108z" /></vector>`
+			},
+			foreground: `<vector android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFF" android:pathData="M4,4h16v16h-16z" /></vector>`,
+			colors: new Map()
+		});
+
+		expect(svg).toContain('viewBox="0 0 108 108"');
+		expect(svg).toContain('<g transform="scale(4.5 4.5)">');
+		expect(svg).not.toContain('scale(1 1)');
+	});
+
 	it('paints a colour background beneath the foreground', () => {
 		const svg = composeAdaptiveSvg({
 			background: { kind: 'color', value: '@color/launcher_background' },
@@ -108,7 +235,7 @@ describe('composeAdaptiveSvg', () => {
 			])
 		});
 
-		expect(svg).toContain('<rect width="256" height="256" fill="#FBFCFD"/>');
+		expect(svg).toContain('<rect width="108" height="108" fill="#FBFCFD"/>');
 		expect(svg).toContain('fill="#0A0C10"');
 	});
 

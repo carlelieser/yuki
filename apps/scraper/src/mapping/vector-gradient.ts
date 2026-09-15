@@ -1,4 +1,4 @@
-const GRADIENT_TAG = /<gradient\b[^>]*>([\s\S]*?)<\/gradient>/;
+const GRADIENT_TAG = /<gradient\b[^>]*?(?:\/>|>([\s\S]*?)<\/gradient>)/;
 const GRADIENT_ITEM = /<item\b[^>]*\/>/g;
 
 export type GradientStop = {
@@ -47,6 +47,22 @@ function readStops(body: string, toColor: (raw: string | null) => string | null)
 	return stops;
 }
 
+function readAttributeStops(
+	tag: string,
+	toColor: (raw: string | null) => string | null
+): GradientStop[] {
+	const start = toColor(attribute(tag, 'startColor'));
+	const center = toColor(attribute(tag, 'centerColor'));
+	const end = toColor(attribute(tag, 'endColor'));
+
+	const stops: GradientStop[] = [];
+	if (start !== null) stops.push({ color: start, offset: 0 });
+	if (center !== null) stops.push({ color: center, offset: 0.5 });
+	if (end !== null) stops.push({ color: end, offset: 1 });
+
+	return stops.length < 2 ? [] : stops;
+}
+
 export function parseGradient(
 	source: string,
 	toColor: (raw: string | null) => string | null
@@ -55,7 +71,8 @@ export function parseGradient(
 	if (match === null) return null;
 
 	const tag = match[0];
-	const stops = readStops(match[1] ?? '', toColor);
+	const itemStops = readStops(match[1] ?? '', toColor);
+	const stops = itemStops.length > 0 ? itemStops : readAttributeStops(tag, toColor);
 	if (stops.length === 0) return null;
 
 	const kind = attribute(tag, 'type') === 'radial' ? 'radial' : 'linear';
@@ -87,6 +104,8 @@ export function gradientToSvg(gradient: VectorGradient, id: string): string {
 			`${stops}</radialGradient>`
 		);
 	}
+
+	if (gradient.startX === gradient.endX && gradient.startY === gradient.endY) return '';
 
 	return (
 		`<linearGradient id="${id}" gradientUnits="userSpaceOnUse"` +

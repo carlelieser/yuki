@@ -18,6 +18,70 @@ const RADIAL_PATH = GRADIENT_PATH.replace(
 	'android:type="radial" android:centerX="256" android:centerY="256" android:gradientRadius="128"'
 );
 
+const ATTRIBUTE_GRADIENT = `<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:viewportWidth="108" android:viewportHeight="108">
+	<path android:pathData="M0,0h108v108h-108z">
+		<aapt:attr name="android:fillColor">
+			<gradient
+				android:type="linear"
+				android:startX="0"
+				android:startY="0"
+				android:endX="108"
+				android:endY="108"
+				android:startColor="#4C8DF0"
+				android:endColor="#16233F" />
+		</aapt:attr>
+	</path>
+</vector>`;
+
+describe('attribute-form gradients', () => {
+	it('renders a self-closing gradient declared with start and end colours', () => {
+		const svg = vectorToSvg(ATTRIBUTE_GRADIENT, new Map()) ?? '';
+
+		expect(svg).toContain('fill="url(#');
+		expect(svg).not.toContain('fill="#000000"');
+	});
+
+	it('emits the start and end colours as stops', () => {
+		const svg = vectorToSvg(ATTRIBUTE_GRADIENT, new Map()) ?? '';
+
+		expect(svg).toContain('stop-color="#4C8DF0"');
+		expect(svg).toContain('stop-color="#16233F"');
+	});
+
+	it('places a centre colour midway between the ends', () => {
+		const withCentre = ATTRIBUTE_GRADIENT.replace(
+			'android:startColor="#4C8DF0"',
+			'android:startColor="#4C8DF0" android:centerColor="#2A5580"'
+		);
+		const svg = vectorToSvg(withCentre, new Map()) ?? '';
+
+		expect(svg).toContain('<stop offset="0.5" stop-color="#2A5580"/>');
+	});
+
+	it('falls back to a flat fill when the gradient has no direction', () => {
+		const degenerate = ATTRIBUTE_GRADIENT.replace('android:endX="108"', 'android:endX="0"').replace(
+			'android:endY="108"',
+			'android:endY="0"'
+		);
+		const svg = vectorToSvg(degenerate, new Map()) ?? '';
+
+		expect(svg).toContain('fill="#4C8DF0"');
+		expect(svg).not.toContain('fill="#000000"');
+	});
+
+	it('still prefers item stops when both forms are present', () => {
+		const both = ATTRIBUTE_GRADIENT.replace(
+			'android:endColor="#16233F" />',
+			`android:endColor="#16233F"><item android:color="#AAAAAA" android:offset="0" /><item android:color="#BBBBBB" android:offset="1" /></gradient>`
+		);
+		const svg = vectorToSvg(both, new Map()) ?? '';
+
+		expect(svg).toContain('stop-color="#AAAAAA"');
+		expect(svg).not.toContain('stop-color="#4C8DF0"');
+	});
+});
+
 describe('gradient fills', () => {
 	it('renders a path whose fill is a nested gradient rather than dropping it', () => {
 		const svg = vectorToSvg(GRADIENT_PATH, new Map());

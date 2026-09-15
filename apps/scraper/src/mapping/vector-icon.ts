@@ -1,7 +1,7 @@
 import { gradientToSvg, parseGradient } from './vector-gradient.ts';
 
 const ADAPTIVE_LAYER =
-	/<(background|foreground)\b[^>]*android:drawable="@(color|drawable|mipmap)\/([^"]+)"/g;
+	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(color|drawable|mipmap)\/([^"]+)"/g;
 const VECTOR_TAG = /<vector\b[^>]*>/;
 const PATH_TAG = /<path\b[^>]*?(?:\/>|>([\s\S]*?)<\/path>)/g;
 const GROUP_TAG = /<group\b[^>]*>/;
@@ -11,6 +11,33 @@ const MAX_SOURCE_BYTES = 64 * 1024;
 const MAX_PATHS = 64;
 const CANVAS = 108;
 const VIEWPORT_INSET = 18;
+const CORNER_RADIUS = 0.2;
+const MAX_COLOR_HOPS = 8;
+
+const FRAMEWORK_COLORS = new Map([
+	['white', '#FFFFFFFF'],
+	['black', '#FF000000'],
+	['transparent', '#00000000'],
+	['background_light', '#FFFFFFFF'],
+	['background_dark', '#FF000000'],
+	['primary_text_light', '#FF000000'],
+	['primary_text_dark', '#FFFFFFFF'],
+	['secondary_text_light', '#FF666666'],
+	['secondary_text_dark', '#FFBEBEBE'],
+	['holo_blue_light', '#FF33B5E5'],
+	['holo_blue_dark', '#FF0099CC'],
+	['holo_blue_bright', '#FF00DDFF'],
+	['holo_green_light', '#FF99CC00'],
+	['holo_green_dark', '#FF669900'],
+	['holo_red_light', '#FFFF4444'],
+	['holo_red_dark', '#FFCC0000'],
+	['holo_orange_light', '#FFFFBB33'],
+	['holo_orange_dark', '#FFFF8800'],
+	['holo_purple', '#FFAA66CC'],
+	['darker_gray', '#FFAAAAAA'],
+	['background_holo_dark', '#FF000000'],
+	['background_holo_light', '#FFFFFFFF']
+]);
 
 export type AdaptiveIconRefs = {
 	background: { kind: 'color' | 'drawable'; name: string } | null;
@@ -36,8 +63,10 @@ export function parseColors(xml: string): Map<string, string> {
 	for (const match of xml.matchAll(COLOR_ENTRY)) {
 		const name = match[1];
 		const value = match[2];
-		if (name !== undefined && value !== undefined && value.startsWith('#')) {
-			colors.set(name, value);
+		if (name !== undefined && value !== undefined) {
+			if (value.startsWith('#') || value.startsWith('@color/') || value.startsWith('@android:color/')) {
+				colors.set(name, value);
+			}
 		}
 	}
 
@@ -49,11 +78,15 @@ export function parseAdaptiveIcon(xml: string): AdaptiveIconRefs {
 
 	for (const match of xml.matchAll(ADAPTIVE_LAYER)) {
 		const layer = match[1];
-		const kind = match[2];
-		const name = match[3];
+		const framework = match[2] !== undefined;
+		const kind = match[3];
+		const name = match[4];
 		if (name === undefined || kind === 'mipmap') continue;
 
-		const ref = { kind: kind === 'color' ? ('color' as const) : ('drawable' as const), name };
+		const ref = {
+			kind: kind === 'color' ? ('color' as const) : ('drawable' as const),
+			name: kind === 'color' && framework ? `android:${name}` : name
+		};
 		if (layer === 'background') refs.background = ref;
 		if (layer === 'foreground') refs.foreground = ref;
 	}
@@ -64,9 +97,19 @@ export function parseAdaptiveIcon(xml: string): AdaptiveIconRefs {
 function resolveColor(raw: string | null, colors: Map<string, string>): string | null {
 	if (raw === null) return null;
 
-	const value = raw.startsWith('@')
-		? (colors.get(raw.replace(/^@(android:)?color\//, '')) ?? null)
-		: raw;
+	let value: string | null = raw;
+	const seen = new Set<string>();
+
+	for (let hop = 0; value !== null && value.startsWith('@'); hop += 1) {
+		if (hop >= MAX_COLOR_HOPS || seen.has(value)) return null;
+		seen.add(value);
+
+		const reference: string = value;
+		const isFramework = reference.startsWith('@android:color/');
+		const key = reference.replace(/^@(android:)?color\//, '');
+
+		value = isFramework ? (FRAMEWORK_COLORS.get(key) ?? null) : (colors.get(key) ?? null);
+	}
 
 	if (value === null || !/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return null;
 
@@ -97,10 +140,16 @@ function groupTransform(vector: string): string | null {
 	const scaleX = numeric(group, 'scaleX', 1);
 	const scaleY = numeric(group, 'scaleY', 1);
 	const rotation = numeric(group, 'rotation', 0);
+	const pivotX = numeric(group, 'pivotX', 0);
+	const pivotY = numeric(group, 'pivotY', 0);
 
 	if (translateX !== 0 || translateY !== 0) parts.push(`translate(${translateX} ${translateY})`);
-	if (scaleX !== 1 || scaleY !== 1) parts.push(`scale(${scaleX} ${scaleY})`);
+
+	const pivoted = pivotX !== 0 || pivotY !== 0;
+	if (pivoted) parts.push(`translate(${pivotX} ${pivotY})`);
 	if (rotation !== 0) parts.push(`rotate(${rotation})`);
+	if (scaleX !== 1 || scaleY !== 1) parts.push(`scale(${scaleX} ${scaleY})`);
+	if (pivoted) parts.push(`translate(${-pivotX} ${-pivotY})`);
 
 	return parts.length === 0 ? null : parts.join(' ');
 }
@@ -125,6 +174,10 @@ function convertPaths(
 		const fill = resolveColor(attribute(tag, 'fillColor'), colors);
 		const stroke = resolveColor(attribute(tag, 'strokeColor'), colors);
 		const strokeWidth = numeric(tag, 'strokeWidth', 0);
+
+		const declaresFill = attribute(tag, 'fillColor') !== null;
+		const declaresStroke = attribute(tag, 'strokeColor') !== null;
+		if (gradient === null && !declaresFill && !declaresStroke) continue;
 
 		const attributes = [`d="${escapeXml(data.trim())}"`];
 
@@ -153,6 +206,10 @@ function convertPaths(
 
 		const alpha = attribute(tag, 'fillAlpha');
 		if (alpha !== null) attributes.push(`fill-opacity="${escapeXml(alpha)}"`);
+
+		if (attribute(tag, 'fillType')?.toLowerCase() === 'evenodd') {
+			attributes.push('fill-rule="evenodd"');
+		}
 
 		rendered.push(`<path ${attributes.join(' ')}/>`);
 	}
@@ -189,6 +246,22 @@ export function vectorToSvg(
 	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${body}</svg>`;
 }
 
+function normaliseLayer(svg: string): string {
+	const inner = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+	const viewBox = svg.match(/viewBox="([^"]+)"/)?.[1];
+	if (viewBox === undefined) return inner;
+
+	const [, , rawWidth, rawHeight] = viewBox.split(/\s+/).map((part) => Number.parseFloat(part));
+	const width = rawWidth !== undefined && rawWidth > 0 ? rawWidth : CANVAS;
+	const height = rawHeight !== undefined && rawHeight > 0 ? rawHeight : CANVAS;
+
+	const scaleX = CANVAS / width;
+	const scaleY = CANVAS / height;
+	if (scaleX === 1 && scaleY === 1) return inner;
+
+	return `<g transform="scale(${scaleX} ${scaleY})">${inner}</g>`;
+}
+
 export function composeAdaptiveSvg(input: {
 	background: { kind: 'color' | 'vector'; value: string } | null;
 	foreground: string | null;
@@ -200,11 +273,9 @@ export function composeAdaptiveSvg(input: {
 			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg' });
 	if (foreground === null) return null;
 
-	const inner = foreground.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
-	const viewBox = foreground.match(/viewBox="([^"]+)"/)?.[1] ?? `0 0 ${CANVAS} ${CANVAS}`;
-	const [, , rawWidth, rawHeight] = viewBox.split(/\s+/).map((part) => Number.parseFloat(part));
-	const width = rawWidth ?? CANVAS;
-	const height = rawHeight ?? CANVAS;
+	const width = CANVAS;
+	const height = CANVAS;
+	const inner = normaliseLayer(foreground);
 
 	const layers: string[] = [];
 
@@ -217,16 +288,14 @@ export function composeAdaptiveSvg(input: {
 			const backgroundSvg = vectorToSvg(input.background.value, input.colors, {
 				idPrefix: 'bg'
 			});
-			if (backgroundSvg !== null) {
-				layers.push(backgroundSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, ''));
-			}
+			if (backgroundSvg !== null) layers.push(normaliseLayer(backgroundSvg));
 		}
 	}
 
 	layers.push(inner);
 
 	const inset = (VIEWPORT_INSET / CANVAS) * Math.min(width, height);
-	const clip = `<clipPath id="c"><rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${(width - inset * 2) / 4}"/></clipPath>`;
+	const clip = `<clipPath id="c"><rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${CORNER_RADIUS * Math.min(width, height)}"/></clipPath>`;
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${clip}<g clip-path="url(#c)">${layers.join('')}</g></svg>`;
 }
