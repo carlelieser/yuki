@@ -75,8 +75,17 @@ class UpdatesScreenTest {
         )
 
         composeRule.onNodeWithTag(UNCHECKED_ROW_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText(UPDATES_PARTIAL_DESCRIPTION).assertIsDisplayed()
+        composeRule.onNodeWithText(UNCHECKED_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(UPDATES_EMPTY_TITLE).assertDoesNotExist()
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun theUpToDateScreenAppearsOnlyWhenThereIsNothingToShow() {
+        setContent(UiState.Success(UpdatesContent(updates = emptyList(), unchecked = emptyList())))
+
+        composeRule.onNodeWithText(UPDATES_EMPTY_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(UPDATES_EMPTY_DESCRIPTION).assertIsDisplayed()
     }
 
     @Test

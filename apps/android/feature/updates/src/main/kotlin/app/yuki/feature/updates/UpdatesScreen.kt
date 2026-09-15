@@ -101,10 +101,8 @@ private fun UpdatesList(
     actions: UpdatesActions,
     contentPadding: PaddingValues,
 ) {
-    if (content.hasNoUpdates) {
-        YukiScreenCenter(contentPadding) {
-            UpToDate(hasUnchecked = content.unchecked.isNotEmpty())
-        }
+    if (content.isEmpty) {
+        YukiScreenCenter(contentPadding) { UpToDate() }
         return
     }
 
@@ -120,11 +118,11 @@ private fun UpdatesList(
 }
 
 @Composable
-private fun UpToDate(hasUnchecked: Boolean) {
+private fun UpToDate() {
     CollectionEmpty(
         content = EmptyContent(
             title = UPDATES_EMPTY_TITLE,
-            description = if (hasUnchecked) UPDATES_PARTIAL_DESCRIPTION else UPDATES_EMPTY_DESCRIPTION,
+            description = UPDATES_EMPTY_DESCRIPTION,
             icon = YukiIcons.Update,
         ),
     )
@@ -133,7 +131,5 @@ private fun UpToDate(hasUnchecked: Boolean) {
 internal const val UPDATES_TITLE = "Updates"
 internal const val UPDATES_EMPTY_TITLE = "Everything is up to date"
 internal const val UPDATES_EMPTY_DESCRIPTION =
-    "Yuki checked every app you installed and found no new versions."
-internal const val UPDATES_PARTIAL_DESCRIPTION =
     "Any available updates will show up here."
 internal const val UPDATES_MISSING_MESSAGE = "We couldn't check for updates."
