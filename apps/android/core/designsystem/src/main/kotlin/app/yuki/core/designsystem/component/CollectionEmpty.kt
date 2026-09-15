@@ -24,7 +24,7 @@ const val COLLECTION_EMPTY_TAG = "collectionEmpty"
 
 data class EmptyContent(
     val title: String,
-    val description: String,
+    val description: String? = null,
     val icon: ImageVector? = null,
     val actionLabel: String? = null,
     val onAction: (() -> Unit)? = null,
@@ -50,6 +50,18 @@ private fun EmptyIcon(icon: ImageVector?) {
             modifier = Modifier.size(YukiSize.IconSmall),
         )
     }
+}
+
+@Composable
+private fun EmptyDescription(description: String?) {
+    if (description == null) return
+
+    Text(
+        text = description,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+    )
 }
 
 @Composable
@@ -84,12 +96,7 @@ fun CollectionEmpty(
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
         )
-        Text(
-            text = content.description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
+        EmptyDescription(description = content.description)
         EmptyActionButton(content = content)
     }
 }

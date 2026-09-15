@@ -221,7 +221,6 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
             title = LIBRARY_EMPTY_TITLE,
-            description = LIBRARY_EMPTY_DESCRIPTION,
             icon = YukiIcons.Library,
             actionLabel = LIBRARY_EMPTY_ACTION,
             onAction = onExploreClick,
@@ -231,7 +230,5 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 
 internal const val LIBRARY_TITLE = "Library"
 internal const val LIBRARY_EMPTY_TITLE = "Nothing installed yet"
-internal const val LIBRARY_EMPTY_DESCRIPTION =
-    "Your apps will show up here, ready to open or update."
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."
