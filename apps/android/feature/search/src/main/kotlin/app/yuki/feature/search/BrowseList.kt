@@ -13,6 +13,7 @@ import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.toProductListItemContent
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -26,14 +27,13 @@ private val NothingToBrowse = EmptyContent(
 
 internal fun LazyListScope.browseList(
     listings: LazyPagingItems<ListingSummary>,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
     onSelect: (ListingSummary) -> Unit,
 ) {
     items(count = listings.itemCount) { index ->
         val listing = listings[index] ?: return@items
         ClickableProductListItem(
-            content = listing.toProductListItemContent()
-                .copy(isInstalled = listing.githubRepoId in installedIds),
+            content = installs.apply(listing, listing.toProductListItemContent()),
             onClick = { onSelect(listing) },
         )
     }

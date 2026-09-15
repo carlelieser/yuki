@@ -11,6 +11,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.model.ListingCategory
@@ -27,11 +28,11 @@ fun CategoryRoute(
     viewModel: CategoryViewModel = hiltViewModel(),
 ) {
     val sort by viewModel.sort.collectAsStateWithLifecycle()
-    val installedIds by viewModel.installedIds.collectAsStateWithLifecycle()
+    val installs by viewModel.installs.collectAsStateWithLifecycle()
     val listings = viewModel.listings.collectAsLazyPagingItems()
 
     CategoryScreen(
-        browsed = BrowsedCategory(category = viewModel.category, installedIds = installedIds),
+        browsed = BrowsedCategory(category = viewModel.category, installs = installs),
         listings = listings,
         callbacks = CategoryCallbacks(
             sort = sort,
@@ -46,7 +47,7 @@ fun CategoryRoute(
 
 internal data class BrowsedCategory(
     val category: ListingCategory,
-    val installedIds: Set<Long>,
+    val installs: ListingInstalls,
 )
 
 data class CategoryCallbacks(
@@ -88,7 +89,7 @@ internal fun CategoryScreen(
                 browseRefreshState(listings = listings)
                 browseList(
                     listings = listings,
-                    installedIds = browsed.installedIds,
+                    installs = browsed.installs,
                     onSelect = callbacks.onListingSelected,
                 )
             }

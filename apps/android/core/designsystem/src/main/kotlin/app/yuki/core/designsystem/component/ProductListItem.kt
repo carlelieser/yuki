@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingSummary
 
 private const val DESCRIPTION_MAX_LINES = 2
@@ -30,6 +31,7 @@ data class ProductListItemContent(
     val description: String? = null,
     val badges: ListingBadges = ListingBadges(emptyList()),
     val isInstalled: Boolean = false,
+    val installState: InstallState = InstallState.NotInstalled,
 )
 
 @Composable
@@ -61,9 +63,9 @@ private fun ProductListItemIcon(content: ProductListItemContent) {
         modifier = Modifier.padding(end = BADGE_OVERHANG, bottom = BADGE_OVERHANG),
         contentAlignment = Alignment.BottomEnd,
     ) {
-        AppIcon(iconUrl = content.iconUrl, size = YukiSize.IconMedium)
+        AppIconProgress(iconUrl = content.iconUrl, state = content.installState)
         InstalledBadge(
-            isInstalled = content.isInstalled,
+            isInstalled = content.isInstalled && !isInstallInProgress(content.installState),
             modifier = Modifier.offset(x = BADGE_OVERHANG, y = BADGE_OVERHANG),
         )
     }

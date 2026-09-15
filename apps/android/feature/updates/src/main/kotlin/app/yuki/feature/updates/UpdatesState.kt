@@ -18,6 +18,7 @@ data class UpdateRow(
         title = update.installed.title,
         supporting = "${update.installed.versionTag} $VERSION_ARROW ${update.version.tag}",
         iconUrl = update.installed.iconUrl,
+        installState = install,
     )
 }
 

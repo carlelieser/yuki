@@ -2,6 +2,8 @@ package app.yuki.feature.explore
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingSummary
@@ -26,6 +28,7 @@ const val SECTION_ITEM_COUNT = 3
 class ExploreViewModel @Inject constructor(
     private val repository: ListingRepository,
     installedListings: InstalledListings,
+    installProgress: InstallProgressStore,
 ) : ViewModel() {
     private val featured = MutableStateFlow<UiState<List<ListingSummary>>>(UiState.Loading)
     private val sections = MutableStateFlow<UiState<List<CategorySection>>>(UiState.Loading)
@@ -34,7 +37,13 @@ class ExploreViewModel @Inject constructor(
     val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
 
     val state: StateFlow<UiState<ExploreContent>> =
-        combine(featured, sections, installedListings.observeInstalledIds(), ::content)
+        combine(
+            featured,
+            sections,
+            installedListings.observeInstalledIds(),
+            installProgress.observeActive(),
+            ::content,
+        )
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -108,11 +117,13 @@ private fun content(
     featured: UiState<List<ListingSummary>>,
     sections: UiState<List<CategorySection>>,
     installedIds: Set<Long>,
+    active: List<InstallProgress>,
 ): UiState<ExploreContent> {
     val loaded = ExploreContent(
         featured = featured,
         sections = sections,
         installedIds = installedIds,
+        installStates = active.associate { progress -> progress.githubRepoId to progress.state },
     )
 
     val hasContent = featured is UiState.Success || sections is UiState.Success

@@ -34,10 +34,12 @@ class CategoryViewModelTest {
     private fun viewModel(
         category: ListingCategory = ListingCategory.Gaming,
         installed: FakeInstalledListings = FakeInstalledListings(),
+        progress: FakeSearchProgressStore = FakeSearchProgressStore(),
     ) = CategoryViewModel(
         savedStateHandle = SavedStateHandle(mapOf(CATEGORY_KEY to category.wireValue)),
         repository = repository,
         installedListings = installed,
+        installProgress = progress,
     )
 
     @Test
@@ -61,6 +63,7 @@ class CategoryViewModelTest {
                 savedStateHandle = SavedStateHandle(mapOf(CATEGORY_KEY to "not_a_category")),
                 repository = repository,
                 installedListings = FakeInstalledListings(),
+                installProgress = FakeSearchProgressStore(),
             )
         }
 

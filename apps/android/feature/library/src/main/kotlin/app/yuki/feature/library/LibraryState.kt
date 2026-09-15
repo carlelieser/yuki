@@ -33,6 +33,7 @@ data class LibraryItem(
         title = app.title,
         supporting = supportingText(),
         iconUrl = app.iconUrl,
+        installState = install,
     )
 
     private fun supportingText(): String = when (install) {

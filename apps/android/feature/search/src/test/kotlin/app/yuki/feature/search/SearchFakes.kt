@@ -1,11 +1,14 @@
 package app.yuki.feature.search
 
 import app.yuki.core.datastore.RecentSearchStore
+import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingPage
@@ -15,6 +18,7 @@ import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 internal class TypedFailure(override val reason: FailureReason) :
     Exception("Search test failure"), FailureAware
@@ -93,5 +97,35 @@ internal class FakeRecentSearchStore : RecentSearchStore {
 
     override suspend fun clear() {
         entries.value = emptyList()
+    }
+}
+
+internal class FakeSearchProgressStore(
+    initial: List<InstallProgress> = emptyList(),
+) : InstallProgressStore {
+    private val rows = MutableStateFlow(initial)
+
+    override fun observe(githubRepoId: Long): Flow<InstallProgress?> =
+        rows.map { current -> current.firstOrNull { it.githubRepoId == githubRepoId } }
+
+    override fun observeActive(): Flow<List<InstallProgress>> = rows
+
+    override suspend fun find(githubRepoId: Long): InstallProgress? =
+        rows.value.firstOrNull { it.githubRepoId == githubRepoId }
+
+    override suspend fun unsettled(): List<InstallProgress> = rows.value
+
+    override suspend fun write(progress: InstallProgress) {
+        rows.value = rows.value.filterNot {
+            it.githubRepoId == progress.githubRepoId
+        } + progress
+    }
+
+    override suspend fun clear(githubRepoId: Long) {
+        rows.value = rows.value.filterNot { it.githubRepoId == githubRepoId }
+    }
+
+    override suspend fun clearSettled() {
+        rows.value = rows.value.filterNot { row -> row.state is InstallState.Installed }
     }
 }

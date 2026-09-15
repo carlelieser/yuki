@@ -42,10 +42,12 @@ class SearchViewModelTest {
 
     private fun viewModel(
         installed: FakeInstalledListings = FakeInstalledListings(),
+        progress: FakeSearchProgressStore = FakeSearchProgressStore(),
     ) = SearchViewModel(
         repository = repository,
         recentSearches = recentSearches,
         installedListings = installed,
+        installProgress = progress,
     )
 
     @Test

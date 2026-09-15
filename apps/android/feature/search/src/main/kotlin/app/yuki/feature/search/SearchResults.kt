@@ -14,6 +14,7 @@ import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.toProductListItemContent
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -53,7 +54,7 @@ internal fun SearchResults(
 
             is UiState.Success -> MatchList(
                 matches = Matches(query = state.query, listings = results.data),
-                installedIds = state.installedIds,
+                installs = state.installs,
                 onSelect = onSelect,
             )
         }
@@ -68,7 +69,7 @@ private data class Matches(
 @Composable
 private fun MatchList(
     matches: Matches,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
     onSelect: (ListingSummary) -> Unit,
 ) {
     if (matches.listings.isEmpty()) {
@@ -85,8 +86,7 @@ private fun MatchList(
     ) {
         items(items = matches.listings, key = { listing -> listing.id }) { listing ->
             ClickableProductListItem(
-                content = listing.toProductListItemContent()
-                    .copy(isInstalled = listing.githubRepoId in installedIds),
+                content = installs.apply(listing, listing.toProductListItemContent()),
                 onClick = { onSelect(listing) },
             )
         }

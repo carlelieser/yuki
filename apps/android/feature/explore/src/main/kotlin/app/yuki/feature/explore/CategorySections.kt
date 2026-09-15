@@ -12,6 +12,7 @@ import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -37,7 +38,7 @@ internal data class CategorySectionActions(
 
 internal fun LazyListScope.categorySections(
     sections: UiState<List<CategorySection>>,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
     actions: CategorySectionActions,
 ) {
     when (sections) {
@@ -47,7 +48,7 @@ internal fun LazyListScope.categorySections(
 
         is UiState.Success -> sectionList(
             entries = sections.data,
-            installedIds = installedIds,
+            installs = installs,
             actions = actions,
         )
     }
@@ -55,7 +56,7 @@ internal fun LazyListScope.categorySections(
 
 private fun LazyListScope.sectionList(
     entries: List<CategorySection>,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
     actions: CategorySectionActions,
 ) {
     if (entries.isEmpty()) {
@@ -64,13 +65,13 @@ private fun LazyListScope.sectionList(
     }
 
     entries.forEach { entry ->
-        categorySection(section = entry, installedIds = installedIds, actions = actions)
+        categorySection(section = entry, installs = installs, actions = actions)
     }
 }
 
 private fun LazyListScope.categorySection(
     section: CategorySection,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
     actions: CategorySectionActions,
 ) {
     val category = section.category
@@ -87,8 +88,7 @@ private fun LazyListScope.categorySection(
         key = { listing -> "${category.wireValue}/${listing.id}" },
     ) { listing ->
         ClickableProductListItem(
-            content = listing.toProductListItemContent()
-                .copy(isInstalled = listing.githubRepoId in installedIds),
+            content = installs.apply(listing, listing.toProductListItemContent()),
             onClick = { actions.onListingSelected(listing) },
         )
     }

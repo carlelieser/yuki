@@ -7,6 +7,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import app.yuki.core.datastore.RecentSearchStore
+import app.yuki.core.designsystem.component.ListingInstalls
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -40,6 +42,7 @@ class SearchViewModel @Inject constructor(
     private val repository: ListingRepository,
     private val recentSearches: RecentSearchStore,
     installedListings: InstalledListings,
+    installProgress: InstallProgressStore,
 ) : ViewModel() {
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(BrowseFilter())
@@ -56,8 +59,16 @@ class SearchViewModel @Inject constructor(
         .flatMapLatest { active -> pagerFor(active) }
         .cachedIn(viewModelScope)
 
+    private val installs: Flow<ListingInstalls> =
+        combine(installedIds, installProgress.observeActive()) { ids, active ->
+            ListingInstalls(
+                installedIds = ids,
+                installStates = active.associate { it.githubRepoId to it.state },
+            )
+        }
+
     val state: StateFlow<UiState<SearchContent>> =
-        combine(query, recentSearches.recentSearches, results(), filter, installedIds, ::content)
+        combine(query, recentSearches.recentSearches, results(), filter, installs, ::content)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
@@ -118,13 +129,14 @@ private fun content(
     recent: List<String>,
     results: UiState<List<ListingSummary>>?,
     filter: BrowseFilter,
-    installedIds: Set<Long>,
+    installs: ListingInstalls,
 ): UiState<SearchContent> = UiState.Success(
     SearchContent(
         query = query,
         recent = recent,
         results = results,
         filter = filter,
-        installedIds = installedIds,
+        installedIds = installs.installedIds,
+        installStates = installs.installStates,
     ),
 )

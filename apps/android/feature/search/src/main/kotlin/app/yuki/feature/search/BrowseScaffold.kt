@@ -188,7 +188,7 @@ private fun BrowseListing(
                 browseRefreshState(listings = listings)
                 browseList(
                     listings = listings,
-                    installedIds = content.installedIds,
+                    installs = content.installs,
                     onSelect = callbacks.onListingSelected,
                 )
             }

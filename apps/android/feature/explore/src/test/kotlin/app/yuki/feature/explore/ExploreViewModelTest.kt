@@ -39,7 +39,8 @@ class ExploreViewModelTest {
 
     private fun viewModel(
         installed: FakeInstalledListings = FakeInstalledListings(),
-    ) = ExploreViewModel(repository, installed)
+        progress: FakeExploreProgressStore = FakeExploreProgressStore(),
+    ) = ExploreViewModel(repository, installed, progress)
 
     @Test
     fun `emits loading then success once featured resolves`() = runTest {

@@ -13,6 +13,7 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.BACK_ACTION_TAG
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -34,7 +35,7 @@ class CategoryScreenTest {
     private fun render(category: ListingCategory = ListingCategory.Gaming) {
         composeRule.setContent {
             CategoryScreen(
-                browsed = BrowsedCategory(category = category, installedIds = emptySet()),
+                browsed = BrowsedCategory(category = category, installs = ListingInstalls()),
                 listings = emptyListings(),
                 callbacks = noCallbacks,
                 contentPadding = PaddingValues(),

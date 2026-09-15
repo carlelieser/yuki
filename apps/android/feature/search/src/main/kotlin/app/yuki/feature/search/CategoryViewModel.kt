@@ -7,6 +7,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import app.yuki.core.designsystem.component.ListingInstalls
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstalledListings
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 
@@ -32,6 +35,7 @@ class CategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: ListingRepository,
     installedListings: InstalledListings,
+    installProgress: InstallProgressStore,
 ) : ViewModel() {
     val category: ListingCategory = requireCategory(savedStateHandle[CATEGORY_KEY])
 
@@ -39,11 +43,19 @@ class CategoryViewModel @Inject constructor(
 
     val sort: StateFlow<BrowseSortOption> = selectedSort.asStateFlow()
 
-    val installedIds: StateFlow<Set<Long>> = installedListings.observeInstalledIds()
-        .stateIn(
+    val installs: StateFlow<ListingInstalls> =
+        combine(
+            installedListings.observeInstalledIds(),
+            installProgress.observeActive(),
+        ) { ids, active ->
+            ListingInstalls(
+                installedIds = ids,
+                installStates = active.associate { it.githubRepoId to it.state },
+            )
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(CATEGORY_STOP_TIMEOUT_MILLIS),
-            initialValue = emptySet(),
+            initialValue = ListingInstalls(),
         )
 
     @OptIn(ExperimentalCoroutinesApi::class)
