@@ -26,6 +26,8 @@ object YukiSize {
     val OverlineHeaderHeight = 28.dp
     val BadgeHeight = 22.dp
     val BadgeWidth = 64.dp
+    val InstalledBadge = 18.dp
+    val InstalledBadgeBorder = 1.5.dp
     val TitleLineHeight = 20.dp
     val ProgressCircular = 20.dp
 }

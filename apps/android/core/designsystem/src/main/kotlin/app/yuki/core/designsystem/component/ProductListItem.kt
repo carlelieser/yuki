@@ -2,10 +2,12 @@ package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,11 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 
 private const val DESCRIPTION_MAX_LINES = 2
+private val BADGE_OVERHANG = 6.dp
 
 data class ProductListItemContent(
     val title: String,
@@ -48,7 +52,20 @@ private fun ProductListItemText(content: ProductListItemContent, modifier: Modif
         )
         ProductDescription(description = content.description)
         ProductListItemSupporting(content = content)
-        InstalledBadge(isInstalled = content.isInstalled, modifier = badgeSpacing())
+    }
+}
+
+@Composable
+private fun ProductListItemIcon(content: ProductListItemContent) {
+    Box(
+        modifier = Modifier.padding(end = BADGE_OVERHANG, bottom = BADGE_OVERHANG),
+        contentAlignment = Alignment.BottomEnd,
+    ) {
+        AppIcon(iconUrl = content.iconUrl, size = YukiSize.IconMedium)
+        InstalledBadge(
+            isInstalled = content.isInstalled,
+            modifier = Modifier.offset(x = BADGE_OVERHANG, y = BADGE_OVERHANG),
+        )
     }
 }
 
@@ -103,7 +120,7 @@ fun ProductListItem(
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppIcon(iconUrl = content.iconUrl, size = YukiSize.IconMedium)
+        ProductListItemIcon(content = content)
         ProductListItemText(content = content, modifier = Modifier.weight(1f))
         trailing?.invoke()
     }
