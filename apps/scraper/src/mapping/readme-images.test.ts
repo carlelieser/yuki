@@ -64,6 +64,21 @@ describe('extractReadmeImages', () => {
 		]);
 	});
 
+	it('rejects translation and code-quality widgets', () => {
+		const images = extract(`
+			![translations](https://hosted.weblate.org/widgets/better-internet-tiles/-/translations/287x66-grey.png)
+			![crowdin](https://crowdin.com/badge/abc.png)
+			![coverage](https://coveralls.io/repos/github/acme/app/badge.png)
+			![codacy](https://app.codacy.com/project/badge/Grade/abc)
+			![ci](https://github.com/acme/app/actions/workflows/build.yml/badge.svg)
+			![shot](docs/shot.png)
+		`);
+
+		expect(images.map((image) => image.url)).toEqual([
+			'https://raw.githubusercontent.com/acme/app/main/docs/shot.png'
+		]);
+	});
+
 	it('uses only screenshot-named images when any are present', () => {
 		const images = extract(`
 			![logo](docs/logo.png)

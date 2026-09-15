@@ -17,7 +17,18 @@ const BADGE_HOSTS = [
 	'travis-ci',
 	'codecov.io',
 	'discordapp.com/api',
-	'discord.com/api'
+	'discord.com/api',
+	'hosted.weblate.org',
+	'weblate.org/widget',
+	'crowdin.com/badge',
+	'poeditor.com/badge',
+	'app.codacy.com/project/badge',
+	'api.codeclimate.com/v1/badges',
+	'coveralls.io/repos',
+	'snyk.io/test',
+	'deepsource.io',
+	'sonarcloud.io/api/project_badges',
+	'/badge.svg'
 ];
 const PREFERRED_WORDS = ['screenshot', 'screenshots', 'preview', 'previews'];
 const BANNER_WORDS = ['banner', 'hero', 'cover', 'header', 'splash'];
@@ -127,7 +138,8 @@ export function resolveImageUrl(
 	rawUrl: string,
 	owner: string,
 	name: string,
-	defaultBranch: string
+	defaultBranch: string,
+	lfsPaths: ReadonlySet<string> = new Set()
 ): string | null {
 	const url = rawUrl.trim();
 	if (url === '' || url.startsWith('data:') || url.startsWith('#')) return null;
@@ -138,7 +150,11 @@ export function resolveImageUrl(
 	const path = url.replace(/^\.\//, '').replace(/^\//, '');
 	if (path === '') return null;
 
-	return `https://raw.githubusercontent.com/${owner}/${name}/${defaultBranch}/${path}`;
+	const host = lfsPaths.has(path)
+		? 'https://media.githubusercontent.com/media'
+		: 'https://raw.githubusercontent.com';
+
+	return `${host}/${owner}/${name}/${defaultBranch}/${path}`;
 }
 
 function collectCandidates(markdown: string): { url: string; alt: string | null }[] {
@@ -164,12 +180,13 @@ export function findBannerUrl(
 	markdown: string,
 	owner: string,
 	name: string,
-	defaultBranch: string
+	defaultBranch: string,
+	lfsPaths: ReadonlySet<string> = new Set()
 ): string | null {
 	for (const candidate of collectCandidates(markdown)) {
 		if (isRejected(candidate.url)) continue;
 
-		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch);
+		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch, lfsPaths);
 		if (url === null || isRejected(url)) continue;
 		if (isBanner(url)) return url;
 	}
@@ -182,7 +199,8 @@ export function extractReadmeImages(
 	owner: string,
 	name: string,
 	defaultBranch: string,
-	exclude: string | null = null
+	exclude: string | null = null,
+	lfsPaths: ReadonlySet<string> = new Set()
 ): ReadmeImage[] {
 	const resolved: { url: string; alt: string | null }[] = [];
 	const seen = new Set<string>();
@@ -190,7 +208,7 @@ export function extractReadmeImages(
 	for (const candidate of collectCandidates(markdown)) {
 		if (isRejected(candidate.url)) continue;
 
-		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch);
+		const url = resolveImageUrl(candidate.url, owner, name, defaultBranch, lfsPaths);
 		if (url === null || isRejected(url) || seen.has(url) || url === exclude) continue;
 
 		seen.add(url);
