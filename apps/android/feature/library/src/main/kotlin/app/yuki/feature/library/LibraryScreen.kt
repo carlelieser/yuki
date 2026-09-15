@@ -221,7 +221,7 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
             title = LIBRARY_EMPTY_TITLE,
-            icon = YukiIcons.Library,
+            icon = YukiIcons.GridView,
             actionLabel = LIBRARY_EMPTY_ACTION,
             onAction = onExploreClick,
         ),
