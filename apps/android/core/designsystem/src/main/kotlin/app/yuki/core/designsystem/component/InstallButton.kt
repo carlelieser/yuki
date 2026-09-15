@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,6 +38,8 @@ enum class InstallAction {
     Uninstall,
 }
 
+const val INSTALL_PROGRESS_TAG = "installProgress"
+
 enum class InstallProgressShape {
     Linear,
     Circular,
@@ -45,6 +48,7 @@ enum class InstallProgressShape {
 enum class InstallProgressPosition {
     Leading,
     Trailing,
+    None,
 }
 
 private fun labelFor(state: InstallState): String = when (state) {
@@ -96,7 +100,9 @@ private fun describeDownload(size: DownloadSize): String {
 @Composable
 private fun LinearDownloadProgress(size: DownloadSize) {
     val fraction = size.fraction
-    val progressModifier = Modifier.width(YukiSpacing.Section * 3)
+    val progressModifier = Modifier
+        .width(YukiSpacing.Section * 3)
+        .testTag(INSTALL_PROGRESS_TAG)
 
     Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
         if (fraction == null) {
@@ -119,7 +125,9 @@ private fun LinearDownloadProgress(size: DownloadSize) {
 @Composable
 private fun CircularDownloadProgress(size: DownloadSize) {
     val fraction = size.fraction
-    val progressModifier = Modifier.size(YukiSize.ProgressCircular)
+    val progressModifier = Modifier
+        .size(YukiSize.ProgressCircular)
+        .testTag(INSTALL_PROGRESS_TAG)
 
     if (fraction == null) {
         CircularProgressIndicator(modifier = progressModifier)
@@ -136,6 +144,20 @@ private fun DownloadProgress(size: DownloadSize, shape: InstallProgressShape) {
     }
 }
 
+@Composable
+private fun ProgressAccessory(state: InstallState, shape: InstallProgressShape) {
+    if (state is InstallState.Downloading) DownloadProgress(size = state.size, shape = shape)
+    if (state is InstallState.Installing) YukiLoadingIndicator()
+    if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
+}
+
+@Composable
+private fun FailureAccessory(state: InstallState, onAction: InstallActionHandler) {
+    if (state !is InstallState.Failed) return
+
+    InstallFailureBadge(reason = state.reason)
+    DismissControl(onAction = onAction)
+}
 
 @Composable
 private fun InstallControl(
@@ -210,25 +232,15 @@ fun InstallButton(
     progressShape: InstallProgressShape = InstallProgressShape.Linear,
     progressPosition: InstallProgressPosition = InstallProgressPosition.Trailing,
 ) {
-    val accessory: @Composable () -> Unit = {
-        if (state is InstallState.Downloading) {
-            DownloadProgress(size = state.size, shape = progressShape)
-        }
-        if (state is InstallState.Failed) {
-            InstallFailureBadge(reason = state.reason)
-            DismissControl(onAction = onAction)
-        }
-        if (state is InstallState.Installing) YukiLoadingIndicator()
-        if (state is InstallState.PendingUserAction) YukiLoadingIndicator()
-    }
-
     Row(
         modifier = modifier
             .semantics { contentDescription = describe(state) },
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (progressPosition == InstallProgressPosition.Leading) accessory()
+        if (progressPosition == InstallProgressPosition.Leading) {
+            ProgressAccessory(state = state, shape = progressShape)
+        }
 
         if (canUninstall && state is InstallState.Installed) {
             UninstallControl(onAction = onAction, isEnabled = isEnabled)
@@ -241,6 +253,10 @@ fun InstallButton(
             presentation = InstallControlPresentation(isGhost, canUninstall),
         )
 
-        if (progressPosition == InstallProgressPosition.Trailing) accessory()
+        if (progressPosition == InstallProgressPosition.Trailing) {
+            ProgressAccessory(state = state, shape = progressShape)
+        }
+
+        FailureAccessory(state = state, onAction = onAction)
     }
 }

@@ -6,9 +6,12 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.yuki.core.designsystem.component.INSTALL_DISMISS_DESCRIPTION
+import app.yuki.core.designsystem.component.INSTALL_PROGRESS_TAG
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
@@ -58,6 +61,37 @@ class InstallButtonTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun aDownloadWithoutAProgressPositionShowsOnlyTheCancelButton() {
+        renderCircular(
+            state = InstallState.Downloading(PARTLY_DOWNLOADED),
+            position = InstallProgressPosition.None,
+        )
+
+        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
+        composeRule.onNodeWithTag(INSTALL_PROGRESS_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFailureStillOffersDismissWithoutAProgressPosition() {
+        val actions = mutableListOf<InstallAction>()
+        composeRule.setContent {
+            YukiTheme(isDynamicColorEnabled = false) {
+                InstallButton(
+                    state = InstallState.Failed(InstallFailure.InsufficientStorage),
+                    onAction = InstallActionHandler { action -> actions += action },
+                    progressPosition = InstallProgressPosition.None,
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Not enough space").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(INSTALL_DISMISS_DESCRIPTION).performClick()
+
+        assertEquals(listOf(InstallAction.Dismiss), actions)
     }
 
     @Test

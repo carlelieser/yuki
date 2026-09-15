@@ -1,14 +1,17 @@
 package app.yuki.feature.library
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.yuki.core.designsystem.component.APP_ICON_PROGRESS_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
@@ -17,6 +20,7 @@ import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstalledApp
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
+import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -58,10 +62,17 @@ class LibraryScreenTest {
     }
 
     @Test
-    fun anInstallingRowShowsAProgressIndicator() {
+    fun anInstallingRowReportsProgressAroundItsIcon() {
         setContent(UiState.Success(LibraryContent(listOf(item(InstallState.Installing)))))
 
-        composeRule.onNodeWithTag(LIBRARY_DOWNLOAD_PROGRESS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(APP_ICON_PROGRESS_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun aDownloadingRowShowsOnlyTheIconProgress() {
+        setContent(UiState.Success(LibraryContent(listOf(item(InstallState.Downloading(PARTLY_DOWNLOADED))))))
+
+        composeRule.onAllNodesWithTag(APP_ICON_PROGRESS_TAG).assertCountEquals(1)
     }
 
     @Test
@@ -150,6 +161,9 @@ class LibraryScreenTest {
 
 private fun item(install: InstallState = InstallState.NotInstalled): LibraryItem =
     LibraryItem(app = TERMUX, canOpen = true, install = install)
+
+private val PARTLY_DOWNLOADED =
+    downloadSizeOf(bytesDownloaded = 4_100_000L, bytesTotal = 12_100_000L)
 
 private val TERMUX = InstalledApp(
     githubRepoId = 1_234L,

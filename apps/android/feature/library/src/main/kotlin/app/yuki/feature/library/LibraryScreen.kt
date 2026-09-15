@@ -35,9 +35,6 @@ import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
-import app.yuki.core.model.downloadSizeOf
-
-private val INSTALLING_SIZE = downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L)
 
 const val LIBRARY_LIST_TAG = "libraryList"
 const val LIBRARY_DISMISS_TAG = "libraryDismiss"
@@ -181,27 +178,6 @@ private fun LibraryDismissButton(onDismiss: () -> Unit) {
 @Composable
 private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> Unit) {
     val install = item.install
-
-    if (install is InstallState.Downloading) {
-        return ProductListItem(
-            content = item.listItem,
-            modifier = Modifier.clickable(onClick = onClick),
-            trailing = { LibraryDownloadIndicator(install.size) },
-        )
-    }
-
-    if (install is InstallState.Installing) {
-        return ProductListItem(
-            content = item.listItem,
-            modifier = Modifier.clickable(onClick = onClick),
-            trailing = {
-                LibraryDownloadIndicator(
-                    size = INSTALLING_SIZE,
-                    description = LIBRARY_INSTALLING_SUPPORTING,
-                )
-            },
-        )
-    }
 
     if (install is InstallState.Failed) {
         return ProductListItem(

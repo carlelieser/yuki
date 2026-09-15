@@ -10,14 +10,17 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import app.yuki.core.designsystem.component.APP_ICON_PROGRESS_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.INSTALL_PROGRESS_TAG
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
+import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -102,6 +105,15 @@ class UpdatesScreenTest {
     }
 
     @Test
+    fun aDownloadingRowReportsProgressAroundTheIconOnly() {
+        setContent(UiState.Success(UpdatesContent(listOf(downloadingRow()), emptyList())))
+
+        composeRule.onNodeWithTag(APP_ICON_PROGRESS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText("Cancel").assertIsDisplayed()
+        composeRule.onNodeWithTag(INSTALL_PROGRESS_TAG).assertDoesNotExist()
+    }
+
+    @Test
     fun aWholeScreenFailureRendersTheFailureStateAndNotTheEmptyState() {
         setContent(UiState.Failure(FailureReason.Offline))
 
@@ -165,6 +177,12 @@ private fun termuxRow(): UpdateRow {
 
     return UpdateRow(update = update, install = update.toInstallState())
 }
+
+private fun downloadingRow(): UpdateRow = termuxRow().copy(
+    install = InstallState.Downloading(
+        downloadSizeOf(bytesDownloaded = 4_100_000L, bytesTotal = 12_100_000L),
+    ),
+)
 
 private val TERMUX = installedApp(1_234L, "termux", "v0.118.0")
 
