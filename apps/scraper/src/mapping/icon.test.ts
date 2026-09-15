@@ -3,7 +3,10 @@ import {
 	buildIconUrl,
 	buildVectorIcon,
 	findAdaptiveIconPath,
+	findDeclaredIconPaths,
 	findIconPath,
+	findManifestPath,
+	readManifestIcon,
 	resolveRelativePath
 } from './icon.ts';
 import type { GithubTree } from '@yuki/github';
@@ -28,6 +31,117 @@ function treeWithSymlink(paths: string[], symlinkPath: string): GithubTree {
 }
 
 const noRead = (): Promise<string | null> => Promise.resolve(null);
+
+describe('manifest declared icons', () => {
+	it('reads the application icon, not activity icons', () => {
+		const manifest = `<manifest><application android:icon="@mipmap/tb_launcher" android:label="x">
+			<activity android:icon="@drawable/tb_allapps" />
+		</application></manifest>`;
+
+		expect(readManifestIcon(manifest)).toEqual({ kind: 'mipmap', name: 'tb_launcher' });
+	});
+
+	it('reads a drawable icon outside any mipmap directory', () => {
+		const manifest = `<manifest><application android:icon="@drawable/ic_app_icon" /></manifest>`;
+
+		expect(readManifestIcon(manifest)).toEqual({ kind: 'drawable', name: 'ic_app_icon' });
+	});
+
+	it('prefers icon over roundIcon', () => {
+		const manifest = `<manifest><application android:roundIcon="@mipmap/round" android:icon="@mipmap/square" /></manifest>`;
+
+		expect(readManifestIcon(manifest)?.name).toBe('square');
+	});
+
+	it('falls back to roundIcon when icon is absent', () => {
+		const manifest = `<manifest><application android:roundIcon="@mipmap/round" /></manifest>`;
+
+		expect(readManifestIcon(manifest)?.name).toBe('round');
+	});
+
+	it('ignores an icon declared only on an activity', () => {
+		const manifest = `<manifest><application android:label="x">
+			<activity android:icon="@drawable/tb_allapps" />
+		</application></manifest>`;
+
+		expect(readManifestIcon(manifest)).toBeNull();
+	});
+
+	it('locates the declared resource across densities', () => {
+		const found = findDeclaredIconPaths(
+			tree([
+				'app/src/main/res/drawable/ic_app_icon.xml',
+				'app/src/main/res/mipmap-hdpi/ic_app_icon.png',
+				'app/src/main/res/drawable/unrelated.xml'
+			]),
+			{ kind: 'drawable', name: 'ic_app_icon' }
+		);
+
+		expect(found.xml).toEqual(['app/src/main/res/drawable/ic_app_icon.xml']);
+	});
+
+	it('prefers the main source set manifest', () => {
+		const found = findManifestPath(
+			tree(['app/src/debug/AndroidManifest.xml', 'app/src/main/AndroidManifest.xml'])
+		);
+
+		expect(found).toBe('app/src/main/AndroidManifest.xml');
+	});
+});
+
+describe('prefixed launcher stems', () => {
+	it('finds a launcher icon behind a project prefix', () => {
+		expect(findIconPath(tree(['app/src/nonlib/res/mipmap-xxxhdpi/tb_launcher.png']))).toBe(
+			'app/src/nonlib/res/mipmap-xxxhdpi/tb_launcher.png'
+		);
+	});
+
+	it('finds a prefixed adaptive launcher', () => {
+		expect(findAdaptiveIconPath(tree(['app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml']))).toBe(
+			'app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml'
+		);
+	});
+
+	it('still rejects unrelated mipmap rasters', () => {
+		expect(findIconPath(tree(['app/src/nonlib/res/mipmap-xxxhdpi/tb_freeform_mode.png']))).toBeNull();
+	});
+
+	it('does not match a stem that merely contains launcher', () => {
+		expect(findIconPath(tree(['app/src/main/res/mipmap-xxxhdpi/launcher_banner.png']))).toBeNull();
+	});
+});
+
+describe('metadata icon layouts', () => {
+	it('finds a fastlane icon without the fastlane prefix or a locale', () => {
+		expect(findIconPath(tree(['metadata/images/icon.png']))).toBe('metadata/images/icon.png');
+	});
+
+	it('finds a fastlane icon under an android directory without a locale', () => {
+		expect(findIconPath(tree(['metadata/android/images/icon.png']))).toBe(
+			'metadata/android/images/icon.png'
+		);
+	});
+
+	it('prefers english when several locales ship an icon', () => {
+		const found = findIconPath(
+			tree([
+				'fastlane/metadata/android/de-DE/images/icon.png',
+				'fastlane/metadata/android/en-US/images/icon.png',
+				'fastlane/metadata/android/fr-FR/images/icon.png'
+			])
+		);
+
+		expect(found).toBe('fastlane/metadata/android/en-US/images/icon.png');
+	});
+
+	it('prefers a metadata icon over a mipmap raster', () => {
+		const found = findIconPath(
+			tree(['app/src/main/res/mipmap-xxxhdpi/ic_launcher.png', 'metadata/images/icon.png'])
+		);
+
+		expect(found).toBe('metadata/images/icon.png');
+	});
+});
 
 describe('findIconPath', () => {
 	it('prefers the highest density available', () => {
@@ -224,6 +338,61 @@ describe('buildIconUrl', () => {
 	});
 });
 
+describe('git lfs icons', () => {
+	const POINTER =
+		'version https://git-lfs.github.com/spec/v1\noid sha256:c36ea4212b2db24c3adaf8697d169ad4730d152e8739be52f755068148132573\nsize 24116\n';
+
+	function sizedTree(path: string, size: number): GithubTree {
+		return {
+			tree: [{ path, type: 'blob', mode: '100644', sha: 'blobsha', size }],
+			truncated: false
+		};
+	}
+
+	it('serves lfs-backed icons from the media host', async () => {
+		const url = await buildIconUrl(
+			sizedTree('fastlane/metadata/android/en-US/images/icon.png', 130),
+			'acme',
+			'app',
+			'main',
+			() => Promise.resolve(POINTER)
+		);
+
+		expect(url).toBe(
+			'https://media.githubusercontent.com/media/acme/app/main/fastlane/metadata/android/en-US/images/icon.png'
+		);
+	});
+
+	it('leaves a normal small file on the raw host', async () => {
+		const url = await buildIconUrl(
+			sizedTree('metadata/images/icon.png', 130),
+			'acme',
+			'app',
+			'main',
+			() => Promise.resolve('not a pointer')
+		);
+
+		expect(url).toBe('https://raw.githubusercontent.com/acme/app/main/metadata/images/icon.png');
+	});
+
+	it('does not read blobs for icons that are too large to be pointers', async () => {
+		let reads = 0;
+		const url = await buildIconUrl(
+			sizedTree('metadata/images/icon.png', 24116),
+			'acme',
+			'app',
+			'main',
+			() => {
+				reads += 1;
+				return Promise.resolve(POINTER);
+			}
+		);
+
+		expect(reads).toBe(0);
+		expect(url).toBe('https://raw.githubusercontent.com/acme/app/main/metadata/images/icon.png');
+	});
+});
+
 describe('resolveRelativePath', () => {
 	it('resolves parent segments against the symlink directory', () => {
 		expect(
@@ -304,6 +473,45 @@ describe('buildVectorIcon', () => {
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');
+	});
+
+	it('prefers the baseline values directory over qualified variants', async () => {
+		const qualified = new Map([
+			['app/src/main/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
+			['app/src/main/res/drawable/launcher_foreground.xml', VECTOR],
+			[
+				'app/src/main/res/values-night-v31/colors.xml',
+				`<resources><color name="launcher_background">@android:color/system_neutral1_800</color><color name="launcher_tint">@android:color/system_accent1_100</color></resources>`
+			],
+			[
+				'app/src/main/res/values-v31/colors.xml',
+				`<resources><color name="launcher_background">@android:color/system_accent1_100</color><color name="launcher_tint">@android:color/system_neutral2_700</color></resources>`
+			],
+			['app/src/main/res/values/colors.xml', COLORS]
+		]);
+
+		const icon = await buildVectorIcon(tree([...qualified.keys()]), (path) =>
+			Promise.resolve(qualified.get(path) ?? null)
+		);
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+
+		expect(svg).toContain('#FBFCFD');
+		expect(svg).toContain('#0A0C10');
+	});
+
+	it('falls back to the night variant when there is no baseline', async () => {
+		const nightOnly = new Map([
+			['app/src/main/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
+			['app/src/main/res/drawable/launcher_foreground.xml', VECTOR],
+			['app/src/main/res/values-night/colors.xml', COLORS]
+		]);
+
+		const icon = await buildVectorIcon(tree([...nightOnly.keys()]), (path) =>
+			Promise.resolve(nightOnly.get(path) ?? null)
+		);
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+
+		expect(svg).toContain('#FBFCFD');
 	});
 
 	it('returns null when the project ships no adaptive icon', async () => {
