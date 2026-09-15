@@ -36,7 +36,7 @@ data class LibraryItem(
     )
 
     private fun supportingText(): String = when (install) {
-        is InstallState.Downloading -> install.size.label
+        is InstallState.Downloading -> if (install.size.isTotalKnown) install.size.label else ""
         InstallState.Installing -> LIBRARY_INSTALLING_SUPPORTING
         InstallState.PendingUserAction -> LIBRARY_PENDING_SUPPORTING
         is InstallState.Failed -> installFailureLabel(install.reason)

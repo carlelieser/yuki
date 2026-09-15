@@ -33,7 +33,7 @@ internal fun LibraryDownloadIndicator(
 }
 
 internal fun describeDownload(size: DownloadSize): String {
-    val fraction = size.fraction ?: return "Downloading, ${size.label}, total size unknown"
+    val fraction = size.fraction ?: return "Downloading"
 
     return "Downloading, ${(fraction * 100).toInt()} percent, ${size.label}"
 }

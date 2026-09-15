@@ -105,10 +105,10 @@ class InstallButtonTest {
     }
 
     @Test
-    fun aDownloadWithAnUnknownTotalStillReportsTheBytesReceived() {
+    fun aDownloadWithAnUnknownTotalShowsNoByteCountsAtAll() {
         render(InstallState.Downloading(UNKNOWN_TOTAL))
 
-        composeRule.onNodeWithText("4.1 MB / ?").assertExists()
+        composeRule.onNodeWithText("4.1 MB", substring = true).assertDoesNotExist()
     }
 
     @Test

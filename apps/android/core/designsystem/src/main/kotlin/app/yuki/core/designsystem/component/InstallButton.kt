@@ -88,8 +88,7 @@ private fun isFilled(state: InstallState, canUninstall: Boolean): Boolean {
 private fun isBlocking(state: InstallState): Boolean = state is InstallState.Installing
 
 private fun describeDownload(size: DownloadSize): String {
-    val fraction = size.fraction
-        ?: return "Downloading, ${size.label}, total size unknown"
+    val fraction = size.fraction ?: return "Downloading"
 
     return "Downloading, ${(fraction * 100).toInt()} percent, ${size.label}"
 }
@@ -102,9 +101,10 @@ private fun LinearDownloadProgress(size: DownloadSize) {
     Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
         if (fraction == null) {
             LinearProgressIndicator(modifier = progressModifier)
-        } else {
-            LinearProgressIndicator(progress = { fraction }, modifier = progressModifier)
+            return@Column
         }
+
+        LinearProgressIndicator(progress = { fraction }, modifier = progressModifier)
 
         Text(
             text = size.label,
