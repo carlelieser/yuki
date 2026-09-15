@@ -16,14 +16,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class LibraryViewModel @Inject internal constructor(
-    store: InstallStore,
+    private val store: InstallStore,
     private val progress: InstallProgressStore,
     private val dependencies: LibraryDependencies,
 ) : ViewModel() {
@@ -33,13 +32,17 @@ class LibraryViewModel @Inject internal constructor(
     val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
 
     val state: StateFlow<UiState<LibraryContent>> =
-        combine(presentInstalls(store), activeProgress()) { installed, active ->
+        combine(presentInstalls(), activeProgress()) { installed, active ->
             UiState.Success(LibraryContent(merge(installed, active)))
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = UiState.Loading,
         )
+
+    init {
+        viewModelScope.launch { reconcile() }
+    }
 
     fun onResume() {
         viewModelScope.launch { reconcile() }
@@ -64,13 +67,15 @@ class LibraryViewModel @Inject internal constructor(
     }
 
     private suspend fun reconcile() {
+        dependencies.reconciler.reconcile(store.installs())
         resumes.value += 1
         progress.clearSettled()
     }
 
-    private fun presentInstalls(store: InstallStore): Flow<List<InstalledApp>> =
-        combine(store.observeInstalls(), resumes) { installs, _ -> installs }
-            .map { installs -> dependencies.reconciler.reconcile(installs) }
+    private fun presentInstalls(): Flow<List<InstalledApp>> =
+        combine(store.observeInstalls(), resumes) { installs, _ ->
+            installs.filter { app -> dependencies.packages.isPresent(app.packageName) }
+        }
 
     private fun activeProgress() = progress.observeActive().onStart {
         progress.clearSettled()

@@ -15,6 +15,9 @@ internal class FakeInstallStore(initial: List<InstalledApp> = emptyList()) : Ins
 
     val forgottenPackages = mutableListOf<List<String>>()
 
+    var forgetCalls = 0
+        private set
+
     override fun observeInstalls(): Flow<List<InstalledApp>> = rows
 
     override suspend fun installs(): List<InstalledApp> = rows.value
@@ -33,6 +36,7 @@ internal class FakeInstallStore(initial: List<InstalledApp> = emptyList()) : Ins
     }
 
     override suspend fun forgetPackages(packageNames: List<String>) {
+        forgetCalls += 1
         forgottenPackages += packageNames
         rows.value = rows.value.filterNot { app -> app.packageName in packageNames }
     }

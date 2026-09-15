@@ -8,12 +8,10 @@ internal class LibraryReconciler @Inject constructor(
     private val store: InstallStore,
     private val packages: InstalledPackages,
 ) {
-    suspend fun reconcile(installs: List<InstalledApp>): List<InstalledApp> {
-        val (present, uninstalled) = installs.partition { app -> packages.isPresent(app.packageName) }
-        if (uninstalled.isEmpty()) return present
+    suspend fun reconcile(installs: List<InstalledApp>) {
+        val uninstalled = installs.filterNot { app -> packages.isPresent(app.packageName) }
+        if (uninstalled.isEmpty()) return
 
         store.forgetPackages(uninstalled.map(InstalledApp::packageName))
-
-        return present
     }
 }

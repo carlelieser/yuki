@@ -98,6 +98,45 @@ class LibraryViewModelTest {
     }
 
     @Test
+    fun aStoreEmissionDoesNotWriteBackToTheStore() = runTest {
+        val store = FakeInstallStore(listOf(TERMUX))
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val viewModel = viewModelFor(store, packages)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+
+            val afterLoad = store.forgetCalls
+
+            packages.install(AURORA.packageName)
+            store.record(recordingOf(AURORA))
+            advanceUntilIdle()
+
+            assertEquals(afterLoad, store.forgetCalls)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun reconcilingWritesOnlyWhenSomethingIsActuallyGone() = runTest {
+        val store = FakeInstallStore(listOf(TERMUX))
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val viewModel = viewModelFor(store, packages)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+
+            viewModel.onResume()
+            advanceUntilIdle()
+
+            assertEquals(0, store.forgetCalls)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun marksAnAppOpenableOnlyWhenItHasALaunchIntent() = runTest {
         val packages = FakeInstalledPackages().apply {
             install(TERMUX.packageName, isLaunchable = true)
