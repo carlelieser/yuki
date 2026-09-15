@@ -28,6 +28,8 @@ type ClientOverrides = Partial<{
 	getReadme: GithubClient['getReadme'];
 	getReleases: GithubClient['getReleases'];
 	getTree: GithubClient['getTree'];
+	getRawFile: GithubClient['getRawFile'];
+	getBlob: GithubClient['getBlob'];
 }>;
 
 function fakeClient(overrides: ClientOverrides = {}): GithubClient {
@@ -37,6 +39,8 @@ function fakeClient(overrides: ClientOverrides = {}): GithubClient {
 		getReadme: async () => ({ isModified: false }),
 		getReleases: async () => ({ isModified: true, body: [], etag: null }),
 		getTree: async () => ({ isModified: false }),
+		getRawFile: async () => ({ isModified: false }),
+		getBlob: async () => ({ isModified: false }),
 		...overrides
 	} as unknown as GithubClient;
 }
@@ -206,7 +210,9 @@ describe('self-declared candidates', () => {
 				isModified: true,
 				body: { tree: paths.map((path) => ({ path, type: 'blob' })), truncated: false },
 				etag: 'W/"t"'
-			})
+			}),
+			getRawFile: async () => ({ isModified: false }),
+			getBlob: async () => ({ isModified: false })
 		} as unknown as GithubClient;
 	}
 

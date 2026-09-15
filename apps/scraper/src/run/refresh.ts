@@ -8,6 +8,14 @@ import { GithubSkip, type GithubClient } from '@yuki/github';
 import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
+import {
+	buildBlobUrl,
+	collectLfsPaths,
+	findDeclaredIconPaths,
+	findManifestPath,
+	pickBestDeclared,
+	readManifestIcon
+} from '../mapping/icon.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
 import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
@@ -77,7 +85,16 @@ export async function refreshListing(
 					? []
 					: mapReleases(releases.body);
 		const readmeBody = readme.state === 'fresh' ? readme.body : null;
-		const bannerUrl = readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch);
+		const lfsPaths =
+			tree.state === 'fresh' && !tree.body.truncated
+				? await collectLfsPaths(tree.body, (sha) =>
+						readOptional(() => client.getBlob(owner, name, sha)).then(
+							(response) => response ?? null
+						)
+					)
+				: new Set<string>();
+		const bannerUrl =
+			readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch, lfsPaths);
 		const isAndroidApp = androidVerdict(tree);
 
 		return {
@@ -99,7 +116,7 @@ export async function refreshListing(
 						? null
 						: readmeBody === null
 							? []
-							: extractReadmeImages(readmeBody, owner, name, branch, bannerUrl),
+							: extractReadmeImages(readmeBody, owner, name, branch, bannerUrl, lfsPaths),
 				versions,
 				hasApk: versions === null ? null : hasDistributableApk(versions),
 				isAndroidApp,
@@ -224,7 +241,36 @@ async function iconFrom(
 	const rasterUrl = await buildIconUrl(tree, owner, name, branch, readBlob);
 	if (rasterUrl !== null) return rasterUrl;
 
+	const declared = await declaredIconFrom(tree, read);
+	if (declared !== null) {
+		if (declared.xml !== null) {
+			const svg = await buildVectorIcon(tree, read, declared.xml);
+			if (svg !== null) return svg;
+		}
+
+		if (declared.raster !== null) {
+			return buildBlobUrl(owner, name, branch, declared.raster, false);
+		}
+	}
+
 	return buildVectorIcon(tree, read);
+}
+
+async function declaredIconFrom(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>
+): Promise<{ xml: string | null; raster: string | null } | null> {
+	const manifestPath = findManifestPath(tree);
+	if (manifestPath === null) return null;
+
+	const manifest = await read(manifestPath);
+	if (manifest === null) return null;
+
+	const icon = readManifestIcon(manifest);
+	if (icon === null) return null;
+
+	const found = findDeclaredIconPaths(tree, icon);
+	return { xml: found.xml[0] ?? null, raster: pickBestDeclared(found.raster) };
 }
 
 async function readResource<Body>(
