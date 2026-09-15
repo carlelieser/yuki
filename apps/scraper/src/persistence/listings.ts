@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -192,6 +192,24 @@ export async function listListingsForRefresh(
 		.from(schema.listings)
 		.orderBy(sql`${schema.listings.lastScrapedAt} asc nulls first`, asc(schema.listings.id))
 		.limit(limit);
+}
+
+export async function listListingsBySlug(
+	db: Database,
+	slugs: string[]
+): Promise<(ListingRecord & { slug: string })[]> {
+	if (slugs.length === 0) return [];
+
+	return db
+		.select({
+			id: schema.listings.id,
+			slug: schema.listings.slug,
+			owner: schema.listings.owner,
+			name: schema.listings.name,
+			githubRepoId: schema.listings.githubRepoId
+		})
+		.from(schema.listings)
+		.where(inArray(schema.listings.slug, slugs));
 }
 
 export async function listKnownRepoIds(db: Database): Promise<number[]> {

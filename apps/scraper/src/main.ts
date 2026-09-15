@@ -2,6 +2,7 @@ import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
 import {
 	listKnownRepoIds,
+	listListingsBySlug,
 	listListingsForRefresh,
 	touchListing,
 	upsertListing
@@ -11,6 +12,7 @@ import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts'
 import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
 import { runNightly } from './run/nightly.ts';
+import { findMissingSlugs, readListFlag } from './run/args.ts';
 
 const DEFAULT_MAX_REPOS = 200;
 const DEFAULT_SEED_MAX_REPOS = 10000;
@@ -26,8 +28,15 @@ function readNumberFlag(flag: string, fallback: number): number {
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+const slugs = readListFlag(process.argv, '--slug');
 const shouldSeed = process.argv.includes('--seed');
 const shouldDiscover = shouldSeed || process.argv.includes('--discover');
+
+if (slugs.length > 0 && shouldDiscover) {
+	console.error('--slug cannot be combined with --discover or --seed');
+	process.exit(1);
+}
+
 const maxRepos = readNumberFlag(
 	'--max-repos',
 	shouldSeed ? DEFAULT_SEED_MAX_REPOS : DEFAULT_MAX_REPOS
@@ -45,6 +54,20 @@ const client = createGithubClient(
 const discoveryRange = shouldDiscover ? await resolveDiscoveryRange() : undefined;
 const runId = await startRun(db);
 
+async function resolveSlugTargets() {
+	const targets = await listListingsBySlug(db, slugs);
+	const missing = findMissingSlugs(
+		slugs,
+		targets.map((target) => target.slug)
+	);
+
+	if (missing.length > 0) {
+		throw new Error(`No listing with slug ${missing.join(', ')}`);
+	}
+
+	return targets;
+}
+
 async function resolveDiscoveryRange() {
 	const until = new Date();
 	if (shouldSeed) return { since: GITHUB_EPOCH, until };
@@ -61,7 +84,8 @@ try {
 				read: (resource) => readEtag(db, resource),
 				write: (resource, etag) => writeEtag(db, resource, etag)
 			},
-			listTargets: (limit) => listListingsForRefresh(db, limit),
+			listTargets: (limit) =>
+				slugs.length > 0 ? resolveSlugTargets() : listListingsForRefresh(db, limit),
 			listKnownRepoIds: () => listKnownRepoIds(db),
 			partitions: {
 				isComplete: (partition) => isPartitionComplete(db, partition),
