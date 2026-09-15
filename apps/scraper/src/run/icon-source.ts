@@ -18,6 +18,7 @@ import { buildVectorIcon } from '../mapping/adaptive-vector.ts';
 import {
 	buildBlobUrl,
 	buildIconUrl,
+	findAdaptiveIconPath,
 	findDeclaredIconPaths,
 	findManifestPath,
 	findRasterForReference,
@@ -70,7 +71,33 @@ export async function iconFrom(
 		}
 	}
 
-	return buildVectorIcon(tree, read);
+	const vector = await buildVectorIcon(tree, read);
+	if (vector !== null) return vector;
+
+	return discoveredRasterFrom(tree, read, owner, name, branch);
+}
+
+async function discoveredRasterFrom(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	owner: string,
+	name: string,
+	branch: string
+): Promise<string | null> {
+	const adaptivePath = findAdaptiveIconPath(tree);
+	if (adaptivePath === null) return null;
+
+	const adaptiveXml = await read(adaptivePath);
+	if (adaptiveXml === null) return null;
+
+	const foreground = readAdaptiveRasterLayers(adaptiveXml).foreground;
+	if (foreground === null) return null;
+
+	const wrappers = findDeclaredIconPaths(tree, foreground).xml;
+	const resolved = await resolveIconXml(tree, read, wrappers);
+	if (resolved.raster === null) return null;
+
+	return buildBlobUrl(owner, name, branch, resolved.raster, false);
 }
 
 async function downloadBlob(
@@ -121,20 +148,28 @@ async function declaredIconFrom(
 	const direct = pickBestDeclared(found.raster);
 	if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct, layers: null };
 
-	for (const path of found.xml) {
+	return resolveIconXml(tree, read, found.xml);
+}
+
+export async function resolveIconXml(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	candidates: string[]
+): Promise<DeclaredIcon> {
+	for (const path of candidates) {
 		const xml = await read(path);
 		if (xml === null) continue;
 
 		const layers = rasterLayersIn(tree, xml);
-		if (layers !== null) return { xml: found.xml[0] ?? null, raster: null, layers };
+		if (layers !== null) return { xml: candidates[0] ?? null, raster: null, layers };
 
 		for (const reference of readRasterReferences(xml)) {
 			const raster = findRasterForReference(tree, reference);
-			if (raster !== null) return { xml: found.xml[0] ?? null, raster, layers: null };
+			if (raster !== null) return { xml: candidates[0] ?? null, raster, layers: null };
 		}
 	}
 
-	return { xml: found.xml[0] ?? null, raster: null, layers: null };
+	return { xml: candidates[0] ?? null, raster: null, layers: null };
 }
 
 function rasterLayersIn(
