@@ -73,3 +73,60 @@ describe('adaptive icons backed by a raster drawable', () => {
 		expect(icon).toBeNull();
 	});
 });
+
+describe('expo projects', () => {
+	const EXPO_CONFIG = JSON.stringify({
+		expo: {
+			name: 'SyncClipboard',
+			icon: './assets/icon.png',
+			android: {
+				adaptiveIcon: {
+					foregroundImage: './assets/adaptive-icon.png',
+					backgroundColor: '#ffffff'
+				}
+			}
+		}
+	});
+
+	it('resolves an icon declared in app.json when there is no android resource tree', async () => {
+		const icon = await iconFrom(
+			clientReading(new Map([['app.json', EXPO_CONFIG]])),
+			tree(['app.json', 'package.json', 'assets/icon.png', 'assets/adaptive-icon.png']),
+			'owner',
+			'repo',
+			'main'
+		);
+
+		expect(icon).toBe('https://raw.githubusercontent.com/owner/repo/main/assets/adaptive-icon.png');
+	});
+
+	it('leaves android projects to the resource pipeline', async () => {
+		const icon = await iconFrom(
+			clientReading(new Map([['app.json', EXPO_CONFIG]])),
+			tree([
+				'app.json',
+				'assets/adaptive-icon.png',
+				'app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+			]),
+			'owner',
+			'repo',
+			'main'
+		);
+
+		expect(icon).toBe(
+			'https://raw.githubusercontent.com/owner/repo/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+		);
+	});
+
+	it('returns null when the declared asset is missing from the tree', async () => {
+		const icon = await iconFrom(
+			clientReading(new Map([['app.json', EXPO_CONFIG]])),
+			tree(['app.json', 'package.json']),
+			'owner',
+			'repo',
+			'main'
+		);
+
+		expect(icon).toBeNull();
+	});
+});

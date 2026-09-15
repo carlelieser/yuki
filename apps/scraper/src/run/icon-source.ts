@@ -14,6 +14,7 @@ export async function readOptional<Body>(
 }
 
 import { composeAdaptiveRaster, toPngDataUri } from '../mapping/adaptive-raster.ts';
+import { findExpoConfigPaths, readExpoIcon, resolveExpoAsset } from '../mapping/expo-config.ts';
 import { buildVectorIcon } from '../mapping/adaptive-vector.ts';
 import {
 	buildBlobUrl,
@@ -74,7 +75,33 @@ export async function iconFrom(
 	const vector = await buildVectorIcon(tree, read);
 	if (vector !== null) return vector;
 
-	return discoveredRasterFrom(tree, read, owner, name, branch);
+	const discovered = await discoveredRasterFrom(tree, read, owner, name, branch);
+	if (discovered !== null) return discovered;
+
+	return expoIconFrom(tree, read, owner, name, branch);
+}
+
+async function expoIconFrom(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	owner: string,
+	name: string,
+	branch: string
+): Promise<string | null> {
+	for (const configPath of findExpoConfigPaths(tree)) {
+		const config = await read(configPath);
+		if (config === null) continue;
+
+		const declared = readExpoIcon(config);
+		if (declared === null) continue;
+
+		const asset = resolveExpoAsset(tree, configPath, declared.foreground);
+		if (asset === null) continue;
+
+		return buildBlobUrl(owner, name, branch, asset, false);
+	}
+
+	return null;
 }
 
 async function discoveredRasterFrom(
