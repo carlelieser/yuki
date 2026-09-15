@@ -5,16 +5,19 @@ import {
 	type DetectedEvidence
 } from '../detection/evidence.ts';
 import { GithubSkip, type GithubClient } from '@yuki/github';
-import { buildIconUrl, buildVectorIcon } from '../mapping/icon.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
 import {
 	buildBlobUrl,
+	buildIconUrl,
+	buildVectorIcon,
 	collectLfsPaths,
 	findDeclaredIconPaths,
 	findManifestPath,
+	findRasterForReference,
 	pickBestDeclared,
-	readManifestIcon
+	readManifestIcon,
+	readRasterReferences
 } from '../mapping/icon.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
 import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
@@ -270,7 +273,35 @@ async function declaredIconFrom(
 	if (icon === null) return null;
 
 	const found = findDeclaredIconPaths(tree, icon);
-	return { xml: found.xml[0] ?? null, raster: pickBestDeclared(found.raster) };
+	const direct = pickBestDeclared(found.raster);
+	if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct };
+
+	const layered: { kind: string; name: string }[] = [];
+
+	for (const path of found.xml) {
+		const xml = await read(path);
+		if (xml === null) continue;
+
+		const references = readRasterReferences(xml);
+		const isAdaptive = /<adaptive-icon\b/.test(xml);
+
+		for (const reference of references) {
+			if (isAdaptive) {
+				if (reference.name.includes('foreground')) layered.push(reference);
+				continue;
+			}
+
+			const raster = findRasterForReference(tree, reference);
+			if (raster !== null) return { xml: found.xml[0] ?? null, raster };
+		}
+	}
+
+	for (const reference of layered) {
+		const raster = findRasterForReference(tree, reference);
+		if (raster !== null) return { xml: found.xml[0] ?? null, raster };
+	}
+
+	return { xml: found.xml[0] ?? null, raster: null };
 }
 
 async function readResource<Body>(

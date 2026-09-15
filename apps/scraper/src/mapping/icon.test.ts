@@ -6,7 +6,9 @@ import {
 	findDeclaredIconPaths,
 	findIconPath,
 	findManifestPath,
+	findRasterForReference,
 	readManifestIcon,
+	readRasterReferences,
 	resolveRelativePath
 } from './icon.ts';
 import type { GithubTree } from '@yuki/github';
@@ -31,6 +33,45 @@ function treeWithSymlink(paths: string[], symlinkPath: string): GithubTree {
 }
 
 const noRead = (): Promise<string | null> => Promise.resolve(null);
+
+describe('raster references from declared drawables', () => {
+	it('reads a bitmap wrapper pointing at a mipmap', () => {
+		const refs = readRasterReferences(
+			`<bitmap xmlns:android="http://schemas.android.com/apk/res/android" android:src="@mipmap/ic_key_attestation" />`
+		);
+
+		expect(refs).toEqual([{ kind: 'mipmap', name: 'ic_key_attestation' }]);
+	});
+
+	it('reads adaptive layers that point at rasters', () => {
+		const refs = readRasterReferences(
+			`<adaptive-icon><background android:drawable="@mipmap/ic_bg" /><foreground android:drawable="@mipmap/ic_fg" /></adaptive-icon>`
+		);
+
+		expect(refs.map((r) => r.name)).toEqual(['ic_bg', 'ic_fg']);
+	});
+
+	it('resolves a reference to the highest density raster', () => {
+		const found = findRasterForReference(
+			tree([
+				'app/src/main/res/mipmap-hdpi/ic_key_attestation.png',
+				'app/src/main/res/mipmap-xxxhdpi/ic_key_attestation.png'
+			]),
+			{ kind: 'mipmap', name: 'ic_key_attestation' }
+		);
+
+		expect(found).toBe('app/src/main/res/mipmap-xxxhdpi/ic_key_attestation.png');
+	});
+
+	it('does not match a reference in the wrong resource kind', () => {
+		const found = findRasterForReference(tree(['app/src/main/res/drawable-hdpi/logo.png']), {
+			kind: 'mipmap',
+			name: 'logo'
+		});
+
+		expect(found).toBeNull();
+	});
+});
 
 describe('manifest declared icons', () => {
 	it('reads the application icon, not activity icons', () => {

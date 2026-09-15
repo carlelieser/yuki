@@ -302,6 +302,36 @@ export function pickBestDeclared(candidates: string[]): string | null {
 	return pickBest(candidates);
 }
 
+const RESOURCE_REFERENCE = /android:(?:src|drawable)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
+
+export function readRasterReferences(xml: string): { kind: string; name: string }[] {
+	const found: { kind: string; name: string }[] = [];
+
+	for (const match of xml.matchAll(RESOURCE_REFERENCE)) {
+		const kind = match[1];
+		const name = match[2];
+		if (kind === undefined || name === undefined) continue;
+		found.push({ kind, name });
+	}
+
+	return found;
+}
+
+export function findRasterForReference(
+	tree: GithubTree,
+	reference: { kind: string; name: string }
+): string | null {
+	return pickBest(
+		blobs(tree).filter((path) => {
+			const { dir, filename, stem } = splitPath(path);
+			if (stem !== reference.name || !isRaster(filename)) return false;
+
+			const directory = dir.split('/').pop() ?? '';
+			return new RegExp(`^${reference.kind}(-|$)`).test(directory);
+		})
+	);
+}
+
 export function findAdaptiveIconPath(tree: GithubTree): string | null {
 	return pickBest(
 		blobs(tree).filter((path) => {
