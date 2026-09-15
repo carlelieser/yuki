@@ -570,3 +570,86 @@ describe('buildVectorIcon', () => {
 		expect(icon).toBeNull();
 	});
 });
+
+describe('unqualified resource directories', () => {
+	it('finds a launcher icon in res/drawable with no density qualifier', () => {
+		expect(findIconPath(tree(['app/src/main/res/drawable/ic_launcher.png']))).toBe(
+			'app/src/main/res/drawable/ic_launcher.png'
+		);
+	});
+
+	it('finds a launcher icon in res/mipmap with no density qualifier', () => {
+		expect(findIconPath(tree(['app/src/main/res/mipmap/ic_launcher.webp']))).toBe(
+			'app/src/main/res/mipmap/ic_launcher.webp'
+		);
+	});
+
+	it('still prefers a density-qualified raster over the unqualified one', () => {
+		expect(
+			findIconPath(
+				tree([
+					'app/src/main/res/drawable/ic_launcher.png',
+					'app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+				])
+			)
+		).toBe('app/src/main/res/mipmap-xxxhdpi/ic_launcher.png');
+	});
+
+	it('ignores non-resource directories that merely contain a launcher file', () => {
+		expect(findIconPath(tree(['docs/drawable/ic_launcher.png']))).toBeNull();
+	});
+});
+
+describe('qualified launcher stems', () => {
+	it('matches a launcher stem carrying a trailing qualifier', () => {
+		expect(findIconPath(tree(['app/src/main/res/mipmap/ic_app_launcher_adaptive.png']))).toBe(
+			'app/src/main/res/mipmap/ic_app_launcher_adaptive.png'
+		);
+	});
+
+	it('finds the adaptive xml for a multi-word launcher stem', () => {
+		expect(
+			findAdaptiveIconPath(
+				tree(['app/src/main/res/mipmap-anydpi-v26/ic_app_launcher_adaptive.xml'])
+			)
+		).toBe('app/src/main/res/mipmap-anydpi-v26/ic_app_launcher_adaptive.xml');
+	});
+
+	it('does not treat an unrelated shortcut icon as the launcher', () => {
+		expect(
+			findAdaptiveIconPath(
+				tree(['app/src/main/res/mipmap-anydpi-v26/ic_app_shortcut_docs_adaptive.xml'])
+			)
+		).toBeNull();
+	});
+});
+
+describe('self-contained icons versus bare layers', () => {
+	it('prefers a complete icon over a higher density foreground layer', () => {
+		expect(
+			findIconPath(
+				tree([
+					'app/src/main/res/mipmap/ic_app_launcher_adaptive.png',
+					'app/src/main/res/mipmap-xxxhdpi/ic_app_launcher_adaptive_foreground.png'
+				])
+			)
+		).toBe('app/src/main/res/mipmap/ic_app_launcher_adaptive.png');
+	});
+
+	it('still picks the densest option among equally complete icons', () => {
+		expect(
+			findIconPath(
+				tree([
+					'app/src/main/res/mipmap/ic_launcher.png',
+					'app/src/main/res/mipmap-xxxhdpi/ic_launcher.png'
+				])
+			)
+		).toBe('app/src/main/res/mipmap-xxxhdpi/ic_launcher.png');
+	});
+
+	it('falls back to a foreground layer when nothing else exists', () => {
+		expect(findIconPath(tree(['app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png']))).toBe(
+			'app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png'
+		);
+	});
+});

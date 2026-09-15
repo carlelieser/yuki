@@ -14,7 +14,12 @@ const RASTER_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];
 
 const ICON_STEMS = ['ic_launcher', 'ic_launcher_round', 'ic_launcher_foreground'];
 const STEM_ORDER = ICON_STEMS;
-const LAUNCHER_STEM = /^(?:[a-z0-9]+_)?(?:ic_)?launcher(?:_round|_foreground)?$/;
+const LAUNCHER_SUFFIX = '(?:_(?:round|foreground|adaptive))*';
+const LAUNCHER_STEM = new RegExp(`^(?:[a-z0-9]+_)*(?:ic_)?launcher${LAUNCHER_SUFFIX}$`);
+
+const LAUNCHER_EXCLUDED = /(?:^|_)(shortcut|notification|monochrome|badge|widget|tile)(?:_|$)/;
+
+const RESOURCE_DIR = /(^|\/)res\/(mipmap|drawable)(-[a-z0-9-]+)?$/;
 
 const DENSITY_ORDER = ['xxxhdpi', 'xxhdpi', 'xhdpi', 'hdpi', 'mdpi'];
 
@@ -59,6 +64,10 @@ function stemRank(stem: string): number {
 	return index === -1 ? STEM_ORDER.length : index;
 }
 
+function layerRank(stem: string): number {
+	return stem.endsWith('_foreground') ? 1 : 0;
+}
+
 function localeRank(path: string): number {
 	const match = path.match(FASTLANE_ICON);
 	if (match === null) return 0;
@@ -73,7 +82,13 @@ function localeRank(path: string): number {
 function rankOf(path: string): number[] {
 	const lowered = path.toLowerCase();
 	const { stem } = splitPath(lowered);
-	return [flavourRank(lowered), localeRank(lowered), densityRank(lowered), stemRank(stem)];
+	return [
+		flavourRank(lowered),
+		localeRank(lowered),
+		layerRank(stem),
+		densityRank(lowered),
+		stemRank(stem)
+	];
 }
 
 function isBetter(candidate: string, best: string): boolean {
@@ -132,16 +147,21 @@ function pickBest(candidates: string[]): string | null {
 	return candidates.reduce((best, path) => (isBetter(path, best) ? path : best));
 }
 
+function isLauncherStem(stem: string): boolean {
+	return LAUNCHER_STEM.test(stem) && !LAUNCHER_EXCLUDED.test(stem);
+}
+
+function isResourceDir(dir: string): boolean {
+	return RESOURCE_DIR.test(dir);
+}
+
 function findMipmapIcon(paths: string[]): string | null {
 	return pickBest(
 		paths.filter((path) => {
-			const lowered = path.toLowerCase();
-			if (!lowered.includes('mipmap-') && !lowered.includes('drawable-')) return false;
+			const { dir, filename, stem } = splitPath(path.toLowerCase());
+			if (!isResourceDir(dir) || !isRaster(filename)) return false;
 
-			const { filename, stem } = splitPath(lowered);
-			if (!isRaster(filename)) return false;
-
-			return LAUNCHER_STEM.test(stem);
+			return isLauncherStem(stem);
 		})
 	);
 }
@@ -254,7 +274,7 @@ export function findAdaptiveIconPath(tree: GithubTree): string | null {
 			const { stem, filename } = splitPath(lowered);
 			if (!filename.endsWith('.xml')) return false;
 
-			return LAUNCHER_STEM.test(stem);
+			return isLauncherStem(stem);
 		})
 	);
 }
