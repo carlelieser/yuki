@@ -3,6 +3,7 @@ package app.yuki.feature.updates
 import app.yuki.core.database.InstallRecording
 import app.yuki.core.database.InstallStore
 import app.yuki.core.model.AvailableUpdate
+import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
@@ -60,6 +61,9 @@ internal class FakeListingRepository(
 
     override suspend fun sections(limit: Int): Result<List<CategorySection>> =
         Result.failure(IllegalStateException("sections is not used by Updates"))
+
+    override suspend fun packages(): Result<List<CatalogPackage>> =
+        Result.failure(IllegalStateException("packages is not used by Updates"))
 
     override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
         Result.failure(IllegalStateException("search is not used by Updates"))

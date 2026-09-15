@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingLinks
@@ -68,6 +69,14 @@ private fun ListingDetailDto.toSummary(): ListingSummary = ListingSummary(
 )
 
 internal fun ScreenshotDto.toDomain(): Screenshot = Screenshot(url, alt)
+
+internal fun CatalogPackageDto.toDomain(): CatalogPackage = CatalogPackage(
+    packageName = packageName,
+    githubRepoId = githubRepoId,
+    slug = slug,
+    title = title,
+    iconUrl = iconUrl,
+)
 
 internal fun ListingVersionDto.toDomain(): ListingVersion = ListingVersion(
     tag = tag,

@@ -1,5 +1,10 @@
 package app.yuki.core.model
 
+enum class InstallSource {
+    YUKI,
+    DETECTED,
+}
+
 data class InstalledApp(
     val githubRepoId: Long,
     val packageName: String,
@@ -7,7 +12,10 @@ data class InstalledApp(
     val title: String,
     val iconUrl: String?,
     val versionTag: String,
-)
+    val source: InstallSource = InstallSource.YUKI,
+) {
+    val isDetected: Boolean get() = source == InstallSource.DETECTED
+}
 
 data class AvailableUpdate(
     val installed: InstalledApp,
@@ -17,6 +25,17 @@ data class AvailableUpdate(
 private fun isEligible(version: ListingVersion, includePrereleases: Boolean): Boolean {
     if (version.downloadUrl == null) return false
     return includePrereleases || !version.isPrerelease
+}
+
+fun matchingReleaseTag(versionName: String, versions: List<ListingVersion>): String? {
+    val installed = parseVersion(versionName) ?: return null
+
+    val matches = versions
+        .map(ListingVersion::tag)
+        .filter { tag -> parseVersion(tag)?.let { compareVersions(it, installed) == 0 } == true }
+        .distinct()
+
+    return matches.singleOrNull()
 }
 
 private fun newestUpdate(
@@ -46,5 +65,18 @@ fun findUpdates(
     includePrereleases: Boolean,
 ): List<AvailableUpdate> = installs.mapNotNull { installed ->
     val detail = listings[installed.githubRepoId] ?: return@mapNotNull null
-    newestUpdate(installed, detail, includePrereleases)
+    val resolved = resolveInstalledVersion(installed, detail) ?: return@mapNotNull null
+
+    newestUpdate(resolved, detail, includePrereleases)
+}
+
+private fun resolveInstalledVersion(
+    installed: InstalledApp,
+    detail: ListingDetail,
+): InstalledApp? {
+    if (!installed.isDetected) return installed
+
+    val tag = matchingReleaseTag(installed.versionTag, detail.versions) ?: return null
+
+    return installed.copy(versionTag = tag)
 }

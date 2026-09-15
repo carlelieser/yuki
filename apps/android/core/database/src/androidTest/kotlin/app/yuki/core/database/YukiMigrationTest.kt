@@ -253,4 +253,81 @@ class YukiMigrationTest {
 
     private fun runToVersionFour() =
         helper.runMigrationsAndValidate(TEST_DATABASE, 4, true, MIGRATION_3_TO_4)
+
+    private fun seedVersionFour(vararg statements: String) {
+        helper.createDatabase(TEST_DATABASE, 4).use { database ->
+            statements.forEach(database::execSQL)
+        }
+    }
+
+    private fun runToVersionFive() =
+        helper.runMigrationsAndValidate(TEST_DATABASE, 5, true, MIGRATION_4_TO_5)
+
+    @Test
+    fun migratingToVersionFiveKeepsRecordedInstalls() {
+        seedVersionFour(
+            """
+            INSERT INTO installs
+            (githubRepoId, packageName, slug, title, iconUrl, versionTag, versionCode, installedAt)
+            VALUES (7, 'com.termux', 'termux', 'Termux', NULL, 'v0.118.0', 118, 1000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionFive()
+
+        migrated.query("SELECT packageName, versionTag FROM installs").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("com.termux", cursor.getString(0))
+            assertEquals("v0.118.0", cursor.getString(1))
+        }
+    }
+
+    @Test
+    fun migratingToVersionFiveCreditsExistingInstallsToYuki() {
+        seedVersionFour(
+            """
+            INSERT INTO installs
+            (githubRepoId, packageName, slug, title, iconUrl, versionTag, versionCode, installedAt)
+            VALUES (7, 'com.termux', 'termux', 'Termux', NULL, 'v0.118.0', 118, 1000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionFive()
+
+        migrated.query("SELECT source FROM installs").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("YUKI", cursor.getString(0))
+        }
+    }
+
+    @Test
+    fun migratingToVersionFiveAddsAnEmptyPackageIndex() {
+        helper.createDatabase(TEST_DATABASE, 4).close()
+
+        val migrated = runToVersionFive()
+
+        migrated.query("SELECT COUNT(*) FROM package_index").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(0, cursor.getInt(0))
+        }
+    }
+
+    @Test
+    fun theMigratedPackageIndexAcceptsAnEntry() {
+        helper.createDatabase(TEST_DATABASE, 4).close()
+
+        val migrated = runToVersionFive()
+        migrated.execSQL(
+            """
+            INSERT INTO package_index (packageName, githubRepoId, slug, title, iconUrl)
+            VALUES ('dev.imranr.obtainium.fdroid', 42, 'obtainium', 'Obtainium', NULL)
+            """.trimIndent(),
+        )
+
+        migrated.query("SELECT githubRepoId, title FROM package_index").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(42L, cursor.getLong(0))
+            assertEquals("Obtainium", cursor.getString(1))
+        }
+    }
 }

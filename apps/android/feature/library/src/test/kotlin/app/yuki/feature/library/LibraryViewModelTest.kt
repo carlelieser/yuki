@@ -568,7 +568,7 @@ class LibraryViewModelTest {
     ): LibraryViewModel = LibraryViewModel(
         store = store,
         progress = progress,
-        dependencies = LibraryDependencies(LibraryReconciler(store, packages), packages),
+        dependencies = libraryDependencies(store, packages),
     )
 }
 

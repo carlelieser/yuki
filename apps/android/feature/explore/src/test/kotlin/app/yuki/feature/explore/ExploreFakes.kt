@@ -1,6 +1,7 @@
 package app.yuki.feature.explore
 
 import app.yuki.core.installer.InstalledListings
+import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
@@ -62,6 +63,9 @@ internal class FakeListingRepository : ListingRepository {
         featuredGate?.await()
         return featuredResult
     }
+
+    override suspend fun packages(): Result<List<CatalogPackage>> =
+        error("packages is not used by the explore screen")
 
     override suspend fun sections(limit: Int): Result<List<CategorySection>> {
         startedCalls += SECTIONS_CALL

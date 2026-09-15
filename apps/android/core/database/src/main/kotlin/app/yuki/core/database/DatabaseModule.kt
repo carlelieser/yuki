@@ -34,6 +34,10 @@ internal object DatabaseProviders {
 
     @Provides
     @Singleton
+    fun packageIndexDao(database: YukiDatabase): PackageIndexDao = database.packageIndexDao()
+
+    @Provides
+    @Singleton
     fun clock(): Clock = Clock.systemUTC()
 }
 
@@ -51,4 +55,8 @@ internal interface DatabaseBindings {
     @Binds
     @Singleton
     fun installProgressStore(implementation: RoomInstallProgressStore): InstallProgressStore
+
+    @Binds
+    @Singleton
+    fun packageIndexStore(implementation: RoomPackageIndexStore): PackageIndexStore
 }

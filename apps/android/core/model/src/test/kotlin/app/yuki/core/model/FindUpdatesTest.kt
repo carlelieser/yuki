@@ -15,6 +15,16 @@ private fun installedApp(versionTag: String) = InstalledApp(
     versionTag = versionTag,
 )
 
+private fun detectedApp(versionName: String) = InstalledApp(
+    githubRepoId = REPO_ID,
+    packageName = "app.example",
+    slug = "example",
+    title = "Example",
+    iconUrl = null,
+    versionTag = versionName,
+    source = InstallSource.DETECTED,
+)
+
 private fun version(
     tag: String,
     downloadUrl: String? = "https://example.test/$tag.apk",
@@ -101,6 +111,60 @@ class FindUpdatesTest {
         val listings = mapOf(REPO_ID to detail(listOf(version("2.0.0"))))
 
         val updates = findUpdates(listOf(installedApp("nightly")), listings, includePrereleases = false)
+
+        assertTrue(updates.isEmpty())
+    }
+
+    @Test
+    fun `updates a detected app once its version matches a release tag`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v1.6.17"), version("v1.7.0"))))
+
+        val updates = findUpdates(listOf(detectedApp("1.6.17")), listings, includePrereleases = false)
+
+        assertEquals(listOf("v1.7.0"), updates.map { update -> update.version.tag })
+    }
+
+    @Test
+    fun `reports nothing for a detected app that is already on the newest release`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v1.6.17"))))
+
+        val updates = findUpdates(listOf(detectedApp("1.6.17")), listings, includePrereleases = false)
+
+        assertTrue(updates.isEmpty())
+    }
+
+    @Test
+    fun `never updates a detected app whose version matches no release`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v2.0.0"), version("v3.0.0"))))
+
+        val updates = findUpdates(listOf(detectedApp("1.6.17")), listings, includePrereleases = false)
+
+        assertTrue(updates.isEmpty())
+    }
+
+    @Test
+    fun `never updates a detected app whose version matches more than one release`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v1.6.17"), version("1.6.17"))))
+
+        val updates = findUpdates(listOf(detectedApp("1.6.17")), listings, includePrereleases = false)
+
+        assertTrue(updates.isEmpty())
+    }
+
+    @Test
+    fun `never updates a detected app that reports no version at all`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v2.0.0"))))
+
+        val updates = findUpdates(listOf(detectedApp("")), listings, includePrereleases = false)
+
+        assertTrue(updates.isEmpty())
+    }
+
+    @Test
+    fun `never downgrades a detected app to an older release`() {
+        val listings = mapOf(REPO_ID to detail(listOf(version("v1.0.0"), version("v1.6.17"))))
+
+        val updates = findUpdates(listOf(detectedApp("1.6.17")), listings, includePrereleases = false)
 
         assertTrue(updates.isEmpty())
     }

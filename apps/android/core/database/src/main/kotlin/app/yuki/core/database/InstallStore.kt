@@ -60,4 +60,5 @@ private fun InstallRecording.toEntity(): InstallEntity = InstallEntity(
     versionTag = app.versionTag,
     versionCode = versionCode,
     installedAt = installedAt,
+    source = app.source.name,
 )

@@ -232,6 +232,6 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 internal const val LIBRARY_TITLE = "Library"
 internal const val LIBRARY_EMPTY_TITLE = "Nothing installed yet"
 internal const val LIBRARY_EMPTY_DESCRIPTION =
-    "Apps you install through Yuki appear here, ready to open or update."
+    "Catalog apps on your device appear here, ready to open or update."
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."

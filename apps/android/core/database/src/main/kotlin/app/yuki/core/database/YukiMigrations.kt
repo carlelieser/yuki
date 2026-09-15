@@ -58,5 +58,23 @@ internal val MIGRATION_3_TO_4 = object : Migration(3, 4) {
     }
 }
 
+internal val MIGRATION_4_TO_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `installs` ADD COLUMN `source` TEXT NOT NULL DEFAULT 'YUKI'")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `package_index` (
+                `packageName` TEXT NOT NULL,
+                `githubRepoId` INTEGER NOT NULL,
+                `slug` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `iconUrl` TEXT,
+                PRIMARY KEY(`packageName`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 internal val YUKI_MIGRATIONS: Array<Migration> =
-    arrayOf(MIGRATION_1_TO_2, MIGRATION_2_TO_3, MIGRATION_3_TO_4)
+    arrayOf(MIGRATION_1_TO_2, MIGRATION_2_TO_3, MIGRATION_3_TO_4, MIGRATION_4_TO_5)

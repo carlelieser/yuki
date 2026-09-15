@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingPage
@@ -17,6 +18,8 @@ interface ListingRepository {
     suspend fun search(query: SearchQuery): Result<List<ListingSummary>>
 
     suspend fun detail(slug: String): Result<ListingDetail>
+
+    suspend fun packages(): Result<List<CatalogPackage>>
 }
 
 @Singleton
@@ -46,5 +49,10 @@ internal class NetworkListingRepository @Inject constructor(
     override suspend fun detail(slug: String): Result<ListingDetail> =
         runRemote("Load listing detail for slug=$slug") {
             remote.detail(slug).toDomain()
+        }
+
+    override suspend fun packages(): Result<List<CatalogPackage>> =
+        runRemote("Load the package index") {
+            remote.packages().packages.map(CatalogPackageDto::toDomain)
         }
 }

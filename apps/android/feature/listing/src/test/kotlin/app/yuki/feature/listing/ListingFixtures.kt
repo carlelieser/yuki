@@ -1,5 +1,6 @@
 package app.yuki.feature.listing
 
+import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
@@ -78,6 +79,9 @@ internal class FakeListingRepository(
 
     override suspend fun sections(limit: Int): Result<List<CategorySection>> =
         error("sections is not used by the listing screen")
+
+    override suspend fun packages(): Result<List<CatalogPackage>> =
+        error("packages is not used by the listing screen")
 
     override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
         error("search is not used by the listing screen")

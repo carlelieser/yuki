@@ -78,3 +78,17 @@ internal data class CategorySectionDto(
     val category: String? = null,
     val results: List<ListingSummaryDto> = emptyList(),
 )
+
+@Serializable
+internal data class CatalogPackageDto(
+    val packageName: String,
+    val githubRepoId: Long,
+    val slug: String,
+    val title: String,
+    val iconUrl: String? = null,
+)
+
+@Serializable
+internal data class PackageIndexDto(
+    val packages: List<CatalogPackageDto> = emptyList(),
+)

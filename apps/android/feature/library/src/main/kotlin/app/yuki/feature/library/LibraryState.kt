@@ -40,7 +40,7 @@ data class LibraryItem(
         InstallState.Installing -> LIBRARY_INSTALLING_SUPPORTING
         InstallState.PendingUserAction -> LIBRARY_PENDING_SUPPORTING
         is InstallState.Failed -> installFailureLabel(install.reason)
-        else -> app.versionTag
+        else -> app.versionTag.ifEmpty { LIBRARY_UNKNOWN_VERSION_SUPPORTING }
     }
 }
 
@@ -59,3 +59,4 @@ private const val RANK_SETTLED = 3
 
 internal const val LIBRARY_INSTALLING_SUPPORTING = "Installing"
 internal const val LIBRARY_PENDING_SUPPORTING = "Waiting for confirmation"
+internal const val LIBRARY_UNKNOWN_VERSION_SUPPORTING = "Version unknown"

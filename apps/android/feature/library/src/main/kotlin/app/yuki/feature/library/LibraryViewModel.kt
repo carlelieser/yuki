@@ -67,6 +67,7 @@ class LibraryViewModel @Inject internal constructor(
     }
 
     private suspend fun reconcile() {
+        runCatching { dependencies.detection.reconcile() }
         dependencies.reconciler.reconcile(store.installs())
         resumes.value += 1
         progress.clearSettled()

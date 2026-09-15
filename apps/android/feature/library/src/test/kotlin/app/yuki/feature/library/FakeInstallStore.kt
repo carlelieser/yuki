@@ -2,10 +2,20 @@ package app.yuki.feature.library
 
 import app.yuki.core.database.InstallRecording
 import app.yuki.core.database.InstallStore
+import app.yuki.core.database.PackageIndexStore
 import app.yuki.core.installer.InstallProgress
 import app.yuki.core.installer.InstallProgressStore
+import app.yuki.core.model.CatalogPackage
+import app.yuki.core.model.CategorySection
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.ListingDetail
+import app.yuki.core.model.ListingPage
+import app.yuki.core.model.ListingSummary
+import app.yuki.core.network.BrowseQuery
+import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.SearchQuery
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -46,21 +56,78 @@ internal class FakeInstalledPackages(
     private val present: MutableSet<String> = mutableSetOf(),
 ) : InstalledPackages {
     private val launchable = mutableSetOf<String>()
+    private val versions = mutableMapOf<String, String>()
 
     override fun isPresent(packageName: String): Boolean = packageName in present
 
     override fun launchIntentExists(packageName: String): Boolean = packageName in launchable
 
-    fun install(packageName: String, isLaunchable: Boolean = true) {
+    override fun findAll(packageNames: List<String>): List<DevicePackage> =
+        packageNames.filter { name -> name in present }.map { name ->
+            DevicePackage(
+                packageName = name,
+                versionName = versions[name] ?: "1.0.0",
+                versionCode = 1L,
+                firstInstalledAt = Instant.EPOCH,
+            )
+        }
+
+    fun install(packageName: String, isLaunchable: Boolean = true, versionName: String = "1.0.0") {
         present += packageName
+        versions[packageName] = versionName
         if (isLaunchable) launchable += packageName
     }
 
     fun uninstall(packageName: String) {
         present -= packageName
         launchable -= packageName
+        versions -= packageName
     }
 }
+
+internal class FakePackageIndexStore(
+    private var entries: List<CatalogPackage> = emptyList(),
+) : PackageIndexStore {
+    override suspend fun packages(): List<CatalogPackage> = entries
+
+    override suspend fun isEmpty(): Boolean = entries.isEmpty()
+
+    override suspend fun replaceAll(packages: List<CatalogPackage>) {
+        entries = packages
+    }
+}
+
+internal class FakeCatalogRepository(
+    private val result: Result<List<CatalogPackage>> = Result.success(emptyList()),
+) : ListingRepository {
+    override suspend fun browse(query: BrowseQuery): Result<ListingPage> =
+        error("browse is not used by the library screen")
+
+    override suspend fun featured(): Result<List<ListingSummary>> =
+        error("featured is not used by the library screen")
+
+    override suspend fun sections(limit: Int): Result<List<CategorySection>> =
+        error("sections is not used by the library screen")
+
+    override suspend fun search(query: SearchQuery): Result<List<ListingSummary>> =
+        error("search is not used by the library screen")
+
+    override suspend fun detail(slug: String): Result<ListingDetail> =
+        error("detail is not used by the library screen")
+
+    override suspend fun packages(): Result<List<CatalogPackage>> = result
+}
+
+internal fun libraryDependencies(
+    store: FakeInstallStore,
+    packages: FakeInstalledPackages,
+    index: PackageIndexStore = FakePackageIndexStore(),
+    repository: ListingRepository = FakeCatalogRepository(),
+): LibraryDependencies = LibraryDependencies(
+    reconciler = LibraryReconciler(store, packages),
+    detection = PackageDetectionReconciler(store, index, repository, packages),
+    packages = packages,
+)
 
 internal class FakeLibraryProgressStore : InstallProgressStore {
     private val rows = MutableStateFlow<List<InstallProgress>>(emptyList())

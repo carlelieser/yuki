@@ -67,6 +67,11 @@ internal class ListingRemoteDataSource @Inject constructor(
         val response = client.get("api/listings/$slug")
         return response.decode("Load listing detail for slug=$slug")
     }
+
+    suspend fun packages(): PackageIndexDto {
+        val response = client.get("api/packages")
+        return response.decode("Load the package index")
+    }
 }
 
 private suspend inline fun <reified T> HttpResponse.decode(operation: String): T {
