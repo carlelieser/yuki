@@ -11,9 +11,9 @@ Download the APK from the [latest release](https://github.com/carlelieser/yuki/r
 
 ## Screenshots
 
-| Explore                                    | Search                                   | Library                                    | Updates                                    |
-| ------------------------------------------ | ---------------------------------------- | ------------------------------------------ | ------------------------------------------ |
-| ![Explore](assets/screenshots/explore.png) | ![Search](assets/screenshots/search.png) | ![Library](assets/screenshots/library.png) | ![Updates](assets/screenshots/updates.png) |
+| Explore                                    | Listing                                    | Search                                   | Library                                    | Updates                                    |
+| ------------------------------------------ | ------------------------------------------ | ---------------------------------------- | ------------------------------------------ | ------------------------------------------ |
+| ![Explore](assets/screenshots/explore.png) | ![Listing](assets/screenshots/listing.png) | ![Search](assets/screenshots/search.png) | ![Library](assets/screenshots/library.png) | ![Updates](assets/screenshots/updates.png) |
 
 ## How it works
 
