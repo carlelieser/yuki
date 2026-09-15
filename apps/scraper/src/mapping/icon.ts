@@ -303,6 +303,29 @@ export function pickBestDeclared(candidates: string[]): string | null {
 }
 
 const RESOURCE_REFERENCE = /android:(?:src|drawable)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
+const ADAPTIVE_RASTER_LAYER =
+	/<(background|foreground)\b[^>]*android:drawable="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
+
+export type AdaptiveRasterLayers = {
+	background: { kind: string; name: string } | null;
+	foreground: { kind: string; name: string } | null;
+};
+
+export function readAdaptiveRasterLayers(xml: string): AdaptiveRasterLayers {
+	const layers: AdaptiveRasterLayers = { background: null, foreground: null };
+
+	for (const match of xml.matchAll(ADAPTIVE_RASTER_LAYER)) {
+		const layer = match[1];
+		const kind = match[2];
+		const name = match[3];
+		if (kind === undefined || name === undefined) continue;
+
+		if (layer === 'background') layers.background = { kind, name };
+		if (layer === 'foreground') layers.foreground = { kind, name };
+	}
+
+	return layers;
+}
 
 export function readRasterReferences(xml: string): { kind: string; name: string }[] {
 	const found: { kind: string; name: string }[] = [];

@@ -16,9 +16,11 @@ import {
 	findManifestPath,
 	findRasterForReference,
 	pickBestDeclared,
+	readAdaptiveRasterLayers,
 	readManifestIcon,
 	readRasterReferences
 } from '../mapping/icon.ts';
+import { composeAdaptiveRaster, toPngDataUri } from '../mapping/adaptive-raster.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
 import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
@@ -251,6 +253,15 @@ async function iconFrom(
 			if (svg !== null) return svg;
 		}
 
+		if (declared.layers !== null) {
+			const composed = await composeLayers(declared.layers, (path) =>
+				downloadBlob(owner, name, branch, path)
+			);
+			if (composed !== null) return composed;
+
+			return buildBlobUrl(owner, name, branch, declared.layers.foreground, false);
+		}
+
 		if (declared.raster !== null) {
 			return buildBlobUrl(owner, name, branch, declared.raster, false);
 		}
@@ -259,10 +270,41 @@ async function iconFrom(
 	return buildVectorIcon(tree, read);
 }
 
+async function downloadBlob(
+	owner: string,
+	name: string,
+	branch: string,
+	path: string
+): Promise<Buffer | null> {
+	const response = await fetch(buildBlobUrl(owner, name, branch, path, false));
+	if (!response.ok) return null;
+
+	return Buffer.from(await response.arrayBuffer());
+}
+
+async function composeLayers(
+	layers: { background: string | null; foreground: string },
+	download: (path: string) => Promise<Buffer | null>
+): Promise<string | null> {
+	const foreground = await download(layers.foreground);
+	if (foreground === null) return null;
+
+	const background = layers.background === null ? null : await download(layers.background);
+	const composed = composeAdaptiveRaster(background ?? Buffer.alloc(0), foreground);
+
+	return composed === null ? null : toPngDataUri(composed);
+}
+
+type DeclaredIcon = {
+	xml: string | null;
+	raster: string | null;
+	layers: { background: string | null; foreground: string } | null;
+};
+
 async function declaredIconFrom(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>
-): Promise<{ xml: string | null; raster: string | null } | null> {
+): Promise<DeclaredIcon | null> {
 	const manifestPath = findManifestPath(tree);
 	if (manifestPath === null) return null;
 
@@ -274,34 +316,38 @@ async function declaredIconFrom(
 
 	const found = findDeclaredIconPaths(tree, icon);
 	const direct = pickBestDeclared(found.raster);
-	if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct };
-
-	const layered: { kind: string; name: string }[] = [];
+	if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct, layers: null };
 
 	for (const path of found.xml) {
 		const xml = await read(path);
 		if (xml === null) continue;
 
-		const references = readRasterReferences(xml);
-		const isAdaptive = /<adaptive-icon\b/.test(xml);
+		const layers = rasterLayersIn(tree, xml);
+		if (layers !== null) return { xml: found.xml[0] ?? null, raster: null, layers };
 
-		for (const reference of references) {
-			if (isAdaptive) {
-				if (reference.name.includes('foreground')) layered.push(reference);
-				continue;
-			}
-
+		for (const reference of readRasterReferences(xml)) {
 			const raster = findRasterForReference(tree, reference);
-			if (raster !== null) return { xml: found.xml[0] ?? null, raster };
+			if (raster !== null) return { xml: found.xml[0] ?? null, raster, layers: null };
 		}
 	}
 
-	for (const reference of layered) {
-		const raster = findRasterForReference(tree, reference);
-		if (raster !== null) return { xml: found.xml[0] ?? null, raster };
-	}
+	return { xml: found.xml[0] ?? null, raster: null, layers: null };
+}
 
-	return { xml: found.xml[0] ?? null, raster: null };
+function rasterLayersIn(
+	tree: GithubTree,
+	xml: string
+): { background: string | null; foreground: string } | null {
+	const layers = readAdaptiveRasterLayers(xml);
+	if (layers.foreground === null) return null;
+
+	const foreground = findRasterForReference(tree, layers.foreground);
+	if (foreground === null) return null;
+
+	const background =
+		layers.background === null ? null : findRasterForReference(tree, layers.background);
+
+	return { background, foreground };
 }
 
 async function readResource<Body>(
