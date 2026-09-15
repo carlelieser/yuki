@@ -1,3 +1,5 @@
+![Yuki](assets/banner.png)
+
 # Yuki
 
 A catalog of open-source Android apps that use the [Shizuku](https://shizuku.rikka.app)
