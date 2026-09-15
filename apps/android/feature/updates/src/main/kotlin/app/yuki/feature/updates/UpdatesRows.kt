@@ -84,7 +84,7 @@ private fun UncheckedNote(reason: FailureReason) {
 
 internal fun uncheckedDetail(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> "No connection"
-    FailureReason.NotFound -> "Listing removed"
+    FailureReason.NotFound -> "Not in the catalog"
     is FailureReason.Server -> "Server error ${reason.status}"
     is FailureReason.Unexpected -> "Unexpected error"
 }
