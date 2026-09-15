@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-	composeAdaptiveSvg,
-	parseAdaptiveIcon,
-	parseColors,
-	toDataUri,
-	vectorToSvg
-} from './vector-icon.ts';
+import { parseAdaptiveIcon, parseColors, vectorToSvg } from './vector-icon.ts';
+import { composeAdaptiveSvg, toDataUri } from './adaptive-svg.ts';
 
 const FOREGROUND = `<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -33,7 +28,9 @@ describe('parseColors', () => {
 	});
 
 	it('ignores values that are neither literals nor colour references', () => {
-		const colors = parseColors(`<resources><color name="ref">?attr/colorPrimary</color></resources>`);
+		const colors = parseColors(
+			`<resources><color name="ref">?attr/colorPrimary</color></resources>`
+		);
 
 		expect(colors.has('ref')).toBe(false);
 	});

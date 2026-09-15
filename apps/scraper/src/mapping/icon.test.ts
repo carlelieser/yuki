@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
 	buildIconUrl,
-	buildVectorIcon,
 	findAdaptiveIconPath,
 	findDeclaredIconPaths,
 	findIconPath,
@@ -11,6 +10,7 @@ import {
 	readRasterReferences,
 	resolveRelativePath
 } from './icon.ts';
+import { buildVectorIcon } from './adaptive-vector.ts';
 import type { GithubTree } from '@yuki/github';
 
 function tree(paths: string[], truncated = false): GithubTree {
@@ -138,13 +138,15 @@ describe('prefixed launcher stems', () => {
 	});
 
 	it('finds a prefixed adaptive launcher', () => {
-		expect(findAdaptiveIconPath(tree(['app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml']))).toBe(
-			'app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml'
-		);
+		expect(
+			findAdaptiveIconPath(tree(['app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml']))
+		).toBe('app/src/nonlib/res/mipmap-anydpi-v26/tb_launcher.xml');
 	});
 
 	it('still rejects unrelated mipmap rasters', () => {
-		expect(findIconPath(tree(['app/src/nonlib/res/mipmap-xxxhdpi/tb_freeform_mode.png']))).toBeNull();
+		expect(
+			findIconPath(tree(['app/src/nonlib/res/mipmap-xxxhdpi/tb_freeform_mode.png']))
+		).toBeNull();
 	});
 
 	it('does not match a stem that merely contains launcher', () => {

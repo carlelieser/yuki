@@ -1,11 +1,14 @@
 import type { GithubTree } from '@yuki/github';
-import {
-	composeAdaptiveSvg,
-	parseAdaptiveIcon,
-	parseColors,
-	toDataUri,
-	vectorToSvg
-} from './vector-icon.ts';
+import type { ResourceReference } from './android-resources.ts';
+import { buildBlobUrl, isLfsBlob } from './blob-url.ts';
+export { buildBlobUrl, collectLfsPaths, isLfsPointer } from './blob-url.ts';
+export {
+	readAdaptiveRasterLayers,
+	readManifestIcon,
+	readRasterReferences,
+	type AdaptiveRasterLayers,
+	type ResourceReference
+} from './android-resources.ts';
 
 const RASTER_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg'];
 
@@ -20,39 +23,17 @@ const FASTLANE_ICON =
 
 const LOCALE_ORDER = ['en-us', 'en-gb', 'en'];
 
-const LFS_POINTER_MAX_BYTES = 200;
-const LFS_POINTER_PREFIX = 'version https://git-lfs.github.com/spec/v1';
-const MEDIA_EXTENSIONS = ['.png', '.webp', '.jpg', '.jpeg', '.gif', '.svg'];
 const PLAYSTORE_ICON = /(^|\/)ic_launcher[-_]playstore\.(png|webp|jpg|jpeg)$/;
 
 const FLAVOUR_PENALTY = ['nightly', 'debug', 'dev', 'beta', 'alpha', 'staging', 'test'];
 
 const MANIFEST_FILE = /(^|\/)AndroidManifest\.xml$/;
-const APPLICATION_TAG = /<application\b[^>]*>/;
-const MANIFEST_ICON = /android:(?:roundIcon|icon)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
 
 export function findManifestPath(tree: GithubTree): string | null {
 	return pickBest(blobs(tree).filter((path) => MANIFEST_FILE.test(path)));
 }
 
-export function readManifestIcon(xml: string): { kind: string; name: string } | null {
-	const application = xml.match(APPLICATION_TAG)?.[0];
-	if (application === undefined) return null;
-
-	const icons = [...application.matchAll(MANIFEST_ICON)];
-	const round = icons.find((match) => match[0].includes('roundIcon'));
-	const chosen = icons.find((match) => !match[0].includes('roundIcon')) ?? round;
-	if (chosen === undefined) return null;
-
-	const kind = chosen[1];
-	const name = chosen[2];
-	if (kind === undefined || name === undefined) return null;
-
-	return { kind, name };
-}
-
-
-function splitPath(path: string): { dir: string; filename: string; stem: string } {
+export function splitPath(path: string): { dir: string; filename: string; stem: string } {
 	const segments = path.split('/');
 	const filename = segments.pop() ?? '';
 	const stem = filename.replace(/\.[a-z0-9]+$/, '');
@@ -111,7 +92,7 @@ function isBetter(candidate: string, best: string): boolean {
 const SYMLINK_MODE = '120000';
 const MAX_SYMLINK_HOPS = 5;
 
-function blobs(tree: GithubTree): string[] {
+export function blobs(tree: GithubTree): string[] {
 	return tree.tree.filter((entry) => entry.type === 'blob').map((entry) => entry.path);
 }
 
@@ -204,50 +185,6 @@ export async function resolveSymlinkPath(
 	return null;
 }
 
-export function isLfsPointer(content: string): boolean {
-	return content.trimStart().startsWith(LFS_POINTER_PREFIX);
-}
-
-export async function collectLfsPaths(
-	tree: GithubTree,
-	readBlob: (sha: string) => Promise<string | null>
-): Promise<Set<string>> {
-	const paths = new Set<string>();
-
-	for (const entry of tree.tree) {
-		if (entry.type !== 'blob') continue;
-		if (entry.sha === undefined || entry.size === undefined) continue;
-		if (entry.size > LFS_POINTER_MAX_BYTES) continue;
-		if (!MEDIA_EXTENSIONS.some((extension) => entry.path.toLowerCase().endsWith(extension))) {
-			continue;
-		}
-
-		const content = await readBlob(entry.sha);
-		if (content !== null && isLfsPointer(content)) paths.add(entry.path);
-	}
-
-	return paths;
-}
-
-export function buildBlobUrl(
-	owner: string,
-	name: string,
-	defaultBranch: string,
-	path: string,
-	isLfs: boolean
-): string {
-	const encoded = path
-		.split('/')
-		.map((segment) => encodeURIComponent(segment))
-		.join('/');
-
-	const host = isLfs
-		? 'https://media.githubusercontent.com/media'
-		: 'https://raw.githubusercontent.com';
-
-	return `${host}/${owner}/${name}/${defaultBranch}/${encoded}`;
-}
-
 export async function buildIconUrl(
 	tree: GithubTree,
 	owner: string,
@@ -262,23 +199,14 @@ export async function buildIconUrl(
 	if (resolved === null) return null;
 
 	const entry = tree.tree.find((candidate) => candidate.path === resolved);
-	let isLfs = false;
-
-	if (
-		entry?.sha !== undefined &&
-		entry.size !== undefined &&
-		entry.size <= LFS_POINTER_MAX_BYTES
-	) {
-		const content = await readBlob(entry.sha);
-		isLfs = content !== null && isLfsPointer(content);
-	}
+	const isLfs = await isLfsBlob(entry, readBlob);
 
 	return buildBlobUrl(owner, name, defaultBranch, resolved, isLfs);
 }
 
 export function findDeclaredIconPaths(
 	tree: GithubTree,
-	icon: { kind: string; name: string }
+	icon: ResourceReference
 ): { xml: string[]; raster: string[] } {
 	const suffix = `/${icon.kind}`;
 	const xml: string[] = [];
@@ -302,47 +230,9 @@ export function pickBestDeclared(candidates: string[]): string | null {
 	return pickBest(candidates);
 }
 
-const RESOURCE_REFERENCE = /android:(?:src|drawable)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
-const ADAPTIVE_RASTER_LAYER =
-	/<(background|foreground)\b[^>]*android:drawable="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
-
-export type AdaptiveRasterLayers = {
-	background: { kind: string; name: string } | null;
-	foreground: { kind: string; name: string } | null;
-};
-
-export function readAdaptiveRasterLayers(xml: string): AdaptiveRasterLayers {
-	const layers: AdaptiveRasterLayers = { background: null, foreground: null };
-
-	for (const match of xml.matchAll(ADAPTIVE_RASTER_LAYER)) {
-		const layer = match[1];
-		const kind = match[2];
-		const name = match[3];
-		if (kind === undefined || name === undefined) continue;
-
-		if (layer === 'background') layers.background = { kind, name };
-		if (layer === 'foreground') layers.foreground = { kind, name };
-	}
-
-	return layers;
-}
-
-export function readRasterReferences(xml: string): { kind: string; name: string }[] {
-	const found: { kind: string; name: string }[] = [];
-
-	for (const match of xml.matchAll(RESOURCE_REFERENCE)) {
-		const kind = match[1];
-		const name = match[2];
-		if (kind === undefined || name === undefined) continue;
-		found.push({ kind, name });
-	}
-
-	return found;
-}
-
 export function findRasterForReference(
 	tree: GithubTree,
-	reference: { kind: string; name: string }
+	reference: ResourceReference
 ): string | null {
 	return pickBest(
 		blobs(tree).filter((path) => {
@@ -367,132 +257,4 @@ export function findAdaptiveIconPath(tree: GithubTree): string | null {
 			return LAUNCHER_STEM.test(stem);
 		})
 	);
-}
-
-function qualifierRank(loweredPath: string, loweredResourceDir: string): number | null {
-	const rest = loweredPath.slice(`${loweredResourceDir}/`.length);
-	const dir = rest.split('/')[0] ?? '';
-	const qualifiers = dir.split('-').slice(1);
-
-	if (qualifiers.some((qualifier) => /^v\d+$/.test(qualifier))) return null;
-
-	if (qualifiers.length === 0) return 2;
-	if (qualifiers.length === 1 && qualifiers[0] === 'night') return 1;
-
-	return null;
-}
-
-function resourceDirOf(adaptivePath: string): string {
-	const marker = adaptivePath.search(/\/(mipmap|drawable)[^/]*\//);
-	return marker === -1 ? '' : adaptivePath.slice(0, marker);
-}
-
-export async function buildVectorIcon(
-	tree: GithubTree,
-	read: (path: string) => Promise<string | null>,
-	declaredPath: string | null = null
-): Promise<string | null> {
-	const adaptivePath = declaredPath ?? findAdaptiveIconPath(tree);
-	if (adaptivePath === null) return null;
-
-	const adaptiveXml = await read(adaptivePath);
-	if (adaptiveXml === null) return null;
-
-	const refs = parseAdaptiveIcon(adaptiveXml);
-	const isPlainVector = refs.foreground === null && /<vector\b/.test(adaptiveXml);
-	if (refs.foreground === null && !isPlainVector) return null;
-
-	const resourceDir = resourceDirOf(adaptivePath);
-	const available = new Set(blobs(tree));
-
-	const buckets: { rank: number; path: string }[] = [];
-	for (const path of blobs(tree)) {
-		const lowered = path.toLowerCase();
-		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/values`)) continue;
-		if (!/\/(colors?|ic_launcher_background)\.xml$/.test(lowered)) continue;
-
-		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
-		if (rank === null) continue;
-		buckets.push({ rank, path });
-	}
-
-	buckets.sort((left, right) => right.rank - left.rank || right.path.localeCompare(left.path));
-
-	const colors = new Map<string, string>();
-	for (const { path } of buckets) {
-		const xml = await read(path);
-		if (xml === null) continue;
-		for (const [key, value] of parseColors(xml)) colors.set(key, value);
-	}
-
-	const colorResources: { rank: number; path: string }[] = [];
-	for (const path of blobs(tree)) {
-		const lowered = path.toLowerCase();
-		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/color`)) continue;
-		if (!lowered.endsWith('.xml')) continue;
-
-		const directory = splitPath(lowered).dir.split('/').pop() ?? '';
-		if (!/^color(-|$)/.test(directory)) continue;
-
-		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
-		if (rank === null) continue;
-		colorResources.push({ rank, path });
-	}
-
-	colorResources.sort(
-		(left, right) => right.rank - left.rank || right.path.localeCompare(left.path)
-	);
-
-	const gradients = new Map<string, string>();
-	for (const { path } of colorResources) {
-		const xml = await read(path);
-		if (xml === null || !/<gradient\b/.test(xml)) continue;
-		gradients.set(splitPath(path).stem, xml);
-	}
-
-	const readDrawable = async (drawable: string): Promise<string | null> => {
-		const prefix = `${resourceDir}/drawable`;
-		const candidates = [...available].filter((path) => {
-			if (!path.startsWith(prefix)) return false;
-
-			const { dir, filename, stem } = splitPath(path);
-			if (stem !== drawable || !filename.endsWith('.xml')) return false;
-
-			return /^drawable(-|$)/.test(dir.split('/').pop() ?? '');
-		});
-
-		candidates.sort((left, right) => left.length - right.length || left.localeCompare(right));
-
-		for (const candidate of candidates) {
-			const xml = await read(candidate);
-			if (xml !== null) return xml;
-		}
-
-		return null;
-	};
-
-	if (refs.foreground === null) {
-		const svg = vectorToSvg(adaptiveXml, colors, { gradients });
-		return svg === null ? null : toDataUri(svg);
-	}
-
-	const foregroundXml =
-		refs.foreground.kind === 'drawable' ? await readDrawable(refs.foreground.name) : null;
-	if (foregroundXml === null) return null;
-
-	let background: { kind: 'color' | 'vector'; value: string } | null = null;
-	if (refs.background !== null) {
-		if (refs.background.kind === 'color') {
-			const reference = refs.background.name.startsWith('android:')
-				? `@android:color/${refs.background.name.slice('android:'.length)}`
-				: `@color/${refs.background.name}`;
-			background = { kind: 'color', value: reference };
-		} else {
-			const backgroundXml = await readDrawable(refs.background.name);
-			if (backgroundXml !== null) background = { kind: 'vector', value: backgroundXml };
-		}
-	}
-
-	const svg = composeAdaptiveSvg({ background, foreground: foregroundXml, colors, gradients });
-	return svg === null ? null : toDataUri(svg);
 }

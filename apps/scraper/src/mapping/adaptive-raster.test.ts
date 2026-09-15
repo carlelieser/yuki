@@ -55,7 +55,11 @@ describe('composeAdaptiveRaster', () => {
 		if (composed === null) throw new Error('expected a composed icon');
 
 		const image = decodePng(composed);
-		const centre = pixelAt(composed, Math.floor((image?.width ?? 0) / 2), Math.floor((image?.height ?? 0) / 2));
+		const centre = pixelAt(
+			composed,
+			Math.floor((image?.width ?? 0) / 2),
+			Math.floor((image?.height ?? 0) / 2)
+		);
 
 		expect(centre[2]).toBeGreaterThan(centre[0]);
 		expect(centre[3]).toBe(255);
