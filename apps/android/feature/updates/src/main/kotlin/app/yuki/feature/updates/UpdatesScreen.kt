@@ -135,5 +135,5 @@ internal const val UPDATES_EMPTY_TITLE = "Everything is up to date"
 internal const val UPDATES_EMPTY_DESCRIPTION =
     "Yuki checked every app you installed and found no new versions."
 internal const val UPDATES_PARTIAL_DESCRIPTION =
-    "No new versions among the apps Yuki could check."
+    "Any available updates will show up here."
 internal const val UPDATES_MISSING_MESSAGE = "We couldn't check for updates."
