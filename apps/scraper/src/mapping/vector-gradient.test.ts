@@ -34,6 +34,40 @@ const ATTRIBUTE_GRADIENT = `<vector xmlns:android="http://schemas.android.com/ap
 	</path>
 </vector>`;
 
+describe('colour resource gradients', () => {
+	const COLOR_RESOURCE = `<gradient xmlns:android="http://schemas.android.com/apk/res/android"
+		android:startX="5.4" android:startY="5.4" android:endX="102.6" android:endY="102.6" android:type="linear">
+		<item android:color="@color/brand_start" android:offset="0.0" />
+		<item android:color="@color/brand_end" android:offset="1.0" />
+	</gradient>`;
+
+	const VECTOR = `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="@color/launcher_bg" android:pathData="M0,0h108v108h-108z" /></vector>`;
+
+	it('fills a path from a gradient declared in res/color', () => {
+		const svg = vectorToSvg(
+			VECTOR,
+			new Map([
+				['brand_start', '#E1115C'],
+				['brand_end', '#8B0A3A']
+			]),
+			{ gradients: new Map([['launcher_bg', COLOR_RESOURCE]]) }
+		);
+
+		expect(svg).toContain('fill="url(#');
+		expect(svg).toContain('stop-color="#E1115C"');
+		expect(svg).toContain('stop-color="#8B0A3A"');
+		expect(svg).not.toContain('#000000');
+	});
+
+	it('falls back to the flat colour when no gradient resource matches', () => {
+		const svg = vectorToSvg(VECTOR, new Map([['launcher_bg', '#123456']]), {
+			gradients: new Map()
+		});
+
+		expect(svg).toContain('fill="#123456"');
+	});
+});
+
 describe('attribute-form gradients', () => {
 	it('renders a self-closing gradient declared with start and end colours', () => {
 		const svg = vectorToSvg(ATTRIBUTE_GRADIENT, new Map()) ?? '';

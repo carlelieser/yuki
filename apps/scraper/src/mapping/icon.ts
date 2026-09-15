@@ -372,6 +372,31 @@ export async function buildVectorIcon(
 		for (const [key, value] of parseColors(xml)) colors.set(key, value);
 	}
 
+	const colorResources: { rank: number; path: string }[] = [];
+	for (const path of blobs(tree)) {
+		const lowered = path.toLowerCase();
+		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/color`)) continue;
+		if (!lowered.endsWith('.xml')) continue;
+
+		const directory = splitPath(lowered).dir.split('/').pop() ?? '';
+		if (!/^color(-|$)/.test(directory)) continue;
+
+		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
+		if (rank === null) continue;
+		colorResources.push({ rank, path });
+	}
+
+	colorResources.sort(
+		(left, right) => right.rank - left.rank || right.path.localeCompare(left.path)
+	);
+
+	const gradients = new Map<string, string>();
+	for (const { path } of colorResources) {
+		const xml = await read(path);
+		if (xml === null || !/<gradient\b/.test(xml)) continue;
+		gradients.set(splitPath(path).stem, xml);
+	}
+
 	const readDrawable = async (drawable: string): Promise<string | null> => {
 		const prefix = `${resourceDir}/drawable`;
 		const candidates = [...available].filter((path) => {
@@ -394,7 +419,7 @@ export async function buildVectorIcon(
 	};
 
 	if (refs.foreground === null) {
-		const svg = vectorToSvg(adaptiveXml, colors);
+		const svg = vectorToSvg(adaptiveXml, colors, { gradients });
 		return svg === null ? null : toDataUri(svg);
 	}
 
@@ -415,6 +440,6 @@ export async function buildVectorIcon(
 		}
 	}
 
-	const svg = composeAdaptiveSvg({ background, foreground: foregroundXml, colors });
+	const svg = composeAdaptiveSvg({ background, foreground: foregroundXml, colors, gradients });
 	return svg === null ? null : toDataUri(svg);
 }

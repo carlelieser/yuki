@@ -1,4 +1,4 @@
-import { gradientToSvg, parseGradient } from './vector-gradient.ts';
+import { gradientToSvg, parseGradient, type VectorGradient } from './vector-gradient.ts';
 
 const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(color|drawable|mipmap)\/([^"]+)"/g;
@@ -122,6 +122,19 @@ function resolveColor(raw: string | null, colors: Map<string, string>): string |
 	return value;
 }
 
+function resolveColorGradient(
+	raw: string | null,
+	colors: Map<string, string>,
+	gradients: Map<string, string>
+): VectorGradient | null {
+	if (raw === null || !raw.startsWith('@color/')) return null;
+
+	const source = gradients.get(raw.slice('@color/'.length));
+	if (source === undefined) return null;
+
+	return parseGradient(source, (value) => resolveColor(value, colors));
+}
+
 function escapeXml(value: string): string {
 	return value
 		.replace(/&/g, '&amp;')
@@ -158,7 +171,8 @@ function convertPaths(
 	vector: string,
 	colors: Map<string, string>,
 	fallbackFill: string,
-	idPrefix: string
+	idPrefix: string,
+	gradients: Map<string, string>
 ): string {
 	const rendered: string[] = [];
 	const definitions: string[] = [];
@@ -170,7 +184,9 @@ function convertPaths(
 		const data = attribute(tag, 'pathData');
 		if (data === null || data.trim() === '') continue;
 
-		const gradient = parseGradient(match[1] ?? '', (raw) => resolveColor(raw, colors));
+		const gradient =
+			parseGradient(match[1] ?? '', (raw) => resolveColor(raw, colors)) ??
+			resolveColorGradient(attribute(tag, 'fillColor'), colors, gradients);
 		const fill = resolveColor(attribute(tag, 'fillColor'), colors);
 		const stroke = resolveColor(attribute(tag, 'strokeColor'), colors);
 		const strokeWidth = numeric(tag, 'strokeWidth', 0);
@@ -226,10 +242,11 @@ function convertPaths(
 export function vectorToSvg(
 	vector: string,
 	colors: Map<string, string>,
-	options: { fallbackFill?: string; idPrefix?: string } = {}
+	options: { fallbackFill?: string; idPrefix?: string; gradients?: Map<string, string> } = {}
 ): string | null {
 	const fallbackFill = options.fallbackFill ?? '#000000';
 	const idPrefix = options.idPrefix ?? 'g';
+	const gradients = options.gradients ?? new Map<string, string>();
 
 	if (vector.length > MAX_SOURCE_BYTES) return null;
 
@@ -240,7 +257,7 @@ export function vectorToSvg(
 	const height = numeric(header, 'viewportHeight', CANVAS);
 	if (width <= 0 || height <= 0) return null;
 
-	const body = convertPaths(vector, colors, fallbackFill, idPrefix);
+	const body = convertPaths(vector, colors, fallbackFill, idPrefix, gradients);
 	if (body === '') return null;
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${body}</svg>`;
@@ -266,11 +283,13 @@ export function composeAdaptiveSvg(input: {
 	background: { kind: 'color' | 'vector'; value: string } | null;
 	foreground: string | null;
 	colors: Map<string, string>;
+	gradients?: Map<string, string>;
 }): string | null {
+	const gradients = input.gradients ?? new Map<string, string>();
 	const foreground =
 		input.foreground === null
 			? null
-			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg' });
+			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg', gradients });
 	if (foreground === null) return null;
 
 	const width = CANVAS;
@@ -282,11 +301,26 @@ export function composeAdaptiveSvg(input: {
 	if (input.background !== null) {
 		if (input.background.kind === 'color') {
 			const color = resolveColor(input.background.value, input.colors);
-			if (color !== null)
+			const gradient = resolveColorGradient(input.background.value, input.colors, gradients);
+
+			if (gradient !== null) {
+				const definition = gradientToSvg(gradient, 'bgc');
+				if (definition === '') {
+					const first = gradient.stops[0]?.color;
+					if (first !== undefined)
+						layers.push(`<rect width="${width}" height="${height}" fill="${first}"/>`);
+				} else {
+					layers.push(
+						`<defs>${definition}</defs><rect width="${width}" height="${height}" fill="url(#bgc)"/>`
+					);
+				}
+			} else if (color !== null) {
 				layers.push(`<rect width="${width}" height="${height}" fill="${color}"/>`);
+			}
 		} else {
 			const backgroundSvg = vectorToSvg(input.background.value, input.colors, {
-				idPrefix: 'bg'
+				idPrefix: 'bg',
+				gradients
 			});
 			if (backgroundSvg !== null) layers.push(normaliseLayer(backgroundSvg));
 		}
