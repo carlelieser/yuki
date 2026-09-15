@@ -24,7 +24,7 @@
 		</div>
 	</div>
 
-	<div class="hidden items-center justify-center bg-primary p-12 lg:flex">
+	<div class="hidden items-center justify-center bg-[#1e44af] p-12 lg:flex">
 		<enhanced:img
 			src={authIllustration}
 			alt=""
