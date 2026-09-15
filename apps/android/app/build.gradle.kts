@@ -8,9 +8,13 @@ plugins {
 val YUKI_STOREFRONT_URL = "https://yukistore.org/"
 val YUKI_LISTING_SLUG = "carlelieser-yuki"
 val YUKI_LISTING_REPO_ID = 1359590051L
+val YUKI_LISTING_TITLE = "Yuki"
+val YUKI_LISTING_ICON_URL =
+    "https://raw.githubusercontent.com/carlelieser/yuki/main/apps/android/app/src/main/ic_launcher-playstore.png"
 
 val YUKI_VERSION_CODE = providers.gradleProperty("yukiVersionCode").orNull?.toInt() ?: 1
 val YUKI_VERSION_NAME = providers.gradleProperty("yukiVersionName").orNull ?: "1.0.0"
+val YUKI_RELEASE_TAG = providers.gradleProperty("yukiReleaseTag").orNull ?: ""
 
 android {
     namespace = "app.yuki"
@@ -26,6 +30,9 @@ android {
         buildConfigField("String", "YUKI_BASE_URL", "\"$YUKI_STOREFRONT_URL\"")
         buildConfigField("String", "YUKI_LISTING_SLUG", "\"$YUKI_LISTING_SLUG\"")
         buildConfigField("long", "YUKI_LISTING_REPO_ID", "${YUKI_LISTING_REPO_ID}L")
+        buildConfigField("String", "YUKI_LISTING_TITLE", "\"$YUKI_LISTING_TITLE\"")
+        buildConfigField("String", "YUKI_LISTING_ICON_URL", "\"$YUKI_LISTING_ICON_URL\"")
+        buildConfigField("String", "YUKI_RELEASE_TAG", "\"$YUKI_RELEASE_TAG\"")
     }
 }
 

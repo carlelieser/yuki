@@ -41,7 +41,7 @@ class YukiApplication : Application(), Configuration.Provider {
         }
 
         scope.launch {
-            selfInstalls.reconcile().onFailure { error ->
+            runCatching { selfInstalls.reconcile() }.onFailure { error ->
                 Log.w(TAG, "Could not reconcile Yuki's own install record", error)
             }
         }

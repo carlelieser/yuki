@@ -54,10 +54,12 @@ jobs:
           YUKI_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_NAME: ${{ steps.version.outputs.name }}
           VERSION_CODE: ${{ steps.version.outputs.code }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           ./gradlew assembleRelease --no-daemon \
             -PyukiVersionName="$VERSION_NAME" \
-            -PyukiVersionCode="$VERSION_CODE"
+            -PyukiVersionCode="$VERSION_CODE" \
+            -PyukiReleaseTag="$RELEASE_TAG"
 
       - name: Verify the APK is signed with the expected key
         id: apk

@@ -1,9 +1,7 @@
 package app.yuki.feature.updates
 
 import app.yuki.core.model.InstalledApp
-import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.SelfListing
-import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -15,103 +13,52 @@ import org.junit.Test
 
 private const val SELF_REPO_ID = 1_359_590_051L
 private const val SELF_SLUG = "carlelieser-yuki"
+private const val SELF_ICON = "https://example.com/icon.png"
 
 private val CLOCK = Clock.fixed(Instant.parse("2026-09-14T00:00:00Z"), ZoneOffset.UTC)
 
-private fun selfListing(versionName: String) = SelfListing(
+private fun selfListing(releaseTag: String) = SelfListing(
     githubRepoId = SELF_REPO_ID,
     slug = SELF_SLUG,
     packageName = "app.yuki",
-    versionName = versionName,
-    versionCode = 289L,
+    title = "Yuki",
+    iconUrl = SELF_ICON,
+    releaseTag = releaseTag,
+    versionCode = 318L,
 )
 
-private fun reconciler(
-    store: FakeInstallStore,
-    details: Map<String, Result<ListingDetail>>,
-    versionName: String,
-) = SelfInstallReconciler(
+private fun reconciler(store: FakeInstallStore, releaseTag: String) = SelfInstallReconciler(
     store = store,
-    repository = FakeListingRepository(details),
-    self = selfListing(versionName),
+    self = selfListing(releaseTag),
     clock = CLOCK,
 )
 
 class SelfInstallReconcilerTest {
     @Test
-    fun `records the running build against its published tag`() = runTest {
+    fun `records the running build against the tag it was built from`() = runTest {
         val store = FakeInstallStore(emptyList())
-        val detail = listingDetail(
-            SELF_REPO_ID,
-            SELF_SLUG,
-            listOf(version("android-v1.0.1"), version("android-v1.0.0")),
-        )
 
-        val result = reconciler(store, mapOf(SELF_SLUG to Result.success(detail)), "1.0.0")
-            .reconcile()
+        val tag = reconciler(store, "android-v1.2.0").reconcile()
 
-        assertEquals("android-v1.0.0", result.getOrNull())
+        assertEquals("android-v1.2.0", tag)
         assertEquals(
-            listOf(SELF_REPO_ID to "android-v1.0.0"),
+            listOf(SELF_REPO_ID to "android-v1.2.0"),
             store.installs().map { app -> app.githubRepoId to app.versionTag },
         )
     }
 
     @Test
-    fun `writes nothing when the listing cannot be fetched`() = runTest {
+    fun `records the build even when the catalog has not published the release yet`() = runTest {
         val store = FakeInstallStore(emptyList())
 
-        val result = reconciler(store, mapOf(SELF_SLUG to Result.failure(IOException("offline"))), "1.0.0")
-            .reconcile()
+        val tag = reconciler(store, "android-v9.9.9").reconcile()
 
-        assertTrue(result.isFailure)
-        assertTrue(store.installs().isEmpty())
+        assertEquals("android-v9.9.9", tag)
+        assertEquals(1, store.installs().size)
     }
 
     @Test
-    fun `leaves an existing row untouched when the listing cannot be fetched`() = runTest {
-        val existing = InstalledApp(
-            githubRepoId = SELF_REPO_ID,
-            packageName = "app.yuki",
-            slug = SELF_SLUG,
-            title = "Yuki",
-            iconUrl = null,
-            versionTag = "android-v1.0.0",
-        )
-        val store = FakeInstallStore(listOf(existing))
-
-        reconciler(store, mapOf(SELF_SLUG to Result.failure(IOException("offline"))), "1.0.0")
-            .reconcile()
-
-        assertEquals(listOf(existing), store.installs())
-    }
-
-    @Test
-    fun `writes nothing when the running version matches no published tag`() = runTest {
-        val store = FakeInstallStore(emptyList())
-        val detail = listingDetail(SELF_REPO_ID, SELF_SLUG, listOf(version("android-v1.0.0")))
-
-        val result = reconciler(store, mapOf(SELF_SLUG to Result.success(detail)), "9.9.9")
-            .reconcile()
-
-        assertNull(result.getOrNull())
-        assertTrue(store.installs().isEmpty())
-    }
-
-    @Test
-    fun `writes nothing for an unparseable running version`() = runTest {
-        val store = FakeInstallStore(emptyList())
-        val detail = listingDetail(SELF_REPO_ID, SELF_SLUG, listOf(version("android-v1.0.0")))
-
-        val result = reconciler(store, mapOf(SELF_SLUG to Result.success(detail)), "dev")
-            .reconcile()
-
-        assertNull(result.getOrNull())
-        assertTrue(store.installs().isEmpty())
-    }
-
-    @Test
-    fun `advances the recorded tag after a self update`() = runTest {
+    fun `advances the recorded tag when the build is upgraded`() = runTest {
         val store = FakeInstallStore(
             listOf(
                 InstalledApp(
@@ -119,34 +66,27 @@ class SelfInstallReconcilerTest {
                     packageName = "app.yuki",
                     slug = SELF_SLUG,
                     title = "Yuki",
-                    iconUrl = null,
-                    versionTag = "android-v1.0.0",
+                    iconUrl = SELF_ICON,
+                    versionTag = "android-v1.1.0",
                 ),
             ),
         )
-        val detail = listingDetail(
-            SELF_REPO_ID,
-            SELF_SLUG,
-            listOf(version("android-v1.0.1"), version("android-v1.0.0")),
-        )
 
-        reconciler(store, mapOf(SELF_SLUG to Result.success(detail)), "1.0.1").reconcile()
+        reconciler(store, "android-v1.2.0").reconcile()
 
         assertEquals(
-            listOf("android-v1.0.1"),
-            store.installs().map(InstalledApp::versionTag),
+            listOf(SELF_REPO_ID to "android-v1.2.0"),
+            store.installs().map { app -> app.githubRepoId to app.versionTag },
         )
     }
 
     @Test
-    fun `keeps a single row across repeated reconciles`() = runTest {
+    fun `writes nothing for a build that came from no release`() = runTest {
         val store = FakeInstallStore(emptyList())
-        val detail = listingDetail(SELF_REPO_ID, SELF_SLUG, listOf(version("android-v1.0.0")))
-        val subject = reconciler(store, mapOf(SELF_SLUG to Result.success(detail)), "1.0.0")
 
-        subject.reconcile()
-        subject.reconcile()
+        val tag = reconciler(store, "").reconcile()
 
-        assertEquals(1, store.installs().size)
+        assertNull(tag)
+        assertTrue(store.installs().isEmpty())
     }
 }
