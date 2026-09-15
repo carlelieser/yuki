@@ -5,7 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val YUKI_STOREFRONT_URL = "https://yukistore.org/"
+val YUKI_STOREFRONT_URL =
+    providers.gradleProperty("yukiBaseUrl").orNull ?: "https://yukistore.org/"
 val YUKI_LISTING_SLUG = "carlelieser-yuki"
 val YUKI_LISTING_REPO_ID = 1359590051L
 val YUKI_LISTING_TITLE = "Yuki"
