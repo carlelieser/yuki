@@ -303,4 +303,93 @@ describe('android structure', () => {
 		if (outcome.kind !== 'updated') return;
 		expect(outcome.input.isAndroidApp).toBeNull();
 	});
+
+	it('reads the package name out of the newest release apk', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
+		});
+
+		const outcome = await refreshListing(
+			client,
+			storedEtags(repoEtag),
+			target,
+			async () => 'com.acme.app'
+		);
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.packageName).toBe('com.acme.app');
+	});
+
+	it('never reads an apk for a listing that already has a package name', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
+		});
+		const reads: string[] = [];
+
+		const outcome = await refreshListing(
+			client,
+			storedEtags(repoEtag),
+			{ ...target, packageName: 'com.acme.app' },
+			async (url) => {
+				reads.push(url);
+				return 'com.acme.other';
+			}
+		);
+
+		expect(reads).toEqual([]);
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.packageName).toBeNull();
+	});
+
+	it('leaves the package name alone when the releases did not change', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo2"' })
+		});
+		const reads: string[] = [];
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
+			reads.push(url);
+			return 'com.acme.app';
+		});
+
+		expect(reads).toEqual([]);
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.packageName).toBeNull();
+	});
+
+	it('keeps refreshing the listing when reading the apk fails', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async () => {
+			throw new Error('range request rejected');
+		});
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.packageName).toBeNull();
+		expect(outcome.input.versions?.map((version) => version.tag)).toEqual(['v2']);
+	});
+
+	it('skips releases that ship no apk', async () => {
+		const client = fakeClient({
+			getReleases: async () => ({
+				isModified: true,
+				body: [releaseWithoutApk('v2')],
+				etag: 'W/"r2"'
+			})
+		});
+		const reads: string[] = [];
+
+		await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
+			reads.push(url);
+			return 'com.acme.app';
+		});
+
+		expect(reads).toEqual([]);
+	});
 });

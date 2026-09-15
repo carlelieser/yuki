@@ -1,5 +1,7 @@
 import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
+import { httpApkSource } from './apk/http-source.ts';
+import { readApkPackageName } from './apk/package-name.ts';
 import {
 	listKnownRepoIds,
 	listListingsBySlug,
@@ -93,6 +95,7 @@ try {
 			},
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),
+			readApkPackage: (downloadUrl) => readApkPackageName(httpApkSource(downloadUrl)),
 			log: (message) => console.log(message)
 		},
 		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange }

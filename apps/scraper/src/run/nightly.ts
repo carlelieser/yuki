@@ -1,7 +1,12 @@
 import { discover, type PartitionStore } from './discover.ts';
 import { isSelfDeclaredOnly } from '../detection/evidence.ts';
 import { GITHUB_EPOCH, type DateRange } from '../detection/queries.ts';
-import { refreshListing, type EtagStore, type RefreshTarget } from './refresh.ts';
+import {
+	refreshListing,
+	type ApkPackageReader,
+	type EtagStore,
+	type RefreshTarget
+} from './refresh.ts';
 import type { GithubClient } from '@yuki/github';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
 import type { RunTotals } from '../persistence/runs.ts';
@@ -14,6 +19,7 @@ export type RunPorts = {
 	partitions?: PartitionStore;
 	persist: (input: PersistInput) => Promise<string>;
 	touch: (listingId: string) => Promise<void>;
+	readApkPackage?: ApkPackageReader;
 	log?: (message: string) => void;
 };
 
@@ -67,7 +73,8 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		targets.push({
 			owner: listing.owner,
 			name: listing.name,
-			githubRepoId: listing.githubRepoId
+			githubRepoId: listing.githubRepoId,
+			packageName: listing.packageName
 		});
 	}
 
@@ -75,7 +82,7 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		const label = `${target.owner}/${target.name}`;
 
 		try {
-			const outcome = await refreshListing(ports.client, ports.etags, target);
+			const outcome = await refreshListing(ports.client, ports.etags, target, ports.readApkPackage);
 
 			if (outcome.kind === 'skipped') {
 				skippedCount += 1;

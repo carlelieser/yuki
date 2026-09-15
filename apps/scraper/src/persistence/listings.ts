@@ -12,6 +12,7 @@ export type ListingRecord = {
 	owner: string;
 	name: string;
 	githubRepoId: number;
+	packageName: string | null;
 };
 
 export type PersistInput = {
@@ -21,6 +22,7 @@ export type PersistInput = {
 	githubRepoId?: number;
 	iconUrl: string | null;
 	bannerUrl: string | null;
+	packageName: string | null;
 	screenshots: ReadmeImage[] | null;
 	versions: MappedVersion[] | null;
 	hasApk: boolean | null;
@@ -124,6 +126,7 @@ async function insertOrUpdate(
 			slug,
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
+			packageName: input.packageName,
 			isPublished: input.hasApk === true && scoreConfidence(input.evidence) !== 'weak',
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
@@ -140,6 +143,7 @@ async function insertOrUpdate(
 				description: listing.description,
 				...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 				...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
+				...(input.packageName === null ? {} : { packageName: input.packageName }),
 				repositoryUrl: listing.repositoryUrl,
 				homepageUrl: listing.homepageUrl,
 				license: listing.license,
@@ -164,6 +168,7 @@ async function updateExisting(tx: Transaction, input: PersistInput): Promise<str
 		.set({
 			...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 			...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
+			...(input.packageName === null ? {} : { packageName: input.packageName }),
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
@@ -187,7 +192,8 @@ export async function listListingsForRefresh(
 			id: schema.listings.id,
 			owner: schema.listings.owner,
 			name: schema.listings.name,
-			githubRepoId: schema.listings.githubRepoId
+			githubRepoId: schema.listings.githubRepoId,
+			packageName: schema.listings.packageName
 		})
 		.from(schema.listings)
 		.orderBy(sql`${schema.listings.lastScrapedAt} asc nulls first`, asc(schema.listings.id))
@@ -206,7 +212,8 @@ export async function listListingsBySlug(
 			slug: schema.listings.slug,
 			owner: schema.listings.owner,
 			name: schema.listings.name,
-			githubRepoId: schema.listings.githubRepoId
+			githubRepoId: schema.listings.githubRepoId,
+			packageName: schema.listings.packageName
 		})
 		.from(schema.listings)
 		.where(inArray(schema.listings.slug, slugs));
