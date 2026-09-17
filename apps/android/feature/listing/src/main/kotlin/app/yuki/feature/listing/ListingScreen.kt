@@ -41,7 +41,8 @@ fun ListingRoute(
     val installStatus by viewModel.installStatus.collectAsStateWithLifecycle()
     val isConfirmingUninstall by viewModel.isConfirmingUninstall.collectAsStateWithLifecycle()
     val hasUninstallFailed by viewModel.hasUninstallFailed.collectAsStateWithLifecycle()
-    val actions by viewModel.actions.collectAsStateWithLifecycle()
+    val isShareable by viewModel.isShareable.collectAsStateWithLifecycle()
+    val actions = rememberListingActions(isShareable, viewModel::shareUrl)
 
     ResumeEffect(onResume = viewModel::onResumed)
 
@@ -80,6 +81,7 @@ private fun rememberListingCallbacks(
     onScreenshotSelected: (Int) -> Unit,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
+    val sharer = rememberListingSharer()
 
     return ListingScreenCallbacks(
         callbacks = ListingCallbacks(

@@ -9,6 +9,7 @@ import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
 import app.yuki.core.network.ListingRepository
+import app.yuki.core.network.YukiBaseUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -30,10 +32,13 @@ class ListingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: ListingRepository,
     private val installGateway: ListingInstallGateway,
+    @param:YukiBaseUrl private val baseUrl: String,
 ) : ViewModel() {
     private val slug: String = requireNotNull(savedStateHandle[LISTING_SLUG_KEY]) {
         "ListingViewModel requires a '$LISTING_SLUG_KEY' argument"
     }
+
+    val shareUrl: String get() = listingShareUrl(baseUrl, slug)
 
     private val mutableListing = MutableStateFlow<UiState<ListingUiModel>>(UiState.Loading)
 
@@ -47,9 +52,13 @@ class ListingViewModel @Inject constructor(
 
     val hasUninstallFailed: StateFlow<Boolean> = mutableUninstallFailed.asStateFlow()
 
-    private val mutableActions = MutableStateFlow<List<ListingAction>>(emptyList())
-
-    val actions: StateFlow<List<ListingAction>> = mutableActions.asStateFlow()
+    val isShareable: StateFlow<Boolean> = mutableListing
+        .map { listing -> listing is UiState.Success }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = false,
+        )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val installStatus: StateFlow<ListingInstallStatus> = mutableListing
