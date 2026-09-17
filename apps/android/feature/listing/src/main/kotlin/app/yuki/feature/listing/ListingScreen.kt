@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
+import app.yuki.core.designsystem.component.OverflowMenu
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -40,6 +41,7 @@ fun ListingRoute(
     val installStatus by viewModel.installStatus.collectAsStateWithLifecycle()
     val isConfirmingUninstall by viewModel.isConfirmingUninstall.collectAsStateWithLifecycle()
     val hasUninstallFailed by viewModel.hasUninstallFailed.collectAsStateWithLifecycle()
+    val actions by viewModel.actions.collectAsStateWithLifecycle()
 
     ResumeEffect(onResume = viewModel::onResumed)
 
@@ -49,6 +51,7 @@ fun ListingRoute(
             installStatus = installStatus,
             isConfirmingUninstall = isConfirmingUninstall,
             hasUninstallFailed = hasUninstallFailed,
+            actions = actions,
         ),
         callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
         onBackClick = navigation.onBackClick,
@@ -103,6 +106,7 @@ data class ListingScreenState(
     val installStatus: ListingInstallStatus,
     val isConfirmingUninstall: Boolean = false,
     val hasUninstallFailed: Boolean = false,
+    val actions: List<ListingAction> = emptyList(),
 )
 
 @Composable
@@ -128,6 +132,7 @@ internal fun ListingScreen(
         title = "",
         onBackClick = onBackClick,
         modifier = modifier,
+        trailing = { OverflowMenu(actions = state.actions) },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             when (val listing = state.listing) {

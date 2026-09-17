@@ -19,6 +19,7 @@ import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performScrollToNode
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.InstallActionHandler
+import app.yuki.core.designsystem.component.OVERFLOW_MENU_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingVersion
@@ -42,6 +43,20 @@ class ListingScreenTest {
             ListingScreen(
                 state = ListingScreenState(listing = listing, installStatus = status),
                 callbacks = callbacks,
+                onBackClick = {},
+            )
+        }
+    }
+
+    private fun setScreenWithActions(actions: List<ListingAction>) {
+        composeRule.setContent {
+            ListingScreen(
+                state = ListingScreenState(
+                    listing = UiState.Success(detail().toUiModel()),
+                    installStatus = idleStatus(),
+                    actions = actions,
+                ),
+                callbacks = noopCallbacks(),
                 onBackClick = {},
             )
         }
@@ -250,6 +265,65 @@ class ListingScreenTest {
         composeRule.scrollToText("Aurora v1.0.0-rc")
         composeRule.onNodeWithText("Aurora v1.0.0-rc").assertIsDisplayed()
         composeRule.onNodeWithText("Prerelease").assertIsDisplayed()
+    }
+
+    @Test
+    fun offersNoOverflowButtonWhenThereAreNoActions() {
+        setScreenWithActions(emptyList())
+
+        composeRule.onAllNodesWithTag(OVERFLOW_MENU_TAG).assertCountEquals(0)
+    }
+
+    @Test
+    fun listsEveryActionWhenTheOverflowMenuOpens() {
+        setScreenWithActions(
+            listOf(
+                ListingAction(label = "Share", onClick = {}),
+                ListingAction(label = "Report", onClick = {}),
+            ),
+        )
+
+        composeRule.onNodeWithTag(OVERFLOW_MENU_TAG).performClick()
+
+        composeRule.onNodeWithText("Share").assertIsDisplayed()
+        composeRule.onNodeWithText("Report").assertIsDisplayed()
+    }
+
+    @Test
+    fun invokesTheTappedActionAndClosesTheMenu() {
+        val invoked = mutableListOf<String>()
+        setScreenWithActions(
+            listOf(
+                ListingAction(label = "Share", onClick = { invoked.add("Share") }),
+                ListingAction(label = "Report", onClick = { invoked.add("Report") }),
+            ),
+        )
+
+        composeRule.onNodeWithTag(OVERFLOW_MENU_TAG).performClick()
+        composeRule.onNodeWithText("Report").performClick()
+
+        assertEquals(listOf("Report"), invoked)
+        composeRule.onAllNodesWithText("Share").assertCountEquals(0)
+    }
+
+    @Test
+    fun ignoresTapsOnADisabledAction() {
+        val invoked = mutableListOf<String>()
+        setScreenWithActions(
+            listOf(
+                ListingAction(
+                    label = "Share",
+                    onClick = { invoked.add("Share") },
+                    isEnabled = false,
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithTag(OVERFLOW_MENU_TAG).performClick()
+        composeRule.onNodeWithText("Share").assertIsNotEnabled()
+        composeRule.onNodeWithText("Share").performClick()
+
+        assertEquals(emptyList<String>(), invoked)
     }
 }
 

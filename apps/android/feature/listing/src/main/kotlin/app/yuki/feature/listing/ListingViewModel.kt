@@ -47,6 +47,10 @@ class ListingViewModel @Inject constructor(
 
     val hasUninstallFailed: StateFlow<Boolean> = mutableUninstallFailed.asStateFlow()
 
+    private val mutableActions = MutableStateFlow<List<ListingAction>>(emptyList())
+
+    val actions: StateFlow<List<ListingAction>> = mutableActions.asStateFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val installStatus: StateFlow<ListingInstallStatus> = mutableListing
         .flatMapLatest(::installStatusFor)
