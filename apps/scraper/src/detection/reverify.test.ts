@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { collectRepositoryEvidence } from './reverify.ts';
 import { scoreConfidence } from './evidence.ts';
+import { isCatalogueExcluded, shouldPublish } from '../persistence/listings.ts';
 import type { GithubClient } from '@yuki/github';
 
 function fakeClient(matches: (query: string) => string[], seen: string[] = []): GithubClient {
@@ -26,7 +27,7 @@ async function verify(client: GithubClient, owner = 'acme', name = 'app') {
 describe('collectRepositoryEvidence', () => {
 	it('scopes every query to the repository under review', async () => {
 		const seen: string[] = [];
-		await verify(
+		await collectRepositoryEvidence(
 			fakeClient(() => [], seen),
 			'mihonapp',
 			'mihon'
@@ -73,6 +74,16 @@ describe('collectRepositoryEvidence', () => {
 		expect(await verify(fakeClient(() => ['README.md']))).toEqual([]);
 	});
 
+	it('reports inconclusive when nothing matched, since an unindexed repo looks the same', async () => {
+		const verdict = await collectRepositoryEvidence(
+			fakeClient(() => []),
+			'acme',
+			'app'
+		);
+
+		expect(verdict.kind).toBe('inconclusive');
+	});
+
 	it('stops querying once the evidence is already strong', async () => {
 		const seen: string[] = [];
 		await verify(
@@ -95,5 +106,57 @@ describe('collectRepositoryEvidence', () => {
 		const verdict = await collectRepositoryEvidence(client, 'acme', 'app');
 
 		expect(verdict.kind).toBe('inconclusive');
+	});
+});
+
+describe('catalogue exclusions', () => {
+	it('keeps the Shizuku platform itself out of a catalogue of apps that use it', () => {
+		expect(isCatalogueExcluded('RikkaApps', 'Shizuku')).toBe(true);
+		expect(isCatalogueExcluded('RikkaApps', 'Sui')).toBe(true);
+	});
+
+	it('does not exclude other apps by the same author', () => {
+		expect(isCatalogueExcluded('RikkaApps', 'WADB')).toBe(false);
+	});
+
+	it('never publishes an excluded repository however strong its evidence', () => {
+		expect(
+			shouldPublish({
+				owner: 'RikkaApps',
+				name: 'Shizuku',
+				confidence: 'strong',
+				hasDownloadableAsset: true
+			})
+		).toBe(false);
+	});
+
+	it('publishes on strong evidence with a downloadable asset', () => {
+		expect(
+			shouldPublish({
+				owner: 'acme',
+				name: 'app',
+				confidence: 'strong',
+				hasDownloadableAsset: true
+			})
+		).toBe(true);
+	});
+
+	it('withholds publication without an asset or without strong evidence', () => {
+		expect(
+			shouldPublish({
+				owner: 'acme',
+				name: 'app',
+				confidence: 'strong',
+				hasDownloadableAsset: false
+			})
+		).toBe(false);
+		expect(
+			shouldPublish({
+				owner: 'acme',
+				name: 'app',
+				confidence: 'probable',
+				hasDownloadableAsset: true
+			})
+		).toBe(false);
 	});
 });

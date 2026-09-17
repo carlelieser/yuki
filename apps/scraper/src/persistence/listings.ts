@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -130,7 +130,12 @@ async function insertOrUpdate(
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
 			packageName: input.packageName,
-			isPublished: input.hasApk === true && scoreConfidence(input.evidence) === 'strong',
+			isPublished: shouldPublish({
+				owner: listing.owner,
+				name: listing.name,
+				confidence: scoreConfidence(input.evidence),
+				hasDownloadableAsset: input.hasApk === true
+			}),
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
@@ -224,9 +229,10 @@ export async function listListingsBySlug(
 
 export async function listListingsForReverify(
 	db: Database,
-	limit: number
+	limit: number,
+	publishedOnly = false
 ): Promise<(ListingRecord & { slug: string; stars: number })[]> {
-	return db
+	const query = db
 		.select({
 			id: schema.listings.id,
 			slug: schema.listings.slug,
@@ -236,9 +242,27 @@ export async function listListingsForReverify(
 			packageName: schema.listings.packageName,
 			stars: schema.listings.stars
 		})
-		.from(schema.listings)
+		.from(schema.listings);
+
+	return (publishedOnly ? query.where(eq(schema.listings.isPublished, true)) : query)
 		.orderBy(desc(schema.listings.stars), asc(schema.listings.id))
 		.limit(limit);
+}
+
+const NEVER_PUBLISHED = new Set(['RikkaApps/Shizuku', 'RikkaApps/Sui']);
+
+export function isCatalogueExcluded(owner: string, name: string): boolean {
+	return NEVER_PUBLISHED.has(`${owner}/${name}`);
+}
+
+export function shouldPublish(input: {
+	owner: string;
+	name: string;
+	confidence: ListingConfidence;
+	hasDownloadableAsset: boolean;
+}): boolean {
+	if (isCatalogueExcluded(input.owner, input.name)) return false;
+	return input.hasDownloadableAsset && input.confidence === 'strong';
 }
 
 export type ReverifyOutcome = {
@@ -264,13 +288,35 @@ export async function replaceEvidence(
 		const confidence = await settleConfidence(tx, listingId);
 
 		const [row] = await tx
-			.select({ isPublished: schema.listings.isPublished })
+			.select({
+				isPublished: schema.listings.isPublished,
+				owner: schema.listings.owner,
+				name: schema.listings.name
+			})
 			.from(schema.listings)
 			.where(eq(schema.listings.id, listingId))
 			.limit(1);
 
+		const [asset] = await tx
+			.select({ id: schema.listingVersions.id })
+			.from(schema.listingVersions)
+			.where(
+				and(
+					eq(schema.listingVersions.listingId, listingId),
+					isNotNull(schema.listingVersions.downloadUrl)
+				)
+			)
+			.limit(1);
+
 		const wasPublished = row?.isPublished === true;
-		const isPublished = wasPublished && confidence === 'strong';
+		const isPublished =
+			row !== undefined &&
+			shouldPublish({
+				owner: row.owner,
+				name: row.name,
+				confidence,
+				hasDownloadableAsset: asset !== undefined
+			});
 
 		if (wasPublished !== isPublished) {
 			await tx

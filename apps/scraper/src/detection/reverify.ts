@@ -14,6 +14,8 @@ export async function collectRepositoryEvidence(
 ): Promise<RepositoryVerdict> {
 	const found: DetectedEvidence[] = [];
 
+	let sawAnyMatch = false;
+
 	for (const query of buildCodeSearchQueries()) {
 		const scoped = withRepository(query.q, owner, name);
 		const response = await client.searchCode(scoped, 1, MATCHES_PER_QUERY);
@@ -22,11 +24,20 @@ export async function collectRepositoryEvidence(
 			return { kind: 'inconclusive', reason: `"${query.q}" returned no readable response` };
 		}
 
+		if (response.body.items.length > 0) sawAnyMatch = true;
+
 		for (const item of response.body.items) {
 			found.push(...evidenceFromMatch(query, item.path));
 		}
 
 		if (scoreConfidence(found) === 'strong') break;
+	}
+
+	if (!sawAnyMatch) {
+		return {
+			kind: 'inconclusive',
+			reason: 'no query matched anything, which an unindexed repository also looks like'
+		};
 	}
 
 	return { kind: 'verified', evidence: mergeEvidence(found) };

@@ -19,11 +19,12 @@ function readNumberFlag(flag: string, fallback: number): number {
 const apply = process.argv.includes('--apply');
 const slugs = readListFlag(process.argv, '--slug');
 const limit = readNumberFlag('--limit', DEFAULT_LIMIT);
+const publishedOnly = process.argv.includes('--published-only');
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());
 
-const candidates = await listListingsForReverify(db, limit);
+const candidates = await listListingsForReverify(db, limit, publishedOnly);
 const targets =
 	slugs.length > 0 ? candidates.filter((listing) => slugs.includes(listing.slug)) : candidates;
 
@@ -32,6 +33,7 @@ console.log(`Reverifying ${targets.length} listings${apply ? '' : ' (dry run)'}.
 let strong = 0;
 let belowStrong = 0;
 let unpublished = 0;
+let published = 0;
 let inconclusive = 0;
 
 for (const listing of targets) {
@@ -70,6 +72,11 @@ for (const listing of targets) {
 		unpublished += 1;
 		console.log(`  unpublished ${label} (${outcome.confidence}) [${kinds}]`);
 	}
+
+	if (!outcome.wasPublished && outcome.isPublished) {
+		published += 1;
+		console.log(`  published ${label} (${outcome.confidence}) [${kinds}]`);
+	}
 }
 
 if (!apply) {
@@ -78,7 +85,7 @@ if (!apply) {
 }
 
 console.log(
-	`\nDone. strong ${strong}, below strong ${belowStrong}, unpublished ${unpublished}, ` +
-		`inconclusive ${inconclusive} (left untouched).`
+	`\nDone. strong ${strong}, below strong ${belowStrong}, published ${published}, ` +
+		`unpublished ${unpublished}, inconclusive ${inconclusive} (left untouched).`
 );
 process.exit(0);
