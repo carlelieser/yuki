@@ -7,8 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
-const val SHARE_DESCRIPTION = "Share"
-
 fun interface ListingSharer {
     fun share(url: String)
 }
@@ -16,12 +14,12 @@ fun interface ListingSharer {
 internal fun listingShareUrl(baseUrl: String, slug: String): String =
     "${baseUrl.trimEnd('/')}/listings/$slug"
 
-internal fun shareUrl(context: Context, url: String) {
+internal fun startShareChooser(context: Context, url: String) {
     val intent = Intent(Intent.ACTION_SEND)
         .setType("text/plain")
         .putExtra(Intent.EXTRA_TEXT, url)
 
-    val chooser = Intent.createChooser(intent, SHARE_DESCRIPTION)
+    val chooser = Intent.createChooser(intent, SHARE_LABEL)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     try {
@@ -34,5 +32,5 @@ internal fun shareUrl(context: Context, url: String) {
 @Composable
 fun rememberListingSharer(): ListingSharer {
     val context = LocalContext.current
-    return remember(context) { ListingSharer { url -> shareUrl(context, url) } }
+    return remember(context) { ListingSharer { url -> startShareChooser(context, url) } }
 }

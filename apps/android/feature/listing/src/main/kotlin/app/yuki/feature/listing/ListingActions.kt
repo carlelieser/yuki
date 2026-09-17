@@ -1,23 +1,30 @@
 package app.yuki.feature.listing
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import app.yuki.core.designsystem.component.OverflowAction
+import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.model.UiState
 
 typealias ListingAction = OverflowAction
 
 const val SHARE_LABEL = "Share"
 
 @Composable
-internal fun rememberListingActions(
-    isShareable: Boolean,
-    shareUrl: () -> String,
+internal fun listingActions(
+    listing: UiState<ListingUiModel>,
+    viewModel: ListingViewModel,
 ): List<ListingAction> {
     val sharer = rememberListingSharer()
 
-    return remember(isShareable, sharer) {
-        if (!isShareable) return@remember emptyList()
-
-        listOf(ListingAction(label = SHARE_LABEL, onClick = { sharer.share(shareUrl()) }))
+    return buildList {
+        if (listing is UiState.Success) {
+            add(
+                ListingAction(
+                    label = SHARE_LABEL,
+                    icon = YukiIcons.Share,
+                    onClick = { sharer.share(viewModel.shareUrl) },
+                ),
+            )
+        }
     }
 }

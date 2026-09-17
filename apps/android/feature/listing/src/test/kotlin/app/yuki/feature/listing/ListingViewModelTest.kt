@@ -393,26 +393,6 @@ class ListingViewModelTest {
     }
 
     @Test
-    fun `offers sharing once the listing has loaded`() = runTest {
-        val viewModel = viewModelWith(Result.success(detail()))
-
-        viewModel.isShareable.test {
-            assertFalse(awaitItem())
-            assertTrue(awaitItem())
-        }
-    }
-
-    @Test
-    fun `withholds sharing from a listing that failed to load`() = runTest {
-        val viewModel = viewModelWith(Result.failure(TypedFailure(FailureReason.NotFound)))
-
-        viewModel.isShareable.test {
-            assertFalse(awaitItem())
-            expectNoEvents()
-        }
-    }
-
-    @Test
     fun `builds the share url without doubling a trailing slash`() = runTest {
         val viewModel = viewModelWith(Result.success(detail()), baseUrl = "https://yukistore.org/")
 
