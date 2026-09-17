@@ -15,6 +15,8 @@ internal fun listingActions(
     viewModel: ListingViewModel,
 ): List<ListingAction> {
     val sharer = rememberListingSharer()
+    val obtainium = rememberObtainiumOpener()
+    val hasObtainium = rememberIsObtainiumInstalled()
 
     return buildList {
         if (listing is UiState.Success) {
@@ -23,6 +25,16 @@ internal fun listingActions(
                     label = SHARE_LABEL,
                     icon = YukiIcons.Share,
                     onClick = { sharer.share(viewModel.shareUrl) },
+                ),
+            )
+        }
+        if (listing is UiState.Success && hasObtainium) {
+            val repositoryUrl = listing.data.detail.links.repositoryUrl
+            add(
+                ListingAction(
+                    label = OBTAINIUM_LABEL,
+                    icon = YukiIcons.Obtainium,
+                    onClick = { obtainium.open(repositoryUrl) },
                 ),
             )
         }
