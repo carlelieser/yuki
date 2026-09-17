@@ -127,7 +127,7 @@ async function insertOrUpdate(
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
 			packageName: input.packageName,
-			isPublished: input.hasApk === true && scoreConfidence(input.evidence) !== 'weak',
+			isPublished: input.hasApk === true && scoreConfidence(input.evidence) === 'strong',
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
