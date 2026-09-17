@@ -38,6 +38,9 @@ export type DiscoveryResult = {
 export type PartitionStore = {
 	isComplete: (partition: string) => Promise<boolean>;
 	markComplete: (partition: string) => Promise<void>;
+	readCursor?: (partition: string) => Promise<number | null>;
+	writeCursor?: (partition: string, page: number) => Promise<void>;
+	clearCursor?: (partition: string) => Promise<void>;
 };
 
 export type DiscoveryOptions = {
@@ -114,7 +117,13 @@ export async function discover(
 		if (options.partitions !== undefined && (await options.partitions.isComplete(key))) return;
 
 		const scoped = withSizeRange(query.q, size);
-		const first = await client.searchCode(scoped, 1, RESULTS_PER_PAGE);
+		const resumeFrom = (await options.partitions?.readCursor?.(key)) ?? 1;
+
+		if (resumeFrom > 1) {
+			log(`Resuming "${query.q}" (${describeSizeRange(size)}) at page ${resumeFrom}`);
+		}
+
+		const first = await client.searchCode(scoped, resumeFrom, RESULTS_PER_PAGE);
 		if (!first.isModified) return;
 
 		const totalCount = first.body.total_count;
@@ -140,9 +149,17 @@ export async function discover(
 
 		absorbCode(query, first.body.items);
 		let lastPageSize = first.body.items.length;
+		let lastPageRead = resumeFrom;
 
-		for (let page = 2; page <= MAX_PAGES && lastPageSize === RESULTS_PER_PAGE; page += 1) {
-			if (found.size >= options.maxNewRepos) return;
+		for (
+			let page = resumeFrom + 1;
+			page <= MAX_PAGES && lastPageSize === RESULTS_PER_PAGE;
+			page += 1
+		) {
+			if (found.size >= options.maxNewRepos) {
+				await options.partitions?.writeCursor?.(key, lastPageRead);
+				return;
+			}
 
 			const next = await client.searchCode(scoped, page, RESULTS_PER_PAGE);
 
@@ -150,13 +167,16 @@ export async function discover(
 				warnings.push(
 					`Query "${scoped}" stopped at page ${page} before its ${totalCount} results were read; not recording it as searched`
 				);
+				await options.partitions?.writeCursor?.(key, lastPageRead);
 				return;
 			}
 
 			absorbCode(query, next.body.items);
 			lastPageSize = next.body.items.length;
+			lastPageRead = page;
 		}
 
+		await options.partitions?.clearCursor?.(key);
 		await options.partitions?.markComplete(key);
 	}
 

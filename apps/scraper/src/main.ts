@@ -9,7 +9,13 @@ import {
 	touchListing,
 	upsertListing
 } from './persistence/listings.ts';
-import { isPartitionComplete, markPartitionComplete } from './persistence/partitions.ts';
+import {
+	clearPartitionCursor,
+	isPartitionComplete,
+	markPartitionComplete,
+	readPartitionCursor,
+	writePartitionCursor
+} from './persistence/partitions.ts';
 import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts';
 import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
@@ -85,7 +91,10 @@ try {
 			listKnownRepoIds: () => listKnownRepoIds(db),
 			partitions: {
 				isComplete: (partition) => isPartitionComplete(db, partition),
-				markComplete: (partition) => markPartitionComplete(db, partition)
+				markComplete: (partition) => markPartitionComplete(db, partition),
+				readCursor: (partition) => readPartitionCursor(db, partition),
+				writeCursor: (partition, page) => writePartitionCursor(db, partition, page),
+				clearCursor: (partition) => clearPartitionCursor(db, partition)
 			},
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),

@@ -1,0 +1,1 @@
+ALTER TABLE "scrape_searched_partitions" ADD COLUMN "cursor_page" integer;

@@ -14,12 +14,16 @@ export function isCodePartitionStale(
 
 export async function isPartitionComplete(db: Database, partition: string): Promise<boolean> {
 	const [row] = await db
-		.select({ completedAt: schema.scrapePartitions.completedAt })
+		.select({
+			completedAt: schema.scrapePartitions.completedAt,
+			cursorPage: schema.scrapePartitions.cursorPage
+		})
 		.from(schema.scrapePartitions)
 		.where(eq(schema.scrapePartitions.partition, partition))
 		.limit(1);
 
 	if (row === undefined) return false;
+	if (row.cursorPage !== null) return false;
 
 	return !isCodePartitionStale(partition, row.completedAt);
 }
@@ -27,9 +31,40 @@ export async function isPartitionComplete(db: Database, partition: string): Prom
 export async function markPartitionComplete(db: Database, partition: string): Promise<void> {
 	await db
 		.insert(schema.scrapePartitions)
-		.values({ partition, completedAt: new Date() })
+		.values({ partition, cursorPage: null, completedAt: new Date() })
 		.onConflictDoUpdate({
 			target: schema.scrapePartitions.partition,
-			set: { completedAt: new Date() }
+			set: { cursorPage: null, completedAt: new Date() }
 		});
+}
+
+export async function readPartitionCursor(db: Database, partition: string): Promise<number | null> {
+	const [row] = await db
+		.select({ cursorPage: schema.scrapePartitions.cursorPage })
+		.from(schema.scrapePartitions)
+		.where(eq(schema.scrapePartitions.partition, partition))
+		.limit(1);
+
+	return row?.cursorPage ?? null;
+}
+
+export async function writePartitionCursor(
+	db: Database,
+	partition: string,
+	page: number
+): Promise<void> {
+	await db
+		.insert(schema.scrapePartitions)
+		.values({ partition, cursorPage: page, completedAt: new Date() })
+		.onConflictDoUpdate({
+			target: schema.scrapePartitions.partition,
+			set: { cursorPage: page, completedAt: new Date() }
+		});
+}
+
+export async function clearPartitionCursor(db: Database, partition: string): Promise<void> {
+	await db
+		.update(schema.scrapePartitions)
+		.set({ cursorPage: null })
+		.where(eq(schema.scrapePartitions.partition, partition));
 }

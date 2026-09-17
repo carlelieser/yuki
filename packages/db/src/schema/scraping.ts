@@ -19,6 +19,7 @@ export const scrapePartitions = pgTable(
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
 		partition: text('partition').notNull(),
+		cursorPage: integer('cursor_page'),
 		completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => [uniqueIndex('scrape_searched_partitions_key').on(table.partition)]

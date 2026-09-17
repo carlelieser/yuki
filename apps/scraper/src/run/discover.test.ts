@@ -139,6 +139,77 @@ describe('discover', () => {
 		expect(result.warnings.some((w) => w.includes('stopped at page 2'))).toBe(true);
 	});
 
+	it('records how far it paged when the repository budget runs out', async () => {
+		const cursors: { partition: string; page: number }[] = [];
+		const client = fakeClient(() => ({
+			totalCount: 400,
+			items: Array.from({ length: 100 }, (_unused, index) => codeItem(index + 1))
+		}));
+
+		await discover(client, () => false, {
+			maxNewRepos: 100,
+			range: fullRange,
+			partitions: {
+				isComplete: async () => false,
+				markComplete: async () => {},
+				writeCursor: async (partition, page) => {
+					cursors.push({ partition, page });
+				}
+			}
+		});
+
+		expect(cursors.length).toBeGreaterThan(0);
+		expect(cursors[0]?.page).toBeGreaterThanOrEqual(1);
+	});
+
+	it('resumes paging from the recorded cursor instead of page one', async () => {
+		const pagesRequested: number[] = [];
+		const client = {
+			stats: { requestCount: 0, notModifiedCount: 0 },
+			searchCode: async (_q: string, page: number) => {
+				pagesRequested.push(page);
+				return {
+					isModified: true,
+					body: { total_count: 400, items: [codeItem(page * 1000)] }
+				};
+			},
+			searchRepositories: async () => ({ isModified: true, body: { total_count: 0, items: [] } })
+		} as unknown as GithubClient;
+
+		await discover(client, () => false, {
+			maxNewRepos: 500,
+			range: fullRange,
+			partitions: {
+				isComplete: async () => false,
+				markComplete: async () => {},
+				readCursor: async () => 3
+			}
+		});
+
+		expect(pagesRequested.every((page) => page >= 3)).toBe(true);
+		expect(pagesRequested).not.toContain(1);
+	});
+
+	it('clears the cursor once a band is read to the end', async () => {
+		const cleared: string[] = [];
+		const client = fakeClient(() => ({ totalCount: 1, items: [codeItem(1)] }));
+
+		await discover(client, () => false, {
+			maxNewRepos: 50,
+			range: fullRange,
+			partitions: {
+				isComplete: async () => false,
+				markComplete: async () => {},
+				readCursor: async () => null,
+				clearCursor: async (partition) => {
+					cleared.push(partition);
+				}
+			}
+		});
+
+		expect(cleared.length).toBeGreaterThan(0);
+	});
+
 	it('does not revisit partitions already recorded as complete', async () => {
 		const queries: string[] = [];
 		const client = fakeClient(() => ({ totalCount: 1, items: [codeItem(7)] }), queries);
