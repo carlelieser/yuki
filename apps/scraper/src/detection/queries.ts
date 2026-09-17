@@ -1,3 +1,4 @@
+import { MARKERS, SCOPE_FILENAMES, describeMarker, type Marker } from './markers.ts';
 import type { EvidenceKind } from '@yuki/db/schema';
 
 export const RESULTS_PER_PAGE = 100;
@@ -17,73 +18,34 @@ export type RepoSearchQuery = {
 };
 
 export function buildCodeSearchQueries(): CodeSearchQuery[] {
-	return [
-		{
-			q: 'rikka.shizuku.ShizukuProvider filename:AndroidManifest.xml',
-			evidence: 'provider_class',
-			detail: 'rikka.shizuku.ShizukuProvider in AndroidManifest.xml'
-		},
-		{
-			q: 'Shizuku.pingBinder language:kotlin',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.pingBinder in Kotlin source'
-		},
-		{
-			q: 'Shizuku.pingBinder language:java',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.pingBinder in Java source'
-		},
-		{
-			q: 'Shizuku.checkSelfPermission language:kotlin',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.checkSelfPermission in Kotlin source'
-		},
-		{
-			q: 'Shizuku.checkSelfPermission language:java',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.checkSelfPermission in Java source'
-		},
-		{
-			q: 'Shizuku.requestPermission language:kotlin',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.requestPermission in Kotlin source'
-		},
-		{
-			q: 'Shizuku.requestPermission language:java',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.requestPermission in Java source'
-		},
-		{
-			q: 'Shizuku.newProcess language:kotlin',
-			evidence: 'runtime_api_call',
-			detail: 'Shizuku.newProcess in Kotlin source'
-		},
-		{
-			q: 'dev.rikka.shizuku filename:build.gradle',
-			evidence: 'gradle_dependency',
-			detail: 'dev.rikka.shizuku in build.gradle'
-		},
-		{
-			q: 'dev.rikka.shizuku filename:build.gradle.kts',
-			evidence: 'gradle_dependency',
-			detail: 'dev.rikka.shizuku in build.gradle.kts'
-		},
-		{
-			q: 'dev.rikka.shizuku filename:libs.versions.toml',
-			evidence: 'gradle_dependency',
-			detail: 'dev.rikka.shizuku in libs.versions.toml'
-		},
-		{
-			q: 'moe.shizuku.api filename:build.gradle',
-			evidence: 'legacy_gradle_dependency',
-			detail: 'moe.shizuku.api in build.gradle'
-		},
-		{
-			q: 'moe.shizuku.api filename:build.gradle.kts',
-			evidence: 'legacy_gradle_dependency',
-			detail: 'moe.shizuku.api in build.gradle.kts'
+	const queries: CodeSearchQuery[] = [];
+
+	for (const marker of MARKERS) {
+		for (const qualifier of qualifiersFor(marker)) {
+			queries.push({
+				q: `${marker.literal} ${qualifier.scope}`,
+				evidence: marker.kind,
+				detail: describeMarker(marker, qualifier.label)
+			});
 		}
-	];
+	}
+
+	return queries;
+}
+
+type Qualifier = { scope: string; label: string };
+
+function qualifiersFor(marker: Marker): Qualifier[] {
+	const filenames = SCOPE_FILENAMES[marker.scope];
+
+	if (filenames.length > 0) {
+		return filenames.map((filename) => ({ scope: `filename:${filename}`, label: filename }));
+	}
+
+	return (marker.languages ?? []).map((language) => ({
+		scope: `language:${language}`,
+		label: `${language} source`
+	}));
 }
 
 export function buildRepoSearchQueries(): RepoSearchQuery[] {
