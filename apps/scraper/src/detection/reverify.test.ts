@@ -1,113 +1,99 @@
 import { describe, expect, it } from 'vitest';
 import { collectRepositoryEvidence } from './reverify.ts';
+import { scoreConfidence } from './evidence.ts';
 import type { GithubClient } from '@yuki/github';
 
-function fakeClient(files: Record<string, string>): GithubClient {
-	const paths = Object.keys(files);
-
+function fakeClient(matches: (query: string) => string[], seen: string[] = []): GithubClient {
 	return {
-		stats: { requestCount: 0, notModifiedCount: 0 },
-		getTree: async () => ({
-			isModified: true,
-			body: {
-				truncated: false,
-				tree: paths.map((path) => ({ path, type: 'blob', sha: path }))
-			}
-		}),
-		getBlob: async (_owner: string, _name: string, sha: string) => ({
-			isModified: true,
-			body: files[sha] ?? ''
-		})
+		stats: { requestCount: 0, notModifiedCount: 0, pacedWaitMs: 0 },
+		searchCode: async (q: string) => {
+			seen.push(q);
+			const paths = matches(q);
+			return {
+				isModified: true,
+				body: { total_count: paths.length, items: paths.map((path) => ({ path })) }
+			};
+		}
 	} as unknown as GithubClient;
 }
 
+async function verify(client: GithubClient, owner = 'acme', name = 'app') {
+	const verdict = await collectRepositoryEvidence(client, owner, name);
+	if (verdict.kind !== 'verified') throw new Error(`expected verified, got ${verdict.kind}`);
+	return verdict.evidence;
+}
+
 describe('collectRepositoryEvidence', () => {
-	it('recovers the provider evidence a truncated discovery band missed', async () => {
-		const client = fakeClient({
-			'app/src/main/AndroidManifest.xml':
-				'<provider android:name="rikka.shizuku.ShizukuProvider" />',
-			'gradle/libs.versions.toml': 'shizuku = { module = "dev.rikka.shizuku:api" }'
-		});
+	it('scopes every query to the repository under review', async () => {
+		const seen: string[] = [];
+		await verify(
+			fakeClient(() => [], seen),
+			'mihonapp',
+			'mihon'
+		);
 
-		const evidence = await collectRepositoryEvidence(client, 'mihonapp', 'mihon', 'main');
-
-		expect(evidence.map((entry) => entry.kind).sort()).toEqual([
-			'gradle_dependency',
-			'provider_class'
-		]);
+		expect(seen.every((query) => query.includes('repo:mihonapp/mihon'))).toBe(true);
 	});
 
-	it('rates a root app that only borrows a utility as gradle evidence alone', async () => {
-		const client = fakeClient({
-			'app/build.gradle': 'implementation "dev.rikka.shizuku:api:13.1.5"',
-			'app/src/main/AndroidManifest.xml': '<application />',
-			'app/src/main/java/PixelLauncherModsRootService.kt':
-				'import rikka.shizuku.SystemServiceHelper'
-		});
+	it.each([
+		['vvb2060/KeyAttestation', 'Shizuku.pingBinder', 'app/src/main/java/.../home/HomeFragment.kt'],
+		[
+			'RikkaApps/WADB',
+			'Shizuku.checkSelfPermission',
+			'app/src/main/java/.../events/GlobalRequestHandler.java'
+		],
+		[
+			'andreknieriem/open-headunit',
+			'Shizuku.pingBinder',
+			'app/src/main/java/.../utils/SUExecutor.kt'
+		],
+		['Turbo1123/TurboIMS', 'Shizuku.pingBinder', 'app/src/main/java/.../ims/MainActivity.java'],
+		[
+			'zhanghai/MaterialFiles',
+			'Shizuku.checkSelfPermission',
+			'app/src/main/java/.../root/SuiFileServiceLauncher.kt'
+		]
+	])('finds the runtime call %s keeps in an unhinted filename', async (_repo, marker, path) => {
+		const evidence = await verify(fakeClient((query) => (query.startsWith(marker) ? [path] : [])));
 
-		const evidence = await collectRepositoryEvidence(
-			client,
-			'KieronQuinn',
-			'PixelLauncherMods',
-			'main'
+		expect(evidence.map((entry) => entry.kind)).toContain('runtime_api_call');
+		expect(scoreConfidence(evidence)).toBe('strong');
+	});
+
+	it('leaves a repository that only links the library short of strong', async () => {
+		const evidence = await verify(
+			fakeClient((query) => (query.startsWith('dev.rikka.shizuku') ? ['app/build.gradle'] : []))
 		);
 
 		expect(evidence.map((entry) => entry.kind)).toEqual(['gradle_dependency']);
+		expect(scoreConfidence(evidence)).toBe('probable');
 	});
 
-	it('records a runtime call as its own evidence kind', async () => {
-		const client = fakeClient({
-			'app/src/main/java/ShizukuInstaller.kt': 'if (!Shizuku.pingBinder()) return'
-		});
-
-		const evidence = await collectRepositoryEvidence(client, 'acme', 'app', 'main');
-
-		expect(evidence.map((entry) => entry.kind).sort()).toEqual([
-			'runtime_api_call',
-			'source_filename'
-		]);
+	it('ignores prose that merely mentions Shizuku', async () => {
+		expect(await verify(fakeClient(() => ['README.md']))).toEqual([]);
 	});
 
-	it('finds a runtime call in a Sui-named file that no filename heuristic would match', async () => {
-		const client = fakeClient({
-			'app/build.gradle': 'implementation "dev.rikka.shizuku:api:13.1.5"',
-			'app/src/main/java/provider/root/SuiFileServiceLauncher.kt':
-				'if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {'
-		});
+	it('stops querying once the evidence is already strong', async () => {
+		const seen: string[] = [];
+		await verify(
+			fakeClient(
+				(query) =>
+					query.startsWith('rikka.shizuku.ShizukuProvider') ? ['AndroidManifest.xml'] : [],
+				seen
+			)
+		);
 
-		const evidence = await collectRepositoryEvidence(client, 'zhanghai', 'MaterialFiles', 'main');
-
-		expect(evidence.map((entry) => entry.kind).sort()).toEqual([
-			'gradle_dependency',
-			'runtime_api_call'
-		]);
+		expect(seen).toHaveLength(1);
 	});
 
-	it('reads the legacy coordinate as its own kind', async () => {
-		const client = fakeClient({ 'build.gradle': 'implementation "moe.shizuku.api:provider:1.0"' });
+	it('reports inconclusive rather than empty when a query cannot be read', async () => {
+		const client = {
+			stats: { requestCount: 0, notModifiedCount: 0, pacedWaitMs: 0 },
+			searchCode: async () => ({ isModified: false })
+		} as unknown as GithubClient;
 
-		const evidence = await collectRepositoryEvidence(client, 'acme', 'legacy', 'main');
+		const verdict = await collectRepositoryEvidence(client, 'acme', 'app');
 
-		expect(evidence.map((entry) => entry.kind)).toEqual(['legacy_gradle_dependency']);
-	});
-
-	it('finds no evidence in a repository that merely mentions Shizuku in prose', async () => {
-		const client = fakeClient({ 'README.md': 'Works great with Shizuku!' });
-
-		const evidence = await collectRepositoryEvidence(client, 'acme', 'docs', 'main');
-
-		expect(evidence).toEqual([]);
-	});
-
-	it('keeps one row per kind so the unique constraint holds', async () => {
-		const client = fakeClient({
-			'app/build.gradle': 'dev.rikka.shizuku:api',
-			'core/build.gradle': 'dev.rikka.shizuku:provider'
-		});
-
-		const evidence = await collectRepositoryEvidence(client, 'acme', 'app', 'main');
-		const kinds = evidence.map((entry) => entry.kind);
-
-		expect(new Set(kinds).size).toBe(kinds.length);
+		expect(verdict.kind).toBe('inconclusive');
 	});
 });

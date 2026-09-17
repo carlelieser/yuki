@@ -170,7 +170,7 @@ describe('quota pacing', () => {
 		expect(decision.kind).not.toBe('fail');
 	});
 
-	it('gives up when the reset is further away than a run should wait', () => {
+	it('waits out a distant reset rather than abandoning the run', () => {
 		const decision = decideRetry({
 			status: 403,
 			headers: exhausted(3600),
@@ -179,7 +179,7 @@ describe('quota pacing', () => {
 			resource: 'search/code'
 		});
 
-		expect(decision.kind).toBe('fail');
+		expect(decision.kind).toBe('pace');
 	});
 
 	it('still fails a request that keeps erroring for other reasons', () => {

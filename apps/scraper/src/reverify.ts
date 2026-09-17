@@ -29,48 +29,42 @@ const targets =
 
 console.log(`Reverifying ${targets.length} listings${apply ? '' : ' (dry run)'}.`);
 
-let demoted = 0;
-let promoted = 0;
+let strong = 0;
+let belowStrong = 0;
 let unpublished = 0;
-let failed = 0;
+let inconclusive = 0;
 
 for (const listing of targets) {
 	const label = `${listing.owner}/${listing.name}`;
 
-	let evidence;
+	let verdict;
 	try {
-		const repo = await client.getRepository(listing.owner, listing.name);
-		if (!repo.isModified) {
-			failed += 1;
-			console.warn(`  ! ${label}: repository metadata unavailable`);
-			continue;
-		}
-
-		evidence = await collectRepositoryEvidence(
-			client,
-			listing.owner,
-			listing.name,
-			repo.body.default_branch
-		);
+		verdict = await collectRepositoryEvidence(client, listing.owner, listing.name);
 	} catch (cause) {
-		failed += 1;
+		inconclusive += 1;
 		const reason = cause instanceof Error ? cause.message : String(cause);
-		console.warn(`  ! ${label}: ${reason}`);
+		console.warn(`  ? ${label}: ${reason}`);
 		continue;
 	}
 
-	const confidence = scoreConfidence(evidence);
-	const kinds = evidence.map((entry) => entry.kind).join(',') || '(none)';
+	if (verdict.kind === 'inconclusive') {
+		inconclusive += 1;
+		console.warn(`  ? ${label}: ${verdict.reason}`);
+		continue;
+	}
+
+	const confidence = scoreConfidence(verdict.evidence);
+	const kinds = verdict.evidence.map((entry) => entry.kind).join(',') || '(none)';
 
 	if (!apply) {
 		console.log(`  ${confidence.padEnd(8)} ${label} [${kinds}]`);
 		continue;
 	}
 
-	const outcome = await replaceEvidence(db, listing.id, evidence);
+	const outcome = await replaceEvidence(db, listing.id, verdict.evidence);
 
-	if (outcome.confidence === 'strong') promoted += 1;
-	else demoted += 1;
+	if (outcome.confidence === 'strong') strong += 1;
+	else belowStrong += 1;
 
 	if (outcome.wasPublished && !outcome.isPublished) {
 		unpublished += 1;
@@ -79,11 +73,12 @@ for (const listing of targets) {
 }
 
 if (!apply) {
-	console.log('\nDry run. Re-run with --apply to write these changes.');
+	console.log(`\nDry run (${inconclusive} inconclusive). Re-run with --apply to write.`);
 	process.exit(0);
 }
 
 console.log(
-	`\nDone. strong ${promoted}, below strong ${demoted}, unpublished ${unpublished}, failed ${failed}.`
+	`\nDone. strong ${strong}, below strong ${belowStrong}, unpublished ${unpublished}, ` +
+		`inconclusive ${inconclusive} (left untouched).`
 );
 process.exit(0);

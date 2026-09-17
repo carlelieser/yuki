@@ -2,7 +2,6 @@ import { isExhausted, readRateLimit, waitUntilReset } from './rate-limit.ts';
 
 export const MAX_ATTEMPTS = 3;
 export const SECONDARY_LIMIT_WAIT_MS = 60_000;
-export const MAX_PACED_WAIT_MS = 15 * 60_000;
 
 export type RetryDecision =
 	| { kind: 'succeed' }
@@ -41,29 +40,13 @@ export function decideRetry({
 	const snapshot = readRateLimit(headers);
 
 	if (snapshot.retryAfterMs !== null) {
-		if (snapshot.retryAfterMs > MAX_PACED_WAIT_MS) {
-			return {
-				kind: 'fail',
-				reason: `${resource} asked for a ${Math.round(snapshot.retryAfterMs / 60_000)} minute wait`
-			};
-		}
-
 		return { kind: 'pace', waitMs: snapshot.retryAfterMs, reason: `Retry-After on ${resource}` };
 	}
 
 	if (isExhausted(snapshot) && (status === 403 || status === 429)) {
-		const waitMs = waitUntilReset(snapshot.resetAt, now);
-
-		if (waitMs > MAX_PACED_WAIT_MS) {
-			return {
-				kind: 'fail',
-				reason: `${resource} rate limit does not reset for ${Math.round(waitMs / 60_000)} minutes`
-			};
-		}
-
 		return {
 			kind: 'pace',
-			waitMs,
+			waitMs: waitUntilReset(snapshot.resetAt, now),
 			reason: `primary rate limit exhausted on ${resource}`
 		};
 	}

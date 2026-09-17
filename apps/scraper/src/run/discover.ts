@@ -6,11 +6,10 @@ import {
 	buildCodeSearchQueries,
 	buildRepoSearchQueries,
 	describeSizeRange,
+	evidenceFromMatch,
 	isIndivisible,
-	isMarkdownPath,
 	isSizeIndivisible,
 	isSliceTruncated,
-	isSourceFilenameMatch,
 	splitRange,
 	splitSizeRange,
 	withCreatedRange,
@@ -252,13 +251,10 @@ export async function discover(
 		items: { path: string; repository: GithubMinimalRepository }[]
 	): void {
 		for (const item of items) {
-			if (isMarkdownPath(item.path)) continue;
 			if (isKnown(item.repository.id)) continue;
 
-			record(found, item.repository, { kind: query.evidence, detail: query.detail });
-
-			if (isSourceFilenameMatch(item.path)) {
-				record(found, item.repository, { kind: 'source_filename', detail: item.path });
+			for (const evidence of evidenceFromMatch(query, item.path)) {
+				record(found, item.repository, evidence);
 			}
 		}
 	}

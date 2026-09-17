@@ -48,6 +48,25 @@ function qualifiersFor(marker: Marker): Qualifier[] {
 	}));
 }
 
+export function withRepository(query: string, owner: string, name: string): string {
+	return `${query} repo:${owner}/${name}`;
+}
+
+export function evidenceFromMatch(
+	query: CodeSearchQuery,
+	path: string
+): { kind: EvidenceKind; detail: string }[] {
+	if (isMarkdownPath(path)) return [];
+
+	const found = [{ kind: query.evidence, detail: query.detail }];
+
+	if (isSourceFilenameMatch(path)) {
+		found.push({ kind: 'source_filename', detail: path });
+	}
+
+	return found;
+}
+
 export function buildRepoSearchQueries(): RepoSearchQuery[] {
 	return [
 		{ q: 'topic:shizuku', evidence: 'repository_topic', detail: 'topic:shizuku' },
