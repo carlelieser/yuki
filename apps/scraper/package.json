@@ -7,6 +7,7 @@
 		"start": "bun run src/main.ts",
 		"review": "bun run src/review.ts",
 		"backfill": "bun run src/backfill.ts",
+		"reverify": "bun run src/reverify.ts",
 		"check": "tsc --noEmit",
 		"test": "vitest run"
 	},

@@ -18,7 +18,8 @@
 		"db:studio": "bun run --filter '@yuki/db' studio",
 		"scrape": "bun run --filter '@yuki/scraper' start",
 		"listings": "bun run --filter '@yuki/scraper' review",
-		"backfill": "bun run --filter '@yuki/scraper' backfill"
+		"backfill": "bun run --filter '@yuki/scraper' backfill",
+		"reverify": "bun run --filter '@yuki/scraper' reverify"
 	},
 	"devDependencies": {
 		"@eslint/js": "10.0.1",

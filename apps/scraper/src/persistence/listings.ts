@@ -1,10 +1,11 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
 import type { MappedListing } from '../mapping/listing.ts';
 import type { MappedVersion } from '@yuki/github';
+import type { ListingConfidence } from '@yuki/db/schema';
 import type { ReadmeImage } from '../mapping/readme-images.ts';
 
 export type ListingRecord = {
@@ -101,7 +102,7 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 	});
 }
 
-async function settleConfidence(tx: Transaction, listingId: string): Promise<void> {
+async function settleConfidence(tx: Transaction, listingId: string): Promise<ListingConfidence> {
 	const stored = await tx
 		.select({ kind: schema.listingEvidence.kind })
 		.from(schema.listingEvidence)
@@ -110,6 +111,8 @@ async function settleConfidence(tx: Transaction, listingId: string): Promise<voi
 	const confidence = scoreConfidence(stored.map((row) => ({ kind: row.kind, detail: null })));
 
 	await tx.update(schema.listings).set({ confidence }).where(eq(schema.listings.id, listingId));
+
+	return confidence;
 }
 
 async function insertOrUpdate(
@@ -217,6 +220,67 @@ export async function listListingsBySlug(
 		})
 		.from(schema.listings)
 		.where(inArray(schema.listings.slug, slugs));
+}
+
+export async function listListingsForReverify(
+	db: Database,
+	limit: number
+): Promise<(ListingRecord & { slug: string; stars: number })[]> {
+	return db
+		.select({
+			id: schema.listings.id,
+			slug: schema.listings.slug,
+			owner: schema.listings.owner,
+			name: schema.listings.name,
+			githubRepoId: schema.listings.githubRepoId,
+			packageName: schema.listings.packageName,
+			stars: schema.listings.stars
+		})
+		.from(schema.listings)
+		.orderBy(desc(schema.listings.stars), asc(schema.listings.id))
+		.limit(limit);
+}
+
+export type ReverifyOutcome = {
+	confidence: ListingConfidence;
+	wasPublished: boolean;
+	isPublished: boolean;
+};
+
+export async function replaceEvidence(
+	db: Database,
+	listingId: string,
+	evidence: DetectedEvidence[]
+): Promise<ReverifyOutcome> {
+	return db.transaction(async (tx) => {
+		await tx.delete(schema.listingEvidence).where(eq(schema.listingEvidence.listingId, listingId));
+
+		if (evidence.length > 0) {
+			await tx
+				.insert(schema.listingEvidence)
+				.values(evidence.map((entry) => ({ listingId, kind: entry.kind, detail: entry.detail })));
+		}
+
+		const confidence = await settleConfidence(tx, listingId);
+
+		const [row] = await tx
+			.select({ isPublished: schema.listings.isPublished })
+			.from(schema.listings)
+			.where(eq(schema.listings.id, listingId))
+			.limit(1);
+
+		const wasPublished = row?.isPublished === true;
+		const isPublished = wasPublished && confidence === 'strong';
+
+		if (wasPublished !== isPublished) {
+			await tx
+				.update(schema.listings)
+				.set({ isPublished, updatedAt: new Date() })
+				.where(eq(schema.listings.id, listingId));
+		}
+
+		return { confidence, wasPublished, isPublished };
+	});
 }
 
 export async function listKnownRepoIds(db: Database): Promise<number[]> {
