@@ -24,6 +24,7 @@ import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
+import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
@@ -146,20 +147,41 @@ class ListingScreenTest {
 
     @Test
     fun reportsTheTappedScreenshotIndex() {
-        val selected = mutableListOf<Int>()
+        val selected = mutableListOf<ScreenshotSelection>()
         val screenshots = listOf(
             Screenshot("https://cdn.test/one.png", "Home"),
             Screenshot("https://cdn.test/two.png", "Settings"),
         )
         setScreen(
             listing = UiState.Success(detail(screenshots = screenshots).toUiModel()),
-            callbacks = withScreenshotHandler { index -> selected.add(index) },
+            callbacks = withScreenshotHandler(selected::add),
         )
 
         composeRule.scrollToText("Screenshots")
         composeRule.onNodeWithContentDescription("Settings").performClick()
 
-        assertEquals(listOf(1), selected)
+        assertEquals(listOf(1), selected.map(ScreenshotSelection::index))
+    }
+
+    @Test
+    fun reportsEveryScreenshotUrlSoTheViewerNeedsNoRefetch() {
+        val selected = mutableListOf<ScreenshotSelection>()
+        val screenshots = listOf(
+            Screenshot("https://cdn.test/one.png", "Home"),
+            Screenshot("https://cdn.test/two.png", "Settings"),
+        )
+        setScreen(
+            listing = UiState.Success(detail(screenshots = screenshots).toUiModel()),
+            callbacks = withScreenshotHandler(selected::add),
+        )
+
+        composeRule.scrollToText("Screenshots")
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+
+        assertEquals(
+            listOf(screenshots.map(Screenshot::url)),
+            selected.map(ScreenshotSelection::urls),
+        )
     }
 
     @Test
@@ -358,7 +380,9 @@ private fun withLinkOpener(onOpen: (String) -> Unit): ListingScreenCallbacks {
     return base.copy(callbacks = base.callbacks.copy(onOpenLink = LinkOpener(onOpen)))
 }
 
-private fun withScreenshotHandler(onSelect: (Int) -> Unit): ListingScreenCallbacks {
+private fun withScreenshotHandler(
+    onSelect: (ScreenshotSelection) -> Unit,
+): ListingScreenCallbacks {
     val base = noopCallbacks()
     return base.copy(callbacks = base.callbacks.copy(onScreenshotSelected = onSelect))
 }

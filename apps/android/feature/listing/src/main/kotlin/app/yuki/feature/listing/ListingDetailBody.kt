@@ -18,13 +18,14 @@ import app.yuki.core.designsystem.component.ScreenshotCarousel
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
+import app.yuki.core.model.ScreenshotSelection
 
 const val LISTING_DETAIL_TAG = "listingDetail"
 
 data class ListingCallbacks(
     val onInstallAction: InstallActionHandler,
     val onOpenLink: LinkOpener,
-    val onScreenshotSelected: (Int) -> Unit,
+    val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onVersionInstallAction: VersionInstallHandler,
 )
 
@@ -88,7 +89,7 @@ private fun LazyListScope.descriptionSection(model: ListingUiModel) {
 
 private fun LazyListScope.screenshotSection(
     model: ListingUiModel,
-    onScreenshotSelected: (Int) -> Unit,
+    onScreenshotSelected: (ScreenshotSelection) -> Unit,
 ) {
     val screenshots = model.detail.screenshots
     if (screenshots.isEmpty()) return

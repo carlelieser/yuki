@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 const val SCREENSHOT_START_INDEX_KEY = "startIndex"
+const val SCREENSHOT_URLS_KEY = "urls"
 
 @HiltViewModel
 class ScreenshotViewerViewModel @Inject constructor(
@@ -27,8 +28,13 @@ class ScreenshotViewerViewModel @Inject constructor(
 
     val startIndex: Int = savedStateHandle[SCREENSHOT_START_INDEX_KEY] ?: 0
 
+    private val seeded: List<Screenshot> =
+        savedStateHandle.get<List<String>>(SCREENSHOT_URLS_KEY)
+            .orEmpty()
+            .map { url -> Screenshot(url = url, alt = null) }
+
     private val mutableScreenshots =
-        MutableStateFlow<UiState<List<Screenshot>>>(UiState.Loading)
+        MutableStateFlow<UiState<List<Screenshot>>>(initialState())
 
     val screenshots: StateFlow<UiState<List<Screenshot>>> = mutableScreenshots.asStateFlow()
 
@@ -36,11 +42,23 @@ class ScreenshotViewerViewModel @Inject constructor(
         refresh()
     }
 
+    private fun initialState(): UiState<List<Screenshot>> =
+        if (seeded.isEmpty()) UiState.Loading else UiState.Success(seeded)
+
     fun refresh() {
-        mutableScreenshots.value = UiState.Loading
+        mutableScreenshots.value = initialState()
         viewModelScope.launch {
             val detail = repository.detail(slug)
-            mutableScreenshots.value = detail.map { it.screenshots }.toUiState()
+            val refined = detail.map { it.screenshots }.toUiState()
+
+            mutableScreenshots.value = resolve(refined)
         }
+    }
+
+    private fun resolve(refined: UiState<List<Screenshot>>): UiState<List<Screenshot>> {
+        if (refined is UiState.Success) return refined
+        if (seeded.isEmpty()) return refined
+
+        return UiState.Success(seeded)
     }
 }

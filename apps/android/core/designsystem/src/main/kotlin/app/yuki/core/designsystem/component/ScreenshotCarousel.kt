@@ -16,6 +16,7 @@ import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.Screenshot
+import app.yuki.core.model.ScreenshotSelection
 import coil3.compose.AsyncImage
 
 fun describeScreenshot(alt: String?, index: Int, total: Int): String =
@@ -25,8 +26,10 @@ fun describeScreenshot(alt: String?, index: Int, total: Int): String =
 fun ScreenshotCarousel(
     screenshots: List<Screenshot>,
     modifier: Modifier = Modifier,
-    onSelect: ((Int) -> Unit)? = null,
+    onSelect: ((ScreenshotSelection) -> Unit)? = null,
 ) {
+    val urls = screenshots.map(Screenshot::url)
+
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
@@ -37,6 +40,7 @@ fun ScreenshotCarousel(
                 .width(YukiSize.ScreenshotWidth)
                 .aspectRatio(YukiRatio.Screenshot)
                 .clip(YukiShape.Media)
+                .sharedScreenshot(url = screenshot.url)
 
             AsyncImage(
                 model = screenshot.url,
@@ -49,7 +53,9 @@ fun ScreenshotCarousel(
                 modifier = if (onSelect == null) {
                     itemModifier
                 } else {
-                    itemModifier.clickable { onSelect(index) }
+                    itemModifier.clickable {
+                        onSelect(ScreenshotSelection(index = index, urls = urls))
+                    }
                 },
             )
         }

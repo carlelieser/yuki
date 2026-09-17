@@ -22,13 +22,14 @@ import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.UiState
 
 const val LISTING_LOADING_TAG = "listingLoading"
 
 data class ListingNavigation(
     val onBackClick: () -> Unit,
-    val onScreenshotSelected: (Int) -> Unit,
+    val onScreenshotSelected: (ScreenshotSelection) -> Unit,
 )
 
 @Composable
@@ -78,7 +79,7 @@ private fun ResumeEffect(onResume: () -> Unit) {
 @Composable
 private fun rememberListingCallbacks(
     viewModel: ListingViewModel,
-    onScreenshotSelected: (Int) -> Unit,
+    onScreenshotSelected: (ScreenshotSelection) -> Unit,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 

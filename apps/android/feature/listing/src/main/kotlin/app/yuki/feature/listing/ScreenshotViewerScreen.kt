@@ -19,6 +19,7 @@ import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.describeScreenshot
+import app.yuki.core.designsystem.component.sharedScreenshot
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.Screenshot
 import app.yuki.core.model.UiState
@@ -131,7 +132,9 @@ private fun ScreenshotPage(screenshot: Screenshot, index: Int, total: Int) {
                 total = total,
             ),
             contentScale = ContentScale.Fit,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .sharedScreenshot(url = screenshot.url),
         )
     }
 }

@@ -24,4 +24,8 @@ data object SearchRoute
 data class CategoryRoute(val category: String)
 
 @Serializable
-data class ScreenshotRoute(val slug: String, val startIndex: Int)
+data class ScreenshotRoute(
+    val slug: String,
+    val startIndex: Int,
+    val urls: List<String>,
+)
