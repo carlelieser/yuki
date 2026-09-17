@@ -143,8 +143,11 @@ private fun LibraryList(
         items(content.items, key = LibraryItem::githubRepoId) { item ->
             LibraryRow(
                 item = item,
-                onClick = { actions.onListingClick(item.app.slug) },
-                onDismiss = { actions.onDismiss(item.githubRepoId) },
+                rowActions = LibraryRowActions(
+                    onClick = { actions.onListingClick(item.app.slug) },
+                    onDismiss = { actions.onDismiss(item.githubRepoId) },
+                ),
+                modifier = Modifier.animateItem(),
             )
         }
     }
@@ -178,7 +181,11 @@ private fun LibraryDismissButton(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> Unit) {
+private fun LibraryRow(
+    item: LibraryItem,
+    rowActions: LibraryRowActions,
+    modifier: Modifier = Modifier,
+) {
     val install = item.install
 
     if (install is InstallState.Failed) {
@@ -186,13 +193,22 @@ private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> 
             content = item.listItem.copy(
                 badges = ListingBadges(listOf(installFailureBadge(install.reason))),
             ),
-            modifier = Modifier.clickable(onClick = onClick),
-            trailing = { LibraryDismissButton(onDismiss = onDismiss) },
+            modifier = modifier.clickable(onClick = rowActions.onClick),
+            trailing = { LibraryDismissButton(onDismiss = rowActions.onDismiss) },
         )
     }
 
-    ClickableProductListItem(content = item.listItem, onClick = onClick)
+    ClickableProductListItem(
+        content = item.listItem,
+        onClick = rowActions.onClick,
+        modifier = modifier,
+    )
 }
+
+private data class LibraryRowActions(
+    val onClick: () -> Unit,
+    val onDismiss: () -> Unit,
+)
 
 @Composable
 private fun LibraryEmpty(onExploreClick: () -> Unit) {

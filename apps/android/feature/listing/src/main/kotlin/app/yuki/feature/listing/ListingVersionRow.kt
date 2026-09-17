@@ -130,11 +130,11 @@ private fun VersionInstallControl(
 @Composable
 internal fun ListingVersionItem(
     version: ListingVersion,
-    installState: VersionInstallState,
-    onAction: InstallActionHandler,
+    install: VersionInstallPresentation,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)
             .padding(horizontal = YukiSpacing.Large, vertical = YukiSpacing.Medium),
@@ -145,8 +145,13 @@ internal fun ListingVersionItem(
         VersionText(version = version, modifier = Modifier.weight(1f))
         VersionInstallControl(
             version = version,
-            installState = installState,
-            onAction = onAction,
+            installState = install.state,
+            onAction = install.onAction,
         )
     }
 }
+
+internal data class VersionInstallPresentation(
+    val state: VersionInstallState,
+    val onAction: InstallActionHandler,
+)

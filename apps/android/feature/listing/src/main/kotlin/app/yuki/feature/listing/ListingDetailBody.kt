@@ -103,7 +103,11 @@ private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpe
 
     item { SectionHeader(title = "Links") }
     items(items = rows, key = ListingLinkRow::label) { row ->
-        ListingLinkItem(row = row, onOpen = { onOpenLink.open(row.url) })
+        ListingLinkItem(
+            row = row,
+            onOpen = { onOpenLink.open(row.url) },
+            modifier = Modifier.animateItem(),
+        )
     }
 }
 
@@ -119,10 +123,13 @@ private fun LazyListScope.versionSection(
     items(items = versions, key = { it.tag }) { version ->
         ListingVersionItem(
             version = version,
-            installState = versionInstallState(version = version, status = status),
-            onAction = InstallActionHandler { action ->
-                onVersionInstallAction.onAction(action, version)
-            },
+            install = VersionInstallPresentation(
+                state = versionInstallState(version = version, status = status),
+                onAction = InstallActionHandler { action ->
+                    onVersionInstallAction.onAction(action, version)
+                },
+            ),
+            modifier = Modifier.animateItem(),
         )
     }
 }
