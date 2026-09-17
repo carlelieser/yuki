@@ -51,7 +51,6 @@ fun LibraryScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
-    ResumeEffect(viewModel::onResume)
 
     LibraryContentScreen(
         state = state,

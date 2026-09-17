@@ -6,14 +6,16 @@ import app.yuki.core.database.PackageIndexStore
 import app.yuki.core.model.CatalogPackage
 import app.yuki.core.network.ListingRepository
 import javax.inject.Inject
+import javax.inject.Singleton
 
-internal class PackageDetectionReconciler @Inject constructor(
+@Singleton
+class PackageDetectionReconciler @Inject internal constructor(
     private val store: InstallStore,
     private val index: PackageIndexStore,
     private val repository: ListingRepository,
     private val packages: InstalledPackages,
-) {
-    suspend fun reconcile() {
+) : DetectedInstallRefresh {
+    override suspend fun reconcile() {
         val catalog = refreshIndex()
         if (catalog.isEmpty()) return
 

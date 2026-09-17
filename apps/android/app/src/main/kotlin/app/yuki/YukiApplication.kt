@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import app.yuki.core.installer.StuckInstallReclaimer
 import app.yuki.feature.updates.SelfInstallReconciler
+import app.yuki.install.LibraryRefreshObserver
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,9 @@ class YukiApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var stuckInstalls: StuckInstallReclaimer
 
+    @Inject
+    internal lateinit var libraryRefresh: LibraryRefreshObserver
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val workManagerConfiguration: Configuration
@@ -33,6 +37,8 @@ class YukiApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        libraryRefresh.start()
 
         scope.launch {
             stuckInstalls.reclaim().onFailure { error ->
