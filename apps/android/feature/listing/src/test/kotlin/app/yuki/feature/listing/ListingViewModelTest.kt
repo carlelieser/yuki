@@ -33,11 +33,15 @@ class ListingViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun viewModelWith(result: Result<ListingDetail>): ListingViewModel =
+    private fun viewModelWith(
+        result: Result<ListingDetail>,
+        baseUrl: String = BASE_URL,
+    ): ListingViewModel =
         ListingViewModel(
             savedStateHandle = SavedStateHandle(mapOf(LISTING_SLUG_KEY to SLUG)),
             repository = FakeListingRepository(result),
             installGateway = installGateway,
+            baseUrl = baseUrl,
         )
 
     @Test
@@ -380,6 +384,42 @@ class ListingViewModelTest {
 
         assertEquals(1, installGateway.refreshes)
     }
+
+    @Test
+    fun `builds the storefront share url from the slug`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+
+        assertEquals("https://yukistore.org/listings/$SLUG", viewModel.shareUrl)
+    }
+
+    @Test
+    fun `offers sharing once the listing has loaded`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()))
+
+        viewModel.isShareable.test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
+    }
+
+    @Test
+    fun `withholds sharing from a listing that failed to load`() = runTest {
+        val viewModel = viewModelWith(Result.failure(TypedFailure(FailureReason.NotFound)))
+
+        viewModel.isShareable.test {
+            assertFalse(awaitItem())
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    fun `builds the share url without doubling a trailing slash`() = runTest {
+        val viewModel = viewModelWith(Result.success(detail()), baseUrl = "https://yukistore.org/")
+
+        assertEquals("https://yukistore.org/listings/$SLUG", viewModel.shareUrl)
+    }
 }
+
+private const val BASE_URL = "https://yukistore.org"
 
 private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)

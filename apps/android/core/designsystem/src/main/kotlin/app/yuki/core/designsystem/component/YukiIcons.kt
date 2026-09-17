@@ -89,4 +89,7 @@ object YukiIcons {
 
     val MoreVert: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_more_vert)
+
+    val Share: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_share)
 }
