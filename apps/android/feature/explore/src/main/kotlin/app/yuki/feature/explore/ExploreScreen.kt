@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ScreenAction
 import app.yuki.core.designsystem.component.SectionHeader
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
@@ -109,22 +110,24 @@ private fun ExploreBody(
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
 ) {
-    when (state) {
-        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+    YukiAnimatedState(state = state) { settled ->
+        when (settled) {
+            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-        is UiState.Failure -> YukiScreenCenter(contentPadding) {
-            FailureState(
-                reason = state.reason,
-                missingMessage = EXPLORE_MISSING_MESSAGE,
-                onRetry = callbacks.onRetry,
+            is UiState.Failure -> YukiScreenCenter(contentPadding) {
+                FailureState(
+                    reason = settled.reason,
+                    missingMessage = EXPLORE_MISSING_MESSAGE,
+                    onRetry = callbacks.onRetry,
+                )
+            }
+
+            is UiState.Success -> ExploreContentBody(
+                content = settled.data,
+                callbacks = callbacks,
+                contentPadding = contentPadding,
             )
         }
-
-        is UiState.Success -> ExploreContentBody(
-            content = state.data,
-            callbacks = callbacks,
-            contentPadding = contentPadding,
-        )
     }
 }
 

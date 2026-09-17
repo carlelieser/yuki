@@ -26,6 +26,7 @@ import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingBadges
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.installFailureBadge
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -103,18 +104,20 @@ private fun LibraryBody(
     actions: LibraryActions,
     contentPadding: PaddingValues,
 ) {
-    when (state) {
-        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+    YukiAnimatedState(state = state) { settled ->
+        when (settled) {
+            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-        is UiState.Failure -> YukiScreenCenter(contentPadding) {
-            FailureState(reason = state.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+            is UiState.Failure -> YukiScreenCenter(contentPadding) {
+                FailureState(reason = settled.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+            }
+
+            is UiState.Success -> LibraryList(
+                content = settled.data,
+                actions = actions,
+                contentPadding = contentPadding,
+            )
         }
-
-        is UiState.Success -> LibraryList(
-            content = state.data,
-            actions = actions,
-            contentPadding = contentPadding,
-        )
     }
 }
 

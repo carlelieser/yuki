@@ -15,6 +15,7 @@ import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingInstalls
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.toProductListItemContent
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -42,21 +43,23 @@ internal fun SearchResults(
             .testTag(SEARCH_RESULTS_TAG),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        when (results) {
-            is UiState.Loading -> YukiLoadingIndicator(
-                modifier = Modifier.padding(YukiSpacing.ExtraLarge),
-            )
+        YukiAnimatedState(state = results) { settled ->
+            when (settled) {
+                is UiState.Loading -> YukiLoadingIndicator(
+                    modifier = Modifier.padding(YukiSpacing.ExtraLarge),
+                )
 
-            is UiState.Failure -> FailureState(
-                reason = results.reason,
-                modifier = Modifier.padding(YukiSpacing.Large),
-            )
+                is UiState.Failure -> FailureState(
+                    reason = settled.reason,
+                    modifier = Modifier.padding(YukiSpacing.Large),
+                )
 
-            is UiState.Success -> MatchList(
-                matches = Matches(query = state.query, listings = results.data),
-                installs = state.installs,
-                onSelect = onSelect,
-            )
+                is UiState.Success -> MatchList(
+                    matches = Matches(query = state.query, listings = settled.data),
+                    installs = state.installs,
+                    onSelect = onSelect,
+                )
+            }
         }
     }
 }

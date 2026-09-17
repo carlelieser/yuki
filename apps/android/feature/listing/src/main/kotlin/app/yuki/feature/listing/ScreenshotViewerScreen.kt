@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.describeScreenshot
@@ -58,21 +59,27 @@ internal fun ScreenshotViewerScreen(
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(title = "", onBackClick = onBackClick, modifier = modifier) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            when (val screenshots = state.screenshots) {
+        YukiAnimatedState(
+            state = state.screenshots,
+            modifier = Modifier.fillMaxSize(),
+        ) { screenshots ->
+            when (screenshots) {
                 UiState.Loading -> ScreenshotViewerLoading()
                 is UiState.Success -> ScreenshotPager(
                     screenshots = screenshots.data,
                     startIndex = state.startIndex,
                 )
-                is UiState.Failure -> FailureState(
-                    reason = screenshots.reason,
-                    missingMessage = LISTING_MISSING_MESSAGE,
-                    onRetry = onRetry,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(YukiSpacing.Large),
-                )
+                is UiState.Failure -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FailureState(
+                        reason = screenshots.reason,
+                        missingMessage = LISTING_MISSING_MESSAGE,
+                        onRetry = onRetry,
+                        modifier = Modifier.padding(YukiSpacing.Large),
+                    )
+                }
             }
         }
     }
