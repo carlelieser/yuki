@@ -42,7 +42,7 @@ describe('decideRetry', () => {
 			resource: 'repos/acme/app'
 		});
 
-		expect(decision).toMatchObject({ kind: 'retry', waitMs: 5000 });
+		expect(decision).toMatchObject({ kind: 'pace', waitMs: 5000 });
 	});
 
 	it('waits for the reset when the primary quota is exhausted', () => {
@@ -58,7 +58,7 @@ describe('decideRetry', () => {
 			now
 		});
 
-		expect(decision).toMatchObject({ kind: 'retry', waitMs: 600_000 });
+		expect(decision).toMatchObject({ kind: 'pace', waitMs: 600_000 });
 	});
 
 	it('backs off at least a minute on a secondary limit without headers', () => {
@@ -139,33 +139,56 @@ describe('decideRetry', () => {
 	});
 });
 
-describe('attempt ceiling', () => {
-	const exhausted = () =>
+describe('quota pacing', () => {
+	const exhausted = (resetInSeconds = 60) =>
 		headers({
 			'x-ratelimit-remaining': '0',
-			'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 60)
+			'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + resetInSeconds)
 		});
 
-	it('keeps retrying an exhausted quota when the caller allows more attempts', () => {
+	it('paces an exhausted quota however many times it takes', () => {
 		const decision = decideRetry({
 			status: 403,
 			headers: exhausted(),
-			attempt: 5,
+			attempt: MAX_ATTEMPTS * 100,
 			isCodeSearch: true,
-			resource: 'search/code',
-			maxAttempts: 60
+			resource: 'search/code'
 		});
 
-		expect(decision.kind).toBe('retry');
+		expect(decision.kind).toBe('pace');
 	});
 
-	it('still gives up at the default ceiling', () => {
+	it('does not spend an attempt on a quota that simply needs time', () => {
 		const decision = decideRetry({
 			status: 403,
 			headers: exhausted(),
 			attempt: MAX_ATTEMPTS,
 			isCodeSearch: true,
 			resource: 'search/code'
+		});
+
+		expect(decision.kind).not.toBe('fail');
+	});
+
+	it('gives up when the reset is further away than a run should wait', () => {
+		const decision = decideRetry({
+			status: 403,
+			headers: exhausted(3600),
+			attempt: 1,
+			isCodeSearch: true,
+			resource: 'search/code'
+		});
+
+		expect(decision.kind).toBe('fail');
+	});
+
+	it('still fails a request that keeps erroring for other reasons', () => {
+		const decision = decideRetry({
+			status: 502,
+			headers: headers(),
+			attempt: MAX_ATTEMPTS,
+			isCodeSearch: false,
+			resource: 'repos/acme/app'
 		});
 
 		expect(decision.kind).toBe('fail');

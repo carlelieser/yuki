@@ -106,7 +106,7 @@ describe('createGithubClient', () => {
 		await client.getRepository('acme', 'app');
 		await client.getRepository('acme', 'app', 'W/"abc"');
 
-		expect(client.stats).toEqual({ requestCount: 2, notModifiedCount: 1 });
+		expect(client.stats).toEqual({ requestCount: 2, notModifiedCount: 1, pacedWaitMs: 0 });
 	});
 
 	it('authenticates every request', async () => {

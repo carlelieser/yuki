@@ -26,6 +26,7 @@ export class GithubSkip extends Error {}
 export type ClientStats = {
 	requestCount: number;
 	notModifiedCount: number;
+	pacedWaitMs: number;
 };
 
 function sleep(ms: number): Promise<void> {
@@ -38,7 +39,7 @@ export function createGithubClient(
 	wait: (ms: number) => Promise<void> = sleep,
 	maxAttempts?: number
 ) {
-	const stats: ClientStats = { requestCount: 0, notModifiedCount: 0 };
+	const stats: ClientStats = { requestCount: 0, notModifiedCount: 0, pacedWaitMs: 0 };
 
 	async function request<Body>(
 		path: string,
@@ -47,7 +48,9 @@ export function createGithubClient(
 		const url = path.startsWith('http') ? path : `${API_ORIGIN}${path}`;
 		const isCodeSearch = url.includes('/search/code');
 
-		for (let attempt = 1; ; attempt += 1) {
+		let attempt = 1;
+
+		for (;;) {
 			const headers: Record<string, string> = {
 				accept,
 				authorization: `Bearer ${token}`,
@@ -83,7 +86,14 @@ export function createGithubClient(
 				};
 			}
 
+			if (decision.kind === 'pace') {
+				stats.pacedWaitMs += decision.waitMs;
+				await wait(decision.waitMs);
+				continue;
+			}
+
 			if (decision.kind === 'retry') {
+				attempt += 1;
 				await wait(decision.waitMs);
 				continue;
 			}
