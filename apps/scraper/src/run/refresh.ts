@@ -8,20 +8,7 @@ import { GithubSkip, type GithubClient } from '@yuki/github';
 import { iconFrom, readOptional } from './icon-source.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
-import {
-	buildBlobUrl,
-	buildIconUrl,
-	collectLfsPaths,
-	findDeclaredIconPaths,
-	findManifestPath,
-	findRasterForReference,
-	pickBestDeclared,
-	readAdaptiveRasterLayers,
-	readManifestIcon,
-	readRasterReferences
-} from '../mapping/icon.ts';
-import { composeAdaptiveRaster, toPngDataUri } from '../mapping/adaptive-raster.ts';
-import { buildVectorIcon } from '../mapping/adaptive-vector.ts';
+import { collectLfsPaths } from '../mapping/icon.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
 import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
