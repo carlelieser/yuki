@@ -41,11 +41,7 @@ class LibraryViewModel @Inject internal constructor(
         )
 
     init {
-        viewModelScope.launch { reconcile() }
-    }
-
-    fun onResume() {
-        viewModelScope.launch { reconcile() }
+        viewModelScope.launch { refreshLocalState() }
     }
 
     fun onPullToRefresh() {
@@ -68,6 +64,10 @@ class LibraryViewModel @Inject internal constructor(
 
     private suspend fun reconcile() {
         runCatching { dependencies.detection.reconcile() }
+        refreshLocalState()
+    }
+
+    private suspend fun refreshLocalState() {
         dependencies.reconciler.reconcile(store.installs())
         resumes.value += 1
         progress.clearSettled()

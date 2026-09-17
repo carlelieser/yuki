@@ -80,7 +80,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun reconcilesAgainOnResumeWhenAnAppDisappears() = runTest {
+    fun reconcilesAgainOnRefreshWhenAnAppDisappears() = runTest {
         val store = FakeInstallStore(listOf(TERMUX))
         val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
         val viewModel = viewModelFor(store, packages)
@@ -90,7 +90,7 @@ class LibraryViewModelTest {
             assertEquals(listOf(TERMUX), successApps(awaitItem()))
 
             packages.uninstall(TERMUX.packageName)
-            viewModel.onResume()
+            viewModel.onPullToRefresh()
 
             assertEquals(emptyList<InstalledApp>(), successApps(awaitItem()))
             cancelAndIgnoreRemainingEvents()
@@ -128,7 +128,7 @@ class LibraryViewModelTest {
             assertEquals(UiState.Loading, awaitItem())
             assertEquals(listOf(TERMUX), successApps(awaitItem()))
 
-            viewModel.onResume()
+            viewModel.onPullToRefresh()
             advanceUntilIdle()
 
             assertEquals(0, store.forgetCalls)
@@ -386,7 +386,7 @@ class LibraryViewModelTest {
             assertEquals(UiState.Loading, awaitItem())
             assertTrue(singleItem(awaitItem()).isFailed)
 
-            viewModel.onResume()
+            viewModel.onPullToRefresh()
             advanceUntilIdle()
             cancelAndIgnoreRemainingEvents()
         }
