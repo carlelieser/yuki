@@ -10,8 +10,12 @@ export function hasAndroidStructure(paths: string[]): boolean {
 	return paths.some(isAndroidStructurePath);
 }
 
-const STRONG_KINDS: EvidenceKind[] = ['provider_class', 'gradle_dependency'];
-const PROBABLE_KINDS: EvidenceKind[] = ['legacy_gradle_dependency', 'source_filename'];
+const STRONG_KINDS: EvidenceKind[] = ['provider_class', 'runtime_api_call'];
+const PROBABLE_KINDS: EvidenceKind[] = [
+	'gradle_dependency',
+	'legacy_gradle_dependency',
+	'source_filename'
+];
 
 export function mergeEvidence(evidence: DetectedEvidence[]): DetectedEvidence[] {
 	const byKind = new Map<EvidenceKind, DetectedEvidence>();

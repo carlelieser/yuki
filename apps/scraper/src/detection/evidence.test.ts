@@ -6,8 +6,31 @@ describe('scoreConfidence', () => {
 		expect(scoreConfidence([{ kind: 'provider_class', detail: null }])).toBe('strong');
 	});
 
-	it('rates the current gradle coordinate as strong', () => {
-		expect(scoreConfidence([{ kind: 'gradle_dependency', detail: null }])).toBe('strong');
+	it('rates a runtime api call as strong', () => {
+		expect(scoreConfidence([{ kind: 'runtime_api_call', detail: null }])).toBe('strong');
+	});
+
+	it('rates the current gradle coordinate as probable because linking is not using', () => {
+		expect(scoreConfidence([{ kind: 'gradle_dependency', detail: null }])).toBe('probable');
+	});
+
+	it('leaves a root app that only borrows a shizuku utility short of strong', () => {
+		expect(
+			scoreConfidence([
+				{ kind: 'gradle_dependency', detail: 'dev.rikka.shizuku in build.gradle' },
+				{ kind: 'source_filename', detail: 'PixelLauncherModsRootService.kt' }
+			])
+		).toBe('probable');
+	});
+
+	it('rates an app that registers the provider and calls the api as strong', () => {
+		expect(
+			scoreConfidence([
+				{ kind: 'provider_class', detail: 'AndroidManifest.xml' },
+				{ kind: 'runtime_api_call', detail: 'Shizuku.pingBinder in Kotlin source' },
+				{ kind: 'gradle_dependency', detail: 'dev.rikka.shizuku in build.gradle.kts' }
+			])
+		).toBe('strong');
 	});
 
 	it('rates the legacy coordinate as probable', () => {

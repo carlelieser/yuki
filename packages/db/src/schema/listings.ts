@@ -38,6 +38,7 @@ export const listingCategory = pgEnum('listing_category', [
 
 export const evidenceKind = pgEnum('evidence_kind', [
 	'provider_class',
+	'runtime_api_call',
 	'gradle_dependency',
 	'legacy_gradle_dependency',
 	'source_filename',

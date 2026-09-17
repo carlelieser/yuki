@@ -24,6 +24,41 @@ export function buildCodeSearchQueries(): CodeSearchQuery[] {
 			detail: 'rikka.shizuku.ShizukuProvider in AndroidManifest.xml'
 		},
 		{
+			q: 'Shizuku.pingBinder language:kotlin',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.pingBinder in Kotlin source'
+		},
+		{
+			q: 'Shizuku.pingBinder language:java',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.pingBinder in Java source'
+		},
+		{
+			q: 'Shizuku.checkSelfPermission language:kotlin',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.checkSelfPermission in Kotlin source'
+		},
+		{
+			q: 'Shizuku.checkSelfPermission language:java',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.checkSelfPermission in Java source'
+		},
+		{
+			q: 'Shizuku.requestPermission language:kotlin',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.requestPermission in Kotlin source'
+		},
+		{
+			q: 'Shizuku.requestPermission language:java',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.requestPermission in Java source'
+		},
+		{
+			q: 'Shizuku.newProcess language:kotlin',
+			evidence: 'runtime_api_call',
+			detail: 'Shizuku.newProcess in Kotlin source'
+		},
+		{
 			q: 'dev.rikka.shizuku filename:build.gradle',
 			evidence: 'gradle_dependency',
 			detail: 'dev.rikka.shizuku in build.gradle'
