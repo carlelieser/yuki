@@ -145,7 +145,13 @@ export async function discover(
 			if (found.size >= options.maxNewRepos) return;
 
 			const next = await client.searchCode(scoped, page, RESULTS_PER_PAGE);
-			if (!next.isModified) break;
+
+			if (!next.isModified) {
+				warnings.push(
+					`Query "${scoped}" stopped at page ${page} before its ${totalCount} results were read; not recording it as searched`
+				);
+				return;
+			}
 
 			absorbCode(query, next.body.items);
 			lastPageSize = next.body.items.length;
@@ -205,7 +211,13 @@ export async function discover(
 			if (found.size >= options.maxNewRepos) return false;
 
 			const next = await client.searchRepositories(scoped, page, RESULTS_PER_PAGE);
-			if (!next.isModified) break;
+
+			if (!next.isModified) {
+				warnings.push(
+					`Query "${scoped}" stopped at page ${page} before its ${totalCount} results were read; not recording it as searched`
+				);
+				return false;
+			}
 
 			absorbRepositories(query, next.body.items);
 			lastPageSize = next.body.items.length;

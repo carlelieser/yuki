@@ -107,6 +107,38 @@ describe('discover', () => {
 		expect(result.warnings.some((w) => w.includes('matched nothing'))).toBe(true);
 	});
 
+	it('does not record a partition whose paging stopped before the last result', async () => {
+		const completed: string[] = [];
+		const client = {
+			stats: { requestCount: 0, notModifiedCount: 0 },
+			searchCode: async (_q: string, page: number) => {
+				if (page > 1) return { isModified: false };
+				return {
+					isModified: true,
+					body: {
+						total_count: 250,
+						items: Array.from({ length: 100 }, (_unused, index) => codeItem(index + 1))
+					}
+				};
+			},
+			searchRepositories: async () => ({ isModified: true, body: { total_count: 0, items: [] } })
+		} as unknown as GithubClient;
+
+		const result = await discover(client, () => false, {
+			maxNewRepos: 500,
+			range: fullRange,
+			partitions: {
+				isComplete: async () => false,
+				markComplete: async (partition) => {
+					completed.push(partition);
+				}
+			}
+		});
+
+		expect(completed).toEqual([]);
+		expect(result.warnings.some((w) => w.includes('stopped at page 2'))).toBe(true);
+	});
+
 	it('does not revisit partitions already recorded as complete', async () => {
 		const queries: string[] = [];
 		const client = fakeClient(() => ({ totalCount: 1, items: [codeItem(7)] }), queries);
