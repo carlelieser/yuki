@@ -84,6 +84,12 @@ class YukiTabTransitionTest {
     private fun exploreLeftEdge() =
         composeRule.onNodeWithTag(EXPLORE_TAG).getUnclippedBoundsInRoot().left
 
+    private fun exploreHorizontalCenter(): Float {
+        val bounds = composeRule.onNodeWithTag(EXPLORE_TAG).getUnclippedBoundsInRoot()
+
+        return (bounds.left.value + bounds.right.value) / 2f
+    }
+
     @Test
     fun poppingTheListingSlidesExploreBackIn() {
         setContent()
@@ -118,24 +124,39 @@ class YukiTabTransitionTest {
     }
 
     @Test
-    fun movingToBrowseKeepsExploreInPlaceBecauseBrowseIsATab() {
+    fun movingToBrowseDoesNotSlideExploreBecauseBrowseIsATab() {
         setContent()
-        val restingLeft = exploreLeftEdge()
+        val restingCenter = exploreHorizontalCenter()
 
         navigate { navController.navigate(SearchRoute) }
         composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
 
-        assertEquals(restingLeft.value, exploreLeftEdge().value, 0.5f)
+        assertEquals(restingCenter, exploreHorizontalCenter(), 0.5f)
     }
 
     @Test
-    fun movingBetweenTabsKeepsExploreInPlace() {
+    fun movingBetweenTabsDoesNotSlideExplore() {
+        setContent()
+        val restingCenter = exploreHorizontalCenter()
+
+        navigate { navController.navigate(LibraryRoute) }
+        composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
+
+        assertEquals(restingCenter, exploreHorizontalCenter(), 0.5f)
+    }
+
+    @Test
+    fun movingBetweenTabsScalesExploreRatherThanLeavingItStatic() {
         setContent()
         val restingLeft = exploreLeftEdge()
 
         navigate { navController.navigate(LibraryRoute) }
         composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
 
-        assertEquals(restingLeft.value, exploreLeftEdge().value, 0.5f)
+        val scaledOffset = exploreLeftEdge() - restingLeft
+        assertTrue(
+            "Explore should scale while a peer tab enters, was $scaledOffset",
+            scaledOffset.value != 0f,
+        )
     }
 }

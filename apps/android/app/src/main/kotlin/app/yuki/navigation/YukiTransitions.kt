@@ -5,6 +5,8 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.NavBackStackEntry
@@ -37,14 +39,28 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.isTabToTab(): Bool
     return initialTab != null && targetTab != null
 }
 
+private fun peerEnter(): EnterTransition =
+    fadeIn(animationSpec = YukiMotion.fade()) +
+        scaleIn(
+            initialScale = YukiMotion.TabScaleEnter,
+            animationSpec = YukiMotion.fade(),
+        )
+
+private fun peerExit(): ExitTransition =
+    fadeOut(animationSpec = YukiMotion.fade()) +
+        scaleOut(
+            targetScale = YukiMotion.TabScaleExit,
+            animationSpec = YukiMotion.fade(),
+        )
+
 internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabEnter(): EnterTransition =
-    if (isTabToTab()) fadeIn(animationSpec = YukiMotion.fade()) else forwardEnter()
+    if (isTabToTab()) peerEnter() else forwardEnter()
 
 internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabExit(): ExitTransition =
-    if (isTabToTab()) fadeOut(animationSpec = YukiMotion.fade()) else forwardExit()
+    if (isTabToTab()) peerExit() else forwardExit()
 
 internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabPopEnter(): EnterTransition =
-    if (isTabToTab()) fadeIn(animationSpec = YukiMotion.fade()) else backEnter()
+    if (isTabToTab()) peerEnter() else backEnter()
 
 internal fun AnimatedContentTransitionScope<NavBackStackEntry>.tabPopExit(): ExitTransition =
-    if (isTabToTab()) fadeOut(animationSpec = YukiMotion.fade()) else backExit()
+    if (isTabToTab()) peerExit() else backExit()
