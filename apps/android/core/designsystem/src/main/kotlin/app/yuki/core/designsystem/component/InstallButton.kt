@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -98,6 +98,18 @@ private fun describeDownload(size: DownloadSize): String {
 }
 
 @Composable
+private fun LinearDownloadBar(fraction: Float?) {
+    if (fraction == null) {
+        LinearWavyProgressIndicator()
+        return
+    }
+
+    val animated = animatedProgress(fraction)
+
+    LinearWavyProgressIndicator(progress = { animated })
+}
+
+@Composable
 private fun LinearDownloadProgress(size: DownloadSize) {
     val fraction = size.fraction
     val progressModifier = Modifier
@@ -105,12 +117,11 @@ private fun LinearDownloadProgress(size: DownloadSize) {
         .testTag(INSTALL_PROGRESS_TAG)
 
     Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
-        if (fraction == null) {
-            LinearProgressIndicator(modifier = progressModifier)
-            return@Column
+        ProgressIndicatorCrossfade(fraction = fraction, modifier = progressModifier) { settled ->
+            LinearDownloadBar(fraction = settled)
         }
 
-        LinearProgressIndicator(progress = { fraction }, modifier = progressModifier)
+        if (fraction == null) return@Column
 
         Text(
             text = size.label,
@@ -123,16 +134,25 @@ private fun LinearDownloadProgress(size: DownloadSize) {
 }
 
 @Composable
+private fun CircularDownloadRing(fraction: Float?) {
+    if (fraction == null) {
+        CircularWavyProgressIndicator()
+        return
+    }
+
+    val animated = animatedProgress(fraction)
+
+    CircularWavyProgressIndicator(progress = { animated })
+}
+
+@Composable
 private fun CircularDownloadProgress(size: DownloadSize) {
-    val fraction = size.fraction
     val progressModifier = Modifier
         .size(YukiSize.ProgressCircular)
         .testTag(INSTALL_PROGRESS_TAG)
 
-    if (fraction == null) {
-        CircularProgressIndicator(modifier = progressModifier)
-    } else {
-        CircularProgressIndicator(progress = { fraction }, modifier = progressModifier)
+    ProgressIndicatorCrossfade(fraction = size.fraction, modifier = progressModifier) { settled ->
+        CircularDownloadRing(fraction = settled)
     }
 }
 

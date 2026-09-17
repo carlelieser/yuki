@@ -2,7 +2,6 @@ package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,13 +38,12 @@ fun AppIconProgress(
     }
 
     val fraction = installProgressFraction(state)
-    val ring = Modifier
-        .size(YukiSize.IconMedium)
-        .testTag(APP_ICON_PROGRESS_TAG)
+    val ring = Modifier.size(YukiSize.IconMedium)
 
     Box(
         modifier = modifier
             .size(YukiSize.IconMedium)
+            .testTag(APP_ICON_PROGRESS_TAG)
             .semantics(mergeDescendants = true) {
                 if (description != null) contentDescription = description
             },
@@ -53,10 +51,20 @@ fun AppIconProgress(
     ) {
         AppIcon(iconUrl = iconUrl, size = YukiSize.IconMediumInProgress)
 
-        if (fraction == null) {
-            CircularProgressIndicator(modifier = ring)
-        } else {
-            CircularWavyProgressIndicator(progress = { fraction }, modifier = ring)
+        ProgressIndicatorCrossfade(fraction = fraction, modifier = ring) { settled ->
+            InstallRingIndicator(fraction = settled)
         }
     }
+}
+
+@Composable
+private fun InstallRingIndicator(fraction: Float?) {
+    if (fraction == null) {
+        CircularWavyProgressIndicator()
+        return
+    }
+
+    val animated = animatedProgress(fraction)
+
+    CircularWavyProgressIndicator(progress = { animated })
 }
