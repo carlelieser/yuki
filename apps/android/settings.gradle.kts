@@ -21,6 +21,7 @@ rootProject.name = "yuki-android"
 
 include(":app")
 
+include(":core:auth")
 include(":core:database")
 include(":core:datastore")
 include(":core:designsystem")
