@@ -17,16 +17,16 @@ class RemoteRequestException(
 private fun describe(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> "the device is offline"
     FailureReason.NotFound -> "the server returned 404"
+    FailureReason.Unauthorized -> "the server returned 401"
     is FailureReason.Server -> "the server returned ${reason.status}"
     is FailureReason.Unexpected -> "an unexpected error occurred"
 }
 
-internal fun statusFailure(response: HttpResponse): FailureReason =
-    if (response.status == HttpStatusCode.NotFound) {
-        FailureReason.NotFound
-    } else {
-        FailureReason.Server(response.status.value)
-    }
+internal fun statusFailure(response: HttpResponse): FailureReason = when (response.status) {
+    HttpStatusCode.NotFound -> FailureReason.NotFound
+    HttpStatusCode.Unauthorized -> FailureReason.Unauthorized
+    else -> FailureReason.Server(response.status.value)
+}
 
 internal fun thrownFailure(cause: Throwable): FailureReason = when (cause) {
     is IOException -> FailureReason.Offline

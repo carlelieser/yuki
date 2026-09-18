@@ -13,6 +13,8 @@ sealed interface FailureReason {
 
     data object NotFound : FailureReason
 
+    data object Unauthorized : FailureReason
+
     data class Server(val status: Int) : FailureReason
 
     data class Unexpected(val cause: Throwable) : FailureReason

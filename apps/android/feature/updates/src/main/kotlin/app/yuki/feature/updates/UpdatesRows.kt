@@ -93,6 +93,7 @@ private fun UncheckedNote(reason: FailureReason) {
 internal fun uncheckedDetail(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> "No connection"
     FailureReason.NotFound -> "Not in the catalog"
+    FailureReason.Unauthorized -> "Sign in again"
     is FailureReason.Server -> "Server error ${reason.status}"
     is FailureReason.Unexpected -> "Unexpected error"
 }
