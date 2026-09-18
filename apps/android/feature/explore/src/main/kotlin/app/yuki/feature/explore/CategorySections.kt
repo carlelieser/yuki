@@ -42,9 +42,13 @@ internal fun LazyListScope.categorySections(
     actions: CategorySectionActions,
 ) {
     when (sections) {
-        is UiState.Loading -> item { SectionsLoading() }
+        is UiState.Loading -> item(key = SECTIONS_STATUS_KEY) {
+            SectionsLoading(modifier = Modifier.animateItem())
+        }
 
-        is UiState.Failure -> item { SectionsFailure(sections) }
+        is UiState.Failure -> item(key = SECTIONS_STATUS_KEY) {
+            SectionsFailure(sections = sections, modifier = Modifier.animateItem())
+        }
 
         is UiState.Success -> sectionList(
             entries = sections.data,
@@ -60,7 +64,7 @@ private fun LazyListScope.sectionList(
     actions: CategorySectionActions,
 ) {
     if (entries.isEmpty()) {
-        item { SectionsEmpty() }
+        item(key = SECTIONS_STATUS_KEY) { SectionsEmpty(modifier = Modifier.animateItem()) }
         return
     }
 
@@ -109,27 +113,29 @@ private fun CategorySectionHeader(category: ListingCategory, onSeeAll: () -> Uni
     )
 }
 
+private const val SECTIONS_STATUS_KEY = "categorySectionsStatus"
+
 @Composable
-private fun SectionsLoading() {
+private fun SectionsLoading(modifier: Modifier = Modifier) {
     YukiLoadingIndicator(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(YukiSpacing.ExtraLarge),
     )
 }
 
 @Composable
-private fun SectionsFailure(sections: UiState.Failure) {
+private fun SectionsFailure(sections: UiState.Failure, modifier: Modifier = Modifier) {
     FailureState(
         reason = sections.reason,
-        modifier = Modifier.padding(YukiSpacing.Large),
+        modifier = modifier.padding(YukiSpacing.Large),
     )
 }
 
 @Composable
-private fun SectionsEmpty() {
+private fun SectionsEmpty(modifier: Modifier = Modifier) {
     CollectionEmpty(
         content = NothingToExplore,
-        modifier = Modifier.padding(YukiSpacing.Large),
+        modifier = modifier.padding(YukiSpacing.Large),
     )
 }

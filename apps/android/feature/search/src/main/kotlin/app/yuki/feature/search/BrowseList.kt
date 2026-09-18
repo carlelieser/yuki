@@ -14,7 +14,13 @@ import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingInstalls
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.component.toProductListItemContent
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
@@ -77,16 +83,39 @@ private fun BrowseFailure(refresh: LoadState.Error, onRetry: () -> Unit) {
     )
 }
 
+private enum class AppendKind {
+    Idle,
+    Loading,
+    Error,
+}
+
+private fun appendKindOf(append: LoadState): AppendKind = when (append) {
+    is LoadState.Loading -> AppendKind.Loading
+    is LoadState.Error -> AppendKind.Error
+    else -> AppendKind.Idle
+}
+
 @Composable
 private fun AppendState(listings: LazyPagingItems<ListingSummary>) {
-    val append = listings.loadState.append
-
-    when (append) {
-        is LoadState.Loading -> CenteredLoading()
-        is LoadState.Error -> BrowseFailure(refresh = append, onRetry = listings::retry)
-        else -> Unit
+    AnimatedContent(
+        targetState = listings.loadState.append,
+        contentKey = ::appendKindOf,
+        transitionSpec = {
+            fadeIn(animationSpec = YukiMotion.fade()) togetherWith
+                fadeOut(animationSpec = YukiMotion.fade()) using
+                SizeTransform(clip = false) { _, _ -> YukiMotion.resize() }
+        },
+        label = APPEND_STATE_LABEL,
+    ) { append ->
+        when (append) {
+            is LoadState.Loading -> CenteredLoading()
+            is LoadState.Error -> BrowseFailure(refresh = append, onRetry = listings::retry)
+            else -> Unit
+        }
     }
 }
+
+private const val APPEND_STATE_LABEL = "browseAppendState"
 
 @Composable
 private fun CenteredLoading() {
