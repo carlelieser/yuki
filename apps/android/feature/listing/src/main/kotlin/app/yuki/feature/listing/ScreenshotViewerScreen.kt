@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -113,6 +114,10 @@ private fun ScreenshotPager(screenshots: List<Screenshot>, startIndex: Int) {
     LaunchedEffect(pagerState.currentPage, screenshots) {
         val current = screenshots.getOrNull(pagerState.currentPage) ?: return@LaunchedEffect
         focus.focus(current.url)
+    }
+
+    DisposableEffect(focus) {
+        onDispose(focus::release)
     }
 
     HorizontalPager(

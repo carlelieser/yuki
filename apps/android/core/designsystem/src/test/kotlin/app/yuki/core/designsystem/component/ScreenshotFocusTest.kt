@@ -28,6 +28,17 @@ class ScreenshotFocusTest {
     }
 
     @Test
+    fun releasingFocusMakesEveryScreenshotEligibleAgain() {
+        val focus = ScreenshotFocus()
+        focus.focus(SECOND)
+
+        focus.release()
+
+        assertTrue(focus.isFocused(FIRST))
+        assertTrue(focus.isFocused(SECOND))
+    }
+
+    @Test
     fun aFocusFromAnotherListingIsDropped() {
         val focus = ScreenshotFocus()
         focus.focus(SECOND)

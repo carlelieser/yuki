@@ -13,6 +13,10 @@ class ScreenshotFocus {
         this.url = url
     }
 
+    fun release() {
+        url = null
+    }
+
     fun confine(urls: List<String>) {
         if (url !in urls) url = null
     }

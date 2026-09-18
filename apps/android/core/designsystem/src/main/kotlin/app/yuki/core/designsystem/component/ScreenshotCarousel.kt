@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -31,18 +30,11 @@ fun ScreenshotCarousel(
     onSelect: ((ScreenshotSelection) -> Unit)? = null,
 ) {
     val urls = screenshots.map(Screenshot::url)
-    val listState = rememberLazyListState()
     val focus = LocalScreenshotFocus.current
 
     LaunchedEffect(urls) { focus.confine(urls) }
 
-    LaunchedEffect(focus.url, urls) {
-        val target = urls.indexOf(focus.url)
-        if (target >= 0) listState.scrollToItem(target)
-    }
-
     LazyRow(
-        state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
