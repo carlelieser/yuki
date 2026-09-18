@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.designsystem.theme.YukiWave
 import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallState
 
@@ -100,20 +101,23 @@ private fun describeDownload(size: DownloadSize): String {
 @Composable
 private fun LinearDownloadBar(fraction: Float?) {
     if (fraction == null) {
-        LinearWavyProgressIndicator()
+        LinearWavyProgressIndicator(wavelength = YukiWave.LinearWavelength)
         return
     }
 
     val animated = animatedProgress(fraction)
 
-    LinearWavyProgressIndicator(progress = { animated })
+    LinearWavyProgressIndicator(
+        progress = { animated },
+        wavelength = YukiWave.LinearWavelength,
+    )
 }
 
 @Composable
 private fun LinearDownloadProgress(size: DownloadSize) {
     val fraction = size.fraction
     val progressModifier = Modifier
-        .width(YukiSpacing.Section * 3)
+        .width(YukiSize.ProgressLinearWidth)
         .testTag(INSTALL_PROGRESS_TAG)
 
     Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
@@ -136,13 +140,16 @@ private fun LinearDownloadProgress(size: DownloadSize) {
 @Composable
 private fun CircularDownloadRing(fraction: Float?) {
     if (fraction == null) {
-        CircularWavyProgressIndicator()
+        CircularWavyProgressIndicator(wavelength = YukiWave.CircularWavelength)
         return
     }
 
     val animated = animatedProgress(fraction)
 
-    CircularWavyProgressIndicator(progress = { animated })
+    CircularWavyProgressIndicator(
+        progress = { animated },
+        wavelength = YukiWave.CircularWavelength,
+    )
 }
 
 @Composable
