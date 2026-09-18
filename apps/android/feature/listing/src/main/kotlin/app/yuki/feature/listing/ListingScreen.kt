@@ -18,16 +18,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OverflowMenu
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.UiState
 
 const val LISTING_LOADING_TAG = "listingLoading"
 
 data class ListingNavigation(
     val onBackClick: () -> Unit,
-    val onScreenshotSelected: (Int) -> Unit,
+    val onScreenshotSelected: (ScreenshotSelection) -> Unit,
 )
 
 @Composable
@@ -77,7 +79,7 @@ private fun ResumeEffect(onResume: () -> Unit) {
 @Composable
 private fun rememberListingCallbacks(
     viewModel: ListingViewModel,
-    onScreenshotSelected: (Int) -> Unit,
+    onScreenshotSelected: (ScreenshotSelection) -> Unit,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 
@@ -103,7 +105,7 @@ data class ListingScreenCallbacks(
 
 data class ListingScreenState(
     val listing: UiState<ListingUiModel>,
-    val installStatus: ListingInstallStatus,
+    val installStatus: ListingInstallStatus?,
     val isConfirmingUninstall: Boolean = false,
     val hasUninstallFailed: Boolean = false,
     val actions: List<ListingAction> = emptyList(),
@@ -134,8 +136,8 @@ internal fun ListingScreen(
         modifier = modifier,
         trailing = { OverflowMenu(actions = state.actions) },
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            when (val listing = state.listing) {
+        YukiAnimatedState(state = state.listing, modifier = Modifier.fillMaxSize()) { listing ->
+            when (listing) {
                 UiState.Loading -> ListingLoading()
                 is UiState.Success -> {
                     ListingDetailBody(
@@ -157,14 +159,17 @@ internal fun ListingScreen(
                         )
                     }
                 }
-                is UiState.Failure -> FailureState(
-                    reason = listing.reason,
-                    missingMessage = LISTING_MISSING_MESSAGE,
-                    onRetry = callbacks.onRetry,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(YukiSpacing.Large),
-                )
+                is UiState.Failure -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FailureState(
+                        reason = listing.reason,
+                        missingMessage = LISTING_MISSING_MESSAGE,
+                        onRetry = callbacks.onRetry,
+                        modifier = Modifier.padding(YukiSpacing.Large),
+                    )
+                }
             }
         }
     }

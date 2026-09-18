@@ -29,6 +29,7 @@ import androidx.paging.compose.LazyPagingItems
 import app.yuki.core.designsystem.component.SearchBar
 import app.yuki.core.designsystem.component.SearchBarFocus
 import app.yuki.core.designsystem.component.SearchBarState
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreenCenter
@@ -112,25 +113,33 @@ private fun BrowseBody(
     contentPadding: PaddingValues,
     isSearchMode: Boolean,
 ) {
-    val content = (state as? UiState.Success)?.data
-        ?: return YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+    YukiAnimatedState(state = state) { settled ->
+        val content = (settled as? UiState.Success)?.data
+            ?: return@YukiAnimatedState YukiScreenCenter(contentPadding) {
+                YukiLoadingIndicator()
+            }
 
-    AnimatedContent(
-        targetState = isSearchMode,
-        transitionSpec = { fadeIn(YukiMotion.fade()) togetherWith fadeOut(YukiMotion.fade()) },
-        label = BROWSE_MODE_LABEL,
-    ) { searching ->
-        if (searching) {
-            SearchMode(content = content, callbacks = callbacks, contentPadding = contentPadding)
-            return@AnimatedContent
+        AnimatedContent(
+            targetState = isSearchMode,
+            transitionSpec = { fadeIn(YukiMotion.fade()) togetherWith fadeOut(YukiMotion.fade()) },
+            label = BROWSE_MODE_LABEL,
+        ) { searching ->
+            if (searching) {
+                SearchMode(
+                    content = content,
+                    callbacks = callbacks,
+                    contentPadding = contentPadding,
+                )
+                return@AnimatedContent
+            }
+
+            BrowseListing(
+                content = content,
+                listings = listings,
+                callbacks = callbacks,
+                contentPadding = contentPadding,
+            )
         }
-
-        BrowseListing(
-            content = content,
-            listings = listings,
-            callbacks = callbacks,
-            contentPadding = contentPadding,
-        )
     }
 }
 

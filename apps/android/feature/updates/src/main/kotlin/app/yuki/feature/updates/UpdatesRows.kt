@@ -31,7 +31,9 @@ internal fun LazyListScope.updateRows(content: UpdatesContent, actions: UpdatesA
     items(content.updates, key = UpdateRow::githubRepoId) { row ->
         ProductListItem(
             content = row.listItem,
-            modifier = Modifier.clickable { actions.onListingClick(row.slug) },
+            modifier = Modifier
+                .animateItem()
+                .clickable { actions.onListingClick(row.slug) },
             trailing = {
                 InstallButton(
                     state = row.install,
@@ -51,15 +53,23 @@ internal fun LazyListScope.uncheckedRows(content: UpdatesContent, actions: Updat
     item { SectionHeader(title = UNCHECKED_TITLE) }
 
     items(content.unchecked, key = UncheckedApp::githubRepoId) { entry ->
-        UncheckedRow(entry = entry, onClick = { actions.onListingClick(entry.slug) })
+        UncheckedRow(
+            entry = entry,
+            onClick = { actions.onListingClick(entry.slug) },
+            modifier = Modifier.animateItem(),
+        )
     }
 }
 
 @Composable
-private fun UncheckedRow(entry: UncheckedApp, onClick: () -> Unit) {
+private fun UncheckedRow(
+    entry: UncheckedApp,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     ProductListItem(
         content = entry.listItem,
-        modifier = Modifier.clickable(onClick = onClick).testTag(UNCHECKED_ROW_TAG),
+        modifier = modifier.clickable(onClick = onClick).testTag(UNCHECKED_ROW_TAG),
         trailing = { UncheckedNote(reason = entry.reason) },
     )
 }

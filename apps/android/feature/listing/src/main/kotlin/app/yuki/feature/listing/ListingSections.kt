@@ -99,9 +99,13 @@ private fun LinkRowText(row: ListingLinkRow, modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun ListingLinkItem(row: ListingLinkRow, onOpen: () -> Unit) {
+internal fun ListingLinkItem(
+    row: ListingLinkRow,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onOpen)
             .defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)

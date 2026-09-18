@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -16,6 +17,7 @@ import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.Screenshot
+import app.yuki.core.model.ScreenshotSelection
 import coil3.compose.AsyncImage
 
 fun describeScreenshot(alt: String?, index: Int, total: Int): String =
@@ -25,18 +27,24 @@ fun describeScreenshot(alt: String?, index: Int, total: Int): String =
 fun ScreenshotCarousel(
     screenshots: List<Screenshot>,
     modifier: Modifier = Modifier,
-    onSelect: ((Int) -> Unit)? = null,
+    onSelect: ((ScreenshotSelection) -> Unit)? = null,
 ) {
+    val urls = screenshots.map(Screenshot::url)
+    val focus = LocalScreenshotFocus.current
+
+    LaunchedEffect(urls) { focus.confine(urls) }
+
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = YukiSpacing.Large),
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
     ) {
-        itemsIndexed(items = screenshots) { index, screenshot ->
+        itemsIndexed(items = screenshots, key = { _, item -> item.url }) { index, screenshot ->
             val itemModifier = Modifier
                 .width(YukiSize.ScreenshotWidth)
                 .aspectRatio(YukiRatio.Screenshot)
                 .clip(YukiShape.Media)
+                .sharedScreenshot(url = screenshot.url)
 
             AsyncImage(
                 model = screenshot.url,
@@ -49,7 +57,9 @@ fun ScreenshotCarousel(
                 modifier = if (onSelect == null) {
                     itemModifier
                 } else {
-                    itemModifier.clickable { onSelect(index) }
+                    itemModifier.clickable {
+                        onSelect(ScreenshotSelection(index = index, urls = urls))
+                    }
                 },
             )
         }

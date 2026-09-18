@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.UiState
@@ -59,13 +60,15 @@ internal fun SettingsContentScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        when (state) {
-            is UiState.Loading -> SettingsLoading()
-            is UiState.Failure -> FailureState(
-                reason = state.reason,
-                modifier = Modifier.padding(YukiSpacing.Large),
-            )
-            is UiState.Success -> SettingsList(content = state.data, actions = actions)
+        YukiAnimatedState(state = state) { settled ->
+            when (settled) {
+                is UiState.Loading -> SettingsLoading()
+                is UiState.Failure -> FailureState(
+                    reason = settled.reason,
+                    modifier = Modifier.padding(YukiSpacing.Large),
+                )
+                is UiState.Success -> SettingsList(content = settled.data, actions = actions)
+            }
         }
     }
 }

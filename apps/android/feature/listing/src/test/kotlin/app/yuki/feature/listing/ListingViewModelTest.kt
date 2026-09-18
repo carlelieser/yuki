@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -165,10 +166,11 @@ class ListingViewModelTest {
 
     @Test
     fun `install progress observed for the listing reaches the screen`() = runTest {
+        installGateway.emitObserved(InstallState.NotInstalled)
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.installStatus.map { it.state }.test {
+        viewModel.installStatus.filterNotNull().map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
 
             viewModel.onInstallAction(InstallAction.Install)
@@ -186,10 +188,11 @@ class ListingViewModelTest {
 
     @Test
     fun `install keeps running after the screen stops collecting`() = runTest {
+        installGateway.emitObserved(InstallState.NotInstalled)
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.installStatus.map { it.state }.test {
+        viewModel.installStatus.filterNotNull().map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
             viewModel.onInstallAction(InstallAction.Install)
             dispatcher.scheduler.advanceUntilIdle()
@@ -252,10 +255,11 @@ class ListingViewModelTest {
 
     @Test
     fun `reports which version the gateway is installing`() = runTest {
+        installGateway.emitObserved(InstallState.NotInstalled)
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.installStatus.test {
+        viewModel.installStatus.filterNotNull().test {
             assertEquals(null, awaitItem().versionTag)
 
             installGateway.emitObserved(InstallState.Downloading(HALF_DOWNLOADED), "v2.0.0")
@@ -269,10 +273,17 @@ class ListingViewModelTest {
         installGateway.emitObserved(InstallState.Installed("v2.0.0"))
         val viewModel = viewModelWith(Result.success(detail()))
 
-        viewModel.installStatus.map { it.state }.test {
-            assertEquals(InstallState.NotInstalled, awaitItem())
+        viewModel.installStatus.filterNotNull().map { it.state }.test {
             assertEquals(InstallState.Installed("v2.0.0"), awaitItem())
         }
+    }
+
+    @Test
+    fun `the install status is unknown until the gateway reports`() = runTest {
+        installGateway.emitObserved(InstallState.Installed("v2.0.0"))
+        val viewModel = viewModelWith(Result.success(detail()))
+
+        assertEquals(null, viewModel.installStatus.value)
     }
 
     @Test

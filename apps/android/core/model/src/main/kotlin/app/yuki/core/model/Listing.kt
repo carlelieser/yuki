@@ -43,6 +43,11 @@ data class Screenshot(
     val alt: String?,
 )
 
+data class ScreenshotSelection(
+    val index: Int,
+    val urls: List<String>,
+)
+
 data class ListingVersion(
     val tag: String,
     val name: String?,

@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import app.yuki.core.model.ListingCategory
+import app.yuki.core.model.ScreenshotSelection
 
 internal class YukiNavigator(
     private val navController: NavHostController,
@@ -33,8 +34,14 @@ internal class YukiNavigator(
         navController.navigate(CategoryRoute(category = category.wireValue))
     }
 
-    fun openScreenshots(slug: String, startIndex: Int) {
-        navController.navigate(ScreenshotRoute(slug = slug, startIndex = startIndex))
+    fun openScreenshots(slug: String, selection: ScreenshotSelection) {
+        navController.navigate(
+            ScreenshotRoute(
+                slug = slug,
+                startIndex = selection.index,
+                urls = selection.urls,
+            ),
+        )
     }
 
     fun navigateUp() {

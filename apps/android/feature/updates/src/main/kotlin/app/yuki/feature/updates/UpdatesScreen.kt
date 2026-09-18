@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
@@ -76,22 +77,24 @@ private fun UpdatesBody(
     actions: UpdatesActions,
     contentPadding: PaddingValues,
 ) {
-    when (state) {
-        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+    YukiAnimatedState(state = state) { settled ->
+        when (settled) {
+            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-        is UiState.Failure -> YukiScreenCenter(contentPadding) {
-            FailureState(
-                reason = state.reason,
-                missingMessage = UPDATES_MISSING_MESSAGE,
-                onRetry = actions.onRetry,
+            is UiState.Failure -> YukiScreenCenter(contentPadding) {
+                FailureState(
+                    reason = settled.reason,
+                    missingMessage = UPDATES_MISSING_MESSAGE,
+                    onRetry = actions.onRetry,
+                )
+            }
+
+            is UiState.Success -> UpdatesList(
+                content = settled.data,
+                actions = actions,
+                contentPadding = contentPadding,
             )
         }
-
-        is UiState.Success -> UpdatesList(
-            content = state.data,
-            actions = actions,
-            contentPadding = contentPadding,
-        )
     }
 }
 

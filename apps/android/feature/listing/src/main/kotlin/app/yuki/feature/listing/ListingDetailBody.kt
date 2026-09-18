@@ -18,13 +18,14 @@ import app.yuki.core.designsystem.component.ScreenshotCarousel
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
+import app.yuki.core.model.ScreenshotSelection
 
 const val LISTING_DETAIL_TAG = "listingDetail"
 
 data class ListingCallbacks(
     val onInstallAction: InstallActionHandler,
     val onOpenLink: LinkOpener,
-    val onScreenshotSelected: (Int) -> Unit,
+    val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onVersionInstallAction: VersionInstallHandler,
 )
 
@@ -33,7 +34,7 @@ fun interface VersionInstallHandler {
 }
 
 data class ListingUninstallStatus(
-    val install: ListingInstallStatus,
+    val install: ListingInstallStatus?,
     val hasUninstallFailed: Boolean = false,
 )
 
@@ -58,9 +59,11 @@ private fun LazyListScope.installSection(
         return
     }
 
+    val install = status.install ?: return
+
     item {
         InstallButton(
-            state = status.install.state,
+            state = install.state,
             onAction = onInstallAction,
             canUninstall = true,
             modifier = Modifier
@@ -88,7 +91,7 @@ private fun LazyListScope.descriptionSection(model: ListingUiModel) {
 
 private fun LazyListScope.screenshotSection(
     model: ListingUiModel,
-    onScreenshotSelected: (Int) -> Unit,
+    onScreenshotSelected: (ScreenshotSelection) -> Unit,
 ) {
     val screenshots = model.detail.screenshots
     if (screenshots.isEmpty()) return
@@ -102,26 +105,33 @@ private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpe
 
     item { SectionHeader(title = "Links") }
     items(items = rows, key = ListingLinkRow::label) { row ->
-        ListingLinkItem(row = row, onOpen = { onOpenLink.open(row.url) })
+        ListingLinkItem(
+            row = row,
+            onOpen = { onOpenLink.open(row.url) },
+            modifier = Modifier.animateItem(),
+        )
     }
 }
 
 private fun LazyListScope.versionSection(
     model: ListingUiModel,
-    status: ListingInstallStatus,
+    status: ListingInstallStatus?,
     onVersionInstallAction: VersionInstallHandler,
 ) {
     val versions = model.detail.versions
-    if (versions.isEmpty()) return
+    if (versions.isEmpty() || status == null) return
 
     item { SectionHeader(title = "Versions") }
     items(items = versions, key = { it.tag }) { version ->
         ListingVersionItem(
             version = version,
-            installState = versionInstallState(version = version, status = status),
-            onAction = InstallActionHandler { action ->
-                onVersionInstallAction.onAction(action, version)
-            },
+            install = VersionInstallPresentation(
+                state = versionInstallState(version = version, status = status),
+                onAction = InstallActionHandler { action ->
+                    onVersionInstallAction.onAction(action, version)
+                },
+            ),
+            modifier = Modifier.animateItem(),
         )
     }
 }

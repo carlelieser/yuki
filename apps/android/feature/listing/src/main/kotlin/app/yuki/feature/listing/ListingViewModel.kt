@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -52,12 +53,12 @@ class ListingViewModel @Inject constructor(
     val hasUninstallFailed: StateFlow<Boolean> = mutableUninstallFailed.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val installStatus: StateFlow<ListingInstallStatus> = mutableListing
+    val installStatus: StateFlow<ListingInstallStatus?> = mutableListing
         .flatMapLatest(::installStatusFor)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = IDLE_STATUS,
+            initialValue = null,
         )
 
     init {
@@ -150,9 +151,10 @@ class ListingViewModel @Inject constructor(
 
     private fun installStatusFor(
         state: UiState<ListingUiModel>,
-    ): Flow<ListingInstallStatus> = when (state) {
+    ): Flow<ListingInstallStatus?> = when (state) {
         is UiState.Success -> installGateway.observe(state.data.repoId)
-        else -> flowOf(IDLE_STATUS)
+        is UiState.Loading -> emptyFlow()
+        is UiState.Failure -> flowOf(IDLE_STATUS)
     }
 
     private fun successOrNull(): ListingUiModel? =

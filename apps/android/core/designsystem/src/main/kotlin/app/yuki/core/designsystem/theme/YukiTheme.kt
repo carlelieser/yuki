@@ -9,6 +9,8 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
@@ -34,10 +36,16 @@ fun YukiTheme(
     isDynamicColorEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = yukiColorScheme(isDarkTheme, isDynamicColorEnabled),
-        motionScheme = MotionScheme.standard(),
-        typography = YukiTypography,
-        content = content,
-    )
+    val isReduceMotion = rememberReduceMotion()
+
+    SideEffect { YukiMotion.isReduced = isReduceMotion }
+
+    CompositionLocalProvider(LocalReduceMotion provides isReduceMotion) {
+        MaterialTheme(
+            colorScheme = yukiColorScheme(isDarkTheme, isDynamicColorEnabled),
+            motionScheme = MotionScheme.standard(),
+            typography = YukiTypography,
+            content = content,
+        )
+    }
 }

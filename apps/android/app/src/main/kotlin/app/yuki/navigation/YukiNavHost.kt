@@ -1,13 +1,20 @@
 package app.yuki.navigation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.yuki.core.designsystem.component.ScreenshotFocus
+import app.yuki.core.designsystem.component.ScreenshotFocusScope
+import app.yuki.core.designsystem.component.ScreenshotTransitionScope
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
 import app.yuki.feature.listing.ListingNavigation
@@ -18,6 +25,7 @@ import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
 import app.yuki.settings.SettingsDestination
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun YukiNavHost(
     navController: NavHostController,
@@ -25,10 +33,39 @@ internal fun YukiNavHost(
     bottomBarPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val screenshotFocus = remember { ScreenshotFocus() }
+
+    SharedTransitionLayout(modifier = modifier) {
+        ScreenshotFocusScope(focus = screenshotFocus) {
+            YukiRoutedContent(
+                navController = navController,
+                navigator = navigator,
+                destinations = DestinationScopes(
+                    sharedScope = this@SharedTransitionLayout,
+                    bottomBarPadding = bottomBarPadding,
+                ),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+private class DestinationScopes(
+    val sharedScope: SharedTransitionScope,
+    val bottomBarPadding: PaddingValues,
+)
+
+@Composable
+private fun YukiRoutedContent(
+    navController: NavHostController,
+    navigator: YukiNavigator,
+    destinations: DestinationScopes,
+) {
+    val bottomBarPadding = destinations.bottomBarPadding
+
     NavHost(
         navController = navController,
         startDestination = ExploreRoute,
-        modifier = modifier,
         enterTransition = { forwardEnter() },
         exitTransition = { forwardExit() },
         popEnterTransition = { backEnter() },
@@ -37,8 +74,8 @@ internal fun YukiNavHost(
         exploreDestination(navigator, bottomBarPadding)
         libraryDestination(navigator, bottomBarPadding)
         updatesDestination(navigator, bottomBarPadding)
-        listingDestination(navigator)
-        screenshotDestination(navigator)
+        listingDestination(navigator, destinations.sharedScope)
+        screenshotDestination(navigator, destinations.sharedScope)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         settingsDestination(navigator)
@@ -99,23 +136,37 @@ private fun NavGraphBuilder.updatesDestination(
     }
 }
 
-private fun NavGraphBuilder.listingDestination(navigator: YukiNavigator) {
+@OptIn(ExperimentalSharedTransitionApi::class)
+private fun NavGraphBuilder.listingDestination(
+    navigator: YukiNavigator,
+    sharedScope: SharedTransitionScope,
+) {
     composable<ListingRoute>(deepLinks = listingDeepLinks()) { entry ->
         val slug = entry.toRoute<ListingRoute>().slug
 
-        ListingScreenRoute(
-            slug = slug,
-            navigation = ListingNavigation(
-                onBackClick = navigator::navigateUp,
-                onScreenshotSelected = { index -> navigator.openScreenshots(slug, index) },
-            ),
-        )
+        ScreenshotTransitionScope(sharedScope = sharedScope, contentScope = this) {
+            ListingScreenRoute(
+                slug = slug,
+                navigation = ListingNavigation(
+                    onBackClick = navigator::navigateUp,
+                    onScreenshotSelected = { selection ->
+                        navigator.openScreenshots(slug, selection)
+                    },
+                ),
+            )
+        }
     }
 }
 
-private fun NavGraphBuilder.screenshotDestination(navigator: YukiNavigator) {
+@OptIn(ExperimentalSharedTransitionApi::class)
+private fun NavGraphBuilder.screenshotDestination(
+    navigator: YukiNavigator,
+    sharedScope: SharedTransitionScope,
+) {
     composable<ScreenshotRoute> {
-        ScreenshotViewerRoute(onBackClick = navigator::navigateUp)
+        ScreenshotTransitionScope(sharedScope = sharedScope, contentScope = this) {
+            ScreenshotViewerRoute(onBackClick = navigator::navigateUp)
+        }
     }
 }
 

@@ -26,6 +26,7 @@ import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingBadges
+import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.installFailureBadge
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -103,18 +104,20 @@ private fun LibraryBody(
     actions: LibraryActions,
     contentPadding: PaddingValues,
 ) {
-    when (state) {
-        is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
+    YukiAnimatedState(state = state) { settled ->
+        when (settled) {
+            is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
-        is UiState.Failure -> YukiScreenCenter(contentPadding) {
-            FailureState(reason = state.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+            is UiState.Failure -> YukiScreenCenter(contentPadding) {
+                FailureState(reason = settled.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+            }
+
+            is UiState.Success -> LibraryList(
+                content = settled.data,
+                actions = actions,
+                contentPadding = contentPadding,
+            )
         }
-
-        is UiState.Success -> LibraryList(
-            content = state.data,
-            actions = actions,
-            contentPadding = contentPadding,
-        )
     }
 }
 
@@ -140,8 +143,11 @@ private fun LibraryList(
         items(content.items, key = LibraryItem::githubRepoId) { item ->
             LibraryRow(
                 item = item,
-                onClick = { actions.onListingClick(item.app.slug) },
-                onDismiss = { actions.onDismiss(item.githubRepoId) },
+                rowActions = LibraryRowActions(
+                    onClick = { actions.onListingClick(item.app.slug) },
+                    onDismiss = { actions.onDismiss(item.githubRepoId) },
+                ),
+                modifier = Modifier.animateItem(),
             )
         }
     }
@@ -175,7 +181,11 @@ private fun LibraryDismissButton(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> Unit) {
+private fun LibraryRow(
+    item: LibraryItem,
+    rowActions: LibraryRowActions,
+    modifier: Modifier = Modifier,
+) {
     val install = item.install
 
     if (install is InstallState.Failed) {
@@ -183,13 +193,22 @@ private fun LibraryRow(item: LibraryItem, onClick: () -> Unit, onDismiss: () -> 
             content = item.listItem.copy(
                 badges = ListingBadges(listOf(installFailureBadge(install.reason))),
             ),
-            modifier = Modifier.clickable(onClick = onClick),
-            trailing = { LibraryDismissButton(onDismiss = onDismiss) },
+            modifier = modifier.clickable(onClick = rowActions.onClick),
+            trailing = { LibraryDismissButton(onDismiss = rowActions.onDismiss) },
         )
     }
 
-    ClickableProductListItem(content = item.listItem, onClick = onClick)
+    ClickableProductListItem(
+        content = item.listItem,
+        onClick = rowActions.onClick,
+        modifier = modifier,
+    )
 }
+
+private data class LibraryRowActions(
+    val onClick: () -> Unit,
+    val onDismiss: () -> Unit,
+)
 
 @Composable
 private fun LibraryEmpty(onExploreClick: () -> Unit) {

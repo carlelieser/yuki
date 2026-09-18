@@ -31,6 +31,11 @@ object YukiSize {
     val IconMediumInProgress = 28.dp
     val TitleLineHeight = 20.dp
     val ProgressCircular = 20.dp
+    val ProgressLinearWidth = 96.dp
+}
+
+object YukiWave {
+    val LinearWavelength = 20.dp
 }
 
 object YukiRatio {
