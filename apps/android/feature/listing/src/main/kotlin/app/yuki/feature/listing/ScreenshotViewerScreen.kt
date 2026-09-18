@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.LocalScreenshotFocus
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -106,6 +108,12 @@ private fun ScreenshotPager(screenshots: List<Screenshot>, startIndex: Int) {
         initialPage = startIndex.coerceIn(0, screenshots.lastIndex),
         pageCount = { screenshots.size },
     )
+    val focus = LocalScreenshotFocus.current
+
+    LaunchedEffect(pagerState.currentPage, screenshots) {
+        val current = screenshots.getOrNull(pagerState.currentPage) ?: return@LaunchedEffect
+        focus.focus(current.url)
+    }
 
     HorizontalPager(
         state = pagerState,
@@ -115,26 +123,41 @@ private fun ScreenshotPager(screenshots: List<Screenshot>, startIndex: Int) {
     ) { page ->
         ScreenshotPage(
             screenshot = screenshots[page],
-            index = page,
-            total = screenshots.size,
+            position = ScreenshotPosition(
+                index = page,
+                total = screenshots.size,
+                isCurrent = page == pagerState.currentPage,
+            ),
         )
     }
 }
 
+private data class ScreenshotPosition(
+    val index: Int,
+    val total: Int,
+    val isCurrent: Boolean,
+)
+
 @Composable
-private fun ScreenshotPage(screenshot: Screenshot, index: Int, total: Int) {
+private fun ScreenshotPage(screenshot: Screenshot, position: ScreenshotPosition) {
+    val shared = if (position.isCurrent) {
+        Modifier.sharedScreenshot(url = screenshot.url)
+    } else {
+        Modifier
+    }
+
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AsyncImage(
             model = screenshot.url,
             contentDescription = describeScreenshot(
                 alt = screenshot.alt,
-                index = index,
-                total = total,
+                index = position.index,
+                total = position.total,
             ),
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxWidth()
-                .sharedScreenshot(url = screenshot.url),
+                .then(shared),
         )
     }
 }

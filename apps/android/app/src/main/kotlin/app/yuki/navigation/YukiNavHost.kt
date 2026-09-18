@@ -5,13 +5,15 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.yuki.core.designsystem.component.ScreenshotFocus
+import app.yuki.core.designsystem.component.ScreenshotFocusScope
 import app.yuki.core.designsystem.component.ScreenshotTransitionScope
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
@@ -31,24 +33,52 @@ internal fun YukiNavHost(
     bottomBarPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val screenshotFocus = remember { ScreenshotFocus() }
+
     SharedTransitionLayout(modifier = modifier) {
-        NavHost(
-            navController = navController,
-            startDestination = ExploreRoute,
-            enterTransition = { forwardEnter() },
-            exitTransition = { forwardExit() },
-            popEnterTransition = { backEnter() },
-            popExitTransition = { backExit() },
-        ) {
-            exploreDestination(navigator, bottomBarPadding)
-            libraryDestination(navigator, bottomBarPadding)
-            updatesDestination(navigator, bottomBarPadding)
-            listingDestination(navigator, this@SharedTransitionLayout)
-            screenshotDestination(navigator, this@SharedTransitionLayout)
-            searchDestination(navigator, bottomBarPadding)
-            categoryDestination(navigator, bottomBarPadding)
-            settingsDestination(navigator)
+        ScreenshotFocusScope(focus = screenshotFocus) {
+            YukiRoutedContent(
+                navController = navController,
+                navigator = navigator,
+                destinations = DestinationScopes(
+                    sharedScope = this@SharedTransitionLayout,
+                    bottomBarPadding = bottomBarPadding,
+                ),
+            )
         }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+private class DestinationScopes(
+    val sharedScope: SharedTransitionScope,
+    val bottomBarPadding: PaddingValues,
+)
+
+@Composable
+private fun YukiRoutedContent(
+    navController: NavHostController,
+    navigator: YukiNavigator,
+    destinations: DestinationScopes,
+) {
+    val bottomBarPadding = destinations.bottomBarPadding
+
+    NavHost(
+        navController = navController,
+        startDestination = ExploreRoute,
+        enterTransition = { forwardEnter() },
+        exitTransition = { forwardExit() },
+        popEnterTransition = { backEnter() },
+        popExitTransition = { backExit() },
+    ) {
+        exploreDestination(navigator, bottomBarPadding)
+        libraryDestination(navigator, bottomBarPadding)
+        updatesDestination(navigator, bottomBarPadding)
+        listingDestination(navigator, destinations.sharedScope)
+        screenshotDestination(navigator, destinations.sharedScope)
+        searchDestination(navigator, bottomBarPadding)
+        categoryDestination(navigator, bottomBarPadding)
+        settingsDestination(navigator)
     }
 }
 

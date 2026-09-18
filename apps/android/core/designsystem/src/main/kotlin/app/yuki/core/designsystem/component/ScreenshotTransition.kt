@@ -23,6 +23,7 @@ fun screenshotSharedKey(url: String): String = "screenshot-$url"
 @Composable
 fun Modifier.sharedScreenshot(url: String): Modifier {
     val transition = LocalScreenshotTransition.current ?: return this
+    if (!LocalScreenshotFocus.current.isFocused(url)) return this
 
     return with(transition.sharedScope) {
         this@sharedScreenshot.sharedElement(
@@ -43,4 +44,9 @@ fun ScreenshotTransitionScope(
     val transition = ScreenshotTransition(sharedScope = sharedScope, contentScope = contentScope)
 
     CompositionLocalProvider(LocalScreenshotTransition provides transition, content = content)
+}
+
+@Composable
+fun ScreenshotFocusScope(focus: ScreenshotFocus, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScreenshotFocus provides focus, content = content)
 }
