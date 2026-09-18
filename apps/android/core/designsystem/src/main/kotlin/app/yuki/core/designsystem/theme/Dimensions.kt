@@ -36,7 +36,6 @@ object YukiSize {
 
 object YukiWave {
     val LinearWavelength = 20.dp
-    val CircularWavelength = 8.dp
 }
 
 object YukiRatio {

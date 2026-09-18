@@ -1,5 +1,6 @@
 package app.yuki.core.designsystem.component
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -10,6 +11,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 
@@ -24,7 +26,8 @@ private fun ButtonLabel(text: String) {
 }
 
 private fun Modifier.buttonSize(): Modifier =
-    defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)
+    animateContentSize(animationSpec = YukiMotion.resize())
+        .defaultMinSize(minHeight = YukiSize.MinimumTouchTarget)
 
 @Composable
 fun YukiButton(

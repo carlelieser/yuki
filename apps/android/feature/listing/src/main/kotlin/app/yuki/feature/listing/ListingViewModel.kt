@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -152,7 +153,8 @@ class ListingViewModel @Inject constructor(
         state: UiState<ListingUiModel>,
     ): Flow<ListingInstallStatus> = when (state) {
         is UiState.Success -> installGateway.observe(state.data.repoId)
-        else -> flowOf(IDLE_STATUS)
+        is UiState.Loading -> emptyFlow()
+        is UiState.Failure -> flowOf(IDLE_STATUS)
     }
 
     private fun successOrNull(): ListingUiModel? =
