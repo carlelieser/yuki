@@ -37,7 +37,7 @@ class ListingScreenTest {
 
     private fun setScreen(
         listing: UiState<ListingUiModel>,
-        status: ListingInstallStatus = idleStatus(),
+        status: ListingInstallStatus? = idleStatus(),
         callbacks: ListingScreenCallbacks = noopCallbacks(),
     ) {
         composeRule.setContent {
@@ -222,6 +222,21 @@ class ListingScreenTest {
         composeRule.onAllNodesWithText("Install").onLast().performClick()
 
         assertEquals(listOf("v1.5.0-rc"), requested)
+    }
+
+    @Test
+    fun withholdsTheInstallControlsUntilTheInstallStatusIsKnown() {
+        setScreen(listing = UiState.Success(detail().toUiModel()), status = null)
+
+        composeRule.onNodeWithText("Install").assertDoesNotExist()
+        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+    }
+
+    @Test
+    fun showsTheInstallControlOnceTheStatusArrives() {
+        setScreen(listing = UiState.Success(detail().toUiModel()), status = idleStatus())
+
+        composeRule.onNodeWithText("Install").assertIsDisplayed()
     }
 
     @Test

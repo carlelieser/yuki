@@ -34,7 +34,7 @@ fun interface VersionInstallHandler {
 }
 
 data class ListingUninstallStatus(
-    val install: ListingInstallStatus,
+    val install: ListingInstallStatus?,
     val hasUninstallFailed: Boolean = false,
 )
 
@@ -59,9 +59,11 @@ private fun LazyListScope.installSection(
         return
     }
 
+    val install = status.install ?: return
+
     item {
         InstallButton(
-            state = status.install.state,
+            state = install.state,
             onAction = onInstallAction,
             canUninstall = true,
             modifier = Modifier
@@ -113,11 +115,11 @@ private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpe
 
 private fun LazyListScope.versionSection(
     model: ListingUiModel,
-    status: ListingInstallStatus,
+    status: ListingInstallStatus?,
     onVersionInstallAction: VersionInstallHandler,
 ) {
     val versions = model.detail.versions
-    if (versions.isEmpty()) return
+    if (versions.isEmpty() || status == null) return
 
     item { SectionHeader(title = "Versions") }
     items(items = versions, key = { it.tag }) { version ->

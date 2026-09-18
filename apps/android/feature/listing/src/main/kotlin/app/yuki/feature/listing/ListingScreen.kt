@@ -105,7 +105,7 @@ data class ListingScreenCallbacks(
 
 data class ListingScreenState(
     val listing: UiState<ListingUiModel>,
-    val installStatus: ListingInstallStatus,
+    val installStatus: ListingInstallStatus?,
     val isConfirmingUninstall: Boolean = false,
     val hasUninstallFailed: Boolean = false,
     val actions: List<ListingAction> = emptyList(),
