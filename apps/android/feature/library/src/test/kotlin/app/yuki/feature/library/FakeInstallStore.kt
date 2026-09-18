@@ -132,7 +132,14 @@ internal fun libraryDependencies(
     reconciler = LibraryReconciler(store, packages),
     detection = PackageDetectionReconciler(store, index, repository, packages),
     packages = packages,
+    library = FakeRemoteLibrary(),
 )
+
+internal class FakeRemoteLibrary(
+    var entries: List<app.yuki.core.model.LibraryEntry> = emptyList(),
+) : RemoteLibrary {
+    override suspend fun entries(): List<app.yuki.core.model.LibraryEntry> = entries
+}
 
 internal class FakeLibraryProgressStore : InstallProgressStore {
     private val rows = MutableStateFlow<List<InstallProgress>>(emptyList())

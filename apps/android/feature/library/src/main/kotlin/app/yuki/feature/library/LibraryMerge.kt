@@ -3,45 +3,65 @@ package app.yuki.feature.library
 import app.yuki.core.installer.InstallProgress
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.LibraryEntry
 
 internal data class LibraryMergeInput(
     val installed: List<InstalledApp>,
+    val remote: List<LibraryEntry>,
     val active: List<InstallProgress>,
 )
 
-internal fun mergeLibrary(
-    input: LibraryMergeInput,
-    canOpen: (String) -> Boolean,
-): List<LibraryItem> {
-    val progressByRepoId = input.active.associateBy(InstallProgress::githubRepoId)
-    val installedRows = input.installed.map { app ->
-        LibraryItem(
-            app = app,
-            canOpen = canOpen(app.packageName),
-            install = progressByRepoId[app.githubRepoId]?.state ?: InstallState.NotInstalled,
-        )
-    }
-    val installedRepoIds = input.installed.mapTo(mutableSetOf(), InstalledApp::githubRepoId)
-    val pendingRows = input.active
-        .filterNot { progress -> progress.githubRepoId in installedRepoIds }
-        .filter { progress -> progress.isVisibleWhileUninstalled }
-        .map(InstallProgress::toPendingItem)
+internal fun mergeLibrary(input: LibraryMergeInput): List<LibraryItem> {
+    val rows = linkedMapOf<Long, LibraryItem>()
 
-    return (pendingRows + installedRows).sortedBy { item -> item.sortRank }
+    input.remote.forEach { entry -> rows[entry.githubRepoId] = entry.toRemoteItem() }
+    input.installed.forEach { app -> rows[app.githubRepoId] = app.toDeviceItem() }
+    input.active.forEach { progress -> rows.applyProgress(progress) }
+
+    return rows.values.sortedBy(LibraryItem::sortRank)
 }
 
-private val InstallProgress.isVisibleWhileUninstalled: Boolean
-    get() = state !is InstallState.Installed
+private fun MutableMap<Long, LibraryItem>.applyProgress(progress: InstallProgress) {
+    val existing = this[progress.githubRepoId]
+
+    if (existing != null) {
+        this[progress.githubRepoId] = existing.copy(install = progress.state)
+        return
+    }
+
+    if (progress.state is InstallState.Installed) return
+
+    this[progress.githubRepoId] = progress.toPendingItem()
+}
+
+private fun LibraryEntry.toRemoteItem(): LibraryItem = LibraryItem(
+    entry = this,
+    presence = LibraryPresence.NotInstalled,
+    install = InstallState.NotInstalled,
+)
+
+private fun InstalledApp.toDeviceItem(): LibraryItem = LibraryItem(
+    entry = LibraryEntry(
+        githubRepoId = githubRepoId,
+        packageName = packageName,
+        slug = slug,
+        title = title,
+        iconUrl = iconUrl,
+        versionTag = versionTag,
+    ),
+    presence = LibraryPresence.Installed,
+    install = InstallState.NotInstalled,
+)
 
 private fun InstallProgress.toPendingItem(): LibraryItem = LibraryItem(
-    app = InstalledApp(
+    entry = LibraryEntry(
         githubRepoId = target.githubRepoId,
-        packageName = "",
+        packageName = null,
         slug = target.slug,
         title = target.title,
         iconUrl = target.iconUrl,
         versionTag = versionTag,
     ),
-    canOpen = false,
+    presence = LibraryPresence.NotInstalled,
     install = state,
 )

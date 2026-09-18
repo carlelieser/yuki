@@ -1,5 +1,11 @@
 package app.yuki.core.installer
 
+import javax.inject.Qualifier
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class LocalInstallRecorder
+
 interface InstallRecorder {
     suspend fun recordedPackageName(githubRepoId: Long): String?
 

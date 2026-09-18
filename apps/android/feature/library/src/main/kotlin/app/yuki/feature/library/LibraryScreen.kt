@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
@@ -52,6 +53,7 @@ fun LibraryScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) { viewModel.onEnter() }
 
     LibraryContentScreen(
         state = state,
@@ -63,6 +65,7 @@ fun LibraryScreen(
             onListingClick = onListingClick,
             onExploreClick = onExploreClick,
             onDismiss = viewModel::onDismiss,
+            onFilterSelected = viewModel::onFilterChange,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -73,6 +76,7 @@ data class LibraryActions(
     val onListingClick: (String) -> Unit,
     val onExploreClick: () -> Unit,
     val onDismiss: (Long) -> Unit,
+    val onFilterSelected: (LibraryFilter) -> Unit,
 )
 
 data class LibraryRefresh(
@@ -88,7 +92,11 @@ internal fun LibraryContentScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    YukiScreen(title = LIBRARY_TITLE, modifier = modifier) {
+    YukiScreen(
+        title = LIBRARY_TITLE,
+        trailing = { LibraryFilterHeader(state = state, actions = actions) },
+        modifier = modifier,
+    ) {
         YukiPullToRefresh(
             isRefreshing = refresh.isRefreshing,
             onRefresh = refresh.onPullToRefresh,
@@ -96,6 +104,20 @@ internal fun LibraryContentScreen(
             LibraryBody(state = state, actions = actions, contentPadding = contentPadding)
         }
     }
+}
+
+@Composable
+private fun LibraryFilterHeader(
+    state: UiState<LibraryContent>,
+    actions: LibraryActions,
+) {
+    val content = (state as? UiState.Success)?.data ?: return
+    if (content.isEmpty) return
+
+    LibraryFilterSelector(
+        selected = content.filter,
+        onFilterSelected = actions.onFilterSelected,
+    )
 }
 
 @Composable
@@ -134,17 +156,22 @@ private fun LibraryList(
         return
     }
 
+    if (content.hasNoMatches) {
+        YukiScreenCenter(contentPadding) { LibraryNoMatches(filter = content.filter) }
+        return
+    }
+
     LazyColumn(
         contentPadding = contentPadding,
         modifier = Modifier
             .fillMaxSize()
             .testTag(LIBRARY_LIST_TAG),
     ) {
-        items(content.items, key = LibraryItem::githubRepoId) { item ->
+        items(content.visible, key = LibraryItem::githubRepoId) { item ->
             LibraryRow(
                 item = item,
                 rowActions = LibraryRowActions(
-                    onClick = { actions.onListingClick(item.app.slug) },
+                    onClick = { actions.onListingClick(item.slug) },
                     onDismiss = { actions.onDismiss(item.githubRepoId) },
                 ),
                 modifier = Modifier.animateItem(),
@@ -222,7 +249,19 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
     )
 }
 
+@Composable
+private fun LibraryNoMatches(filter: LibraryFilter) {
+    CollectionEmpty(
+        content = EmptyContent(
+            title = LIBRARY_NO_MATCHES_TITLE,
+            description = "Nothing in your library is ${filter.label.lowercase()}.",
+            icon = YukiIcons.GridView,
+        ),
+    )
+}
+
 internal const val LIBRARY_TITLE = "Library"
 internal const val LIBRARY_EMPTY_TITLE = "Nothing installed yet"
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."
+internal const val LIBRARY_NO_MATCHES_TITLE = "No apps match that filter"

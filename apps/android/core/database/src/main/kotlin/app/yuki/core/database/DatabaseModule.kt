@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstallRecorder
+import app.yuki.core.installer.LocalInstallRecorder
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -50,6 +51,7 @@ internal interface DatabaseBindings {
 
     @Binds
     @Singleton
+    @LocalInstallRecorder
     fun installRecorder(implementation: RoomInstallRecorder): InstallRecorder
 
     @Binds

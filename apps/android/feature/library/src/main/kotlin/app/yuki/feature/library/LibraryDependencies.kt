@@ -6,4 +6,5 @@ internal class LibraryDependencies @Inject constructor(
     val reconciler: LibraryReconciler,
     val detection: PackageDetectionReconciler,
     val packages: InstalledPackages,
+    val library: RemoteLibrary,
 )
