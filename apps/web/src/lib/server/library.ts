@@ -28,8 +28,6 @@ export async function getLibrary(db: Database, userId: string): Promise<LibraryE
 		})
 		.from(schema.listingDownloads)
 		.innerJoin(schema.listings, eq(schema.listings.id, schema.listingDownloads.listingId))
-		.where(
-			and(eq(schema.listingDownloads.userId, userId), eq(schema.listings.isPublished, true))
-		)
+		.where(and(eq(schema.listingDownloads.userId, userId), eq(schema.listings.isPublished, true)))
 		.orderBy(desc(schema.listingDownloads.createdAt));
 }

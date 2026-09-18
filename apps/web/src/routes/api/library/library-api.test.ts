@@ -93,10 +93,7 @@ describe('POST /api/library', () => {
 
 		await addToLibrary(event({ slug: 'aurora-store' }));
 
-		expect(recordDownload).toHaveBeenCalledWith(
-			db,
-			expect.objectContaining({ versionTag: null })
-		);
+		expect(recordDownload).toHaveBeenCalledWith(db, expect.objectContaining({ versionTag: null }));
 	});
 
 	it('refuses an anonymous request so a library cannot be written for others', async () => {
