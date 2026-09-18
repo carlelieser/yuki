@@ -38,12 +38,14 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.auth)
     implementation(projects.core.database)
     implementation(projects.core.designsystem)
     implementation(projects.core.installer)
     implementation(projects.core.model)
     implementation(projects.core.network)
     implementation(projects.core.shizuku)
+    implementation(projects.feature.account)
     implementation(projects.feature.explore)
     implementation(projects.feature.library)
     implementation(projects.feature.listing)

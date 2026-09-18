@@ -30,6 +30,7 @@ include(":core:model")
 include(":core:network")
 include(":core:shizuku")
 
+include(":feature:account")
 include(":feature:explore")
 include(":feature:library")
 include(":feature:listing")

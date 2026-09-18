@@ -25,6 +25,7 @@ import coil3.compose.rememberAsyncImagePainter
 
 const val AVATAR_TAG = "avatar"
 const val AVATAR_EDIT_DESCRIPTION = "Change your picture"
+const val AVATAR_OPEN_DESCRIPTION = "Open your account"
 
 private const val GLYPH_FRACTION = 0.5f
 private const val BADGE_FRACTION = 0.34f
@@ -44,16 +45,48 @@ fun Avatar(
     size: AvatarSize = AvatarSize.Medium,
     onEditClick: (() -> Unit)? = null,
 ) {
+    AvatarBox(
+        content = content,
+        size = size,
+        click = onEditClick?.let { onClick -> AvatarClick(onClick, isEditable = true) },
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun AccountAvatar(
+    content: AvatarContent,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: AvatarSize = AvatarSize.Small,
+) {
+    AvatarBox(
+        content = content,
+        size = size,
+        click = AvatarClick(onClick, isEditable = false),
+        modifier = modifier,
+    )
+}
+
+private data class AvatarClick(val onClick: () -> Unit, val isEditable: Boolean)
+
+@Composable
+private fun AvatarBox(
+    content: AvatarContent,
+    size: AvatarSize,
+    click: AvatarClick?,
+    modifier: Modifier = Modifier,
+) {
     val diameter = size.diameter()
 
     Box(modifier = modifier.size(diameter).testTag(AVATAR_TAG)) {
         AvatarFace(
             content = content,
             diameter = diameter,
-            modifier = Modifier.editable(onEditClick),
+            modifier = Modifier.clickable(click),
         )
 
-        if (onEditClick != null) {
+        if (click?.isEditable == true) {
             EditBadge(
                 diameter = diameter * BADGE_FRACTION,
                 modifier = Modifier.align(Alignment.BottomEnd),
@@ -62,13 +95,13 @@ fun Avatar(
     }
 }
 
-private fun Modifier.editable(onEditClick: (() -> Unit)?): Modifier {
-    val onClick = onEditClick ?: return this
+private fun Modifier.clickable(click: AvatarClick?): Modifier {
+    if (click == null) return this
 
     return clickable(
-        onClick = onClick,
+        onClick = click.onClick,
         role = Role.Button,
-        onClickLabel = AVATAR_EDIT_DESCRIPTION,
+        onClickLabel = if (click.isEditable) AVATAR_EDIT_DESCRIPTION else AVATAR_OPEN_DESCRIPTION,
     )
 }
 

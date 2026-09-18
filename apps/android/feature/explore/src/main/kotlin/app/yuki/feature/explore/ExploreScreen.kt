@@ -40,6 +40,7 @@ fun ExploreRoute(
     onSettingsClick: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -59,6 +60,7 @@ fun ExploreRoute(
         ),
         contentPadding = contentPadding,
         modifier = modifier,
+        trailing = trailing,
     )
 }
 
@@ -81,6 +83,7 @@ internal fun ExploreScreen(
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     YukiScreen(
         title = EXPLORE_TITLE,
@@ -89,6 +92,7 @@ internal fun ExploreScreen(
             description = SETTINGS_DESCRIPTION,
             onClick = callbacks.onSettingsClick,
         ),
+        trailing = trailing,
         modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {
         YukiPullToRefresh(
