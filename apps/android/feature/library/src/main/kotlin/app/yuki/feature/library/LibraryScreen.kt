@@ -254,7 +254,7 @@ private fun LibraryNoMatches(filter: LibraryFilter) {
     CollectionEmpty(
         content = EmptyContent(
             title = LIBRARY_NO_MATCHES_TITLE,
-            description = "Nothing in your library is ${filter.label.lowercase()}.",
+            description = filter.emptyMessage,
             icon = YukiIcons.GridView,
         ),
     )
