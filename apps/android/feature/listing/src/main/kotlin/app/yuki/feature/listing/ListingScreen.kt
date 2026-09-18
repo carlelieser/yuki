@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.yuki.core.designsystem.component.LinkOpener
+import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OverflowMenu

@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.component.YukiSecondaryButton
 import app.yuki.core.designsystem.theme.YukiSpacing
 
@@ -64,6 +65,15 @@ internal fun AccountScreen(
 ) {
     val account = state.account
 
+    if (account == null) {
+        SignedOut(
+            onSignInClick = actions.onSignInClick,
+            contentPadding = contentPadding,
+            modifier = modifier,
+        )
+        return
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -73,11 +83,6 @@ internal fun AccountScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraLarge),
     ) {
-        if (account == null) {
-            SignedOut(onSignInClick = actions.onSignInClick)
-            return@Column
-        }
-
         ProfileSection(account = account, onEditAvatarClick = actions.onEditAvatarClick)
 
         AuthMessage(title = SIGN_OUT_LABEL, message = state.message)
@@ -91,14 +96,20 @@ internal fun AccountScreen(
 }
 
 @Composable
-private fun SignedOut(onSignInClick: () -> Unit) {
-    CollectionEmpty(
-        content = EmptyContent(
-            title = SIGNED_OUT_TITLE,
-            description = SIGNED_OUT_DESCRIPTION,
-            icon = YukiIcons.Person,
-            actionLabel = SIGNED_OUT_ACTION,
-            onAction = onSignInClick,
-        ),
-    )
+private fun SignedOut(
+    onSignInClick: () -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
+    YukiScreenCenter(contentPadding = contentPadding, modifier = modifier) {
+        CollectionEmpty(
+            content = EmptyContent(
+                title = SIGNED_OUT_TITLE,
+                description = SIGNED_OUT_DESCRIPTION,
+                icon = YukiIcons.Person,
+                actionLabel = SIGNED_OUT_ACTION,
+                onAction = onSignInClick,
+            ),
+        )
+    }
 }

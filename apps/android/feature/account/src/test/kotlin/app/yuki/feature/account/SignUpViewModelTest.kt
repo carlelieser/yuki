@@ -29,7 +29,7 @@ class SignUpViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = SignUpViewModel(repository)
+    private fun viewModel() = SignUpViewModel(repository, baseUrl = "https://yuki.test/")
 
     private fun SignUpViewModel.fillIn(
         name: String = "Ada Lovelace",

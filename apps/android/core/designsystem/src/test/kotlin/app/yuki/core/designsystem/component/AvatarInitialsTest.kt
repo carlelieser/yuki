@@ -1,6 +1,8 @@
 package app.yuki.core.designsystem.component
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -38,5 +40,18 @@ class AvatarInitialsTest {
     @Test
     fun `a blank name has no initials to show`() {
         assertNull(initialsOf("   "))
+    }
+}
+
+class AvatarFallbackTest {
+    @Test
+    fun `a signed-out avatar has no filled backdrop behind the person glyph`() {
+        assertFalse(hasFilledFallback(null))
+        assertFalse(hasFilledFallback("   "))
+    }
+
+    @Test
+    fun `an account without a picture fills the backdrop behind its initials`() {
+        assertTrue(hasFilledFallback("Ada Lovelace"))
     }
 }

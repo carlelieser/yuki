@@ -17,10 +17,17 @@ val YUKI_VERSION_CODE = providers.gradleProperty("yukiVersionCode").orNull?.toIn
 val YUKI_VERSION_NAME = providers.gradleProperty("yukiVersionName").orNull ?: "1.0.0"
 val YUKI_RELEASE_TAG = providers.gradleProperty("yukiReleaseTag").orNull ?: ""
 
+val YUKI_ALLOWS_LOCAL_SERVER =
+    providers.gradleProperty("yukiAllowLocalServer").orNull.toBoolean()
+
 android {
     namespace = "app.yuki"
 
     buildFeatures.buildConfig = true
+
+    if (YUKI_ALLOWS_LOCAL_SERVER) {
+        sourceSets.getByName("release").res.srcDir("src/localServer/res")
+    }
 
     defaultConfig {
         applicationId = "app.yuki"

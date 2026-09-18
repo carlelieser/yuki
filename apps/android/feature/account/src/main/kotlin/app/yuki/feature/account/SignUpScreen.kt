@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.YukiButton
+import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val SIGN_UP_SUBMIT_LABEL = "Create account"
@@ -22,8 +23,6 @@ internal const val SIGN_UP_PROMPT = "Already have an account?"
 internal const val SIGN_UP_SIGN_IN_LABEL = "Sign in"
 internal const val VERIFICATION_TITLE = "Check your email"
 internal const val VERIFICATION_BACK_LABEL = "Back to sign in"
-internal const val TERMS_NOTICE =
-    "By creating an account, you agree to our Terms of Service and Privacy Policy."
 
 private fun verificationBody(email: String) =
     "We sent a verification link to $email. Open it to finish setting up your account."
@@ -38,6 +37,7 @@ fun SignUpRoute(
 
     SignUpScreen(
         state = state,
+        baseUrl = viewModel.baseUrl,
         actions = SignUpActions(
             onNameChange = viewModel::onNameChange,
             onEmailChange = viewModel::onEmailChange,
@@ -60,6 +60,7 @@ data class SignUpActions(
 @Composable
 internal fun SignUpScreen(
     state: SignUpState,
+    baseUrl: String,
     actions: SignUpActions,
     modifier: Modifier = Modifier,
 ) {
@@ -70,12 +71,13 @@ internal fun SignUpScreen(
         return
     }
 
-    SignUpForm(state = state, actions = actions, modifier = modifier)
+    SignUpForm(state = state, baseUrl = baseUrl, actions = actions, modifier = modifier)
 }
 
 @Composable
 private fun SignUpForm(
     state: SignUpState,
+    baseUrl: String,
     actions: SignUpActions,
     modifier: Modifier = Modifier,
 ) {
@@ -97,7 +99,7 @@ private fun SignUpForm(
             onActionClick = actions.onSignInClick,
         )
 
-        TermsNotice()
+        LegalNotice(baseUrl = baseUrl, onLinkClick = rememberLinkOpener())
     }
 }
 
@@ -129,15 +131,6 @@ private fun SignUpFields(state: SignUpState, actions: SignUpActions) {
             ),
         )
     }
-}
-
-@Composable
-private fun TermsNotice() {
-    Text(
-        text = TERMS_NOTICE,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
 }
 
 @Composable

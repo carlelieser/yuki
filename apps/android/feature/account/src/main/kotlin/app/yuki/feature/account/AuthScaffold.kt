@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.yuki.core.designsystem.component.YukiLogo
 import app.yuki.core.designsystem.component.YukiTextButton
 import app.yuki.core.designsystem.theme.YukiSpacing
 
@@ -48,6 +49,7 @@ internal fun AuthScaffold(
 
 @Composable
 private fun AuthHeading(title: String) {
+    YukiLogo(modifier = Modifier.padding(bottom = YukiSpacing.Small))
     Text(
         text = title,
         style = MaterialTheme.typography.headlineMedium,
@@ -72,9 +74,6 @@ internal fun AuthFooterPrompt(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        YukiTextButton(
-            label = actionLabel,
-            onClick = onActionClick,
-        )
+        YukiTextButton(label = actionLabel, onClick = onActionClick)
     }
 }

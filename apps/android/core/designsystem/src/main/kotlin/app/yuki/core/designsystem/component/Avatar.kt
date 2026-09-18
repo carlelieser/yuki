@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -144,7 +145,7 @@ private fun AvatarFallback(
         modifier = modifier
             .size(diameter)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            .background(fallbackColor(hasInitials = initials != null)),
         contentAlignment = Alignment.Center,
     ) {
         if (initials == null) {
@@ -182,6 +183,12 @@ private fun EditBadge(diameter: Dp, modifier: Modifier = Modifier) {
         )
     }
 }
+
+internal fun hasFilledFallback(displayName: String?): Boolean = initialsOf(displayName) != null
+
+@Composable
+private fun fallbackColor(hasInitials: Boolean): Color =
+    if (hasInitials) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent
 
 internal fun initialsOf(displayName: String?): String? {
     val words = displayName?.trim()?.split(" ")?.filter(String::isNotEmpty).orEmpty()

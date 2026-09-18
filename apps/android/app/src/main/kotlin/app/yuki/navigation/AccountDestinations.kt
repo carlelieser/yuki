@@ -33,7 +33,7 @@ internal fun NavGraphBuilder.signInDestination(navigator: YukiNavigator) {
             SignInScreenRoute(
                 navigation = SignInNavigation(
                     onSignedIn = navigator::navigateUp,
-                    onCreateAccountClick = navigator::openSignUp,
+                    onCreateAccountClick = navigator::swapToSignUp,
                 ),
             )
         }
@@ -43,7 +43,7 @@ internal fun NavGraphBuilder.signInDestination(navigator: YukiNavigator) {
 internal fun NavGraphBuilder.signUpDestination(navigator: YukiNavigator) {
     composable<SignUpRoute> {
         YukiDetailScreen(title = SIGN_UP_TITLE, onBackClick = navigator::navigateUp) {
-            SignUpScreenRoute(onSignInClick = navigator::navigateUp)
+            SignUpScreenRoute(onSignInClick = navigator::swapToSignIn)
         }
     }
 }

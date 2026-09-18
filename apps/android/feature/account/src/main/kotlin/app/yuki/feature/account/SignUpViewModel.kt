@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.failureReason
 import app.yuki.core.network.AuthRepository
+import app.yuki.core.network.YukiBaseUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,6 +34,7 @@ data class SignUpState(
 @HiltViewModel
 class SignUpViewModel @Inject internal constructor(
     private val repository: AuthRepository,
+    @param:YukiBaseUrl val baseUrl: String,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(SignUpState())
 
