@@ -17,6 +17,12 @@ import kotlinx.coroutines.launch
 const val SCREENSHOT_START_INDEX_KEY = "startIndex"
 const val SCREENSHOT_URLS_KEY = "urls"
 
+internal fun screenshotUrlsOf(stored: Any?): List<String> = when (stored) {
+    is Array<*> -> stored.filterIsInstance<String>()
+    is Collection<*> -> stored.filterIsInstance<String>()
+    else -> emptyList()
+}
+
 @HiltViewModel
 class ScreenshotViewerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -29,8 +35,7 @@ class ScreenshotViewerViewModel @Inject constructor(
     val startIndex: Int = savedStateHandle[SCREENSHOT_START_INDEX_KEY] ?: 0
 
     private val seeded: List<Screenshot> =
-        savedStateHandle.get<List<String>>(SCREENSHOT_URLS_KEY)
-            .orEmpty()
+        screenshotUrlsOf(savedStateHandle.get<Any?>(SCREENSHOT_URLS_KEY))
             .map { url -> Screenshot(url = url, alt = null) }
 
     private val mutableScreenshots =

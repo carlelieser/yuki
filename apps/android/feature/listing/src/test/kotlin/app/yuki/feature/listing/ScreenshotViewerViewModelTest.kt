@@ -30,7 +30,7 @@ class ScreenshotViewerViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModelWith(
-        urls: List<String> = SEEDED_URLS,
+        urls: Any? = SEEDED_URLS.toTypedArray(),
         detail: Result<ListingDetail> = Result.success(detail()),
     ): ScreenshotViewerViewModel =
         ScreenshotViewerViewModel(
@@ -44,20 +44,33 @@ class ScreenshotViewerViewModelTest {
             repository = FakeListingRepository(detail),
         )
 
+    private fun seededScreenshots(): UiState<List<Screenshot>> =
+        UiState.Success(SEEDED_URLS.map { url -> Screenshot(url = url, alt = null) })
+
     @Test
     fun theViewerOpensOnTheRouteScreenshotsWithoutWaitingForTheNetwork() {
         val viewModel = viewModelWith()
 
-        val state = viewModel.screenshots.value
-        assertEquals(
-            UiState.Success(SEEDED_URLS.map { url -> Screenshot(url = url, alt = null) }),
-            state,
-        )
+        assertEquals(seededScreenshots(), viewModel.screenshots.value)
     }
 
     @Test
     fun theViewerStillLoadsWhenTheRouteCarriesNoScreenshots() {
-        val viewModel = viewModelWith(urls = emptyList())
+        val viewModel = viewModelWith(urls = emptyArray<String>())
+
+        assertEquals(UiState.Loading, viewModel.screenshots.value)
+    }
+
+    @Test
+    fun theViewerOpensWhenTheRouteStoredItsUrlsAsAList() {
+        val viewModel = viewModelWith(urls = SEEDED_URLS)
+
+        assertEquals(seededScreenshots(), viewModel.screenshots.value)
+    }
+
+    @Test
+    fun theViewerStillLoadsWhenTheRouteCarriesNothingAtAll() {
+        val viewModel = viewModelWith(urls = null)
 
         assertEquals(UiState.Loading, viewModel.screenshots.value)
     }
@@ -70,11 +83,7 @@ class ScreenshotViewerViewModelTest {
 
         advanceUntilIdle()
 
-        val state = viewModel.screenshots.value
-        assertEquals(
-            UiState.Success(SEEDED_URLS.map { url -> Screenshot(url = url, alt = null) }),
-            state,
-        )
+        assertEquals(seededScreenshots(), viewModel.screenshots.value)
     }
 
     @Test
