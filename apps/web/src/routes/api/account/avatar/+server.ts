@@ -27,7 +27,7 @@ async function readUpload(request: Request): Promise<File> {
 	return file;
 }
 
-export const POST: RequestHandler = async ({ locals, request }) => {
+export const POST: RequestHandler = async ({ locals, request, url }) => {
 	if (!locals.user) error(401, 'Sign in to change your picture');
 
 	const file = await readUpload(request);
@@ -42,7 +42,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		contentType: file.type,
 		bytes
 	});
-	const image = avatarUrlFor(locals.user.id, updatedAt);
+	const image = avatarUrlFor(locals.user.id, updatedAt, url.origin);
 
 	try {
 		await getAuth().api.updateUser({ body: { image }, headers: request.headers });

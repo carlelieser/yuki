@@ -29,7 +29,8 @@ function upload(file: File | string | null, signedIn = true) {
 
 	return {
 		locals: { db, user: signedIn ? user : null },
-		request: new Request('http://localhost/api/account/avatar', { method: 'POST', body })
+		url: new URL('http://yuki.test/api/account/avatar'),
+		request: new Request('http://yuki.test/api/account/avatar', { method: 'POST', body })
 	} as unknown as RequestEvent;
 }
 
@@ -54,7 +55,7 @@ beforeEach(() => {
 });
 
 describe('POST /api/account/avatar', () => {
-	it('stores the image and points the profile at a cache-busting url', async () => {
+	it('points the profile at an absolute url so native clients can load it', async () => {
 		updateUser.mockResolvedValue({});
 
 		const response = await uploadAvatar(upload(imageOf('image/png')));
@@ -64,7 +65,7 @@ describe('POST /api/account/avatar', () => {
 			expect.objectContaining({ userId: 'user-1', contentType: 'image/png' })
 		);
 		await expect(response.json()).resolves.toEqual({
-			image: `/api/users/user-1/avatar?v=${UPDATED_AT.getTime()}`
+			image: `http://yuki.test/api/users/user-1/avatar?v=${UPDATED_AT.getTime()}`
 		});
 	});
 

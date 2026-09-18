@@ -14,8 +14,8 @@ export function isSupportedAvatarType(contentType: string): boolean {
 	return (AVATAR_CONTENT_TYPES as readonly string[]).includes(contentType);
 }
 
-export function avatarUrlFor(userId: string, updatedAt: Date): string {
-	return `/api/users/${userId}/avatar?v=${updatedAt.getTime()}`;
+export function avatarUrlFor(userId: string, updatedAt: Date, origin: string): string {
+	return new URL(`/api/users/${userId}/avatar?v=${updatedAt.getTime()}`, origin).toString();
 }
 
 export async function getAvatar(db: Database, userId: string): Promise<StoredAvatar | null> {
