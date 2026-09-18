@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.component.FeaturedCard
+import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import kotlinx.coroutines.delay
@@ -29,6 +30,7 @@ internal fun FeaturedRow(
     listings: List<ListingSummary>,
     onSelect: (ListingSummary) -> Unit,
     modifier: Modifier = Modifier,
+    installs: ListingInstalls = ListingInstalls(),
 ) {
     val count = listings.size
     val pagerState = rememberPagerState(
@@ -46,7 +48,11 @@ internal fun FeaturedRow(
         pageSpacing = YukiSpacing.Medium,
     ) { page ->
         val listing = listings[page % count]
-        FeaturedCard(listing = listing, onClick = { onSelect(listing) })
+        FeaturedCard(
+            listing = listing,
+            onClick = { onSelect(listing) },
+            isInstalled = listing.githubRepoId in installs.installedIds,
+        )
     }
 }
 

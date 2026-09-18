@@ -109,10 +109,6 @@ class ListingViewModel @Inject constructor(
         mutableConfirmingUninstall.value = false
     }
 
-    fun onResumed() {
-        installGateway.refresh()
-    }
-
     private fun requestUninstall(model: ListingUiModel) {
         viewModelScope.launch {
             if (installGateway.isSilentUninstall()) {
@@ -131,7 +127,6 @@ class ListingViewModel @Inject constructor(
             .onFailure { error ->
                 if (error is CancellationException) throw error
                 mutableUninstallFailed.value = true
-                installGateway.refresh()
             }
     }
 

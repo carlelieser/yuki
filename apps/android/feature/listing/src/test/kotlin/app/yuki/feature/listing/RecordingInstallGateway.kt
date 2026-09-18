@@ -14,8 +14,6 @@ internal class RecordingInstallGateway : ListingInstallGateway {
     val uninstalled: MutableList<Long> = mutableListOf()
 
     var isSilent: Boolean = false
-    var refreshes: Int = 0
-        private set
 
     fun emitObserved(next: InstallState, versionTag: String? = null) {
         observed.value = ListingInstallStatus(state = next, versionTag = versionTag)
@@ -44,8 +42,4 @@ internal class RecordingInstallGateway : ListingInstallGateway {
     }
 
     override suspend fun isSilentUninstall(): Boolean = isSilent
-
-    override fun refresh() {
-        refreshes += 1
-    }
 }

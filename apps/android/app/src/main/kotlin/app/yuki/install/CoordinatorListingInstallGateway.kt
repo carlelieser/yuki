@@ -17,7 +17,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
@@ -28,13 +27,14 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     private val dependencies: UninstallDependencies,
     @ApplicationContext private val context: Context,
 ) : ListingInstallGateway {
-    private val refreshes = MutableStateFlow(0)
-
     override suspend fun install(request: ListingInstallRequest) =
         scheduler.start(request.toInstallRequest(installs.baseUrl))
 
     override fun observe(githubRepoId: Long): Flow<ListingInstallStatus> =
-        combine(scheduler.observe(githubRepoId), refreshes) { progress, _ -> progress }
+        combine(
+            scheduler.observe(githubRepoId),
+            installs.observePresenceChanges(),
+        ) { progress, _ -> progress }
             .map { progress -> statusFor(githubRepoId, progress) }
 
     private suspend fun statusFor(
@@ -67,10 +67,6 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
 
     override suspend fun isSilentUninstall(): Boolean = dependencies.uninstaller.isSilent()
 
-    override fun refresh() {
-        refreshes.value += 1
-    }
-
     override suspend fun uninstall(githubRepoId: Long) {
         val packageName = requireNotNull(installs.packageNameOf(githubRepoId)) {
             "Cannot uninstall githubRepoId=$githubRepoId: no recorded package name"
@@ -86,7 +82,6 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
     private suspend fun forget(githubRepoId: Long) {
         scheduler.forget(githubRepoId)
         dependencies.store.forget(githubRepoId)
-        refresh()
     }
 
     private fun promptSystemUninstall(packageName: String) {

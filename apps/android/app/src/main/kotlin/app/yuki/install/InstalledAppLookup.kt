@@ -5,6 +5,7 @@ import app.yuki.core.model.InstalledApp
 import app.yuki.core.network.YukiBaseUrl
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
 @Singleton
 internal class InstalledAppLookup @Inject constructor(
@@ -18,4 +19,6 @@ internal class InstalledAppLookup @Inject constructor(
     suspend fun packageNameOf(githubRepoId: Long): String? = store.packageNameOf(githubRepoId)
 
     fun isPresent(packageName: String): Boolean = presence.isPresent(packageName)
+
+    fun observePresenceChanges(): Flow<Unit> = presence.observeChanges()
 }

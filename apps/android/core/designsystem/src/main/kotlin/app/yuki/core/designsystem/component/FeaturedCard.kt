@@ -91,6 +91,7 @@ fun FeaturedCard(
     listing: ListingSummary,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isInstalled: Boolean = false,
 ) {
     Card(
         onClick = onClick,
@@ -102,6 +103,7 @@ fun FeaturedCard(
         ListingIdentity(
             listing = listing,
             modifier = Modifier.padding(vertical = YukiSpacing.Medium),
+            isInstalled = isInstalled,
         )
     }
 }

@@ -26,7 +26,6 @@ class LibraryViewModel @Inject internal constructor(
     private val progress: InstallProgressStore,
     private val dependencies: LibraryDependencies,
 ) : ViewModel() {
-    private val resumes = MutableStateFlow(0)
     private val refreshing = MutableStateFlow(false)
 
     val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
@@ -69,12 +68,11 @@ class LibraryViewModel @Inject internal constructor(
 
     private suspend fun refreshLocalState() {
         dependencies.reconciler.reconcile(store.installs())
-        resumes.value += 1
         progress.clearSettled()
     }
 
     private fun presentInstalls(): Flow<List<InstalledApp>> =
-        combine(store.observeInstalls(), resumes) { installs, _ ->
+        combine(store.observeInstalls(), dependencies.packages.observeChanges()) { installs, _ ->
             installs.filter { app -> dependencies.packages.isPresent(app.packageName) }
         }
 

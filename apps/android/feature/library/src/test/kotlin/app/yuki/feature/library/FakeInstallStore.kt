@@ -57,8 +57,11 @@ internal class FakeInstalledPackages(
 ) : InstalledPackages {
     private val launchable = mutableSetOf<String>()
     private val versions = mutableMapOf<String, String>()
+    private val changes = MutableStateFlow(0)
 
     override fun isPresent(packageName: String): Boolean = packageName in present
+
+    override fun observeChanges(): Flow<Unit> = changes.map { }
 
     override fun launchIntentExists(packageName: String): Boolean = packageName in launchable
 
@@ -76,12 +79,14 @@ internal class FakeInstalledPackages(
         present += packageName
         versions[packageName] = versionName
         if (isLaunchable) launchable += packageName
+        changes.value += 1
     }
 
     fun uninstall(packageName: String) {
         present -= packageName
         launchable -= packageName
         versions -= packageName
+        changes.value += 1
     }
 }
 
