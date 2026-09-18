@@ -1,19 +1,15 @@
 package app.yuki.install
 
-import android.content.Context
-import android.content.pm.PackageManager
-import dagger.hilt.android.qualifiers.ApplicationContext
+import app.yuki.feature.library.InstalledPackages
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 
 @Singleton
 internal class InstalledPackagePresence @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val packages: InstalledPackages,
 ) {
-    fun isPresent(packageName: String): Boolean = try {
-        context.packageManager.getPackageInfo(packageName, 0)
-        true
-    } catch (absent: PackageManager.NameNotFoundException) {
-        false
-    }
+    fun isPresent(packageName: String): Boolean = packages.isPresent(packageName)
+
+    fun observeChanges(): Flow<Unit> = packages.observeChanges()
 }

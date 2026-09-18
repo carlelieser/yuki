@@ -32,6 +32,4 @@ interface ListingInstallGateway {
     suspend fun uninstall(githubRepoId: Long)
 
     suspend fun isSilentUninstall(): Boolean
-
-    fun refresh()
 }

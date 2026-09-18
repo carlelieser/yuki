@@ -367,7 +367,6 @@ class ListingViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(viewModel.hasUninstallFailed.value)
-        assertEquals(1, installGateway.refreshes)
     }
 
     @Test
@@ -384,16 +383,6 @@ class ListingViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.hasUninstallFailed.value)
-    }
-
-    @Test
-    fun `refreshes install state when the screen resumes`() = runTest {
-        val viewModel = viewModelWith(Result.success(detail()))
-        dispatcher.scheduler.advanceUntilIdle()
-
-        viewModel.onResumed()
-
-        assertEquals(1, installGateway.refreshes)
     }
 
     @Test

@@ -4,16 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
@@ -45,7 +40,6 @@ fun ListingRoute(
     val hasUninstallFailed by viewModel.hasUninstallFailed.collectAsStateWithLifecycle()
     val actions = listingActions(listing = listing, viewModel = viewModel)
 
-    ResumeEffect(onResume = viewModel::onResumed)
 
     ListingScreen(
         state = ListingScreenState(
@@ -59,21 +53,6 @@ fun ListingRoute(
         onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
-}
-
-@Composable
-private fun ResumeEffect(onResume: () -> Unit) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val currentOnResume by rememberUpdatedState(onResume)
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) currentOnResume()
-        }
-
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 }
 
 @Composable
