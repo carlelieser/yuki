@@ -1,11 +1,6 @@
 package app.yuki.core.auth
 
-data class AuthAccount(
-    val id: String,
-    val name: String,
-    val email: String,
-    val imageUrl: String?,
-)
+import app.yuki.core.model.AuthAccount
 
 data class AuthSession(
     val token: String,
