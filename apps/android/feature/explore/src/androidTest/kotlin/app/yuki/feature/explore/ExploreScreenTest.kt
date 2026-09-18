@@ -113,6 +113,29 @@ class ExploreScreenTest {
     }
 
     @Test
+    fun anInstalledListingIsMarkedInTheFeaturedCarousel() {
+        val alpha = listing("alpha")
+
+        render(
+            browsing(
+                featured = UiState.Success(listOf(alpha)),
+                installedIds = setOf(alpha.githubRepoId),
+            ),
+        )
+
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onAllNodesWithTag(INSTALLED_BADGE_TAG).assertCountEquals(1)
+    }
+
+    @Test
+    fun aFeaturedListingIsUnmarkedWhenItIsNotInstalled() {
+        render(browsing(featured = UiState.Success(listOf(listing("alpha")))))
+
+        composeRule.onNodeWithText("Alpha").assertIsDisplayed()
+        composeRule.onAllNodesWithTag(INSTALLED_BADGE_TAG).assertCountEquals(0)
+    }
+
+    @Test
     fun noListingIsMarkedWhenNothingIsInstalled() {
         render(
             browsing(

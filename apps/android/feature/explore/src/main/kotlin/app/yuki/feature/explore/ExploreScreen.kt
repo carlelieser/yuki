@@ -171,6 +171,7 @@ private fun LazyListScope.featuredSection(
                 listings = featured.data,
                 onSelect = callbacks.onListingSelected,
                 modifier = Modifier.fillMaxWidth(),
+                installs = content.installs,
             )
 
             else -> FeaturedRowPlaceholder(modifier = Modifier.fillMaxWidth())
