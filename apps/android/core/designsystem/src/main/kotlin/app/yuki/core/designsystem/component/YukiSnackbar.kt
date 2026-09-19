@@ -1,6 +1,5 @@
 package app.yuki.core.designsystem.component
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -17,9 +16,6 @@ fun YukiSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier
         Snackbar(
             snackbarData = data,
             shape = YukiShape.Card,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            actionColor = MaterialTheme.colorScheme.primary,
             modifier = Modifier.testTag(YUKI_SNACKBAR_TAG),
         )
     }
