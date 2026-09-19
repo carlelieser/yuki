@@ -42,6 +42,7 @@ fun SignInRoute(
             onPasswordChange = viewModel::onPasswordChange,
             onSubmit = viewModel::onSubmit,
             onCreateAccountClick = navigation.onCreateAccountClick,
+            onMessageShown = viewModel::onMessageShown,
         ),
         modifier = modifier,
     )
@@ -52,6 +53,7 @@ data class SignInActions(
     val onPasswordChange: (String) -> Unit,
     val onSubmit: () -> Unit,
     val onCreateAccountClick: () -> Unit,
+    val onMessageShown: () -> Unit,
 )
 
 @Composable
@@ -60,9 +62,11 @@ internal fun SignInScreen(
     actions: SignInActions,
     modifier: Modifier = Modifier,
 ) {
-    AuthScaffold(title = SIGN_IN_TITLE, modifier = modifier) {
-        AuthMessage(title = SIGN_IN_FAILED_TITLE, message = state.message)
-
+    AuthScaffold(
+        title = SIGN_IN_TITLE,
+        modifier = modifier,
+        message = state.message?.let { text -> AuthMessage(text, actions.onMessageShown) },
+    ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),

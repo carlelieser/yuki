@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal const val SIGN_UP_FAILED_TITLE = "Could not create your account"
 internal const val SIGN_UP_TAKEN = "An account with that email already exists."
 internal const val SIGN_UP_OFFLINE = "You're offline. Check your connection and try again."
 internal const val SIGN_UP_UNAVAILABLE = "Yuki is not responding right now. Try again in a moment."
@@ -78,6 +77,10 @@ class SignUpViewModel @Inject internal constructor(
         mutableState.update { state ->
             state.copy(isSubmitting = false, verificationSentTo = email)
         }
+    }
+
+    fun onMessageShown() {
+        mutableState.update { state -> state.copy(message = null) }
     }
 
     private fun report(reason: FailureReason) {

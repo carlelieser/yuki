@@ -44,6 +44,7 @@ fun SignUpRoute(
             onPasswordChange = viewModel::onPasswordChange,
             onSubmit = viewModel::onSubmit,
             onSignInClick = onSignInClick,
+            onMessageShown = viewModel::onMessageShown,
         ),
         modifier = modifier,
     )
@@ -55,6 +56,7 @@ data class SignUpActions(
     val onPasswordChange: (String) -> Unit,
     val onSubmit: () -> Unit,
     val onSignInClick: () -> Unit,
+    val onMessageShown: () -> Unit,
 )
 
 @Composable
@@ -81,9 +83,11 @@ private fun SignUpForm(
     actions: SignUpActions,
     modifier: Modifier = Modifier,
 ) {
-    AuthScaffold(title = SIGN_UP_TITLE, modifier = modifier) {
-        AuthMessage(title = SIGN_UP_FAILED_TITLE, message = state.message)
-
+    AuthScaffold(
+        title = SIGN_UP_TITLE,
+        modifier = modifier,
+        message = state.message?.let { text -> AuthMessage(text, actions.onMessageShown) },
+    ) {
         SignUpFields(state = state, actions = actions)
 
         YukiButton(

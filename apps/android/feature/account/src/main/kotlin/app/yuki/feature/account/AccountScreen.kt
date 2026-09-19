@@ -1,6 +1,7 @@
 package app.yuki.feature.account
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -19,6 +23,7 @@ import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.component.YukiSecondaryButton
+import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val SIGN_OUT_LABEL = "Sign out"
@@ -44,6 +49,7 @@ fun AccountRoute(
             onEditAvatarClick = picker::launch,
             onSignInClick = onSignInClick,
             onSignOutClick = viewModel::onSignOut,
+            onMessageShown = viewModel::onMessageShown,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -54,6 +60,7 @@ data class AccountActions(
     val onEditAvatarClick: () -> Unit,
     val onSignInClick: () -> Unit,
     val onSignOutClick: () -> Unit,
+    val onMessageShown: () -> Unit,
 )
 
 @Composable
@@ -74,23 +81,39 @@ internal fun AccountScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(contentPadding)
-            .padding(YukiSpacing.Large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraLarge),
-    ) {
-        ProfileSection(account = account, onEditAvatarClick = actions.onEditAvatarClick)
+    val hostState = remember { SnackbarHostState() }
 
-        AuthMessage(title = SIGN_OUT_LABEL, message = state.message)
+    LaunchedEffect(state.message) {
+        val message = state.message ?: return@LaunchedEffect
 
-        YukiSecondaryButton(
-            label = SIGN_OUT_LABEL,
-            onClick = actions.onSignOutClick,
-            modifier = Modifier.fillMaxWidth(),
+        hostState.showSnackbar(message = message, withDismissAction = true)
+        actions.onMessageShown()
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(contentPadding)
+                .padding(YukiSpacing.Large),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraLarge),
+        ) {
+            ProfileSection(account = account, onEditAvatarClick = actions.onEditAvatarClick)
+
+            YukiSecondaryButton(
+                label = SIGN_OUT_LABEL,
+                onClick = actions.onSignOutClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        YukiSnackbarHost(
+            hostState = hostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(contentPadding),
         )
     }
 }

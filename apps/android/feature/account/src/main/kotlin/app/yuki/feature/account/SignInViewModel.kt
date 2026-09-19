@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal const val SIGN_IN_FAILED_TITLE = "Could not sign you in"
 internal const val SIGN_IN_INVALID = "Invalid email or password."
 internal const val SIGN_IN_UNVERIFIED =
     "Verify your email address before signing in. We sent you a new link."
@@ -82,6 +81,10 @@ class SignInViewModel @Inject internal constructor(
 
         store.store(AuthSession(token = token, account = signedIn.account))
         mutableState.update { state -> state.copy(isSubmitting = false, isSignedIn = true) }
+    }
+
+    fun onMessageShown() {
+        mutableState.update { state -> state.copy(message = null) }
     }
 
     private fun report(reason: FailureReason) {
