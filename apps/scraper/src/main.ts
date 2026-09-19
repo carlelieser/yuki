@@ -24,7 +24,6 @@ import { findMissingSlugs, readListFlag } from './run/args.ts';
 
 const DEFAULT_MAX_REPOS = 200;
 const DEFAULT_SEED_MAX_REPOS = 10000;
-const DEFAULT_MAX_REFRESH = 500;
 
 function readNumberFlag(flag: string, fallback: number): number {
 	const prefix = `${flag}=`;
@@ -33,6 +32,15 @@ function readNumberFlag(flag: string, fallback: number): number {
 
 	const parsed = Number.parseInt(argument.slice(prefix.length), 10);
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function readOptionalNumberFlag(flag: string): number | undefined {
+	const prefix = `${flag}=`;
+	const argument = process.argv.find((value) => value.startsWith(prefix));
+	if (argument === undefined) return undefined;
+
+	const parsed = Number.parseInt(argument.slice(prefix.length), 10);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 const slugs = readListFlag(process.argv, '--slug');
@@ -48,7 +56,7 @@ const maxRepos = readNumberFlag(
 	'--max-repos',
 	shouldSeed ? DEFAULT_SEED_MAX_REPOS : DEFAULT_MAX_REPOS
 );
-const maxRefresh = readNumberFlag('--max-refresh', DEFAULT_MAX_REFRESH);
+const maxRefresh = readOptionalNumberFlag('--max-refresh');
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());

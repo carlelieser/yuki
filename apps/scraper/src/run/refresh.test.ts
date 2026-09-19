@@ -177,6 +177,23 @@ describe('refreshListing', () => {
 		expect(seen).toEqual(['W/"rel"', 'W/"read"', 'W/"tree"']);
 	});
 
+	it('fetches the repository unconditionally so counters stay current', async () => {
+		const seen: (string | null)[] = [];
+		const client = fakeClient({
+			getRepository: async (_owner, _name, etag) => {
+				seen.push(etag ?? null);
+				return { isModified: true, body: repository({ stargazers_count: 100 }), etag: 'W/"r2"' };
+			}
+		});
+
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target);
+
+		expect(seen).toEqual([null]);
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.listing?.stars).toBe(100);
+	});
+
 	it('does not re-request the repository when it returns a 304', async () => {
 		let repoCalls = 0;
 		const client = fakeClient({

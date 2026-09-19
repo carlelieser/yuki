@@ -14,7 +14,7 @@ import type { RunTotals } from '../persistence/runs.ts';
 export type RunPorts = {
 	client: GithubClient;
 	etags: EtagStore;
-	listTargets: (limit: number) => Promise<ListingRecord[]>;
+	listTargets: (limit?: number) => Promise<ListingRecord[]>;
 	listKnownRepoIds?: () => Promise<number[]>;
 	partitions?: PartitionStore;
 	persist: (input: PersistInput) => Promise<string>;
@@ -26,7 +26,7 @@ export type RunPorts = {
 export type RunOptions = {
 	shouldDiscover: boolean;
 	maxRepos: number;
-	maxRefresh: number;
+	maxRefresh?: number;
 	discoveryRange?: DateRange;
 };
 

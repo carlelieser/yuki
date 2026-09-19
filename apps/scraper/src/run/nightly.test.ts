@@ -257,3 +257,33 @@ describe('renamed repositories', () => {
 		expect(runPorts.persisted[0]?.githubRepoId).toBe(knownListing.githubRepoId);
 	});
 });
+
+describe('refresh limit', () => {
+	it('asks for every listing when no limit is configured', async () => {
+		const seen: (number | undefined)[] = [];
+		const runPorts = ports({
+			listTargets: async (limit) => {
+				seen.push(limit);
+				return [];
+			}
+		});
+
+		await runNightly(runPorts, { shouldDiscover: false, maxRepos: 10 });
+
+		expect(seen).toEqual([undefined]);
+	});
+
+	it('passes an explicit limit through when one is configured', async () => {
+		const seen: (number | undefined)[] = [];
+		const runPorts = ports({
+			listTargets: async (limit) => {
+				seen.push(limit);
+				return [];
+			}
+		});
+
+		await runNightly(runPorts, { shouldDiscover: false, maxRepos: 10, maxRefresh: 25 });
+
+		expect(seen).toEqual([25]);
+	});
+});

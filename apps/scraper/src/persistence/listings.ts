@@ -193,9 +193,9 @@ async function updateExisting(tx: Transaction, input: PersistInput): Promise<str
 
 export async function listListingsForRefresh(
 	db: Database,
-	limit: number
+	limit?: number
 ): Promise<ListingRecord[]> {
-	return db
+	const query = db
 		.select({
 			id: schema.listings.id,
 			owner: schema.listings.owner,
@@ -204,8 +204,9 @@ export async function listListingsForRefresh(
 			packageName: schema.listings.packageName
 		})
 		.from(schema.listings)
-		.orderBy(sql`${schema.listings.lastScrapedAt} asc nulls first`, asc(schema.listings.id))
-		.limit(limit);
+		.orderBy(sql`${schema.listings.lastScrapedAt} asc nulls first`, asc(schema.listings.id));
+
+	return limit === undefined ? query : query.limit(limit);
 }
 
 export async function listListingsBySlug(

@@ -178,13 +178,11 @@ async function readRepository(
 ): Promise<RepoResource> {
 	if (target.repo !== undefined) return { state: 'fresh', body: target.repo };
 
-	const stored = await etags.read(resource);
-	const etag = stored === null ? null : parseRepoEtag(stored).etag;
-
 	try {
-		const response = await client.getRepository(target.owner, target.name, etag);
+		const response = await client.getRepository(target.owner, target.name, null);
 
 		if (!response.isModified) {
+			const stored = await etags.read(resource);
 			const branch = stored === null ? null : parseRepoEtag(stored).branch;
 			if (branch === null) return { state: 'absent' };
 			return { state: 'unchanged', branch };
