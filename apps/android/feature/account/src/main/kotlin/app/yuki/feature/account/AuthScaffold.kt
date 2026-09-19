@@ -5,10 +5,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -27,6 +29,7 @@ import app.yuki.core.designsystem.component.YukiLogo
 import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.component.YukiTextButton
 import app.yuki.core.designsystem.component.YukiTonalCircle
+import app.yuki.core.designsystem.component.keyboardInsets
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
@@ -57,8 +60,9 @@ internal fun AuthScaffold(
     }
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.windowInsetsPadding(keyboardInsets()),
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0),
         snackbarHost = { YukiSnackbarHost(hostState = hostState) },
     ) { contentPadding ->
         Column(

@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import app.yuki.core.designsystem.component.ProvideKeyboardInsets
 import app.yuki.core.designsystem.component.YukiNavBar
 import app.yuki.core.designsystem.component.YukiNavBarItem
 import app.yuki.core.designsystem.theme.YukiTheme
@@ -42,7 +43,9 @@ fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
         isDarkTheme = isDarkTheme,
         isDynamicColorEnabled = settings.isDynamicColorEnabled,
     ) {
-        YukiScaffold(navController = rememberNavController())
+        ProvideKeyboardInsets {
+            YukiScaffold(navController = rememberNavController())
+        }
     }
 }
 
