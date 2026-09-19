@@ -120,7 +120,14 @@ ${footnoteMarkup(content.footnote)}
 }
 
 function renderText(content: EmailContent): string {
-	const lines = [content.heading, '', content.body, '', content.action.url];
+	const lines = [
+		content.heading,
+		'',
+		content.body,
+		'',
+		`${content.action.label}:`,
+		content.action.url
+	];
 	if (content.footnote) lines.push('', content.footnote);
 	return `${lines.join('\n')}\n`;
 }

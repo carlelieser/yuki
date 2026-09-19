@@ -42,7 +42,7 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			requireEmailVerification: true,
 			sendResetPassword: async ({ user, url }) => {
 				await sendTemplatedMail(user.email, 'Reset your Yuki password', {
-					previewText: 'Reset your Yuki password',
+					previewText: 'Choose a new password using the link inside.',
 					heading: 'Reset your password',
 					body: 'Choose a new password for your Yuki account using the link below.',
 					action: { label: 'Reset password', url },
