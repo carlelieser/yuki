@@ -29,6 +29,7 @@ const val AVATAR_EDIT_DESCRIPTION = "Change your picture"
 const val AVATAR_OPEN_DESCRIPTION = "Open your account"
 
 private const val GLYPH_FRACTION = 0.5f
+private const val COMPACT_GLYPH_FRACTION = 1f
 private const val BADGE_FRACTION = 0.34f
 private const val BADGE_GLYPH_FRACTION = 0.62f
 
@@ -60,7 +61,12 @@ fun AccountAvatar(
     modifier: Modifier = Modifier,
     size: AvatarSize = AvatarSize.Small,
 ) {
-    AvatarFace(content = content, diameter = size.diameter(), modifier = modifier)
+    AvatarFace(
+        content = content,
+        diameter = size.diameter(),
+        glyphFraction = size.glyphFraction(),
+        modifier = modifier,
+    )
 }
 
 private data class AvatarClick(val onClick: () -> Unit, val isEditable: Boolean)
@@ -78,6 +84,7 @@ private fun AvatarBox(
         AvatarFace(
             content = content,
             diameter = diameter,
+            glyphFraction = size.glyphFraction(),
             modifier = Modifier.clickable(click),
         )
 
@@ -104,6 +111,7 @@ private fun Modifier.clickable(click: AvatarClick?): Modifier {
 private fun AvatarFace(
     content: AvatarContent,
     diameter: Dp,
+    glyphFraction: Float,
     modifier: Modifier = Modifier,
 ) {
     val painter = content.imageUrl?.let { url ->
@@ -112,7 +120,12 @@ private fun AvatarFace(
     val isLoaded = painter?.state?.collectAsState()?.value is AsyncImagePainter.State.Success
 
     if (painter == null || !isLoaded) {
-        AvatarFallback(displayName = content.displayName, diameter = diameter, modifier = modifier)
+        AvatarFallback(
+            displayName = content.displayName,
+            diameter = diameter,
+            glyphFraction = glyphFraction,
+            modifier = modifier,
+        )
         return
     }
 
@@ -131,6 +144,7 @@ private fun AvatarFace(
 private fun AvatarFallback(
     displayName: String?,
     diameter: Dp,
+    glyphFraction: Float,
     modifier: Modifier = Modifier,
 ) {
     val initials = initialsOf(displayName)
@@ -147,7 +161,7 @@ private fun AvatarFallback(
                 imageVector = YukiIcons.Person,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(diameter * GLYPH_FRACTION),
+                modifier = Modifier.size(diameter * glyphFraction),
             )
             return@Box
         }
@@ -198,4 +212,9 @@ private fun AvatarSize.diameter(): Dp = when (this) {
     AvatarSize.Small -> YukiSize.IconSmall
     AvatarSize.Medium -> YukiSize.IconLarge
     AvatarSize.Large -> YukiSize.IconExtraLarge
+}
+
+private fun AvatarSize.glyphFraction(): Float = when (this) {
+    AvatarSize.Small -> COMPACT_GLYPH_FRACTION
+    AvatarSize.Medium, AvatarSize.Large -> GLYPH_FRACTION
 }
