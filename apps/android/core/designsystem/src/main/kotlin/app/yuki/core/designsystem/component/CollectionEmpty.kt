@@ -1,13 +1,10 @@
 package app.yuki.core.designsystem.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,15 +31,7 @@ data class EmptyContent(
 private fun EmptyIcon(icon: ImageVector?) {
     if (icon == null) return
 
-    Box(
-        modifier = Modifier
-            .size(YukiSize.IconLarge)
-            .background(
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                shape = CircleShape,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
+    YukiTonalCircle(diameter = YukiSize.IconLarge) {
         Icon(
             imageVector = icon,
             contentDescription = null,

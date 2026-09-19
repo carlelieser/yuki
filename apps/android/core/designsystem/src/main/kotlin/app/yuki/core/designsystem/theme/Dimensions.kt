@@ -18,6 +18,8 @@ object YukiSize {
     val IconMedium = 40.dp
     val IconLarge = 56.dp
     val IconExtraLarge = 72.dp
+    val IconHeroGlyph = 88.dp
+    val IconHero = 112.dp
     val CardWidth = 156.dp
     val ScreenshotWidth = 220.dp
     val MinimumTouchTarget = 48.dp
