@@ -30,6 +30,28 @@ internal class YukiNavigator(
         navController.navigate(SettingsRoute)
     }
 
+    fun openAccount() {
+        navController.navigate(AccountRoute)
+    }
+
+    fun openSignIn() {
+        navController.navigate(SignInRoute)
+    }
+
+    fun swapToSignUp() {
+        navController.navigate(SignUpRoute) {
+            popUpTo(SignInRoute) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    fun swapToSignIn() {
+        navController.navigate(SignInRoute) {
+            popUpTo(SignUpRoute) { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     fun openCategory(category: ListingCategory) {
         navController.navigate(CategoryRoute(category = category.wireValue))
     }

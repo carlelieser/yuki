@@ -2,14 +2,10 @@ package app.yuki.core.network
 
 import app.yuki.core.model.ListingCategory
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
-import io.ktor.client.statement.HttpResponse
-import io.ktor.http.isSuccess
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CancellationException
 
 const val SEARCH_RESULT_LIMIT = 24
 
@@ -71,17 +67,5 @@ internal class ListingRemoteDataSource @Inject constructor(
     suspend fun packages(): PackageIndexDto {
         val response = client.get("api/packages")
         return response.decode("Load the package index")
-    }
-}
-
-private suspend inline fun <reified T> HttpResponse.decode(operation: String): T {
-    if (!status.isSuccess()) throw RemoteRequestException(statusFailure(this), operation)
-
-    return try {
-        body<T>()
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (error: Throwable) {
-        throw RemoteRequestException(thrownFailure(error), operation, error)
     }
 }

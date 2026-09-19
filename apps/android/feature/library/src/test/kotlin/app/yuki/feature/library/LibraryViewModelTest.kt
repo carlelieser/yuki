@@ -47,7 +47,7 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -60,7 +60,7 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -87,12 +87,12 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
 
             packages.uninstall(TERMUX.packageName)
             viewModel.onPullToRefresh()
 
-            assertEquals(emptyList<InstalledApp>(), successApps(awaitItem()))
+            assertEquals(emptyList<String>(), successSlugs(awaitItem()))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -105,7 +105,7 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
 
             val afterLoad = store.forgetCalls
 
@@ -126,28 +126,12 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
 
             viewModel.onPullToRefresh()
             advanceUntilIdle()
 
             assertEquals(0, store.forgetCalls)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun marksAnAppOpenableOnlyWhenItHasALaunchIntent() = runTest {
-        val packages = FakeInstalledPackages().apply {
-            install(TERMUX.packageName, isLaunchable = true)
-            install(AURORA.packageName, isLaunchable = false)
-        }
-        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX, AURORA)), packages)
-
-        viewModel.state.test {
-            assertEquals(UiState.Loading, awaitItem())
-            val items = (awaitItem() as UiState.Success).data.items
-            assertEquals(listOf(true, false), items.map(LibraryItem::canOpen))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -262,7 +246,7 @@ class LibraryViewModelTest {
                 InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Downloading(HALF_DOWNLOADED)),
             )
 
-            assertEquals("obsidian", singleItem(awaitItem()).app.slug)
+            assertEquals("obsidian", singleItem(awaitItem()).slug)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -442,12 +426,12 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
 
             packages.uninstall(TERMUX.packageName)
             viewModel.onPullToRefresh()
 
-            assertEquals(emptyList<InstalledApp>(), successApps(awaitItem()))
+            assertEquals(emptyList<String>(), successSlugs(awaitItem()))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -475,7 +459,7 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(listOf(TERMUX), successApps(awaitItem()))
+            assertEquals(listOf(TERMUX.slug), successSlugs(awaitItem()))
 
             viewModel.onPullToRefresh()
             runCurrent()
@@ -640,8 +624,8 @@ private val OBSIDIAN = InstallTarget(
     iconUrl = null,
 )
 
-private fun successApps(state: UiState<LibraryContent>): List<InstalledApp> =
-    (state as UiState.Success).data.items.map(LibraryItem::app)
+private fun successSlugs(state: UiState<LibraryContent>): List<String> =
+    (state as UiState.Success).data.items.map(LibraryItem::slug)
 
 private val TERMUX = InstalledApp(
     githubRepoId = 1_234L,

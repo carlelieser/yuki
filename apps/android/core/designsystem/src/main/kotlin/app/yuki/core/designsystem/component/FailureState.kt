@@ -28,6 +28,9 @@ private const val DEFAULT_MISSING_MESSAGE = "We couldn't find what you were look
 private fun titleFor(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> "You're offline"
     FailureReason.NotFound -> "Nothing here"
+    FailureReason.Unauthorized -> "Sign in to continue"
+    FailureReason.EmailNotVerified -> "Verify your email"
+    FailureReason.AccountExists -> "That email is taken"
     is FailureReason.Server -> "Yuki is having trouble"
     is FailureReason.Unexpected -> "Something went wrong"
 }
@@ -35,6 +38,9 @@ private fun titleFor(reason: FailureReason): String = when (reason) {
 private fun descriptionFor(reason: FailureReason, missingMessage: String): String = when (reason) {
     FailureReason.Offline -> "Check your connection and try again."
     FailureReason.NotFound -> missingMessage
+    FailureReason.Unauthorized -> "Your session has expired. Sign in again to continue."
+    FailureReason.EmailNotVerified -> "Open the link we emailed you to finish signing in."
+    FailureReason.AccountExists -> "An account with that email already exists."
     is FailureReason.Server -> "Our server is not responding right now. Try again in a moment."
     is FailureReason.Unexpected -> "This didn't load as expected. Try again."
 }

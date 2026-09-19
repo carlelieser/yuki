@@ -6,6 +6,7 @@ import app.yuki.core.database.InstallStore
 import app.yuki.core.installer.InstallProgress
 import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.LibraryEntry
 import app.yuki.core.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -27,13 +28,13 @@ class LibraryViewModel @Inject internal constructor(
     private val dependencies: LibraryDependencies,
 ) : ViewModel() {
     private val refreshing = MutableStateFlow(false)
+    private val remote = MutableStateFlow(emptyList<LibraryEntry>())
+    private val filter = MutableStateFlow(LibraryFilter.All)
 
     val isRefreshing: StateFlow<Boolean> = refreshing.asStateFlow()
 
     val state: StateFlow<UiState<LibraryContent>> =
-        combine(presentInstalls(), activeProgress()) { installed, active ->
-            UiState.Success(LibraryContent(merge(installed, active)))
-        }.stateIn(
+        combine(presentInstalls(), activeProgress(), remote, filter, ::content).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = UiState.Loading,
@@ -43,6 +44,14 @@ class LibraryViewModel @Inject internal constructor(
         viewModelScope.launch { refreshLocalState() }
     }
 
+    fun onEnter() {
+        viewModelScope.launch { loadRemoteLibrary() }
+    }
+
+    fun onFilterChange(selected: LibraryFilter) {
+        filter.value = selected
+    }
+
     fun onPullToRefresh() {
         if (refreshing.value) return
 
@@ -50,6 +59,7 @@ class LibraryViewModel @Inject internal constructor(
         viewModelScope.launch {
             try {
                 reconcile()
+                loadRemoteLibrary()
                 delay(MINIMUM_REFRESH_MILLIS)
             } finally {
                 refreshing.value = false
@@ -59,6 +69,10 @@ class LibraryViewModel @Inject internal constructor(
 
     fun onDismiss(githubRepoId: Long) {
         viewModelScope.launch { progress.clear(githubRepoId) }
+    }
+
+    private suspend fun loadRemoteLibrary() {
+        remote.value = dependencies.library.entries()
     }
 
     private suspend fun reconcile() {
@@ -80,9 +94,16 @@ class LibraryViewModel @Inject internal constructor(
         progress.clearSettled()
     }
 
-    private fun merge(installed: List<InstalledApp>, active: List<InstallProgress>) = mergeLibrary(
-        input = LibraryMergeInput(installed, active),
-        canOpen = dependencies.packages::launchIntentExists,
+    private fun content(
+        installed: List<InstalledApp>,
+        active: List<InstallProgress>,
+        library: List<LibraryEntry>,
+        selected: LibraryFilter,
+    ): UiState<LibraryContent> = UiState.Success(
+        LibraryContent(
+            items = mergeLibrary(LibraryMergeInput(installed, library, active)),
+            filter = selected,
+        ),
     )
 
     private companion object {

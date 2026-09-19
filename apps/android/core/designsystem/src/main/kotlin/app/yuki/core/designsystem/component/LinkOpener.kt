@@ -1,4 +1,4 @@
-package app.yuki.feature.listing
+package app.yuki.core.designsystem.component
 
 import android.content.ActivityNotFoundException
 import android.content.Context

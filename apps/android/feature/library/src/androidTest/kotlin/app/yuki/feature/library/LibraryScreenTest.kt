@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -17,7 +18,7 @@ import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallFailure
-import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.LibraryEntry
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 import app.yuki.core.model.downloadSizeOf
@@ -124,6 +125,7 @@ class LibraryScreenTest {
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
                     onDismiss = onDismiss,
+                    onFilterSelected = {},
                 ),
                 contentPadding = PaddingValues(),
             )
@@ -145,6 +147,38 @@ class LibraryScreenTest {
     }
 
     @Test
+    fun theFilterControlSitsInTheHeaderAndNamesTheActiveFilter() {
+        setContent(
+            UiState.Success(
+                LibraryContent(items = listOf(item()), filter = LibraryFilter.NotInstalled),
+            ),
+        )
+
+        composeRule
+            .onNodeWithContentDescription("$LIBRARY_FILTER_DESCRIPTION Not installed")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun theEmptyLibraryOffersNoFilterToApply() {
+        setContent(UiState.Success(LibraryContent(emptyList())))
+
+        composeRule.onNodeWithTag(LIBRARY_FILTER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFilterThatMatchesNothingIsNotShownAsAnEmptyLibrary() {
+        setContent(
+            UiState.Success(
+                LibraryContent(items = listOf(item()), filter = LibraryFilter.NotInstalled),
+            ),
+        )
+
+        composeRule.onNodeWithText(LIBRARY_NO_MATCHES_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(LIBRARY_EMPTY_TITLE).assertDoesNotExist()
+    }
+
+    @Test
     fun pullingDownTheEmptyLibraryRequestsARefresh() {
         var refreshes = 0
         setContent(
@@ -159,13 +193,16 @@ class LibraryScreenTest {
     }
 }
 
-private fun item(install: InstallState = InstallState.NotInstalled): LibraryItem =
-    LibraryItem(app = TERMUX, canOpen = true, install = install)
+private fun item(install: InstallState = InstallState.NotInstalled): LibraryItem = LibraryItem(
+    entry = TERMUX,
+    presence = LibraryPresence.Installed,
+    install = install,
+)
 
 private val PARTLY_DOWNLOADED =
     downloadSizeOf(bytesDownloaded = 4_100_000L, bytesTotal = 12_100_000L)
 
-private val TERMUX = InstalledApp(
+private val TERMUX = LibraryEntry(
     githubRepoId = 1_234L,
     packageName = "com.termux",
     slug = "termux",

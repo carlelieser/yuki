@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performScrollToNode
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OVERFLOW_MENU_TAG
 import app.yuki.core.model.FailureReason

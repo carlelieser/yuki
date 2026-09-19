@@ -24,15 +24,21 @@ internal fun repositoryOffline(): ListingRepository =
 internal fun repositoryRecording(
     requests: MutableList<HttpRequestData>,
     body: String,
+    tokens: AuthTokenSource = AuthTokenSource { null },
 ): ListingRepository = repositoryWith(
     MockEngine { request ->
         requests.add(request)
         respondJson(body)
     },
+    tokens,
 )
 
-internal fun repositoryWith(engine: MockEngine): ListingRepository =
-    NetworkListingRepository(ListingRemoteDataSource(YukiHttpClient.create(BASE_URL, engine)))
+internal fun repositoryWith(
+    engine: MockEngine,
+    tokens: AuthTokenSource = AuthTokenSource { null },
+): ListingRepository = NetworkListingRepository(
+    ListingRemoteDataSource(YukiHttpClient.create(BASE_URL, engine, tokens)),
+)
 
 private fun MockRequestHandleScope.respondJson(body: String) = respond(
     content = body,

@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { bearer } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import type { Database } from '@yuki/db';
 import { schema } from '@yuki/db';
@@ -73,7 +74,7 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 				}
 			}
 		},
-		plugins: [sveltekitCookies(getRequestEvent)]
+		plugins: [bearer(), sveltekitCookies(getRequestEvent)]
 	});
 }
 

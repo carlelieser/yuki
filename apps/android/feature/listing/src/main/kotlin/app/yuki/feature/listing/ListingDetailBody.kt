@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton

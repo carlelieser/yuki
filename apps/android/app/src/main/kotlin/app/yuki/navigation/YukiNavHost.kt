@@ -79,6 +79,9 @@ private fun YukiRoutedContent(
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         settingsDestination(navigator)
+        accountDestination(navigator, bottomBarPadding)
+        signInDestination(navigator)
+        signUpDestination(navigator)
     }
 }
 
@@ -97,6 +100,7 @@ private fun NavGraphBuilder.exploreDestination(
             onCategorySelected = navigator::openCategory,
             onSettingsClick = navigator::openSettings,
             contentPadding = bottomBarPadding,
+            trailing = { AccountButton(onClick = navigator::openAccount) },
         )
     }
 }

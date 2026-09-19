@@ -249,6 +249,13 @@ class ListingRepositoryFailureTest {
     }
 
     @Test
+    fun `a 401 becomes an unauthorized failure rather than a server failure`() = runTest {
+        val result = repositoryFailingWith(HttpStatusCode.Unauthorized).browse(BrowseQuery())
+
+        assertEquals(FailureReason.Unauthorized, result.exceptionOrNull()!!.failureReason())
+    }
+
+    @Test
     fun `a transport error becomes an offline failure`() = runTest {
         val result = repositoryOffline().featured()
 
