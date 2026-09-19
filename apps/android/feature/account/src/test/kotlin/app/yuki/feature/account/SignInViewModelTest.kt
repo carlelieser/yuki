@@ -7,6 +7,7 @@ import app.yuki.core.network.SignedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -94,6 +95,60 @@ class SignInViewModelTest {
         repository.signInResult = Result.failure(TypedFailure(FailureReason.EmailNotVerified))
 
         assertEquals(SIGN_IN_UNVERIFIED, messageAfterSubmit())
+    }
+
+    @Test
+    fun `only an unverified account is offered a resend`() = runTest {
+        repository.signInResult = Result.failure(TypedFailure(FailureReason.EmailNotVerified))
+        val unverified = viewModel()
+
+        unverified.fillIn()
+        unverified.onSubmit()
+        advanceUntilIdle()
+
+        assertTrue(unverified.state.value.canResendVerification)
+
+        repository.signInResult = Result.failure(TypedFailure(FailureReason.Unauthorized))
+        val rejected = viewModel()
+
+        rejected.fillIn()
+        rejected.onSubmit()
+        advanceUntilIdle()
+
+        assertFalse(rejected.state.value.canResendVerification)
+    }
+
+    @Test
+    fun `resending asks for a new link and confirms it was sent`() = runTest {
+        repository.signInResult = Result.failure(TypedFailure(FailureReason.EmailNotVerified))
+        val viewModel = viewModel()
+
+        viewModel.fillIn(email = " ada@yuki.test ")
+        viewModel.onSubmit()
+        advanceUntilIdle()
+
+        viewModel.onResendVerification()
+        advanceUntilIdle()
+
+        assertEquals(listOf("ada@yuki.test"), repository.verificationsSentTo)
+        assertEquals(SIGN_IN_RESENT, viewModel.state.value.message)
+        assertFalse(viewModel.state.value.canResendVerification)
+    }
+
+    @Test
+    fun `a resend that fails says so instead of claiming success`() = runTest {
+        repository.signInResult = Result.failure(TypedFailure(FailureReason.EmailNotVerified))
+        repository.verificationResult = Result.failure(TypedFailure(FailureReason.Offline))
+        val viewModel = viewModel()
+
+        viewModel.fillIn()
+        viewModel.onSubmit()
+        advanceUntilIdle()
+
+        viewModel.onResendVerification()
+        advanceUntilIdle()
+
+        assertEquals(SIGN_IN_RESEND_FAILED, viewModel.state.value.message)
     }
 
     @Test

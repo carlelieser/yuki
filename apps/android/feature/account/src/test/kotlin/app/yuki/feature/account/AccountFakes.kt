@@ -49,7 +49,10 @@ internal class FakeAuthRepository : AuthRepository {
     var signUpResult: Result<SignedIn> = Result.success(SignedIn(ADA, token = null))
     var avatarResult: Result<AuthAccount> = Result.success(ADA)
 
+    var verificationResult: Result<Unit> = Result.success(Unit)
+
     val uploads = mutableListOf<AvatarUpload>()
+    val verificationsSentTo = mutableListOf<String>()
     var signOutCount = 0
 
     override suspend fun signIn(email: String, password: String): Result<SignedIn> = signInResult
@@ -63,6 +66,11 @@ internal class FakeAuthRepository : AuthRepository {
     override suspend fun signOut(): Result<Unit> {
         signOutCount += 1
         return Result.success(Unit)
+    }
+
+    override suspend fun sendVerificationEmail(email: String): Result<Unit> {
+        verificationsSentTo.add(email)
+        return verificationResult
     }
 
     override suspend fun session(): Result<AuthAccount?> =

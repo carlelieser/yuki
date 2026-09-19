@@ -17,8 +17,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal const val SIGN_IN_INVALID = "Invalid email or password."
-internal const val SIGN_IN_UNVERIFIED =
-    "Verify your email address before signing in. Check the link we sent when you signed up."
+internal const val SIGN_IN_UNVERIFIED = "Verify your email address before signing in."
+internal const val SIGN_IN_RESEND_LABEL = "Resend"
+internal const val SIGN_IN_RESENT = "We sent a new link to your email address."
+internal const val SIGN_IN_RESEND_FAILED = "We could not send a new link. Try again in a moment."
 internal const val SIGN_IN_OFFLINE = "You're offline. Check your connection and try again."
 internal const val SIGN_IN_UNAVAILABLE = "Yuki is not responding right now. Try again in a moment."
 
@@ -28,6 +30,7 @@ data class SignInState(
     val emailError: String? = null,
     val passwordError: String? = null,
     val message: String? = null,
+    val canResendVerification: Boolean = false,
     val isSubmitting: Boolean = false,
     val isSignedIn: Boolean = false,
 )
@@ -62,7 +65,9 @@ class SignInViewModel @Inject internal constructor(
     }
 
     private fun submit(email: String, password: String) {
-        mutableState.update { state -> state.copy(isSubmitting = true, message = null) }
+        mutableState.update { state ->
+            state.copy(isSubmitting = true, message = null, canResendVerification = false)
+        }
 
         viewModelScope.launch {
             repository.signIn(email, password)
@@ -84,12 +89,30 @@ class SignInViewModel @Inject internal constructor(
     }
 
     fun onMessageShown() {
-        mutableState.update { state -> state.copy(message = null) }
+        mutableState.update { state -> state.copy(message = null, canResendVerification = false) }
+    }
+
+    fun onResendVerification() {
+        val email = mutableState.value.email.trim()
+        if (email.isEmpty()) return
+
+        viewModelScope.launch {
+            val outcome = repository.sendVerificationEmail(email)
+            val message = if (outcome.isSuccess) SIGN_IN_RESENT else SIGN_IN_RESEND_FAILED
+
+            mutableState.update { state ->
+                state.copy(message = message, canResendVerification = false)
+            }
+        }
     }
 
     private fun report(reason: FailureReason) {
         mutableState.update { state ->
-            state.copy(isSubmitting = false, message = messageFor(reason))
+            state.copy(
+                isSubmitting = false,
+                message = messageFor(reason),
+                canResendVerification = reason == FailureReason.EmailNotVerified,
+            )
         }
     }
 }

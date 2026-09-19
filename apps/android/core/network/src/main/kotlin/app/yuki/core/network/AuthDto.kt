@@ -40,6 +40,11 @@ internal data class UpdateAccountRequestDto(
 )
 
 @Serializable
+internal data class SendVerificationRequestDto(
+    val email: String,
+)
+
+@Serializable
 internal data class AuthErrorDto(
     val code: String? = null,
     val message: String? = null,

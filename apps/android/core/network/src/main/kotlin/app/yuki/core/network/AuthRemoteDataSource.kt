@@ -52,6 +52,15 @@ internal class AuthRemoteDataSource @Inject constructor(
         return response.toSignedIn("Sign up as $email")
     }
 
+    suspend fun sendVerificationEmail(email: String) {
+        val response = client.post("api/auth/send-verification-email") {
+            contentType(ContentType.Application.Json)
+            setBody(SendVerificationRequestDto(email = email))
+        }
+
+        response.requireSuccess("Resend the verification email to $email")
+    }
+
     suspend fun signOut() {
         val response = client.post("api/auth/sign-out") {
             contentType(ContentType.Application.Json)

@@ -43,6 +43,7 @@ fun SignInRoute(
             onSubmit = viewModel::onSubmit,
             onCreateAccountClick = navigation.onCreateAccountClick,
             onMessageShown = viewModel::onMessageShown,
+            onResendVerification = viewModel::onResendVerification,
         ),
         modifier = modifier,
     )
@@ -54,6 +55,7 @@ data class SignInActions(
     val onSubmit: () -> Unit,
     val onCreateAccountClick: () -> Unit,
     val onMessageShown: () -> Unit,
+    val onResendVerification: () -> Unit,
 )
 
 @Composable
@@ -65,7 +67,7 @@ internal fun SignInScreen(
     AuthScaffold(
         title = SIGN_IN_TITLE,
         modifier = modifier,
-        message = state.message?.let { text -> AuthMessage(text, actions.onMessageShown) },
+        message = state.authMessage(actions),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -100,4 +102,18 @@ internal fun SignInScreen(
             onActionClick = actions.onCreateAccountClick,
         )
     }
+}
+
+private fun SignInState.authMessage(actions: SignInActions): AuthMessage? {
+    val text = message ?: return null
+
+    return AuthMessage(
+        text = text,
+        onShown = actions.onMessageShown,
+        action = if (canResendVerification) {
+            AuthMessageAction(SIGN_IN_RESEND_LABEL, actions.onResendVerification)
+        } else {
+            null
+        },
+    )
 }

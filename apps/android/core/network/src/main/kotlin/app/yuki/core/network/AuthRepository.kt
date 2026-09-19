@@ -26,6 +26,8 @@ interface AuthRepository {
 
     suspend fun signOut(): Result<Unit>
 
+    suspend fun sendVerificationEmail(email: String): Result<Unit>
+
     suspend fun session(): Result<AuthAccount?>
 
     suspend fun updateName(name: String): Result<AuthAccount>
@@ -48,6 +50,11 @@ internal class NetworkAuthRepository @Inject constructor(
         runRemote("Sign up as $email") { remote.signUp(name, email, password).toDomain() }
 
     override suspend fun signOut(): Result<Unit> = runRemote("Sign out") { remote.signOut() }
+
+    override suspend fun sendVerificationEmail(email: String): Result<Unit> =
+        runRemote("Resend the verification email to $email") {
+            remote.sendVerificationEmail(email)
+        }
 
     override suspend fun session(): Result<AuthAccount?> =
         runRemote("Load the session") { remote.session()?.toDomain() }
