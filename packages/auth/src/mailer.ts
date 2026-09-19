@@ -38,6 +38,7 @@ export async function sendMail(message: MailMessage): Promise<void> {
 		});
 	} catch (cause) {
 		const reason = cause instanceof Error ? cause.message : String(cause);
-		console.error(`[auth] failed to send mail to ${message.to}: ${reason}\n${message.text}`);
+		console.error(`[auth] failed to send mail to ${message.to}: ${reason}`);
+		throw new Error(`Failed to send mail to ${message.to}: ${reason}`, { cause });
 	}
 }
