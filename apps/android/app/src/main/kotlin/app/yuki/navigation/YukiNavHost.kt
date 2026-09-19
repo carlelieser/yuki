@@ -100,7 +100,12 @@ private fun NavGraphBuilder.exploreDestination(
             onCategorySelected = navigator::openCategory,
             onSettingsClick = navigator::openSettings,
             contentPadding = bottomBarPadding,
-            trailing = { AccountButton(onClick = navigator::openAccount) },
+            trailing = {
+                AccountButton(
+                    onAccountClick = navigator::openAccount,
+                    onSignInClick = navigator::openSignIn,
+                )
+            },
         )
     }
 }

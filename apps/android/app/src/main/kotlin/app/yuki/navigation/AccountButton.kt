@@ -16,7 +16,8 @@ import app.yuki.feature.account.AccountViewModel
 
 @Composable
 internal fun AccountButton(
-    onClick: () -> Unit,
+    onAccountClick: () -> Unit,
+    onSignInClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = hiltViewModel(),
 ) {
@@ -24,7 +25,7 @@ internal fun AccountButton(
     val account = state.account
 
     IconButton(
-        onClick = onClick,
+        onClick = if (account == null) onSignInClick else onAccountClick,
         modifier = modifier.semantics { contentDescription = AVATAR_OPEN_DESCRIPTION },
     ) {
         AccountAvatar(
