@@ -24,7 +24,7 @@ internal fun ProfileSection(
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
+        verticalArrangement = Arrangement.spacedBy(YukiSpacing.Medium, Alignment.CenterVertically),
     ) {
         Avatar(
             content = AvatarContent(imageUrl = account.imageUrl, displayName = account.name),
