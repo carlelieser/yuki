@@ -19,6 +19,16 @@ export function requireAuthUrl(): string {
 	return url;
 }
 
+export function getEmailAssetOrigin(): string | undefined {
+	const origin = optional('PUBLIC_SITE_URL') ?? optional('BETTER_AUTH_URL');
+	if (!origin) return undefined;
+
+	const parsed = URL.parse(origin);
+	if (!parsed || parsed.protocol !== 'https:') return undefined;
+
+	return parsed.origin;
+}
+
 export type OAuthCredentials = { clientId: string; clientSecret: string };
 
 function oauthCredentials(prefix: string): OAuthCredentials | undefined {
