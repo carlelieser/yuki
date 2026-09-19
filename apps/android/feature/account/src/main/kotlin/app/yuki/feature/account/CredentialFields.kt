@@ -1,9 +1,6 @@
 package app.yuki.feature.account
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -11,6 +8,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import app.yuki.core.designsystem.component.YukiTextField
 
 const val EMAIL_FIELD_TAG = "emailField"
 const val PASSWORD_FIELD_TAG = "passwordField"
@@ -74,15 +72,13 @@ private fun CredentialTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
-    OutlinedTextField(
+    YukiTextField(
         value = field.value,
         onValueChange = field.onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        label = { Text(text = label) },
-        singleLine = true,
-        isError = field.error != null,
+        label = label,
+        modifier = modifier,
+        error = field.error,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
-        supportingText = field.error?.let { error -> { Text(text = error) } },
     )
 }
