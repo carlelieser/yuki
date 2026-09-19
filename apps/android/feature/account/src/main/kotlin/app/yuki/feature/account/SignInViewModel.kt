@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 internal const val SIGN_IN_INVALID = "Invalid email or password."
 internal const val SIGN_IN_UNVERIFIED =
-    "Verify your email address before signing in. We sent you a new link."
+    "Verify your email address before signing in. Check the link we sent when you signed up."
 internal const val SIGN_IN_OFFLINE = "You're offline. Check your connection and try again."
 internal const val SIGN_IN_UNAVAILABLE = "Yuki is not responding right now. Try again in a moment."
 
