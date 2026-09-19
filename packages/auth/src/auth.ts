@@ -60,6 +60,9 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 		session: {
 			cookieCache: { enabled: true, maxAge: 300 }
 		},
+		advanced: {
+			ipAddress: { ipAddressHeaders: ['x-forwarded-for'] }
+		},
 		user: {
 			additionalFields: {
 				role: {
