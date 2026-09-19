@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.yuki.core.auth.SessionStore
 import app.yuki.core.model.AuthAccount
+import app.yuki.core.model.FailureReason
+import app.yuki.core.model.failureReason
 import app.yuki.core.network.AuthRepository
 import app.yuki.core.network.AvatarUpload
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +23,9 @@ import kotlinx.coroutines.launch
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 internal const val AVATAR_UPLOAD_FAILED = "Could not save that picture. Try again."
+internal const val AVATAR_UPLOAD_OFFLINE = "You're offline. Check your connection and try again."
+internal const val AVATAR_UPLOAD_SIGNED_OUT = "Your session has expired. Sign in again."
+internal const val AVATAR_UNREADABLE = "That image could not be read. Try a different one."
 
 data class AccountState(
     val account: AuthAccount? = null,
@@ -51,15 +56,24 @@ class AccountViewModel @Inject internal constructor(
             initialValue = AccountState(),
         )
 
-    fun onAvatarPicked(upload: AvatarUpload) {
+    internal fun onAvatarPicked(pick: AvatarPick) {
+        when (pick) {
+            is AvatarPick.Unreadable -> transient.value = TransientState(message = AVATAR_UNREADABLE)
+            is AvatarPick.Ready -> uploadAvatar(pick.upload)
+        }
+    }
+
+    private fun uploadAvatar(avatar: AvatarUpload) {
         if (transient.value.isUploadingAvatar) return
 
         transient.value = TransientState(isUploadingAvatar = true)
 
         viewModelScope.launch {
-            repository.uploadAvatar(upload)
+            repository.uploadAvatar(avatar)
                 .onSuccess { account -> store.updateAccount(account) }
-                .onFailure { transient.value = TransientState(message = AVATAR_UPLOAD_FAILED) }
+                .onFailure { error ->
+                    transient.value = TransientState(message = avatarFailureMessage(error))
+                }
 
             transient.update { pending -> pending.copy(isUploadingAvatar = false) }
         }
@@ -81,3 +95,10 @@ private data class TransientState(
     val isUploadingAvatar: Boolean = false,
     val message: String? = null,
 )
+
+internal fun avatarFailureMessage(error: Throwable): String = when (val reason = error.failureReason()) {
+    is FailureReason.Rejected -> reason.explanation
+    FailureReason.Offline -> AVATAR_UPLOAD_OFFLINE
+    FailureReason.Unauthorized -> AVATAR_UPLOAD_SIGNED_OUT
+    else -> AVATAR_UPLOAD_FAILED
+}

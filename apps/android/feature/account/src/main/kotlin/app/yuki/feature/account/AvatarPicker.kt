@@ -3,7 +3,9 @@ package app.yuki.feature.account
 import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,8 +28,14 @@ internal fun interface AvatarPicker {
     fun launch()
 }
 
+internal sealed interface AvatarPick {
+    data class Ready(val upload: AvatarUpload) : AvatarPick
+
+    data object Unreadable : AvatarPick
+}
+
 @Composable
-internal fun rememberAvatarPicker(onPicked: (AvatarUpload) -> Unit): AvatarPicker {
+internal fun rememberAvatarPicker(onPicked: (AvatarPick) -> Unit): AvatarPicker {
     val resolver = LocalContext.current.contentResolver
     val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(
@@ -36,8 +44,8 @@ internal fun rememberAvatarPicker(onPicked: (AvatarUpload) -> Unit): AvatarPicke
         val picked = uri ?: return@rememberLauncherForActivityResult
 
         scope.launch {
-            val upload = withContext(Dispatchers.IO) { readUpload(resolver, picked) }
-            upload?.let(onPicked)
+            val pick = withContext(Dispatchers.IO) { readUpload(resolver, picked) }
+            onPicked(pick)
         }
     }
 
@@ -50,10 +58,37 @@ internal fun rememberAvatarPicker(onPicked: (AvatarUpload) -> Unit): AvatarPicke
     }
 }
 
-private fun readUpload(resolver: ContentResolver, uri: Uri): AvatarUpload? {
-    val decoded = resolver.openInputStream(uri)?.use(BitmapFactory::decodeStream) ?: return null
+private fun readUpload(resolver: ContentResolver, uri: Uri): AvatarPick {
+    val decoded = runCatching { decode(resolver, uri) }.getOrNull()
+        ?: return AvatarPick.Unreadable
 
-    return AvatarUpload(bytes = decoded.toWebp(), contentType = AVATAR_CONTENT_TYPE)
+    val bytes = runCatching { decoded.toWebp() }.getOrNull() ?: return AvatarPick.Unreadable
+
+    return AvatarPick.Ready(AvatarUpload(bytes = bytes, contentType = AVATAR_CONTENT_TYPE))
+}
+
+private fun decode(resolver: ContentResolver, uri: Uri): Bitmap? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        decodeWithImageDecoder(resolver, uri)
+    } else {
+        resolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+    }
+
+private fun decodeWithImageDecoder(resolver: ContentResolver, uri: Uri): Bitmap =
+    ImageDecoder.decodeBitmap(
+        ImageDecoder.createSource(resolver, uri),
+    ) { decoder, info, _ ->
+        decoder.isMutableRequired = false
+        decoder.setTargetSampleSize(sampleSizeFor(info.size.width, info.size.height))
+    }
+
+private fun sampleSizeFor(width: Int, height: Int): Int {
+    var sampleSize = 1
+    while (maxOf(width, height) / (sampleSize * 2) >= MAX_DIMENSION) {
+        sampleSize *= 2
+    }
+
+    return sampleSize
 }
 
 private fun Bitmap.toWebp(): ByteArray {
@@ -81,7 +116,7 @@ private fun Bitmap.downscaled(): Bitmap {
 
 @Suppress("DEPRECATION")
 private fun webpFormat(): Bitmap.CompressFormat =
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         Bitmap.CompressFormat.WEBP_LOSSY
     } else {
         Bitmap.CompressFormat.WEBP

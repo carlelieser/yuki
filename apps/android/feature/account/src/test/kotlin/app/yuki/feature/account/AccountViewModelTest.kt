@@ -19,6 +19,7 @@ import org.junit.Before
 import org.junit.Test
 
 private val UPLOAD = AvatarUpload(bytes = byteArrayOf(1, 2, 3), contentType = "image/webp")
+private val PICKED = AvatarPick.Ready(UPLOAD)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AccountViewModelTest {
@@ -70,7 +71,7 @@ class AccountViewModelTest {
 
         viewModel.state.test {
             awaitSettled { state -> state.isSignedIn }
-            viewModel.onAvatarPicked(UPLOAD)
+            viewModel.onAvatarPicked(PICKED)
 
             assertEquals(updated, awaitSettled { state -> state.account == updated }.account)
             cancelAndIgnoreRemainingEvents()
@@ -88,13 +89,44 @@ class AccountViewModelTest {
 
         viewModel.state.test {
             awaitSettled { state -> state.isSignedIn }
-            viewModel.onAvatarPicked(UPLOAD)
+            viewModel.onAvatarPicked(PICKED)
 
-            assertEquals(AVATAR_UPLOAD_FAILED, awaitSettled { it.message != null }.message)
+            assertEquals(AVATAR_UPLOAD_OFFLINE, awaitSettled { it.message != null }.message)
             cancelAndIgnoreRemainingEvents()
         }
 
         assertEquals(ADA, store.current?.account)
+    }
+
+    @Test
+    fun `a rejected upload repeats the reason the server gave`() = runTest {
+        val explanation = "The image must be smaller than 524288 bytes"
+        repository.avatarResult =
+            Result.failure(TypedFailure(FailureReason.Rejected(explanation)))
+        val viewModel = AccountViewModel(repository, signedIn())
+
+        viewModel.state.test {
+            awaitSettled { state -> state.isSignedIn }
+            viewModel.onAvatarPicked(PICKED)
+
+            assertEquals(explanation, awaitSettled { it.message != null }.message)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `an unreadable image is reported without reaching the server`() = runTest {
+        val viewModel = AccountViewModel(repository, signedIn())
+
+        viewModel.state.test {
+            awaitSettled { state -> state.isSignedIn }
+            viewModel.onAvatarPicked(AvatarPick.Unreadable)
+
+            assertEquals(AVATAR_UNREADABLE, awaitSettled { it.message != null }.message)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertEquals(emptyList<AvatarUpload>(), repository.uploads)
     }
 
     @Test

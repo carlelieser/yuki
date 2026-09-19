@@ -24,6 +24,7 @@ private const val EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
 private const val USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
 private const val EMPTY_BODY = "{}"
 private const val AVATAR_FIELD = "avatar"
+private val CLIENT_ERROR_RANGE = 400..499
 
 internal data class SignedInResponse(
     val account: AccountDto,
@@ -134,9 +135,19 @@ private suspend fun HttpResponse.requireSuccess(operation: String) {
     throw RemoteRequestException(authFailure(), operation)
 }
 
-private suspend fun HttpResponse.authFailure(): FailureReason =
-    when (runCatching { body<AuthErrorDto>() }.getOrNull()?.code) {
+private suspend fun HttpResponse.authFailure(): FailureReason {
+    val error = runCatching { body<AuthErrorDto>() }.getOrNull()
+
+    return when (error?.code) {
         EMAIL_NOT_VERIFIED -> FailureReason.EmailNotVerified
         USER_ALREADY_EXISTS -> FailureReason.AccountExists
-        else -> statusFailure(this)
+        else -> rejection(error?.message) ?: statusFailure(this)
     }
+}
+
+private fun HttpResponse.rejection(message: String?): FailureReason? {
+    val explanation = message?.takeIf(String::isNotBlank) ?: return null
+    if (status.value !in CLIENT_ERROR_RANGE) return null
+
+    return FailureReason.Rejected(explanation)
+}

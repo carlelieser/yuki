@@ -88,6 +88,35 @@ class AuthRepositoryTest {
     }
 
     @Test
+    fun `a rejected upload keeps the explanation the server wrote`() = runTest {
+        val repository = repository(
+            body = """{"message":"Unsupported image type \"image/heic\""}""",
+            status = HttpStatusCode.BadRequest,
+        )
+
+        val upload = AvatarUpload(bytes = byteArrayOf(1, 2, 3), contentType = "image/heic")
+        val failure = repository.uploadAvatar(upload).exceptionOrNull()!!
+
+        assertEquals(
+            FailureReason.Rejected("""Unsupported image type "image/heic""""),
+            failure.failureReason(),
+        )
+    }
+
+    @Test
+    fun `a server error keeps its status rather than quoting the server's prose`() = runTest {
+        val repository = repository(
+            body = """{"message":"Internal Error"}""",
+            status = HttpStatusCode.InternalServerError,
+        )
+
+        val upload = AvatarUpload(bytes = byteArrayOf(1, 2, 3), contentType = "image/webp")
+        val failure = repository.uploadAvatar(upload).exceptionOrNull()!!
+
+        assertEquals(FailureReason.Server(500), failure.failureReason())
+    }
+
+    @Test
     fun `a signed-out session reads as no account rather than a failure`() = runTest {
         val repository = repository(body = "", status = HttpStatusCode.Unauthorized)
 

@@ -20,6 +20,7 @@ private fun describe(reason: FailureReason): String = when (reason) {
     FailureReason.Unauthorized -> "the server returned 401"
     FailureReason.EmailNotVerified -> "the email address is not verified"
     FailureReason.AccountExists -> "an account already uses that email address"
+    is FailureReason.Rejected -> reason.explanation
     is FailureReason.Server -> "the server returned ${reason.status}"
     is FailureReason.Unexpected -> "an unexpected error occurred"
 }
