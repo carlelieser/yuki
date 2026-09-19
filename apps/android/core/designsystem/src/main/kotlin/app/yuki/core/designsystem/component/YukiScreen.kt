@@ -81,8 +81,8 @@ private fun YukiScreenHeader(
                 .weight(1f)
                 .semantics { heading() },
         )
-        trailing?.invoke()
         ScreenActionButton(action = action)
+        trailing?.invoke()
     }
 }
 
