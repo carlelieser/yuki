@@ -21,6 +21,7 @@ internal fun NavGraphBuilder.accountDestination(
         YukiDetailScreen(title = ACCOUNT_TITLE, onBackClick = navigator::navigateUp) {
             AccountScreenRoute(
                 onSignInClick = navigator::openSignIn,
+                onSignedOut = navigator::navigateUp,
                 contentPadding = bottomBarPadding,
             )
         }

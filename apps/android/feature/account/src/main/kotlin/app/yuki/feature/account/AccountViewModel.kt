@@ -31,6 +31,7 @@ data class AccountState(
     val account: AuthAccount? = null,
     val isUploadingAvatar: Boolean = false,
     val message: String? = null,
+    val hasSignedOut: Boolean = false,
 ) {
     val isSignedIn: Boolean get() = account != null
 }
@@ -49,6 +50,7 @@ class AccountViewModel @Inject internal constructor(
                 account = account,
                 isUploadingAvatar = pending.isUploadingAvatar,
                 message = pending.message,
+                hasSignedOut = pending.isSigningOut && account == null,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -84,6 +86,10 @@ class AccountViewModel @Inject internal constructor(
     }
 
     fun onSignOut() {
+        if (transient.value.isSigningOut) return
+
+        transient.update { pending -> pending.copy(isSigningOut = true) }
+
         viewModelScope.launch {
             repository.signOut()
             store.clear()
@@ -94,6 +100,7 @@ class AccountViewModel @Inject internal constructor(
 private data class TransientState(
     val isUploadingAvatar: Boolean = false,
     val message: String? = null,
+    val isSigningOut: Boolean = false,
 )
 
 internal fun avatarFailureMessage(error: Throwable): String = when (val reason = error.failureReason()) {

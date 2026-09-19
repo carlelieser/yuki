@@ -37,12 +37,17 @@ internal const val SIGNED_OUT_ACTION = "Sign in"
 @Composable
 fun AccountRoute(
     onSignInClick: () -> Unit,
+    onSignedOut: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val picker = rememberAvatarPicker(onPicked = viewModel::onAvatarPicked)
+
+    LaunchedEffect(state.hasSignedOut) {
+        if (state.hasSignedOut) onSignedOut()
+    }
 
     AccountScreen(
         state = state,
