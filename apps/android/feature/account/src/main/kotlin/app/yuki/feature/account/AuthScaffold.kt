@@ -2,6 +2,7 @@ package app.yuki.feature.account
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,8 +10,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
@@ -18,38 +23,67 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.yuki.core.designsystem.component.YukiLogo
+import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.component.YukiTextButton
+import app.yuki.core.designsystem.component.YukiTonalCircle
+import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 private val CONTENT_WIDTH = 384.dp
+private const val LOGO_CONTAINER_ALPHA = 0.1f
 
 @Composable
 internal fun AuthScaffold(
     title: String,
     modifier: Modifier = Modifier,
+    message: AuthMessage? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = YukiSpacing.ExtraLarge, vertical = YukiSpacing.Section),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
+    val hostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(message) {
+        if (message == null) return@LaunchedEffect
+
+        hostState.showSnackbar(message = message.text, withDismissAction = true)
+        message.onShown()
+    }
+
+    Scaffold(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { YukiSnackbarHost(hostState = hostState) },
+    ) { contentPadding ->
         Column(
-            modifier = Modifier.widthIn(max = CONTENT_WIDTH).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = YukiSpacing.ExtraLarge, vertical = YukiSpacing.Section),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            AuthHeading(title)
-            content()
+            Column(
+                modifier = Modifier.widthIn(max = CONTENT_WIDTH).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
+            ) {
+                AuthHeading(title)
+                content()
+            }
         }
     }
 }
 
 @Composable
-private fun AuthHeading(title: String) {
-    YukiLogo(modifier = Modifier.padding(bottom = YukiSpacing.Small))
+private fun ColumnScope.AuthHeading(title: String) {
+    YukiTonalCircle(
+        diameter = YukiSize.IconHero,
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = LOGO_CONTAINER_ALPHA),
+        modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+            .padding(bottom = YukiSpacing.ExtraLarge),
+    ) {
+        YukiLogo(size = YukiSize.IconHeroGlyph)
+    }
     Text(
         text = title,
         style = MaterialTheme.typography.headlineMedium,
