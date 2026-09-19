@@ -57,16 +57,10 @@ fun Avatar(
 @Composable
 fun AccountAvatar(
     content: AvatarContent,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: AvatarSize = AvatarSize.Small,
 ) {
-    AvatarBox(
-        content = content,
-        size = size,
-        click = AvatarClick(onClick, isEditable = false),
-        modifier = modifier,
-    )
+    AvatarFace(content = content, diameter = size.diameter(), modifier = modifier)
 }
 
 private data class AvatarClick(val onClick: () -> Unit, val isEditable: Boolean)
@@ -201,7 +195,7 @@ internal fun initialsOf(displayName: String?): String? {
 }
 
 private fun AvatarSize.diameter(): Dp = when (this) {
-    AvatarSize.Small -> YukiSize.IconMedium
+    AvatarSize.Small -> YukiSize.IconSmall
     AvatarSize.Medium -> YukiSize.IconLarge
     AvatarSize.Large -> YukiSize.IconExtraLarge
 }
