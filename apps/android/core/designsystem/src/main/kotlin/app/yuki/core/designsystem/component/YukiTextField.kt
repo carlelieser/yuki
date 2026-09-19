@@ -25,7 +25,7 @@ fun YukiTextField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().then(keyboardClearance()),
         label = { Text(text = label) },
         singleLine = true,
         isError = error != null,
