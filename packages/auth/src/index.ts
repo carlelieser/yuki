@@ -1,5 +1,12 @@
 export { createAuth, type Auth, type SessionData, type SessionUser } from './auth.ts';
 export {
+	renderEmail,
+	type EmailAction,
+	type EmailContent,
+	type RenderedEmail
+} from './email-template.ts';
+export {
+	getEmailAssetOrigin,
 	getGithubCredentials,
 	getGoogleCredentials,
 	getSmtpConfig,

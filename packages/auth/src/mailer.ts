@@ -1,7 +1,7 @@
 import { createTransport, type Transporter } from 'nodemailer';
 import { getSmtpConfig, type SmtpConfig } from './env.ts';
 
-export type MailMessage = { to: string; subject: string; text: string };
+export type MailMessage = { to: string; subject: string; text: string; html?: string };
 
 let transporter: Transporter | undefined;
 let transporterFor: SmtpConfig | undefined;
@@ -34,7 +34,8 @@ export async function sendMail(message: MailMessage): Promise<void> {
 			from: config.from,
 			to: message.to,
 			subject: message.subject,
-			text: message.text
+			text: message.text,
+			html: message.html
 		});
 	} catch (cause) {
 		const reason = cause instanceof Error ? cause.message : String(cause);

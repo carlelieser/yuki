@@ -4,7 +4,9 @@ import { bearer } from 'better-auth/plugins';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import type { Database } from '@yuki/db';
 import { schema } from '@yuki/db';
+import { renderEmail, type EmailContent } from './email-template.ts';
 import {
+	getEmailAssetOrigin,
 	getGithubCredentials,
 	getGoogleCredentials,
 	requireAuthSecret,
@@ -13,6 +15,11 @@ import {
 import { sendMail } from './mailer.ts';
 
 type GetRequestEvent = Parameters<typeof sveltekitCookies>[0];
+
+async function sendTemplatedMail(to: string, subject: string, content: EmailContent) {
+	const { html, text } = renderEmail(content, getEmailAssetOrigin());
+	await sendMail({ to, subject, text, html });
+}
 
 function socialProviders() {
 	const github = getGithubCredentials();
@@ -34,10 +41,12 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			enabled: true,
 			requireEmailVerification: true,
 			sendResetPassword: async ({ user, url }) => {
-				await sendMail({
-					to: user.email,
-					subject: 'Reset your Yuki password',
-					text: `Reset your password by opening this link:\n\n${url}\n\nIf you did not request this, you can ignore this email.`
+				await sendTemplatedMail(user.email, 'Reset your Yuki password', {
+					previewText: 'Reset your Yuki password',
+					heading: 'Reset your password',
+					body: 'Choose a new password for your Yuki account using the link below.',
+					action: { label: 'Reset password', url },
+					footnote: 'If you did not request this, you can ignore this email.'
 				});
 			}
 		},
@@ -46,10 +55,11 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			autoSignInAfterVerification: true,
 			callbackURL: '/verify-email',
 			sendVerificationEmail: async ({ user, url }) => {
-				await sendMail({
-					to: user.email,
-					subject: 'Verify your Yuki email address',
-					text: `Confirm your email address by opening this link:\n\n${url}`
+				await sendTemplatedMail(user.email, 'Verify your Yuki email address', {
+					previewText: 'Confirm your email address to finish setting up Yuki',
+					heading: 'Confirm your email address',
+					body: 'Confirm this address to finish setting up your Yuki account.',
+					action: { label: 'Verify email', url }
 				});
 			}
 		},
