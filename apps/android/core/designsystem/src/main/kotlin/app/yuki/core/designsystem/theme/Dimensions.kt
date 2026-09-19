@@ -15,6 +15,7 @@ object YukiSpacing {
 object YukiSize {
     val IconTiny = 14.dp
     val IconSmall = 24.dp
+    val IconCompact = 36.dp
     val IconMedium = 40.dp
     val IconLarge = 56.dp
     val IconExtraLarge = 72.dp
