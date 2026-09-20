@@ -1,5 +1,10 @@
 package app.yuki.feature.settings
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -170,10 +175,16 @@ class SettingsScreenTest {
         )
 
         composeRule.setContent {
-            SystemSettings(
-                state = UiState.Success(content),
-                actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange),
-            )
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .testTag(SETTINGS_LIST_TAG),
+            ) {
+                SystemSettings(
+                    state = UiState.Success(content),
+                    actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange),
+                )
+            }
         }
     }
 }

@@ -2,17 +2,19 @@ package app.yuki.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.yuki.MainActivity
-import app.yuki.core.designsystem.component.SCREEN_ACTION_TAG
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Rule
 import org.junit.Test
 
 private const val SETTINGS_TITLE = "Settings"
+private const val SETTINGS_DESCRIPTION = "Settings"
 
 @HiltAndroidTest
 class YukiNavigationTest {
@@ -25,14 +27,14 @@ class YukiNavigationTest {
     @Test
     fun everyTabIsReachableFromTheNavigationBar() {
         YukiTab.entries.forEach { tab ->
-            composeRule.onNodeWithText(tab.label).performClick()
-            composeRule.onNodeWithText(tab.label).assertIsDisplayed()
+            composeRule.onAllNodesWithText(tab.label).onFirst().performClick()
+            composeRule.onAllNodesWithText(tab.label).onFirst().assertIsDisplayed()
         }
     }
 
     @Test
-    fun theGearActionOpensSettingsAsAFullScreen() {
-        composeRule.onNodeWithTag(SCREEN_ACTION_TAG).performClick()
+    fun theAvatarOpensSettingsAsAFullScreen() {
+        composeRule.onNodeWithContentDescription(SETTINGS_DESCRIPTION).performClick()
 
         composeRule.onNodeWithText(SETTINGS_TITLE).assertIsDisplayed()
     }
@@ -40,7 +42,7 @@ class YukiNavigationTest {
     @Test
     fun everyTabIsOfferedInTheBarAndSettingsIsNot() {
         YukiTab.entries.forEach { tab ->
-            composeRule.onNodeWithText(tab.label).assertIsDisplayed()
+            composeRule.onAllNodesWithText(tab.label).onFirst().assertIsDisplayed()
         }
 
         composeRule.onNodeWithText(SETTINGS_TITLE).assertDoesNotExist()
