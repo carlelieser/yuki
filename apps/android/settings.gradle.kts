@@ -28,6 +28,7 @@ include(":core:designsystem")
 include(":core:installer")
 include(":core:model")
 include(":core:network")
+include(":core:settings-api")
 include(":core:shizuku")
 
 include(":feature:account")
