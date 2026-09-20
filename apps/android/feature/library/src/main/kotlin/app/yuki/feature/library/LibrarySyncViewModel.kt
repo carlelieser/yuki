@@ -19,8 +19,11 @@ class LibrarySyncViewModel @Inject internal constructor(
     store: SessionStore,
 ) : ViewModel() {
     private val syncing = MutableStateFlow(false)
+    private val messages = MutableStateFlow<String?>(null)
 
     val isSyncing: StateFlow<Boolean> = syncing.asStateFlow()
+
+    val message: StateFlow<String?> = messages.asStateFlow()
 
     val isSignedIn: StateFlow<Boolean> = store.session
         .map { session -> session != null }
@@ -36,13 +39,28 @@ class LibrarySyncViewModel @Inject internal constructor(
         syncing.value = true
 
         viewModelScope.launch {
-            try {
-                sync.run()
-            } finally {
-                syncing.value = false
-            }
+            val outcome = runCatching { sync.run() }
+
+            syncing.value = false
+            messages.value = outcome.fold(
+                onSuccess = ::syncMessage,
+                onFailure = { SYNC_FAILED },
+            )
         }
     }
+
+    fun onMessageShown() {
+        messages.value = null
+    }
+}
+
+internal const val SYNC_FAILED = "Could not sync your library. Try again."
+internal const val SYNC_UP_TO_DATE = "Your library is up to date."
+
+internal fun syncMessage(result: LibrarySyncResult): String = when {
+    result.failed > 0 -> "Added ${result.uploaded}, but ${result.failed} could not be synced."
+    result.uploaded > 0 -> "Added ${result.uploaded} to your library."
+    else -> SYNC_UP_TO_DATE
 }
 
 private const val SUBSCRIPTION_TIMEOUT = 5_000L

@@ -137,8 +137,21 @@ internal fun libraryDependencies(
 
 internal class FakeRemoteLibrary(
     var entries: List<app.yuki.core.model.LibraryEntry> = emptyList(),
+    private val failing: Set<String> = emptySet(),
 ) : RemoteLibrary {
+    val recorded = mutableListOf<String>()
+
     override suspend fun entries(): List<app.yuki.core.model.LibraryEntry> = entries
+
+    override suspend fun record(slug: String, versionTag: String): Result<Unit> {
+        recorded.add(slug)
+
+        return if (slug in failing) {
+            Result.failure(IllegalStateException("the server refused ${'$'}slug"))
+        } else {
+            Result.success(Unit)
+        }
+    }
 }
 
 internal class FakeLibraryProgressStore : InstallProgressStore {

@@ -70,8 +70,14 @@ class LibrarySyncViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModelWith(session: AuthSession?) =
-        LibrarySyncViewModel(LibrarySync(refresh), FakeSessionStore(session))
+    private fun viewModelWith(session: AuthSession?) = LibrarySyncViewModel(
+        LibrarySync(
+            detection = refresh,
+            store = FakeInstallStore(),
+            remote = FakeRemoteLibrary(),
+        ),
+        FakeSessionStore(session),
+    )
 
     @Test
     fun `a signed-out visitor is not offered library actions`() = runTest {

@@ -12,4 +12,7 @@ internal class RepositoryRemoteLibrary @Inject constructor(
 ) : RemoteLibrary {
     override suspend fun entries(): List<LibraryEntry> =
         repository.library().getOrDefault(emptyList())
+
+    override suspend fun record(slug: String, versionTag: String): Result<Unit> =
+        repository.record(slug, versionTag)
 }
