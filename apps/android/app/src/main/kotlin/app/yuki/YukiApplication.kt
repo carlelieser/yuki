@@ -4,9 +4,13 @@ import android.app.Application
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import app.yuki.core.designsystem.image.yukiImageLoader
 import app.yuki.core.installer.StuckInstallReclaimer
 import app.yuki.feature.updates.SelfInstallReconciler
 import app.yuki.install.LibraryRefreshObserver
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +21,7 @@ import kotlinx.coroutines.launch
 private const val TAG = "YukiApplication"
 
 @HiltAndroidApp
-class YukiApplication : Application(), Configuration.Provider {
+class YukiApplication : Application(), Configuration.Provider, SingletonImageLoader.Factory {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
@@ -34,6 +38,8 @@ class YukiApplication : Application(), Configuration.Provider {
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
+
+    override fun newImageLoader(context: PlatformContext): ImageLoader = yukiImageLoader(context)
 
     override fun onCreate() {
         super.onCreate()
