@@ -20,8 +20,10 @@ import {
 	buildBlobUrl,
 	buildIconUrl,
 	findAdaptiveIconPath,
+	findCuratedIconPath,
 	findDeclaredIconPaths,
 	findManifestPath,
+	findPrebakedIconPath,
 	findRasterForReference,
 	pickBestDeclared,
 	readAdaptiveRasterLayers,
@@ -48,8 +50,8 @@ export async function iconFrom(
 		return response ?? null;
 	};
 
-	const rasterUrl = await buildIconUrl(tree, owner, name, branch, readBlob);
-	if (rasterUrl !== null) return rasterUrl;
+	const curatedUrl = await buildIconUrl(tree, owner, name, branch, readBlob, findCuratedIconPath);
+	if (curatedUrl !== null) return curatedUrl;
 
 	const declared = await declaredIconFrom(tree, read);
 	if (declared !== null) {
@@ -77,6 +79,9 @@ export async function iconFrom(
 
 	const discovered = await discoveredRasterFrom(tree, read, owner, name, branch);
 	if (discovered !== null) return discovered;
+
+	const prebakedUrl = await buildIconUrl(tree, owner, name, branch, readBlob, findPrebakedIconPath);
+	if (prebakedUrl !== null) return prebakedUrl;
 
 	return expoIconFrom(tree, read, owner, name, branch);
 }

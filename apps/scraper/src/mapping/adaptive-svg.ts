@@ -74,9 +74,12 @@ export function composeAdaptiveSvg(input: {
 	layers.push(inner);
 
 	const inset = (VIEWPORT_INSET / CANVAS) * Math.min(width, height);
-	const clip = `<clipPath id="c"><rect x="${inset}" y="${inset}" width="${width - inset * 2}" height="${height - inset * 2}" rx="${CORNER_RADIUS * Math.min(width, height)}"/></clipPath>`;
+	const visibleWidth = width - inset * 2;
+	const visibleHeight = height - inset * 2;
+	const radius = CORNER_RADIUS * Math.min(visibleWidth, visibleHeight);
+	const clip = `<clipPath id="c"><rect x="${inset}" y="${inset}" width="${visibleWidth}" height="${visibleHeight}" rx="${radius}"/></clipPath>`;
 
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${clip}<g clip-path="url(#c)">${layers.join('')}</g></svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${inset} ${inset} ${visibleWidth} ${visibleHeight}">${clip}<g clip-path="url(#c)">${layers.join('')}</g></svg>`;
 }
 
 export function toDataUri(svg: string): string {

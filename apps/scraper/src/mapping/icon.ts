@@ -170,14 +170,18 @@ function findByPattern(paths: string[], pattern: RegExp): string | null {
 	return pickBest(paths.filter((path) => pattern.test(path.toLowerCase())));
 }
 
-export function findIconPath(tree: GithubTree): string | null {
+export function findCuratedIconPath(tree: GithubTree): string | null {
+	return findByPattern(blobs(tree), FASTLANE_ICON);
+}
+
+export function findPrebakedIconPath(tree: GithubTree): string | null {
 	const paths = blobs(tree);
 
-	return (
-		findByPattern(paths, FASTLANE_ICON) ??
-		findByPattern(paths, PLAYSTORE_ICON) ??
-		findMipmapIcon(paths)
-	);
+	return findByPattern(paths, PLAYSTORE_ICON) ?? findMipmapIcon(paths);
+}
+
+export function findIconPath(tree: GithubTree): string | null {
+	return findCuratedIconPath(tree) ?? findPrebakedIconPath(tree);
 }
 
 export async function resolveSymlinkPath(
@@ -210,9 +214,10 @@ export async function buildIconUrl(
 	owner: string,
 	name: string,
 	defaultBranch: string,
-	readBlob: (sha: string) => Promise<string | null>
+	readBlob: (sha: string) => Promise<string | null>,
+	find: (tree: GithubTree) => string | null = findIconPath
 ): Promise<string | null> {
-	const path = findIconPath(tree);
+	const path = find(tree);
 	if (path === null) return null;
 
 	const resolved = await resolveSymlinkPath(tree, path, readBlob);

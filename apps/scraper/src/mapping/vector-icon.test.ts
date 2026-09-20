@@ -217,7 +217,7 @@ describe('composeAdaptiveSvg', () => {
 			colors: new Map()
 		});
 
-		expect(svg).toContain('viewBox="0 0 108 108"');
+		expect(svg).toContain('viewBox="18 18 72 72"');
 		expect(svg).toContain('<g transform="scale(4.5 4.5)">');
 		expect(svg).not.toContain('scale(1 1)');
 	});
