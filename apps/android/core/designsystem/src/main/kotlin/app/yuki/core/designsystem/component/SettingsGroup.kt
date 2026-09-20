@@ -44,6 +44,7 @@ fun SettingsRow(
     modifier: Modifier = Modifier,
     supporting: String? = null,
     icon: ImageVector? = null,
+    isEnabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -56,6 +57,7 @@ fun SettingsRow(
         SegmentedListItem(
             shapes = shapes,
             modifier = modifier,
+            enabled = isEnabled,
             colors = colors,
             leadingContent = leading,
             trailingContent = trailing,
@@ -70,6 +72,7 @@ fun SettingsRow(
         onClick = onClick,
         shapes = shapes,
         modifier = modifier,
+        enabled = isEnabled,
         colors = colors,
         leadingContent = leading,
         trailingContent = trailing,
