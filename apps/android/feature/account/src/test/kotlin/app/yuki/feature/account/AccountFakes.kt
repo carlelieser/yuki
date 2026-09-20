@@ -1,5 +1,6 @@
 package app.yuki.feature.account
 
+import kotlinx.coroutines.CompletableDeferred
 import app.yuki.core.auth.AuthSession
 import app.yuki.core.auth.SessionStore
 import app.yuki.core.model.AuthAccount
@@ -51,6 +52,8 @@ internal class FakeAuthRepository : AuthRepository {
 
     var verificationResult: Result<Unit> = Result.success(Unit)
 
+    var signOutGate: CompletableDeferred<Unit> = CompletableDeferred<Unit>().apply { complete(Unit) }
+
     val uploads = mutableListOf<AvatarUpload>()
     val verificationsSentTo = mutableListOf<String>()
     var signOutCount = 0
@@ -64,6 +67,7 @@ internal class FakeAuthRepository : AuthRepository {
     ): Result<SignedIn> = signUpResult
 
     override suspend fun signOut(): Result<Unit> {
+        signOutGate.await()
         signOutCount += 1
         return Result.success(Unit)
     }

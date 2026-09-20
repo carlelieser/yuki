@@ -5,6 +5,7 @@ import app.cash.turbine.test
 import app.yuki.core.auth.AuthSession
 import app.yuki.core.model.FailureReason
 import app.yuki.core.network.AvatarUpload
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -147,6 +148,25 @@ class AccountViewModelTest {
     }
 
 
+    @Test
+    fun `signing out clears the session before the server confirms`() = runTest {
+        repository.signOutGate = CompletableDeferred()
+        val store = signedIn()
+        val viewModel = AccountViewModel(repository, store)
+
+        viewModel.state.test {
+            awaitSettled { state -> state.isSignedIn }
+            viewModel.onSignOut()
+
+            awaitSettled { state -> !state.isSignedIn }
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertNull(store.current)
+        assertEquals(0, repository.signOutCount)
+
+        repository.signOutGate.complete(Unit)
+    }
 }
 
 private suspend fun ReceiveTurbine<AccountState>.awaitSettled(

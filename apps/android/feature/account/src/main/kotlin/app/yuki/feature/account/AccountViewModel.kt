@@ -89,8 +89,8 @@ class AccountViewModel @Inject internal constructor(
         transient.update { pending -> pending.copy(isSigningOut = true) }
 
         viewModelScope.launch {
-            repository.signOut()
             store.clear()
+            repository.signOut()
         }
     }
 }
