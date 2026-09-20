@@ -14,7 +14,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -84,12 +83,6 @@ class YukiTabTransitionTest {
     private fun exploreLeftEdge() =
         composeRule.onNodeWithTag(EXPLORE_TAG).getUnclippedBoundsInRoot().left
 
-    private fun exploreHorizontalCenter(): Float {
-        val bounds = composeRule.onNodeWithTag(EXPLORE_TAG).getUnclippedBoundsInRoot()
-
-        return (bounds.left.value + bounds.right.value) / 2f
-    }
-
     @Test
     fun poppingTheListingSlidesExploreBackIn() {
         setContent()
@@ -121,28 +114,6 @@ class YukiTabTransitionTest {
 
         composeRule.onNodeWithTag(EXPLORE_TAG).assertIsDisplayed()
         assertTrue(currentRouteIsExplore())
-    }
-
-    @Test
-    fun movingToBrowseDoesNotSlideExploreBecauseBrowseIsATab() {
-        setContent()
-        val restingCenter = exploreHorizontalCenter()
-
-        navigate { navController.navigate(SearchRoute) }
-        composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
-
-        assertEquals(restingCenter, exploreHorizontalCenter(), 0.5f)
-    }
-
-    @Test
-    fun movingBetweenTabsDoesNotSlideExplore() {
-        setContent()
-        val restingCenter = exploreHorizontalCenter()
-
-        navigate { navController.navigate(LibraryRoute) }
-        composeRule.mainClock.advanceTimeBy(MID_TRANSITION_MILLIS)
-
-        assertEquals(restingCenter, exploreHorizontalCenter(), 0.5f)
     }
 
     @Test

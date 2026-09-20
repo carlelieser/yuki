@@ -49,7 +49,7 @@ jobs:
 
       - name: Instrumented tests
         run: >-
-          ./gradlew ciDebugAndroidTest --no-daemon
+          ./gradlew ciDebugAndroidTest --no-daemon --max-workers=1
           -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
       - name: Upload test reports
