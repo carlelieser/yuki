@@ -8,6 +8,7 @@ android {
 
 dependencies {
     implementation(projects.core.auth)
+    implementation(projects.core.settingsApi)
     implementation(projects.core.network)
 
     androidTestImplementation(libs.androidx.test.ext.junit)

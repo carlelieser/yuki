@@ -23,6 +23,7 @@ import app.yuki.core.designsystem.component.YukiNavBarItem
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.feature.settings.AppearanceMode
 import app.yuki.navigation.YukiNavHost
+import app.yuki.settings.SettingsNavigationHolder
 import app.yuki.navigation.YukiTab
 import app.yuki.navigation.rememberYukiNavigator
 import app.yuki.navigation.selectedTab
@@ -44,7 +45,10 @@ fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
         isDynamicColorEnabled = settings.isDynamicColorEnabled,
     ) {
         ProvideKeyboardInsets {
-            YukiScaffold(navController = rememberNavController())
+            YukiScaffold(
+                navController = rememberNavController(),
+                navigationHolder = viewModel.settingsNavigation,
+            )
         }
     }
 }
@@ -71,7 +75,10 @@ private fun AppearanceMode.resolveIsDarkTheme(): Boolean = when (this) {
 }
 
 @Composable
-private fun YukiScaffold(navController: NavHostController) {
+private fun YukiScaffold(
+    navController: NavHostController,
+    navigationHolder: SettingsNavigationHolder,
+) {
     val consent = rememberNotificationConsent()
     val navigator = rememberYukiNavigator(
         navController = navController,
@@ -92,6 +99,7 @@ private fun YukiScaffold(navController: NavHostController) {
         YukiNavHost(
             navController = navController,
             navigator = navigator,
+            navigationHolder = navigationHolder,
             bottomBarPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
         )
     }

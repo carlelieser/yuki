@@ -31,7 +31,6 @@ data class AccountState(
     val account: AuthAccount? = null,
     val isUploadingAvatar: Boolean = false,
     val message: String? = null,
-    val hasSignedOut: Boolean = false,
 ) {
     val isSignedIn: Boolean get() = account != null
 }
@@ -50,7 +49,6 @@ class AccountViewModel @Inject internal constructor(
                 account = account,
                 isUploadingAvatar = pending.isUploadingAvatar,
                 message = pending.message,
-                hasSignedOut = pending.isSigningOut && account == null,
             )
         }.stateIn(
             scope = viewModelScope,

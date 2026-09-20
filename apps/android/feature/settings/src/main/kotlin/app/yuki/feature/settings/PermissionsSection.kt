@@ -1,43 +1,53 @@
 package app.yuki.feature.settings
 
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.yuki.core.designsystem.component.BadgeContent
-import app.yuki.core.designsystem.component.SectionHeader
-import app.yuki.core.designsystem.component.SettingsItem
-import app.yuki.core.designsystem.component.SettingsItemContent
+import app.yuki.core.designsystem.component.SettingsGroup
+import app.yuki.core.designsystem.component.SettingsRow
+import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.YukiBadge
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
+import app.yuki.core.designsystem.theme.YukiSpacing
 
-internal fun LazyListScope.permissionsSection(
+@Composable
+internal fun PermissionsSection(
     rows: List<PermissionRow>,
     onPermissionClick: (PermissionRow) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    item { SectionHeader(title = PERMISSIONS_SECTION_TITLE) }
-
-    items(rows, key = { row -> row.permission.permission }) { row ->
-        SettingsItem(
-            content = SettingsItemContent(
+    SettingsGroup(modifier = modifier, label = PERMISSIONS_SECTION_TITLE) {
+        rows.forEachIndexed { index, row ->
+            SettingsRow(
+                position = SettingsRowPosition(index = index, count = rows.size),
                 title = row.permission.label,
                 supporting = row.permission.reason,
-                trailing = { PermissionStatusIcon(row) },
-                belowText = requiredBadgeFor(row),
-            ),
-            onClick = { onPermissionClick(row) },
-        )
+                onClick = { onPermissionClick(row) },
+                trailing = { PermissionTrailing(row) },
+            )
+        }
     }
 }
 
-private fun requiredBadgeFor(row: PermissionRow): (@Composable () -> Unit)? {
-    if (!row.permission.isRequired) return null
+@Composable
+private fun PermissionTrailing(row: PermissionRow) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (row.permission.isRequired) {
+            RequiredBadge()
+        }
 
-    return { RequiredBadge() }
+        PermissionStatusIcon(row)
+    }
 }
 
 @Composable

@@ -15,9 +15,6 @@ data object UpdatesRoute
 data object SettingsRoute
 
 @Serializable
-data object AccountRoute
-
-@Serializable
 data object SignInRoute
 
 @Serializable

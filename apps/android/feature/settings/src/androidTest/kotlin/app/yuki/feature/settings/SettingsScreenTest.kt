@@ -170,7 +170,7 @@ class SettingsScreenTest {
         )
 
         composeRule.setContent {
-            SettingsContentScreen(
+            SystemSettings(
                 state = UiState.Success(content),
                 actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange),
             )

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.yuki.feature.settings.AppearanceMode
 import app.yuki.feature.settings.YukiPreferenceReader
+import app.yuki.settings.SettingsNavigationHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +20,7 @@ data class ThemeSettings(
 @HiltViewModel
 class YukiAppViewModel @Inject constructor(
     reader: YukiPreferenceReader,
+    val settingsNavigation: SettingsNavigationHolder,
 ) : ViewModel() {
     val theme: StateFlow<ThemeSettings?> =
         combine(reader.appearance(), reader.isDynamicColorEnabled(), ::ThemeSettings)

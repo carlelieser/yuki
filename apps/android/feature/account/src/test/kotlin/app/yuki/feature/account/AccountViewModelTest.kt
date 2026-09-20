@@ -15,7 +15,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -147,28 +146,7 @@ class AccountViewModelTest {
         assertEquals(1, repository.signOutCount)
     }
 
-    @Test
-    fun `signing out reports that the screen should be left`() = runTest {
-        val viewModel = AccountViewModel(repository, signedIn())
 
-        viewModel.state.test {
-            awaitSettled { state -> state.isSignedIn }
-            viewModel.onSignOut()
-
-            assertTrue(awaitSettled { state -> !state.isSignedIn }.hasSignedOut)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
-
-    @Test
-    fun `a signed-out visitor is not sent away before signing out`() = runTest {
-        val viewModel = AccountViewModel(repository, signedOut())
-
-        viewModel.state.test {
-            assertFalse(awaitSettled { state -> !state.isSignedIn }.hasSignedOut)
-            cancelAndIgnoreRemainingEvents()
-        }
-    }
 }
 
 private suspend fun ReceiveTurbine<AccountState>.awaitSettled(

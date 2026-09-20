@@ -30,10 +30,6 @@ internal class YukiNavigator(
         navController.navigate(SettingsRoute)
     }
 
-    fun openAccount() {
-        navController.navigate(AccountRoute)
-    }
-
     fun openSignIn() {
         navController.navigate(SignInRoute)
     }

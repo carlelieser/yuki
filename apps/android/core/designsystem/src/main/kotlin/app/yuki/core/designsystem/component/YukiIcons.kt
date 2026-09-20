@@ -60,6 +60,18 @@ object YukiIcons {
     val Login: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_login)
 
+    val Logout: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_logout)
+
+    val Sync: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_sync)
+
+    val Policy: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_policy)
+
+    val ChevronRight: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_chevron_right)
+
     val Edit: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_edit)
 

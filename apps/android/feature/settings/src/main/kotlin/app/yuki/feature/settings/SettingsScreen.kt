@@ -1,93 +1,83 @@
 package app.yuki.feature.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.yuki.core.designsystem.component.FailureState
-import app.yuki.core.designsystem.component.YukiAnimatedState
-import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.model.UiState
+import app.yuki.core.settings.api.ProvideSettingsSnackbar
+import app.yuki.core.settings.api.SettingsContributor
+import app.yuki.core.settings.api.SettingsGroup
 
 const val SETTINGS_LIST_TAG = "settingsList"
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier) {
-    val viewModel: SettingsViewModel = hiltViewModel()
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    val destinations = rememberSystemDestinations()
-
-    ResumeEffect(viewModel::onResume)
-
-    val actions = remember(destinations, viewModel) {
-        settingsActions(destinations = destinations, viewModel = viewModel)
-    }
-
-    SettingsContentScreen(state = state, actions = actions, modifier = modifier)
-}
-
-internal fun settingsActions(
-    destinations: SystemDestinations,
-    viewModel: SettingsViewModel,
-): SettingsActions {
-    val onRequestPermission = viewModel::onRequestShizukuPermission
-
-    return SettingsActions(
-        onShizukuAction = shizukuActionHandler(destinations, onRequestPermission),
-        onPermissionClick = permissionClickHandler(destinations, onRequestPermission),
-        preferences = PreferenceActions(
-            onIncludePrereleasesChange = viewModel::onIncludePrereleasesChange,
-            onInstallModeChange = viewModel::onInstallModeChange,
-            onAppearanceChange = viewModel::onAppearanceChange,
-            onDynamicColorChange = viewModel::onDynamicColorChange,
-        ),
-    )
-}
-
-@Composable
-internal fun SettingsContentScreen(
-    state: UiState<SettingsContent>,
-    actions: SettingsActions,
+fun SettingsScreen(
+    contributors: Set<SettingsContributor>,
+    contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        YukiAnimatedState(state = state) { settled ->
-            when (settled) {
-                is UiState.Loading -> SettingsLoading()
-                is UiState.Failure -> FailureState(
-                    reason = settled.reason,
-                    modifier = Modifier.padding(YukiSpacing.Large),
+    val sections = remember(contributors) { contributors.ordered().partitionFooter() }
+    val hostState = remember { SnackbarHostState() }
+
+    ProvideSettingsSnackbar(hostState = hostState) {
+        BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .heightIn(min = maxHeight)
+                    .verticalScroll(rememberScrollState())
+                    .padding(contentPadding)
+                    .padding(YukiSpacing.Large),
+            ) {
+                Column(
+                    modifier = Modifier.testTag(SETTINGS_LIST_TAG),
+                    verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
+                ) {
+                    sections.body.forEach { contributor -> contributor.Content() }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .heightIn(min = YukiSpacing.Section)
+                        .weight(1f),
                 )
-                is UiState.Success -> SettingsList(content = settled.data, actions = actions)
+
+                sections.footer.forEach { contributor -> contributor.Content() }
             }
+
+            YukiSnackbarHost(
+                hostState = hostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(contentPadding),
+            )
         }
     }
 }
 
-@Composable
-private fun SettingsLoading() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        YukiLoadingIndicator()
-    }
+internal data class SettingsSections(
+    val body: List<SettingsContributor>,
+    val footer: List<SettingsContributor>,
+)
+
+internal fun List<SettingsContributor>.partitionFooter(): SettingsSections {
+    val (footer, body) = partition { contributor -> contributor.group == SettingsGroup.Legal }
+
+    return SettingsSections(body = body, footer = footer)
 }
 
-@Composable
-private fun SettingsList(content: SettingsContent, actions: SettingsActions) {
-    LazyColumn(modifier = Modifier.fillMaxSize().testTag(SETTINGS_LIST_TAG)) {
-        shizukuSection(content = content, onShizukuAction = actions.onShizukuAction)
-        permissionsSection(
-            rows = content.permissions,
-            onPermissionClick = actions.onPermissionClick,
-        )
-        preferencesSection(preferences = content.preferences, actions = actions.preferences)
-    }
-}
+internal fun Set<SettingsContributor>.ordered(): List<SettingsContributor> =
+    sortedWith(compareBy({ contributor -> contributor.group.ordinal }, SettingsContributor::order))
