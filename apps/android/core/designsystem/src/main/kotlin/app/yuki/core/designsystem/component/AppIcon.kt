@@ -12,12 +12,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
 
 private const val FALLBACK_GLYPH_FRACTION = 0.5f
 
@@ -60,7 +63,12 @@ fun AppIcon(
         return
     }
 
-    val painter = rememberAsyncImagePainter(model = iconUrl, contentScale = ContentScale.Crop)
+    val pixels = with(LocalDensity.current) { size.roundToPx() }
+    val request = ImageRequest.Builder(LocalContext.current)
+        .data(iconUrl)
+        .size(pixels)
+        .build()
+    val painter = rememberAsyncImagePainter(model = request, contentScale = ContentScale.Crop)
     val state = painter.state.collectAsState().value
 
     if (state !is AsyncImagePainter.State.Success) {

@@ -222,6 +222,17 @@ describe('composeAdaptiveSvg', () => {
 		expect(svg).not.toContain('scale(1 1)');
 	});
 
+	it('declares a raster size so clients do not rasterise at viewbox units', () => {
+		const svg = composeAdaptiveSvg({
+			background: { kind: 'color', value: '#FFFFFF' },
+			foreground: `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#000000" android:pathData="M0,0h108v108h-108z" /></vector>`,
+			colors: new Map()
+		});
+
+		expect(svg).toContain('width="432"');
+		expect(svg).toContain('height="432"');
+	});
+
 	it('paints a colour background beneath the foreground', () => {
 		const svg = composeAdaptiveSvg({
 			background: { kind: 'color', value: '@color/launcher_background' },

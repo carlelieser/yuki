@@ -8,6 +8,8 @@ import {
 	CORNER_RADIUS
 } from './vector-icon.ts';
 
+const RASTER_SIZE = 432;
+
 function normaliseLayer(svg: string): string {
 	const inner = svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
 	const viewBox = svg.match(/viewBox="([^"]+)"/)?.[1];
@@ -79,7 +81,7 @@ export function composeAdaptiveSvg(input: {
 	const radius = CORNER_RADIUS * Math.min(visibleWidth, visibleHeight);
 	const clip = `<clipPath id="c"><rect x="${inset}" y="${inset}" width="${visibleWidth}" height="${visibleHeight}" rx="${radius}"/></clipPath>`;
 
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${inset} ${inset} ${visibleWidth} ${visibleHeight}">${clip}<g clip-path="url(#c)">${layers.join('')}</g></svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${RASTER_SIZE}" height="${RASTER_SIZE}" viewBox="${inset} ${inset} ${visibleWidth} ${visibleHeight}">${clip}<g clip-path="url(#c)">${layers.join('')}</g></svg>`;
 }
 
 export function toDataUri(svg: string): string {
