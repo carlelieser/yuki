@@ -76,7 +76,7 @@ internal fun cardFor(detail: ShizukuDetail): ShizukuCard = when (detail.state) {
 }
 
 private fun readyDescription(detail: ShizukuDetail): String =
-    "$CARD_READY_DESCRIPTION ${modeLabelFor(detail)}, ${apiVersionLabelFor(detail.apiVersion)}."
+    "$CARD_READY_DESCRIPTION ${modeLabelFor(detail)}, ${apiVersionLabelFor(detail.apiVersion)}"
 
 internal fun modeLabelFor(detail: ShizukuDetail): String = when (detail.mode) {
     ShizukuMode.AdbShell -> MODE_ADB
@@ -92,13 +92,13 @@ internal const val STATUS_DENIED = "Denied"
 
 internal const val CARD_NOT_INSTALLED_TITLE = "Silent install unavailable"
 internal const val CARD_NOT_INSTALLED_DESCRIPTION =
-    "Shizuku is not installed. Without it, every install needs a system prompt."
+    "Shizuku is not installed. Without it, every install needs a system prompt"
 internal const val CARD_NOT_RUNNING_TITLE = "Shizuku installed, not started"
 internal const val CARD_NOT_RUNNING_DESCRIPTION =
-    "Start the Shizuku service to let Yuki install apps without a prompt."
+    "Start the Shizuku service to let Yuki install apps without a prompt"
 internal const val CARD_PERMISSION_TITLE = "Awaiting authorization"
 internal const val CARD_PERMISSION_DESCRIPTION =
-    "Shizuku is running. Authorize Yuki to use it for silent installs."
+    "Shizuku is running. Authorize Yuki to use it for silent installs"
 internal const val CARD_READY_TITLE = "Silent install active"
 internal const val CARD_READY_DESCRIPTION = "Yuki installs without a prompt through"
 

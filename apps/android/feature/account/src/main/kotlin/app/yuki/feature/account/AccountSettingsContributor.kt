@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,6 +31,7 @@ import app.yuki.core.designsystem.component.SettingsRow
 import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.SettingsSlotRow
 import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.AuthAccount
@@ -53,7 +53,7 @@ internal const val ACCOUNT_SECTION_LABEL = "Account"
 const val SIGN_OUT_LABEL = "Sign out"
 
 internal const val SIGNED_OUT_ROW_TITLE = "Sign in"
-internal const val SIGNED_OUT_ROW_SUPPORTING = "Sync your library across devices."
+internal const val SIGNED_OUT_ROW_SUPPORTING = "Sync your library across devices"
 
 class AccountSettingsContributor @Inject constructor(
     private val navigation: AccountSettingsNavigation,
@@ -182,7 +182,7 @@ private fun ProfileAvatar(
         )
 
         if (isUploadingAvatar) {
-            CircularProgressIndicator(modifier = Modifier.size(YukiSize.IconLarge))
+            YukiLoadingIndicator(modifier = Modifier.size(YukiSize.IconLarge))
         }
     }
 }
