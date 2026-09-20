@@ -5,11 +5,14 @@ import app.yuki.core.model.FailureReason
 import app.yuki.core.model.failureReason
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.HttpRequestData
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
+import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -85,6 +88,65 @@ class AuthRepositoryTest {
         val failure = repository.signUp("Ada", "ada@yuki.test", "hunter2000").exceptionOrNull()!!
 
         assertEquals(FailureReason.AccountExists, failure.failureReason())
+    }
+
+    @Test
+    fun `an avatar is sent as json so the upload is not treated as a cross-site form`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val engine = MockEngine { request ->
+            requests.add(request)
+            respond(
+                content = ByteReadChannel(ACCOUNT_BODY),
+                status = HttpStatusCode.OK,
+                headers = headersOf("Content-Type", ContentType.Application.Json.toString()),
+            )
+        }
+        val repository =
+            NetworkAuthRepository(AuthRemoteDataSource(YukiHttpClient.create(BASE_URL, engine)))
+
+        val bytes = byteArrayOf(1, 2, 3, 4)
+        repository.uploadAvatar(AvatarUpload(bytes = bytes, contentType = "image/webp"))
+
+        val upload = requests.first { request -> request.url.encodedPath.endsWith("account/avatar") }
+        assertEquals(
+            ContentType.Application.Json.contentType,
+            upload.body.contentType?.contentType,
+        )
+
+        val sent = YukiHttpClient.json.decodeFromString<AvatarUploadRequestDto>(
+            (upload.body as TextContent).text,
+        )
+        assertEquals("image/webp", sent.contentType)
+        assertTrue(Base64.getDecoder().decode(sent.data).contentEquals(bytes))
+    }
+
+    @Test
+    fun `a rejected upload keeps the explanation the server wrote`() = runTest {
+        val repository = repository(
+            body = """{"message":"Unsupported image type \"image/heic\""}""",
+            status = HttpStatusCode.BadRequest,
+        )
+
+        val upload = AvatarUpload(bytes = byteArrayOf(1, 2, 3), contentType = "image/heic")
+        val failure = repository.uploadAvatar(upload).exceptionOrNull()!!
+
+        assertEquals(
+            FailureReason.Rejected("""Unsupported image type "image/heic""""),
+            failure.failureReason(),
+        )
+    }
+
+    @Test
+    fun `a server error keeps its status rather than quoting the server's prose`() = runTest {
+        val repository = repository(
+            body = """{"message":"Internal Error"}""",
+            status = HttpStatusCode.InternalServerError,
+        )
+
+        val upload = AvatarUpload(bytes = byteArrayOf(1, 2, 3), contentType = "image/webp")
+        val failure = repository.uploadAvatar(upload).exceptionOrNull()!!
+
+        assertEquals(FailureReason.Server(500), failure.failureReason())
     }
 
     @Test

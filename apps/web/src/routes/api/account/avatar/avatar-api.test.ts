@@ -23,19 +23,20 @@ const user = { id: 'user-1' } as SessionUser;
 const db = {} as Database;
 const UPDATED_AT = new Date('2026-01-01T00:00:00.000Z');
 
-function upload(file: File | string | null, signedIn = true) {
-	const body = new FormData();
-	if (file !== null) body.set('avatar', file);
-
+function upload(body: unknown, signedIn = true) {
 	return {
 		locals: { db, user: signedIn ? user : null },
 		url: new URL('http://yuki.test/api/account/avatar'),
-		request: new Request('http://yuki.test/api/account/avatar', { method: 'POST', body })
+		request: new Request('http://yuki.test/api/account/avatar', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: typeof body === 'string' ? body : JSON.stringify(body)
+		})
 	} as unknown as RequestEvent;
 }
 
-function imageOf(type: string, size = 16) {
-	return new File([new Uint8Array(size)], 'me.png', { type });
+function imageOf(contentType: string, size = 16) {
+	return { contentType, data: Buffer.from(new Uint8Array(size)).toString('base64') };
 }
 
 async function expectStatus(request: RequestEvent, status: number): Promise<void> {
@@ -84,10 +85,30 @@ describe('POST /api/account/avatar', () => {
 		expect(saveAvatar).not.toHaveBeenCalled();
 	});
 
-	it('rejects a request carrying no file', async () => {
-		await expectStatus(upload(null), 400);
-		await expectStatus(upload('not a file'), 400);
+	it('rejects a request carrying no image', async () => {
+		await expectStatus(upload({}), 400);
+		await expectStatus(upload('not json'), 400);
+		await expectStatus(upload({ contentType: 'image/png' }), 400);
 		expect(saveAvatar).not.toHaveBeenCalled();
+	});
+
+	it('rejects data that is not base64 so a broken body cannot be stored', async () => {
+		await expectStatus(upload({ contentType: 'image/png', data: 'not base64!!' }), 400);
+		expect(saveAvatar).not.toHaveBeenCalled();
+	});
+
+	it('rejects an empty image', async () => {
+		await expectStatus(upload({ contentType: 'image/png', data: '' }), 400);
+		expect(saveAvatar).not.toHaveBeenCalled();
+	});
+
+	it('stores the decoded bytes rather than the base64 text', async () => {
+		updateUser.mockResolvedValue({});
+		const bytes = Buffer.from([1, 2, 3, 4]);
+
+		await uploadAvatar(upload({ contentType: 'image/webp', data: bytes.toString('base64') }));
+
+		expect(saveAvatar).toHaveBeenCalledWith(db, expect.objectContaining({ bytes }));
 	});
 
 	it('reports a rejected profile write instead of claiming it saved', async () => {

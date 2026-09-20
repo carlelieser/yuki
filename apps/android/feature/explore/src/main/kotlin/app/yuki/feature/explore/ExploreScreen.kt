@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
-import app.yuki.core.designsystem.component.ScreenAction
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
@@ -29,7 +28,6 @@ const val EXPLORE_SCREEN_TAG = "exploreScreen"
 internal const val EXPLORE_TITLE = "Explore"
 internal const val EXPLORE_MISSING_MESSAGE = "There are no apps to show right now."
 internal const val FEATURED_TITLE = "Featured"
-private const val SETTINGS_DESCRIPTION = "Settings"
 private const val FEATURED_HEADER_KEY = "featuredHeader"
 private const val FEATURED_ROW_KEY = "featuredRow"
 
@@ -37,7 +35,6 @@ private const val FEATURED_ROW_KEY = "featuredRow"
 fun ExploreRoute(
     onListingSelected: (String) -> Unit,
     onCategorySelected: (ListingCategory) -> Unit,
-    onSettingsClick: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
@@ -56,7 +53,6 @@ fun ExploreRoute(
             onRetry = viewModel::refresh,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onCategorySelected = onCategorySelected,
-            onSettingsClick = onSettingsClick,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -68,7 +64,6 @@ data class ExploreCallbacks(
     val onRetry: () -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
-    val onSettingsClick: () -> Unit,
 )
 
 data class ExploreRefresh(
@@ -87,11 +82,6 @@ internal fun ExploreScreen(
 ) {
     YukiScreen(
         title = EXPLORE_TITLE,
-        action = ScreenAction(
-            icon = YukiIcons.Settings,
-            description = SETTINGS_DESCRIPTION,
-            onClick = callbacks.onSettingsClick,
-        ),
         trailing = trailing,
         modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {

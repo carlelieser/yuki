@@ -9,37 +9,54 @@ import {
 	saveAvatar
 } from '$lib/server/avatars.ts';
 
-async function readUpload(request: Request): Promise<File> {
-	const form = await request.formData().catch(() => null);
-	if (form === null) error(400, 'Expected a multipart upload');
+type AvatarUpload = {
+	contentType: string;
+	bytes: Buffer;
+};
 
-	const file = form.get('avatar');
-	if (!(file instanceof File)) error(400, 'Expected an avatar file');
-
-	if (!isSupportedAvatarType(file.type)) {
-		error(400, `Unsupported image type "${file.type}"`);
+async function readUpload(request: Request): Promise<AvatarUpload> {
+	const payload = await request.json().catch(() => null);
+	if (payload === null || typeof payload !== 'object') {
+		error(400, 'Expected a JSON body');
 	}
 
-	if (file.size > MAX_AVATAR_BYTES) {
+	const { contentType, data } = payload as Record<string, unknown>;
+	if (typeof contentType !== 'string' || typeof data !== 'string') {
+		error(400, 'Expected a contentType and base64 data');
+	}
+
+	if (!isSupportedAvatarType(contentType)) {
+		error(400, `Unsupported image type "${contentType}"`);
+	}
+
+	const bytes = decodeBase64(data);
+	if (bytes.byteLength > MAX_AVATAR_BYTES) {
 		error(400, `The image must be smaller than ${MAX_AVATAR_BYTES} bytes`);
 	}
 
-	return file;
+	if (bytes.byteLength === 0) error(400, 'The image is empty');
+
+	return { contentType, bytes };
+}
+
+function decodeBase64(data: string): Buffer {
+	const bytes = Buffer.from(data, 'base64');
+
+	if (bytes.toString('base64').replace(/=+$/, '') !== data.replace(/=+$/, '')) {
+		error(400, 'The image data is not valid base64');
+	}
+
+	return bytes;
 }
 
 export const POST: RequestHandler = async ({ locals, request, url }) => {
 	if (!locals.user) error(401, 'Sign in to change your picture');
 
-	const file = await readUpload(request);
-	const bytes = Buffer.from(await file.arrayBuffer());
-
-	if (bytes.byteLength > MAX_AVATAR_BYTES) {
-		error(400, `The image must be smaller than ${MAX_AVATAR_BYTES} bytes`);
-	}
+	const { contentType, bytes } = await readUpload(request);
 
 	const updatedAt = await saveAvatar(locals.db, {
 		userId: locals.user.id,
-		contentType: file.type,
+		contentType,
 		bytes
 	});
 	const image = avatarUrlFor(locals.user.id, updatedAt, url.origin);

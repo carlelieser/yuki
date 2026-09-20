@@ -128,6 +128,7 @@ private fun messageFor(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> SIGN_IN_OFFLINE
     FailureReason.NotFound -> SIGN_IN_INVALID
     FailureReason.AccountExists -> SIGN_IN_INVALID
+    is FailureReason.Rejected -> reason.explanation
     is FailureReason.Server -> SIGN_IN_UNAVAILABLE
     is FailureReason.Unexpected -> SIGN_IN_UNAVAILABLE
 }

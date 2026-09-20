@@ -15,7 +15,7 @@ internal const val PERMISSION_REQUEST_CODE: Int = 4801
 class ShizukuMonitor @Inject constructor(private val gateway: ShizukuGateway) {
     private val resolver = ShizukuStateResolver(gateway)
 
-    private val details = MutableStateFlow(ShizukuDetail.Unavailable)
+    private val details = MutableStateFlow(resolver.resolve())
     private val permissionResults = MutableSharedFlow<Int>(extraBufferCapacity = 4)
 
     private val binderReceived = BinderListener { refresh() }

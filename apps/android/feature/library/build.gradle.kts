@@ -7,7 +7,9 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.auth)
     implementation(projects.core.database)
+    implementation(projects.core.settingsApi)
     implementation(projects.core.installer)
     implementation(projects.core.network)
 

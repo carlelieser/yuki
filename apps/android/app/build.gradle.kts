@@ -44,6 +44,7 @@ dependencies {
     implementation(projects.core.installer)
     implementation(projects.core.model)
     implementation(projects.core.network)
+    implementation(projects.core.settingsApi)
     implementation(projects.core.shizuku)
     implementation(projects.feature.account)
     implementation(projects.feature.explore)

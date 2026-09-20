@@ -19,21 +19,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import app.yuki.core.designsystem.theme.YukiSize
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 
 const val AVATAR_TAG = "avatar"
+const val AVATAR_GLYPH_TAG = "avatarGlyph"
 const val AVATAR_EDIT_DESCRIPTION = "Change your picture"
 const val AVATAR_OPEN_DESCRIPTION = "Open your account"
 
 private const val GLYPH_FRACTION = 0.5f
 private const val COMPACT_GLYPH_FRACTION = 1f
+private const val HEADER_GLYPH_FRACTION = 2f / 3f
 private const val BADGE_FRACTION = 0.34f
 private const val BADGE_GLYPH_FRACTION = 0.62f
 
-enum class AvatarSize { Small, Medium, Large }
+enum class AvatarSize { Small, Compact, Medium, Large }
 
 data class AvatarContent(
     val imageUrl: String?,
@@ -63,8 +66,7 @@ fun AccountAvatar(
 ) {
     AvatarFace(
         content = content,
-        diameter = size.diameter(),
-        glyphFraction = size.glyphFraction(),
+        size = size,
         modifier = modifier,
     )
 }
@@ -83,8 +85,7 @@ private fun AvatarBox(
     Box(modifier = modifier.size(diameter).testTag(AVATAR_TAG)) {
         AvatarFace(
             content = content,
-            diameter = diameter,
-            glyphFraction = size.glyphFraction(),
+            size = size,
             modifier = Modifier.clickable(click),
         )
 
@@ -110,8 +111,7 @@ private fun Modifier.clickable(click: AvatarClick?): Modifier {
 @Composable
 private fun AvatarFace(
     content: AvatarContent,
-    diameter: Dp,
-    glyphFraction: Float,
+    size: AvatarSize,
     modifier: Modifier = Modifier,
 ) {
     val painter = content.imageUrl?.let { url ->
@@ -122,8 +122,7 @@ private fun AvatarFace(
     if (painter == null || !isLoaded) {
         AvatarFallback(
             displayName = content.displayName,
-            diameter = diameter,
-            glyphFraction = glyphFraction,
+            size = size,
             modifier = modifier,
         )
         return
@@ -134,7 +133,7 @@ private fun AvatarFace(
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = modifier
-            .size(diameter)
+            .size(size.diameter())
             .clip(CircleShape)
             .clearAndSetSemantics { },
     )
@@ -143,11 +142,11 @@ private fun AvatarFace(
 @Composable
 private fun AvatarFallback(
     displayName: String?,
-    diameter: Dp,
-    glyphFraction: Float,
+    size: AvatarSize,
     modifier: Modifier = Modifier,
 ) {
     val initials = initialsOf(displayName)
+    val diameter = size.diameter()
 
     Box(
         modifier = modifier
@@ -161,14 +160,16 @@ private fun AvatarFallback(
                 imageVector = YukiIcons.Person,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(diameter * glyphFraction),
+                modifier = Modifier
+                    .size(diameter * size.glyphFraction())
+                    .testTag(AVATAR_GLYPH_TAG),
             )
             return@Box
         }
 
         Text(
             text = initials,
-            style = MaterialTheme.typography.titleMedium,
+            style = size.initialsStyle(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -210,11 +211,21 @@ internal fun initialsOf(displayName: String?): String? {
 
 private fun AvatarSize.diameter(): Dp = when (this) {
     AvatarSize.Small -> YukiSize.IconSmall
+    AvatarSize.Compact -> YukiSize.IconCompact
     AvatarSize.Medium -> YukiSize.IconLarge
     AvatarSize.Large -> YukiSize.IconExtraLarge
 }
 
 private fun AvatarSize.glyphFraction(): Float = when (this) {
     AvatarSize.Small -> COMPACT_GLYPH_FRACTION
+    AvatarSize.Compact -> HEADER_GLYPH_FRACTION
     AvatarSize.Medium, AvatarSize.Large -> GLYPH_FRACTION
+}
+
+@Composable
+private fun AvatarSize.initialsStyle(): TextStyle = when (this) {
+    AvatarSize.Small -> MaterialTheme.typography.labelSmall
+    AvatarSize.Compact -> MaterialTheme.typography.titleSmall
+    AvatarSize.Medium -> MaterialTheme.typography.titleLarge
+    AvatarSize.Large -> MaterialTheme.typography.headlineMedium
 }

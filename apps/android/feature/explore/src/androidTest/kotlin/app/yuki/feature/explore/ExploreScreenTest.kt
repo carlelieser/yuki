@@ -38,7 +38,6 @@ class ExploreScreenTest {
         onRetry = {},
         onListingSelected = {},
         onCategorySelected = { category -> chosenCategories += category },
-        onSettingsClick = {},
     )
 
     private fun browsing(

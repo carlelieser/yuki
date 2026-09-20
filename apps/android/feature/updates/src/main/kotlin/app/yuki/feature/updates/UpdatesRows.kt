@@ -96,6 +96,7 @@ internal fun uncheckedDetail(reason: FailureReason): String = when (reason) {
     FailureReason.Unauthorized -> "Sign in again"
     FailureReason.EmailNotVerified -> "Sign in again"
     FailureReason.AccountExists -> "Unexpected error"
+    is FailureReason.Rejected -> reason.explanation
     is FailureReason.Server -> "Server error ${reason.status}"
     is FailureReason.Unexpected -> "Unexpected error"
 }

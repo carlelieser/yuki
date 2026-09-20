@@ -5,6 +5,7 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
@@ -24,15 +25,24 @@ import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
 import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
 import app.yuki.settings.SettingsDestination
+import app.yuki.settings.SettingsNavigationHolder
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun YukiNavHost(
     navController: NavHostController,
     navigator: YukiNavigator,
+    navigationHolder: SettingsNavigationHolder,
     bottomBarPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    LaunchedEffect(navigator, navigationHolder) {
+        navigationHolder.bind(
+            onSignIn = navigator::openSignIn,
+            onViewLibrary = { navigator.selectTab(YukiTab.Library) },
+        )
+    }
+
     val screenshotFocus = remember { ScreenshotFocus() }
 
     SharedTransitionLayout(modifier = modifier) {
@@ -78,8 +88,7 @@ private fun YukiRoutedContent(
         screenshotDestination(navigator, destinations.sharedScope)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
-        settingsDestination(navigator)
-        accountDestination(navigator, bottomBarPadding)
+        settingsDestination(navigator, bottomBarPadding)
         signInDestination(navigator)
         signUpDestination(navigator)
     }
@@ -98,9 +107,8 @@ private fun NavGraphBuilder.exploreDestination(
         ExploreScreenRoute(
             onListingSelected = navigator::openListing,
             onCategorySelected = navigator::openCategory,
-            onSettingsClick = navigator::openSettings,
             contentPadding = bottomBarPadding,
-            trailing = { AccountButton(onClick = navigator::openAccount) },
+            trailing = { AccountButton(onClick = navigator::openSettings) },
         )
     }
 }
@@ -204,8 +212,14 @@ private fun NavGraphBuilder.categoryDestination(
     }
 }
 
-private fun NavGraphBuilder.settingsDestination(navigator: YukiNavigator) {
+private fun NavGraphBuilder.settingsDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
     composable<SettingsRoute> {
-        SettingsDestination(onBackClick = navigator::navigateUp)
+        SettingsDestination(
+            onBackClick = navigator::navigateUp,
+            contentPadding = bottomBarPadding,
+        )
     }
 }

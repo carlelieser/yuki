@@ -31,6 +31,7 @@ private fun titleFor(reason: FailureReason): String = when (reason) {
     FailureReason.Unauthorized -> "Sign in to continue"
     FailureReason.EmailNotVerified -> "Verify your email"
     FailureReason.AccountExists -> "That email is taken"
+    is FailureReason.Rejected -> "That didn't work"
     is FailureReason.Server -> "Yuki is having trouble"
     is FailureReason.Unexpected -> "Something went wrong"
 }
@@ -41,6 +42,7 @@ private fun descriptionFor(reason: FailureReason, missingMessage: String): Strin
     FailureReason.Unauthorized -> "Your session has expired. Sign in again to continue."
     FailureReason.EmailNotVerified -> "Open the link we emailed you to finish signing in."
     FailureReason.AccountExists -> "An account with that email already exists."
+    is FailureReason.Rejected -> reason.explanation
     is FailureReason.Server -> "Our server is not responding right now. Try again in a moment."
     is FailureReason.Unexpected -> "This didn't load as expected. Try again."
 }

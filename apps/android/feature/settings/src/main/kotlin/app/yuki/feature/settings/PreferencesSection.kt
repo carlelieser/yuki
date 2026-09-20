@@ -1,7 +1,6 @@
 package app.yuki.feature.settings
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -16,21 +15,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.SectionHeader
-import app.yuki.core.designsystem.component.SettingsItem
-import app.yuki.core.designsystem.component.SettingsItemContent
+import app.yuki.core.designsystem.component.SettingsGroup
+import app.yuki.core.designsystem.component.SettingsRow
+import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.YukiIcons
 
-internal fun LazyListScope.preferencesSection(
+private const val APPEARANCE_ROW_COUNT = 2
+private const val PREFERENCE_ROW_COUNT = 2
+
+@Composable
+internal fun AppearanceSection(
     preferences: YukiPreferences,
     actions: PreferenceActions,
+    modifier: Modifier = Modifier,
 ) {
-    item { SectionHeader(title = PREFERENCES_SECTION_TITLE) }
+    SettingsGroup(modifier = modifier, label = APPEARANCE_SECTION_TITLE) {
+        ThemeRow(
+            position = SettingsRowPosition(index = 0, count = APPEARANCE_ROW_COUNT),
+            mode = preferences.appearance,
+            onChange = actions.onAppearanceChange,
+        )
 
-    item { AppearanceRow(mode = preferences.appearance, onChange = actions.onAppearanceChange) }
-
-    item {
         ToggleRow(
+            position = SettingsRowPosition(index = 1, count = APPEARANCE_ROW_COUNT),
             content = ToggleContent(
                 title = DYNAMIC_COLOR_TITLE,
                 supporting = DYNAMIC_COLOR_SUPPORTING,
@@ -39,9 +46,17 @@ internal fun LazyListScope.preferencesSection(
             onCheckedChange = actions.onDynamicColorChange,
         )
     }
+}
 
-    item {
+@Composable
+internal fun PreferencesSection(
+    preferences: YukiPreferences,
+    actions: PreferenceActions,
+    modifier: Modifier = Modifier,
+) {
+    SettingsGroup(modifier = modifier, label = PREFERENCES_SECTION_TITLE) {
         ToggleRow(
+            position = SettingsRowPosition(index = 0, count = PREFERENCE_ROW_COUNT),
             content = ToggleContent(
                 title = PRERELEASES_TITLE,
                 supporting = PRERELEASES_SUPPORTING,
@@ -49,9 +64,13 @@ internal fun LazyListScope.preferencesSection(
             ),
             onCheckedChange = actions.onIncludePrereleasesChange,
         )
-    }
 
-    item { InstallModeRow(mode = preferences.installMode, onChange = actions.onInstallModeChange) }
+        InstallModeRow(
+            position = SettingsRowPosition(index = 1, count = PREFERENCE_ROW_COUNT),
+            mode = preferences.installMode,
+            onChange = actions.onInstallModeChange,
+        )
+    }
 }
 
 internal data class ToggleContent(
@@ -61,45 +80,49 @@ internal data class ToggleContent(
 )
 
 @Composable
-private fun ToggleRow(content: ToggleContent, onCheckedChange: (Boolean) -> Unit) {
-    SettingsItem(
-        content = SettingsItemContent(
-            title = content.title,
-            supporting = content.supporting,
-            trailing = {
-                Switch(checked = content.isChecked, onCheckedChange = onCheckedChange)
-            },
-        ),
+private fun ToggleRow(
+    position: SettingsRowPosition,
+    content: ToggleContent,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    SettingsRow(
+        position = position,
+        title = content.title,
+        supporting = content.supporting,
         onClick = { onCheckedChange(!content.isChecked) },
+        trailing = { Switch(checked = content.isChecked, onCheckedChange = onCheckedChange) },
     )
 }
 
 @Composable
-private fun AppearanceRow(mode: AppearanceMode, onChange: (AppearanceMode) -> Unit) {
+private fun ThemeRow(
+    position: SettingsRowPosition,
+    mode: AppearanceMode,
+    onChange: (AppearanceMode) -> Unit,
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    SettingsItem(
-        content = SettingsItemContent(
-            title = APPEARANCE_TITLE,
-            supporting = mode.label,
-            trailing = {
-                AppearanceSelector(
-                    isExpanded = isExpanded,
-                    onExpand = { isExpanded = true },
-                    onDismiss = { isExpanded = false },
-                    onSelect = { selected ->
-                        isExpanded = false
-                        onChange(selected)
-                    },
-                )
-            },
-        ),
+    SettingsRow(
+        position = position,
+        title = THEME_TITLE,
+        supporting = mode.label,
         onClick = { isExpanded = true },
+        trailing = {
+            ThemeSelector(
+                isExpanded = isExpanded,
+                onExpand = { isExpanded = true },
+                onDismiss = { isExpanded = false },
+                onSelect = { selected ->
+                    isExpanded = false
+                    onChange(selected)
+                },
+            )
+        },
     )
 }
 
 @Composable
-private fun AppearanceSelector(
+private fun ThemeSelector(
     isExpanded: Boolean,
     onExpand: () -> Unit,
     onDismiss: () -> Unit,
@@ -109,7 +132,7 @@ private fun AppearanceSelector(
         IconButton(onClick = onExpand, modifier = Modifier.testTag(APPEARANCE_SELECTOR_TAG)) {
             Icon(
                 imageVector = YukiIcons.ArrowDropDown,
-                contentDescription = APPEARANCE_TITLE,
+                contentDescription = THEME_TITLE,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -126,26 +149,29 @@ private fun AppearanceSelector(
 }
 
 @Composable
-private fun InstallModeRow(mode: InstallMode, onChange: (InstallMode) -> Unit) {
+private fun InstallModeRow(
+    position: SettingsRowPosition,
+    mode: InstallMode,
+    onChange: (InstallMode) -> Unit,
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    SettingsItem(
-        content = SettingsItemContent(
-            title = INSTALL_MODE_TITLE,
-            supporting = mode.label,
-            trailing = {
-                InstallModeSelector(
-                    isExpanded = isExpanded,
-                    onExpand = { isExpanded = true },
-                    onDismiss = { isExpanded = false },
-                    onSelect = { selected ->
-                        isExpanded = false
-                        onChange(selected)
-                    },
-                )
-            },
-        ),
+    SettingsRow(
+        position = position,
+        title = INSTALL_MODE_TITLE,
+        supporting = mode.label,
         onClick = { isExpanded = true },
+        trailing = {
+            InstallModeSelector(
+                isExpanded = isExpanded,
+                onExpand = { isExpanded = true },
+                onDismiss = { isExpanded = false },
+                onSelect = { selected ->
+                    isExpanded = false
+                    onChange(selected)
+                },
+            )
+        },
     )
 }
 
@@ -176,12 +202,13 @@ private fun InstallModeSelector(
     }
 }
 
+internal const val APPEARANCE_SECTION_TITLE = "Appearance"
 internal const val PREFERENCES_SECTION_TITLE = "Preferences"
 internal const val PRERELEASES_TITLE = "Include prereleases"
 internal const val PRERELEASES_SUPPORTING = "Offer beta and release-candidate versions as updates."
 internal const val INSTALL_MODE_TITLE = "Install mode"
 const val INSTALL_MODE_SELECTOR_TAG = "installModeSelector"
-internal const val APPEARANCE_TITLE = "Appearance"
+internal const val THEME_TITLE = "Theme"
 const val APPEARANCE_SELECTOR_TAG = "appearanceSelector"
 internal const val DYNAMIC_COLOR_TITLE = "Dynamic color"
 internal const val DYNAMIC_COLOR_SUPPORTING = "Match Yuki's palette to your wallpaper."

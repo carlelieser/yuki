@@ -45,6 +45,12 @@ internal data class SendVerificationRequestDto(
 )
 
 @Serializable
+internal data class AvatarUploadRequestDto(
+    val contentType: String,
+    val data: String,
+)
+
+@Serializable
 internal data class AuthErrorDto(
     val code: String? = null,
     val message: String? = null,

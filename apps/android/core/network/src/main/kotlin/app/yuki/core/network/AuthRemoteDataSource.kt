@@ -3,18 +3,15 @@ package app.yuki.core.network
 import app.yuki.core.model.FailureReason
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.formData
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +20,7 @@ internal const val AUTH_TOKEN_HEADER = "set-auth-token"
 private const val EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
 private const val USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
 private const val EMPTY_BODY = "{}"
-private const val AVATAR_FIELD = "avatar"
+private val CLIENT_ERROR_RANGE = 400..499
 
 internal data class SignedInResponse(
     val account: AccountDto,
@@ -88,7 +85,13 @@ internal class AuthRemoteDataSource @Inject constructor(
 
     suspend fun uploadAvatar(bytes: ByteArray, contentType: String): AccountDto {
         val response = client.post("api/account/avatar") {
-            setBody(avatarForm(bytes, contentType))
+            contentType(ContentType.Application.Json)
+            setBody(
+                AvatarUploadRequestDto(
+                    contentType = contentType,
+                    data = Base64.getEncoder().encodeToString(bytes),
+                ),
+            )
         }
 
         return response.reloadAccount("Upload a profile picture")
@@ -100,19 +103,6 @@ internal class AuthRemoteDataSource @Inject constructor(
         return session() ?: throw RemoteRequestException(FailureReason.Unauthorized, operation)
     }
 }
-
-private fun avatarForm(bytes: ByteArray, contentType: String) = MultiPartFormDataContent(
-    formData {
-        append(
-            key = AVATAR_FIELD,
-            value = bytes,
-            headers = Headers.build {
-                append(HttpHeaders.ContentType, contentType)
-                append(HttpHeaders.ContentDisposition, "filename=\"$AVATAR_FIELD\"")
-            },
-        )
-    },
-)
 
 private suspend fun HttpResponse.toSignedIn(operation: String): SignedInResponse {
     requireSuccess(operation)
@@ -134,9 +124,19 @@ private suspend fun HttpResponse.requireSuccess(operation: String) {
     throw RemoteRequestException(authFailure(), operation)
 }
 
-private suspend fun HttpResponse.authFailure(): FailureReason =
-    when (runCatching { body<AuthErrorDto>() }.getOrNull()?.code) {
+private suspend fun HttpResponse.authFailure(): FailureReason {
+    val error = runCatching { body<AuthErrorDto>() }.getOrNull()
+
+    return when (error?.code) {
         EMAIL_NOT_VERIFIED -> FailureReason.EmailNotVerified
         USER_ALREADY_EXISTS -> FailureReason.AccountExists
-        else -> statusFailure(this)
+        else -> rejection(error?.message) ?: statusFailure(this)
     }
+}
+
+private fun HttpResponse.rejection(message: String?): FailureReason? {
+    val explanation = message?.takeIf(String::isNotBlank) ?: return null
+    if (status.value !in CLIENT_ERROR_RANGE) return null
+
+    return FailureReason.Rejected(explanation)
+}
