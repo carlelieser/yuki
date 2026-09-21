@@ -19,6 +19,10 @@ object YukiMotion {
     const val TabScaleEnter = 0.97f
     const val TabScaleExit = 1.03f
 
+    const val CarouselAdvanceMillis = 4_000L
+    const val CarouselPageScaleMinimum = 0.92f
+    const val CarouselPageAlphaMinimum = 0.6f
+
     @Volatile
     var isReduced: Boolean = false
         internal set
