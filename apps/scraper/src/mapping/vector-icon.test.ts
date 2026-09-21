@@ -271,6 +271,36 @@ describe('composeAdaptiveSvg', () => {
 		expect(svg).toContain('clip-path="url(#c)"');
 	});
 
+	it('leaves an unresolved background unpainted rather than flooding the icon black', () => {
+		const svg = composeAdaptiveSvg({
+			background: {
+				kind: 'vector',
+				value: `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="@color/missing" android:pathData="M0,0h108v108h-108z" /></vector>`
+			},
+			foreground: FOREGROUND,
+			colors: new Map([['launcher_tint', '#FFFFFF']])
+		});
+
+		expect(svg).not.toContain('fill="#000000"');
+		expect(svg).toContain('fill="#FFFFFF"');
+	});
+
+	it('still paints a background vector whose colour resolves', () => {
+		const svg = composeAdaptiveSvg({
+			background: {
+				kind: 'vector',
+				value: `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="@color/ic_launcher_background" android:pathData="M0,0h108v108h-108z" /></vector>`
+			},
+			foreground: FOREGROUND,
+			colors: new Map([
+				['ic_launcher_background', '#3DDC84'],
+				['launcher_tint', '#FFFFFF']
+			])
+		});
+
+		expect(svg).toContain('fill="#3DDC84"');
+	});
+
 	it('returns null when the foreground cannot be converted', () => {
 		expect(
 			composeAdaptiveSvg({ background: null, foreground: '<vector />', colors: new Map() })

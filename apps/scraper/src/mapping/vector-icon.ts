@@ -182,7 +182,7 @@ function groupTransform(vector: string): string | null {
 function convertPaths(
 	vector: string,
 	colors: Map<string, string>,
-	fallbackFill: string,
+	fallbackFill: string | null,
 	idPrefix: string,
 	gradients: Map<string, string>
 ): string {
@@ -214,13 +214,17 @@ function convertPaths(
 			const definition = gradientToSvg(gradient, id);
 
 			if (definition === '') {
-				attributes.push(`fill="${gradient.stops[0]?.color ?? fallbackFill}"`);
+				const first = gradient.stops[0]?.color ?? fallbackFill;
+				if (first === null) continue;
+				attributes.push(`fill="${first}"`);
 			} else {
 				definitions.push(definition);
 				attributes.push(`fill="url(#${id})"`);
 			}
 		} else {
-			attributes.push(`fill="${fill ?? (stroke === null ? fallbackFill : 'none')}"`);
+			const resolved = fill ?? (stroke === null ? fallbackFill : 'none');
+			if (resolved === null) continue;
+			attributes.push(`fill="${resolved}"`);
 		}
 
 		if (stroke !== null && strokeWidth > 0) {
@@ -254,9 +258,13 @@ function convertPaths(
 export function vectorToSvg(
 	vector: string,
 	colors: Map<string, string>,
-	options: { fallbackFill?: string; idPrefix?: string; gradients?: Map<string, string> } = {}
+	options: {
+		fallbackFill?: string | null;
+		idPrefix?: string;
+		gradients?: Map<string, string>;
+	} = {}
 ): string | null {
-	const fallbackFill = options.fallbackFill ?? '#000000';
+	const fallbackFill = options.fallbackFill === undefined ? '#000000' : options.fallbackFill;
 	const idPrefix = options.idPrefix ?? 'g';
 	const gradients = options.gradients ?? new Map<string, string>();
 

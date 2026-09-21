@@ -67,7 +67,8 @@ export function composeAdaptiveSvg(input: {
 		} else {
 			const backgroundSvg = vectorToSvg(input.background.value, input.colors, {
 				idPrefix: 'bg',
-				gradients
+				gradients,
+				fallbackFill: null
 			});
 			if (backgroundSvg !== null) layers.push(normaliseLayer(backgroundSvg));
 		}
