@@ -144,6 +144,19 @@ describe('colour references', () => {
 	});
 });
 
+describe('nested groups', () => {
+	it('keeps the transform of every enclosing group', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="108" android:viewportHeight="108"><group android:translateX="25.83" android:translateY="25.2" android:scaleX="0.05869" android:scaleY="0.05869"><group android:translateY="960"><path android:fillColor="#14B8A6" android:pathData="M204,-150L880,-440L480,-840z" /></group></group></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain(
+			'transform="translate(25.83 25.2) scale(0.05869 0.05869) translate(0 960)"'
+		);
+	});
+});
+
 describe('invisible paths', () => {
 	it('skips a path that declares neither fill nor stroke', () => {
 		const svg = vectorToSvg(

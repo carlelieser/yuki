@@ -4,11 +4,12 @@ const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(color|drawable|mipmap)\/([^"]+)"/g;
 const VECTOR_TAG = /<vector\b[^>]*>/;
 const PATH_TAG = /<path\b[^>]*?(?:\/>|>([\s\S]*?)<\/path>)/g;
-const GROUP_TAG = /<group\b[^>]*>/;
+const GROUP_TAG = /<group\b[^>]*?>/g;
 const COLOR_ENTRY = /<color\s+name="([^"]+)"\s*>\s*([^<\s]+)\s*<\/color>/g;
 
 const MAX_SOURCE_BYTES = 64 * 1024;
 const MAX_PATHS = 64;
+const MAX_GROUP_DEPTH = 16;
 export const CANVAS = 108;
 export const VIEWPORT_INSET = 18;
 export const CORNER_RADIUS = 0.2;
@@ -147,10 +148,7 @@ function escapeXml(value: string): string {
 		.replace(/"/g, '&quot;');
 }
 
-function groupTransform(vector: string): string | null {
-	const group = vector.match(GROUP_TAG)?.[0];
-	if (group === undefined) return null;
-
+function transformOf(group: string): string[] {
 	const parts: string[] = [];
 	const translateX = numeric(group, 'translateX', 0);
 	const translateY = numeric(group, 'translateY', 0);
@@ -167,6 +165,16 @@ function groupTransform(vector: string): string | null {
 	if (rotation !== 0) parts.push(`rotate(${rotation})`);
 	if (scaleX !== 1 || scaleY !== 1) parts.push(`scale(${scaleX} ${scaleY})`);
 	if (pivoted) parts.push(`translate(${-pivotX} ${-pivotY})`);
+
+	return parts;
+}
+
+function groupTransform(vector: string): string | null {
+	const parts: string[] = [];
+	for (const match of vector.matchAll(GROUP_TAG)) {
+		if (parts.length >= MAX_GROUP_DEPTH) break;
+		parts.push(...transformOf(match[0]));
+	}
 
 	return parts.length === 0 ? null : parts.join(' ');
 }
