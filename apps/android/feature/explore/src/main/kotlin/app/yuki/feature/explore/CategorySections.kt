@@ -3,20 +3,17 @@ package app.yuki.feature.explore
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.LISTING_SECTION_ARROW_DESCRIPTION
 import app.yuki.core.designsystem.component.ListingInstalls
-import app.yuki.core.designsystem.component.SectionHeader
-import app.yuki.core.designsystem.component.YukiIcons
+import app.yuki.core.designsystem.component.ListingSectionActions
+import app.yuki.core.designsystem.component.ListingSectionContent
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
-import app.yuki.core.designsystem.component.toProductListItemContent
+import app.yuki.core.designsystem.component.listingSection
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingCategory
@@ -24,7 +21,7 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
 const val CATEGORY_SECTIONS_TAG = "categorySections"
-const val CATEGORY_SECTION_ARROW_DESCRIPTION = "See all"
+const val CATEGORY_SECTION_ARROW_DESCRIPTION = LISTING_SECTION_ARROW_DESCRIPTION
 
 private val NothingToExplore = EmptyContent(
     title = "No apps yet",
@@ -81,39 +78,18 @@ private fun LazyListScope.categorySection(
 ) {
     val category = section.category
 
-    item(key = category.wireValue) {
-        CategorySectionHeader(
-            category = category,
+    listingSection(
+        content = ListingSectionContent(
+            title = category.label,
+            keyPrefix = category.wireValue,
+            listings = section.results,
+            installs = installs,
+        ),
+        actions = ListingSectionActions(
+            onListingSelected = actions.onListingSelected,
             onSeeAll = { actions.onCategorySelected(category) },
-        )
-    }
-
-    items(
-        items = section.results,
-        key = { listing -> "${category.wireValue}/${listing.id}" },
-    ) { listing ->
-        ClickableProductListItem(
-            content = installs.apply(
-                listing,
-                listing.toProductListItemContent(onAuthorClick = actions.onAuthorSelected),
-            ),
-            onClick = { actions.onListingSelected(listing) },
-        )
-    }
-}
-
-@Composable
-private fun CategorySectionHeader(category: ListingCategory, onSeeAll: () -> Unit) {
-    SectionHeader(
-        title = category.label,
-        action = {
-            IconButton(onClick = onSeeAll) {
-                Icon(
-                    imageVector = YukiIcons.Forward,
-                    contentDescription = "$CATEGORY_SECTION_ARROW_DESCRIPTION ${category.label}",
-                )
-            }
-        },
+            onAuthorSelected = actions.onAuthorSelected,
+        ),
     )
 }
 
