@@ -2,7 +2,7 @@ const APPLICATION_TAG = /<application\b[^>]*>/;
 const MANIFEST_ICON = /android:(?:roundIcon|icon)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
 const RESOURCE_REFERENCE = /android:(?:src|drawable)="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
 const ADAPTIVE_RASTER_LAYER =
-	/<(background|foreground)\b[^>]*android:drawable="@(drawable|mipmap)\/([A-Za-z0-9_]+)"/g;
+	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(drawable|mipmap|color)\/([A-Za-z0-9_]+)"/g;
 
 export type ResourceReference = { kind: string; name: string };
 
@@ -32,10 +32,12 @@ export function readAdaptiveRasterLayers(xml: string): AdaptiveRasterLayers {
 
 	for (const match of xml.matchAll(ADAPTIVE_RASTER_LAYER)) {
 		const layer = match[1];
-		const kind = match[2];
-		const name = match[3];
-		if (kind === undefined || name === undefined) continue;
+		const isFramework = match[2] !== undefined;
+		const kind = match[3];
+		const rawName = match[4];
+		if (kind === undefined || rawName === undefined) continue;
 
+		const name = kind === 'color' && isFramework ? `android:${rawName}` : rawName;
 		if (layer === 'background') layers.background = { kind, name };
 		if (layer === 'foreground') layers.foreground = { kind, name };
 	}

@@ -6,6 +6,7 @@ import {
 	findIconPath,
 	findManifestPath,
 	findRasterForReference,
+	readAdaptiveRasterLayers,
 	readManifestIcon,
 	readRasterReferences,
 	resolveRelativePath
@@ -49,6 +50,23 @@ describe('raster references from declared drawables', () => {
 		);
 
 		expect(refs.map((r) => r.name)).toEqual(['ic_bg', 'ic_fg']);
+	});
+
+	it('reads an adaptive background declared as a colour', () => {
+		const layers = readAdaptiveRasterLayers(
+			`<adaptive-icon><background android:drawable="@color/tb_launcher_adaptive_bg" /><foreground android:drawable="@drawable/tb_launcher_adaptive_fg" /></adaptive-icon>`
+		);
+
+		expect(layers.background).toEqual({ kind: 'color', name: 'tb_launcher_adaptive_bg' });
+		expect(layers.foreground).toEqual({ kind: 'drawable', name: 'tb_launcher_adaptive_fg' });
+	});
+
+	it('marks a framework colour background so it resolves against android colours', () => {
+		const layers = readAdaptiveRasterLayers(
+			`<adaptive-icon><background android:drawable="@android:color/white" /><foreground android:drawable="@drawable/fg" /></adaptive-icon>`
+		);
+
+		expect(layers.background).toEqual({ kind: 'color', name: 'android:white' });
 	});
 
 	it('resolves a reference to the highest density raster', () => {
