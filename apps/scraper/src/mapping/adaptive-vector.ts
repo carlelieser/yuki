@@ -16,6 +16,9 @@ function qualifierRank(loweredPath: string, loweredResourceDir: string): number 
 	return null;
 }
 
+const COLOR_VALUES_FILE =
+	/\/[^/]*colou?rs?[^/]*\.xml$|\/[^/]*ic_launcher[^/]*background[^/]*\.xml$/;
+
 function resourceDirOf(adaptivePath: string): string {
 	const marker = adaptivePath.search(/\/(mipmap|drawable)[^/]*\//);
 	return marker === -1 ? '' : adaptivePath.slice(0, marker);
@@ -30,7 +33,7 @@ export async function readColorResources(
 	for (const path of blobs(tree)) {
 		const lowered = path.toLowerCase();
 		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/values`)) continue;
-		if (!/\/(colors?|ic_launcher_background)\.xml$/.test(lowered)) continue;
+		if (!COLOR_VALUES_FILE.test(lowered)) continue;
 
 		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
 		if (rank === null) continue;
@@ -71,25 +74,7 @@ export async function buildVectorIcon(
 	const resourceDir = resourceDirOf(adaptivePath);
 	const available = new Set(blobs(tree));
 
-	const buckets: { rank: number; path: string }[] = [];
-	for (const path of blobs(tree)) {
-		const lowered = path.toLowerCase();
-		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/values`)) continue;
-		if (!/\/(colors?|ic_launcher_background)\.xml$/.test(lowered)) continue;
-
-		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
-		if (rank === null) continue;
-		buckets.push({ rank, path });
-	}
-
-	buckets.sort((left, right) => right.rank - left.rank || right.path.localeCompare(left.path));
-
-	const colors = new Map<string, string>();
-	for (const { path } of buckets) {
-		const xml = await read(path);
-		if (xml === null) continue;
-		for (const [key, value] of parseColors(xml)) colors.set(key, value);
-	}
+	const colors = await readColorResources(tree, read, resourceDir);
 
 	const colorResources: { rank: number; path: string }[] = [];
 	for (const path of blobs(tree)) {

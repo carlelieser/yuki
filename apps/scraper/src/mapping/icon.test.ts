@@ -518,6 +518,22 @@ describe('buildVectorIcon', () => {
 		expect(svg).toContain('#0A0C10');
 	});
 
+	it('reads launcher colours declared outside colors.xml', async () => {
+		const spread = new Map([
+			['app/src/main/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
+			['app/src/main/res/drawable/launcher_foreground.xml', VECTOR],
+			['app/src/main/res/values/ic_launcher_colors.xml', COLORS]
+		]);
+
+		const icon = await buildVectorIcon(tree([...spread.keys()]), (path) =>
+			Promise.resolve(spread.get(path) ?? null)
+		);
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+
+		expect(svg).toContain('#FBFCFD');
+		expect(svg).toContain('#0A0C10');
+	});
+
 	it('prefers the baseline values directory over qualified variants', async () => {
 		const qualified = new Map([
 			['app/src/main/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
