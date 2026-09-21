@@ -8,9 +8,8 @@ const { getRatingSummary } = vi.hoisted(() => ({ getRatingSummary: vi.fn() }));
 
 vi.mock('./reviews.ts', () => ({ getRatingSummary }));
 
-const { getListingBySlug, getListingsPage, groupIntoSections, summaryColumns } = await import(
-	'./listings.ts'
-);
+const { getListingBySlug, getListingsPage, groupIntoSections, summaryColumns } =
+	await import('./listings.ts');
 
 function ratingOf(average: number, total: number) {
 	return { average, total, distribution: [] };
