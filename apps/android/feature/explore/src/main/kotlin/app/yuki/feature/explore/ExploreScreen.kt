@@ -37,6 +37,7 @@ fun ExploreRoute(
     onCategorySelected: (ListingCategory) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    onAuthorSelected: ((String) -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
@@ -53,6 +54,7 @@ fun ExploreRoute(
             onRetry = viewModel::refresh,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onCategorySelected = onCategorySelected,
+            onAuthorSelected = onAuthorSelected,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -64,6 +66,7 @@ data class ExploreCallbacks(
     val onRetry: () -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
+    val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
 data class ExploreRefresh(
@@ -145,6 +148,7 @@ private fun ExploreContentBody(
             actions = CategorySectionActions(
                 onListingSelected = callbacks.onListingSelected,
                 onCategorySelected = callbacks.onCategorySelected,
+                onAuthorSelected = callbacks.onAuthorSelected,
             ),
         )
     }
@@ -166,6 +170,7 @@ private fun LazyListScope.featuredSection(
                 onSelect = callbacks.onListingSelected,
                 modifier = Modifier.fillMaxWidth(),
                 installs = content.installs,
+                onAuthorSelected = callbacks.onAuthorSelected,
             )
 
             else -> FeaturedRowPlaceholder(modifier = Modifier.fillMaxWidth())

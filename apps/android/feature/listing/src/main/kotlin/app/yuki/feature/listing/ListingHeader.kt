@@ -33,10 +33,15 @@ internal fun ListingBanner(bannerUrl: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-internal fun ListingHeader(summary: ListingSummary, modifier: Modifier = Modifier) {
+internal fun ListingHeader(
+    summary: ListingSummary,
+    modifier: Modifier = Modifier,
+    onAuthorClick: ((String) -> Unit)? = null,
+) {
     ListingIdentity(
         listing = summary,
         modifier = modifier.padding(horizontal = YukiSpacing.Large),
         variant = ListingIdentityVariant.Detail,
+        onAuthorClick = onAuthorClick,
     )
 }

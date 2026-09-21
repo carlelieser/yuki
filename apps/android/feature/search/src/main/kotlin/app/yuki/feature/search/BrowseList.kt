@@ -35,11 +35,15 @@ internal fun LazyListScope.browseList(
     listings: LazyPagingItems<ListingSummary>,
     installs: ListingInstalls,
     onSelect: (ListingSummary) -> Unit,
+    onAuthorSelected: ((String) -> Unit)? = null,
 ) {
     items(count = listings.itemCount) { index ->
         val listing = listings[index] ?: return@items
         ClickableProductListItem(
-            content = installs.apply(listing, listing.toProductListItemContent()),
+            content = installs.apply(
+                listing,
+                listing.toProductListItemContent(onAuthorClick = onAuthorSelected),
+            ),
             onClick = { onSelect(listing) },
         )
     }

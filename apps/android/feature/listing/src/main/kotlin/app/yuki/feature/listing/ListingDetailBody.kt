@@ -28,6 +28,7 @@ data class ListingCallbacks(
     val onOpenLink: LinkOpener,
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onVersionInstallAction: VersionInstallHandler,
+    val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
 fun interface VersionInstallHandler {
@@ -45,8 +46,16 @@ private fun LazyListScope.bannerSection(model: ListingUiModel) {
     item { ListingBanner(bannerUrl = bannerUrl) }
 }
 
-private fun LazyListScope.headerSection(model: ListingUiModel) {
-    item { ListingHeader(summary = model.detail.summary) }
+private fun LazyListScope.headerSection(
+    model: ListingUiModel,
+    onAuthorSelected: ((String) -> Unit)?,
+) {
+    item {
+        ListingHeader(
+            summary = model.detail.summary,
+            onAuthorClick = onAuthorSelected,
+        )
+    }
 }
 
 private fun LazyListScope.installSection(
@@ -151,7 +160,7 @@ internal fun ListingDetailBody(
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
     ) {
         bannerSection(model)
-        headerSection(model)
+        headerSection(model, callbacks.onAuthorSelected)
         installSection(model, status, callbacks.onInstallAction)
         warningSection(model)
         descriptionSection(model)

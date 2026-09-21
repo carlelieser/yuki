@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +34,7 @@ data class BadgeContent(
     val icon: ImageVector,
     val description: String,
     val tone: BadgeTone = BadgeTone.Neutral,
+    val onClick: (() -> Unit)? = null,
 )
 
 @Composable
@@ -45,10 +48,19 @@ fun YukiBadge(content: BadgeContent, modifier: Modifier = Modifier) {
         BadgeTone.Error -> MaterialTheme.colorScheme.onErrorContainer
     }
 
+    val onClick = content.onClick
+
     Row(
         modifier = modifier
             .clip(YukiShape.Pill)
             .background(container)
+            .then(
+                if (onClick == null) {
+                    Modifier
+                } else {
+                    Modifier.clickable(role = Role.Button, onClick = onClick)
+                },
+            )
             .defaultMinSize(minHeight = YukiSize.BadgeHeight)
             .padding(horizontal = YukiSpacing.Small)
             .semantics(mergeDescendants = true) { contentDescription = content.description },

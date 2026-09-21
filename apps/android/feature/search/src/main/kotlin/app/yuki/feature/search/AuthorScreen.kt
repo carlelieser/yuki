@@ -14,28 +14,27 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiPullToRefresh
-import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 
-const val CATEGORY_SCREEN_TAG = "categoryScreen"
+const val AUTHOR_SCREEN_TAG = "authorScreen"
 
 @Composable
-fun CategoryRoute(
+fun AuthorRoute(
     onListingSelected: (String) -> Unit,
     onBackClick: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     onAuthorSelected: ((String) -> Unit)? = null,
-    viewModel: CategoryViewModel = hiltViewModel(),
+    viewModel: AuthorViewModel = hiltViewModel(),
 ) {
     val sort by viewModel.sort.collectAsStateWithLifecycle()
     val installs by viewModel.installs.collectAsStateWithLifecycle()
     val listings = viewModel.listings.collectAsLazyPagingItems()
 
-    CategoryScreen(
-        browsed = BrowsedCategory(category = viewModel.category, installs = installs),
+    AuthorScreen(
+        browsed = BrowsedAuthor(author = viewModel.author, installs = installs),
         listings = listings,
-        callbacks = CategoryCallbacks(
+        callbacks = AuthorCallbacks(
             sort = sort,
             onSortSelected = viewModel::onSortChange,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
@@ -47,12 +46,12 @@ fun CategoryRoute(
     )
 }
 
-internal data class BrowsedCategory(
-    val category: ListingCategory,
+internal data class BrowsedAuthor(
+    val author: String,
     val installs: ListingInstalls,
 )
 
-data class CategoryCallbacks(
+data class AuthorCallbacks(
     val sort: BrowseSortOption,
     val onSortSelected: (BrowseSortOption) -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
@@ -61,17 +60,17 @@ data class CategoryCallbacks(
 )
 
 @Composable
-internal fun CategoryScreen(
-    browsed: BrowsedCategory,
+internal fun AuthorScreen(
+    browsed: BrowsedAuthor,
     listings: LazyPagingItems<ListingSummary>,
-    callbacks: CategoryCallbacks,
+    callbacks: AuthorCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = browsed.category.label,
+        title = browsed.author,
         onBackClick = callbacks.onBackClick,
-        modifier = modifier.testTag(CATEGORY_SCREEN_TAG),
+        modifier = modifier.testTag(AUTHOR_SCREEN_TAG),
         trailing = {
             SortSelector(
                 selected = callbacks.sort,
@@ -100,4 +99,3 @@ internal fun CategoryScreen(
         }
     }
 }
-

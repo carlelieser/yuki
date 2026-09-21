@@ -14,6 +14,7 @@ data class BrowseQuery(
     val order: String = "desc",
     val offset: Int = 0,
     val category: ListingCategory? = null,
+    val author: String? = null,
 )
 
 data class SearchQuery(
@@ -33,6 +34,7 @@ internal class ListingRemoteDataSource @Inject constructor(
             parameter("order", query.order)
             parameter("offset", query.offset)
             query.category?.let { category -> parameter("category", category.wireValue) }
+            query.author?.let { author -> parameter("author", author) }
         }
 
         return response.decode("Browse listings (sort=${query.sort}, offset=${query.offset})")

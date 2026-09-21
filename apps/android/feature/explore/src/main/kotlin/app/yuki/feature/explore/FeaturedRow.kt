@@ -31,6 +31,7 @@ internal fun FeaturedRow(
     onSelect: (ListingSummary) -> Unit,
     modifier: Modifier = Modifier,
     installs: ListingInstalls = ListingInstalls(),
+    onAuthorSelected: ((String) -> Unit)? = null,
 ) {
     val count = listings.size
     val pagerState = rememberPagerState(
@@ -52,6 +53,7 @@ internal fun FeaturedRow(
             listing = listing,
             onClick = { onSelect(listing) },
             isInstalled = listing.githubRepoId in installs.installedIds,
+            onAuthorClick = onAuthorSelected,
         )
     }
 }

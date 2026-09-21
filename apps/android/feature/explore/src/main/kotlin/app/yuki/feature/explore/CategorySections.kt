@@ -34,6 +34,7 @@ private val NothingToExplore = EmptyContent(
 internal data class CategorySectionActions(
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
+    val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
 internal fun LazyListScope.categorySections(
@@ -92,7 +93,10 @@ private fun LazyListScope.categorySection(
         key = { listing -> "${category.wireValue}/${listing.id}" },
     ) { listing ->
         ClickableProductListItem(
-            content = installs.apply(listing, listing.toProductListItemContent()),
+            content = installs.apply(
+                listing,
+                listing.toProductListItemContent(onAuthorClick = actions.onAuthorSelected),
+            ),
             onClick = { actions.onListingSelected(listing) },
         )
     }

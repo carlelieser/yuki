@@ -23,6 +23,7 @@ fun SearchRoute(
     onListingSelected: (String) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    onAuthorSelected: ((String) -> Unit)? = null,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -37,6 +38,7 @@ fun SearchRoute(
             onCategorySelected = viewModel::onCategoryChange,
             onSortSelected = viewModel::onSortChange,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
+            onAuthorSelected = onAuthorSelected,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -49,6 +51,7 @@ data class SearchCallbacks(
     val onCategorySelected: (ListingCategory?) -> Unit,
     val onSortSelected: (BrowseSortOption) -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
+    val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
 @Composable
@@ -87,4 +90,5 @@ private fun SearchCallbacks.toBrowseCallbacks(): BrowseCallbacks = BrowseCallbac
     onRecentRemoved = onRecentRemoved,
     onListingSelected = onListingSelected,
     categoryFilter = { content -> CategoryFilter(content.category, onCategorySelected) },
+    onAuthorSelected = onAuthorSelected,
 )

@@ -27,6 +27,7 @@ const val LISTING_LOADING_TAG = "listingLoading"
 data class ListingNavigation(
     val onBackClick: () -> Unit,
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
+    val onAuthorSelected: (String) -> Unit = {},
 )
 
 @Composable
@@ -51,7 +52,7 @@ fun ListingRoute(
             hasUninstallFailed = hasUninstallFailed,
             actions = actions,
         ),
-        callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
+        callbacks = rememberListingCallbacks(viewModel, navigation),
         onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
@@ -60,7 +61,7 @@ fun ListingRoute(
 @Composable
 private fun rememberListingCallbacks(
     viewModel: ListingViewModel,
-    onScreenshotSelected: (ScreenshotSelection) -> Unit,
+    navigation: ListingNavigation,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 
@@ -68,8 +69,9 @@ private fun rememberListingCallbacks(
         callbacks = ListingCallbacks(
             onInstallAction = InstallActionHandler(viewModel::onInstallAction),
             onOpenLink = opener,
-            onScreenshotSelected = onScreenshotSelected,
+            onScreenshotSelected = navigation.onScreenshotSelected,
             onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
+            onAuthorSelected = navigation.onAuthorSelected,
         ),
         onRetry = viewModel::refresh,
         onUninstallConfirmed = viewModel::onUninstallConfirmed,

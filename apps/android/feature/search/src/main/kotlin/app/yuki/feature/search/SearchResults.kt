@@ -34,6 +34,7 @@ internal fun SearchResults(
     state: SearchContent,
     onSelect: (ListingSummary) -> Unit,
     modifier: Modifier = Modifier,
+    onAuthorSelected: ((String) -> Unit)? = null,
 ) {
     val results = state.results ?: return
 
@@ -58,6 +59,7 @@ internal fun SearchResults(
                     matches = Matches(query = state.query, listings = settled.data),
                     installs = state.installs,
                     onSelect = onSelect,
+                    onAuthorSelected = onAuthorSelected,
                 )
             }
         }
@@ -74,6 +76,7 @@ private fun MatchList(
     matches: Matches,
     installs: ListingInstalls,
     onSelect: (ListingSummary) -> Unit,
+    onAuthorSelected: ((String) -> Unit)? = null,
 ) {
     if (matches.listings.isEmpty()) {
         CollectionEmpty(
@@ -89,7 +92,10 @@ private fun MatchList(
     ) {
         items(items = matches.listings, key = { listing -> listing.id }) { listing ->
             ClickableProductListItem(
-                content = installs.apply(listing, listing.toProductListItemContent()),
+                content = installs.apply(
+                    listing,
+                    listing.toProductListItemContent(onAuthorClick = onAuthorSelected),
+                ),
                 onClick = { onSelect(listing) },
             )
         }
