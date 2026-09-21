@@ -23,6 +23,7 @@ import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OVERFLOW_MENU_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
 import app.yuki.core.model.ScreenshotSelection
@@ -363,6 +364,61 @@ class ListingScreenTest {
 
         assertEquals(emptyList<String>(), invoked)
     }
+
+    @Test
+    fun showsTheAuthorSectionWhenTheAuthorHasOtherApps() {
+        setAuthorSection(composeRule, listOf(otherApp()))
+
+        composeRule.onNodeWithTag(LISTING_DETAIL_TAG)
+            .performScrollToNode(hasText("More from nightsky"))
+        composeRule.onNodeWithText("More from nightsky").assertIsDisplayed()
+        composeRule.onNodeWithText("Borealis").assertIsDisplayed()
+    }
+
+    @Test
+    fun hidesTheAuthorSectionWhenTheAuthorHasNoOtherApps() {
+        setAuthorSection(composeRule, emptyList())
+
+        composeRule.onAllNodesWithText("More from nightsky").assertCountEquals(0)
+    }
+
+    @Test
+    fun theAuthorSectionArrowReportsItsAuthor() {
+        val chosen = mutableListOf<String>()
+        val base = noopCallbacks()
+        setAuthorSection(
+            rule = composeRule,
+            listings = listOf(otherApp()),
+            callbacks = base.copy(
+                callbacks = base.callbacks.copy(onAuthorSelected = { chosen.add(it) }),
+            ),
+        )
+
+        composeRule.onNodeWithTag(LISTING_DETAIL_TAG)
+            .performScrollToNode(hasText("More from nightsky"))
+        composeRule.onNodeWithContentDescription("See all nightsky").performClick()
+
+        assertEquals(listOf("nightsky"), chosen)
+    }
+
+    @Test
+    fun theAuthorSectionRowReportsTheSelectedListing() {
+        val chosen = mutableListOf<String>()
+        val base = noopCallbacks()
+        setAuthorSection(
+            rule = composeRule,
+            listings = listOf(otherApp()),
+            callbacks = base.copy(
+                callbacks = base.callbacks.copy(onListingSelected = { chosen.add(it.slug) }),
+            ),
+        )
+
+        composeRule.onNodeWithTag(LISTING_DETAIL_TAG)
+            .performScrollToNode(hasText("Borealis"))
+        composeRule.onNodeWithText("Borealis").performClick()
+
+        assertEquals(listOf("borealis"), chosen)
+    }
 }
 
 private fun idleStatus(): ListingInstallStatus =
@@ -371,6 +427,31 @@ private fun idleStatus(): ListingInstallStatus =
 private fun ComposeContentTestRule.scrollToText(text: String) {
     onNode(hasTestTag(LISTING_DETAIL_TAG)).performScrollToNode(hasText(text))
 }
+
+private fun setAuthorSection(
+    rule: ComposeContentTestRule,
+    listings: List<ListingSummary>,
+    callbacks: ListingScreenCallbacks = noopCallbacks(),
+) {
+    rule.setContent {
+        ListingScreen(
+            state = ListingScreenState(
+                listing = UiState.Success(detail().toUiModel()),
+                installStatus = idleStatus(),
+                authored = AuthoredListings(listings = listings),
+            ),
+            callbacks = callbacks,
+            onBackClick = {},
+        )
+    }
+}
+
+private fun otherApp(
+    id: String = "listing-2",
+    githubRepoId: Long = 43L,
+    slug: String = "borealis",
+    title: String = "Borealis",
+) = summary(id = id, githubRepoId = githubRepoId, slug = slug, title = title)
 
 private fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
     callbacks = ListingCallbacks(

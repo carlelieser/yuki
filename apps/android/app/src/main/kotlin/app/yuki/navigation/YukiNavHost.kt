@@ -168,6 +168,7 @@ private fun NavGraphBuilder.listingDestination(
                         navigator.openScreenshots(slug, selection)
                     },
                     onAuthorSelected = navigator::openAuthor,
+                    onListingSelected = navigator::openListing,
                 ),
             )
         }

@@ -25,6 +25,10 @@ interface ListingInstallGateway {
 
     fun observe(githubRepoId: Long): Flow<ListingInstallStatus>
 
+    fun observeInstalledIds(): Flow<Set<Long>>
+
+    fun observeActiveStates(): Flow<Map<Long, InstallState>>
+
     suspend fun cancel(githubRepoId: Long)
 
     suspend fun open(githubRepoId: Long)

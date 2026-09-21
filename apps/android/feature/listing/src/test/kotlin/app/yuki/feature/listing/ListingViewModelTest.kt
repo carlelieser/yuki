@@ -7,7 +7,10 @@ import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.ListingDetail
+import app.yuki.core.model.ListingPage
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
+import app.yuki.core.network.BrowseQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -37,10 +40,11 @@ class ListingViewModelTest {
     private fun viewModelWith(
         result: Result<ListingDetail>,
         baseUrl: String = BASE_URL,
+        repository: FakeListingRepository = FakeListingRepository(result),
     ): ListingViewModel =
         ListingViewModel(
             savedStateHandle = SavedStateHandle(mapOf(LISTING_SLUG_KEY to SLUG)),
-            repository = FakeListingRepository(result),
+            repository = repository,
             installGateway = installGateway,
             baseUrl = baseUrl,
         )
@@ -397,6 +401,93 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()), baseUrl = "https://yukistore.org/")
 
         assertEquals("https://yukistore.org/listings/$SLUG", viewModel.shareUrl)
+    }
+
+    @Test
+    fun `the author section excludes the listing being viewed`() = runTest {
+        val repository = FakeListingRepository(
+            result = Result.success(detail()),
+            browseResult = Result.success(
+                ListingPage(
+                    listOf(
+                        summary(),
+                        summary(id = "listing-2", githubRepoId = 43L, slug = "borealis"),
+                    ),
+                    false,
+                ),
+            ),
+        )
+        val viewModel = viewModelWith(Result.success(detail()), repository = repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf(43L), viewModel.authorListings.value.map { it.githubRepoId })
+    }
+
+    @Test
+    fun `the author section browses that author sorted by stars`() = runTest {
+        val repository = FakeListingRepository(result = Result.success(detail()))
+        viewModelWith(Result.success(detail()), repository = repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val query = repository.browsedQueries.single()
+        assertEquals("nightsky", query.author)
+        assertEquals("stars", query.sort)
+        assertEquals("desc", query.order)
+    }
+
+    @Test
+    fun `the author section caps at three other apps`() = runTest {
+        val others = (1..6).map { index ->
+            summary(id = "listing-$index", githubRepoId = 100L + index, slug = "app-$index")
+        }
+        val repository = FakeListingRepository(
+            result = Result.success(detail()),
+            browseResult = Result.success(ListingPage(others, true)),
+        )
+        val viewModel = viewModelWith(Result.success(detail()), repository = repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(3, viewModel.authorListings.value.size)
+    }
+
+    @Test
+    fun `a failed author browse leaves the detail screen intact`() = runTest {
+        val repository = FakeListingRepository(
+            result = Result.success(detail()),
+            browseResult = Result.failure(TypedFailure(FailureReason.Offline)),
+        )
+        val viewModel = viewModelWith(Result.success(detail()), repository = repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(viewModel.listing.value is UiState.Success)
+        assertEquals(emptyList<ListingSummary>(), viewModel.authorListings.value)
+    }
+
+    @Test
+    fun `a blank author issues no browse at all`() = runTest {
+        val blank = detail(summary = summary(author = "   "))
+        val repository = FakeListingRepository(result = Result.success(blank))
+        val viewModel = viewModelWith(Result.success(blank), repository = repository)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(emptyList<BrowseQuery>(), repository.browsedQueries)
+        assertEquals(emptyList<ListingSummary>(), viewModel.authorListings.value)
+    }
+
+    @Test
+    fun `install state reaches the author section`() = runTest {
+        installGateway.markInstalled(43L)
+        installGateway.markActive(44L, InstallState.Installing)
+        val viewModel = viewModelWith(Result.success(detail()))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.installs.test {
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val installs = expectMostRecentItem()
+            assertTrue(43L in installs.installedIds)
+            assertEquals(InstallState.Installing, installs.installStates[44L])
+        }
     }
 }
 

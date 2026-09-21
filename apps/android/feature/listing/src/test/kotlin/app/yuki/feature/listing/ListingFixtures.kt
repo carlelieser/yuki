@@ -17,12 +17,18 @@ import java.time.Instant
 
 internal const val SLUG = "aurora"
 
-internal fun summary(): ListingSummary = ListingSummary(
-    id = "listing-1",
-    githubRepoId = 42L,
-    slug = SLUG,
-    title = "Aurora",
-    author = "nightsky",
+internal fun summary(
+    id: String = "listing-1",
+    githubRepoId: Long = 42L,
+    slug: String = SLUG,
+    title: String = "Aurora",
+    author: String = "nightsky",
+): ListingSummary = ListingSummary(
+    id = id,
+    githubRepoId = githubRepoId,
+    slug = slug,
+    title = title,
+    author = author,
     description = "A calm launcher.",
     iconUrl = "https://cdn.test/icon.png",
     bannerUrl = "https://cdn.test/banner.png",
@@ -49,8 +55,9 @@ internal fun detail(
     isArchived: Boolean = false,
     license: String? = "MIT",
     screenshots: List<Screenshot> = listOf(Screenshot("https://cdn.test/one.png", "Home")),
+    summary: ListingSummary = summary(),
 ): ListingDetail = ListingDetail(
-    summary = summary(),
+    summary = summary,
     links = ListingLinks(
         authorUrl = "https://github.com/nightsky",
         repositoryUrl = "https://github.com/nightsky/aurora",
@@ -67,12 +74,17 @@ internal class TypedFailure(override val reason: FailureReason) :
 
 internal class FakeListingRepository(
     private val result: Result<ListingDetail>,
+    private val browseResult: Result<ListingPage> = Result.success(ListingPage(emptyList(), false)),
 ) : ListingRepository {
     var detailCallCount: Int = 0
         private set
 
-    override suspend fun browse(query: BrowseQuery): Result<ListingPage> =
-        error("browse is not used by the listing screen")
+    val browsedQueries: MutableList<BrowseQuery> = mutableListOf()
+
+    override suspend fun browse(query: BrowseQuery): Result<ListingPage> {
+        browsedQueries.add(query)
+        return browseResult
+    }
 
     override suspend fun featured(): Result<List<ListingSummary>> =
         error("featured is not used by the listing screen")
