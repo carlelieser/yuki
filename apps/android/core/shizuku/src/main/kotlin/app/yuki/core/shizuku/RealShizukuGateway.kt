@@ -1,12 +1,10 @@
 package app.yuki.core.shizuku
 
 import android.content.Context
-import android.content.pm.PackageManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import rikka.shizuku.Shizuku
-import rikka.shizuku.ShizukuProvider
 import rikka.sui.Sui
 
 @Singleton
@@ -18,7 +16,7 @@ internal class RealShizukuGateway @Inject constructor(
     private val permissionListeners =
         ListenerRegistry<PermissionResultListener, Shizuku.OnRequestPermissionResultListener>()
 
-    override fun isInstalled(): Boolean = hasShizukuPermissionDeclared() || Sui.isSui()
+    override fun isInstalled(): Boolean = context.declaresAnyShizukuApiPermission() || Sui.isSui()
 
     override fun isPreV11(): Boolean = Shizuku.isPreV11()
 
@@ -60,12 +58,6 @@ internal class RealShizukuGateway @Inject constructor(
 
     override fun removePermissionResultListener(listener: PermissionResultListener) {
         permissionListeners.take(listener)?.let(Shizuku::removeRequestPermissionResultListener)
-    }
-
-    private fun hasShizukuPermissionDeclared(): Boolean = try {
-        context.packageManager.getPermissionInfo(ShizukuProvider.PERMISSION, 0) != null
-    } catch (missing: PackageManager.NameNotFoundException) {
-        false
     }
 }
 
