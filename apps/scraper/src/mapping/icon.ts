@@ -35,7 +35,13 @@ const FLAVOUR_PENALTY = ['nightly', 'debug', 'dev', 'beta', 'alpha', 'staging', 
 const MANIFEST_FILE = /(^|\/)AndroidManifest\.xml$/;
 
 export function findManifestPath(tree: GithubTree): string | null {
-	return pickBest(blobs(tree).filter((path) => MANIFEST_FILE.test(path)));
+	return pickBest(findManifestPaths(tree));
+}
+
+export function findManifestPaths(tree: GithubTree): string[] {
+	return blobs(tree)
+		.filter((path) => MANIFEST_FILE.test(path))
+		.sort((left, right) => (isBetter(left, right) ? -1 : isBetter(right, left) ? 1 : 0));
 }
 
 export function splitPath(path: string): { dir: string; filename: string; stem: string } {

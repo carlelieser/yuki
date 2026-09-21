@@ -22,7 +22,7 @@ import {
 	findAdaptiveIconPath,
 	findCuratedIconPath,
 	findDeclaredIconPaths,
-	findManifestPath,
+	findManifestPaths,
 	findPrebakedIconPath,
 	findRasterForReference,
 	pickBestDeclared,
@@ -167,20 +167,22 @@ async function declaredIconFrom(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>
 ): Promise<DeclaredIcon | null> {
-	const manifestPath = findManifestPath(tree);
-	if (manifestPath === null) return null;
+	for (const manifestPath of findManifestPaths(tree)) {
+		const manifest = await read(manifestPath);
+		if (manifest === null) continue;
 
-	const manifest = await read(manifestPath);
-	if (manifest === null) return null;
+		const icon = readManifestIcon(manifest);
+		if (icon === null) continue;
 
-	const icon = readManifestIcon(manifest);
-	if (icon === null) return null;
+		const found = findDeclaredIconPaths(tree, icon);
+		const resolved = await resolveIconXml(tree, read, found.xml);
+		if (resolved.layers !== null || resolved.raster !== null) return resolved;
 
-	const found = findDeclaredIconPaths(tree, icon);
-	const direct = pickBestDeclared(found.raster);
-	if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct, layers: null };
+		const direct = pickBestDeclared(found.raster);
+		if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct, layers: null };
+	}
 
-	return resolveIconXml(tree, read, found.xml);
+	return null;
 }
 
 export async function resolveIconXml(
