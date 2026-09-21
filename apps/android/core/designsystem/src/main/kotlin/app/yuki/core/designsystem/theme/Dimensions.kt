@@ -35,6 +35,8 @@ object YukiSize {
     val TitleLineHeight = 20.dp
     val ProgressCircular = 20.dp
     val ProgressLinearWidth = 96.dp
+    val IndicatorDot = 6.dp
+    val IndicatorDotActive = 20.dp
 }
 
 object YukiWave {

@@ -37,10 +37,14 @@ fun YukiTheme(
     content: @Composable () -> Unit,
 ) {
     val isReduceMotion = rememberReduceMotion()
+    val isTouchExploration = rememberTouchExploration()
 
     SideEffect { YukiMotion.isReduced = isReduceMotion }
 
-    CompositionLocalProvider(LocalReduceMotion provides isReduceMotion) {
+    CompositionLocalProvider(
+        LocalReduceMotion provides isReduceMotion,
+        LocalTouchExploration provides isTouchExploration,
+    ) {
         MaterialTheme(
             colorScheme = yukiColorScheme(isDarkTheme, isDynamicColorEnabled),
             motionScheme = MotionScheme.standard(),
