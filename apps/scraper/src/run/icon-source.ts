@@ -152,7 +152,7 @@ async function composeLayers(
 	if (foreground === null) return null;
 
 	const background = layers.background === null ? null : await download(layers.background);
-	const composed = composeAdaptiveRaster(background ?? Buffer.alloc(0), foreground);
+	const composed = await composeAdaptiveRaster(background ?? Buffer.alloc(0), foreground);
 
 	return composed === null ? null : toPngDataUri(composed);
 }

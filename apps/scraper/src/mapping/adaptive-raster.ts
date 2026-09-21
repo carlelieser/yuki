@@ -1,4 +1,5 @@
-import { decodePng, encodePng, type RgbaImage } from './png.ts';
+import { encodePng, type RgbaImage } from './png.ts';
+import { decodeRaster } from './raster.ts';
 
 const CHANNELS = 4;
 const OUTPUT_SIZE = 432;
@@ -57,9 +58,12 @@ function layerAt(layer: RgbaImage | null, x: number, y: number, size: number) {
 	return sample(layer, centred(x) * layer.width, centred(y) * layer.height);
 }
 
-export function composeAdaptiveRaster(background: Buffer, foreground: Buffer): Buffer | null {
-	const under = decodePng(background);
-	const over = decodePng(foreground);
+export async function composeAdaptiveRaster(
+	background: Buffer,
+	foreground: Buffer
+): Promise<Buffer | null> {
+	const under = await decodeRaster(background);
+	const over = await decodeRaster(foreground);
 	if (under === null && over === null) return null;
 
 	const size = OUTPUT_SIZE;
