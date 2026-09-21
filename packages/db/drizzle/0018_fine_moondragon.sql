@@ -1,0 +1,1 @@
+CREATE INDEX "listings_published_author_stars_idx" ON "listings" USING btree ("is_published",lower("author"),"stars");

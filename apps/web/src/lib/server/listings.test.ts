@@ -8,7 +8,9 @@ const { getRatingSummary } = vi.hoisted(() => ({ getRatingSummary: vi.fn() }));
 
 vi.mock('./reviews.ts', () => ({ getRatingSummary }));
 
-const { getListingBySlug, groupIntoSections, summaryColumns } = await import('./listings.ts');
+const { getListingBySlug, getListingsPage, groupIntoSections, summaryColumns } = await import(
+	'./listings.ts'
+);
 
 function ratingOf(average: number, total: number) {
 	return { average, total, distribution: [] };
@@ -216,5 +218,84 @@ describe('groupIntoSections', () => {
 		const [section] = groupIntoSections(rankedSection('gaming', [90]), 3);
 
 		expect(section?.results[0]).not.toHaveProperty('rank');
+	});
+});
+
+function pageDatabase(rows: unknown[]) {
+	const captured: { where?: unknown } = {};
+	const builder = {
+		select: () => builder,
+		from: () => builder,
+		where: (condition: unknown) => {
+			captured.where = condition;
+			return builder;
+		},
+		orderBy: () => builder,
+		limit: () => builder,
+		offset: async () => rows
+	};
+
+	return { db: builder as unknown as Database, captured };
+}
+
+function renderedWhere(captured: { where?: unknown }): string {
+	const rendered = new QueryBuilder()
+		.select({ id: schema.listings.id })
+		.from(schema.listings)
+		.where(captured.where as never)
+		.toSQL().sql;
+
+	return rendered.slice(rendered.indexOf(' where '));
+}
+
+function summaryRows(count: number) {
+	return Array.from({ length: count }, (_, index) => ({ slug: `listing-${index}` }));
+}
+
+describe('getListingsPage', () => {
+	it('filters by author alongside the published check', async () => {
+		const { db, captured } = pageDatabase([]);
+
+		await getListingsPage(db, { limit: 24, offset: 0, author: 'acme' });
+
+		const sql = renderedWhere(captured);
+		expect(sql).toContain('"is_published"');
+		expect(sql).toContain('"author"');
+	});
+
+	it('combines an author filter with a category filter', async () => {
+		const { db, captured } = pageDatabase([]);
+
+		await getListingsPage(db, { limit: 24, offset: 0, author: 'acme', category: 'gaming' });
+
+		const sql = renderedWhere(captured);
+		expect(sql).toContain('"author"');
+		expect(sql).toContain('"category"');
+	});
+
+	it('leaves the author unfiltered when none is given', async () => {
+		const { db, captured } = pageDatabase([]);
+
+		await getListingsPage(db, { limit: 24, offset: 0 });
+
+		expect(renderedWhere(captured)).not.toContain('"author"');
+	});
+
+	it('reports more pages when the lookahead row comes back', async () => {
+		const { db } = pageDatabase(summaryRows(25));
+
+		const page = await getListingsPage(db, { limit: 24, offset: 0, author: 'acme' });
+
+		expect(page.results).toHaveLength(24);
+		expect(page.hasMore).toBe(true);
+	});
+
+	it('reports no more pages on the last page of an author', async () => {
+		const { db } = pageDatabase(summaryRows(5));
+
+		const page = await getListingsPage(db, { limit: 24, offset: 0, author: 'acme' });
+
+		expect(page.results).toHaveLength(5);
+		expect(page.hasMore).toBe(false);
 	});
 });

@@ -7,6 +7,7 @@ import {
 	isFeaturedRequested,
 	MAX_BROWSE_OFFSET,
 	MAX_SECTION_PAGE_SIZE,
+	readAuthor,
 	readBrowseOffset,
 	readBrowseOrder,
 	readBrowseSort,
@@ -202,5 +203,23 @@ describe('readSectionLimit', () => {
 
 	it('clamps limits beyond the maximum', () => {
 		expect(readSectionLimit('999999')).toBe(MAX_SECTION_PAGE_SIZE);
+	});
+});
+
+describe('readAuthor', () => {
+	it('keeps a provided author', () => {
+		expect(readAuthor('acme')).toBe('acme');
+	});
+
+	it('trims surrounding whitespace', () => {
+		expect(readAuthor('  acme  ')).toBe('acme');
+	});
+
+	it('treats a missing author as unfiltered', () => {
+		expect(readAuthor(null)).toBeNull();
+	});
+
+	it('treats a blank author as unfiltered', () => {
+		expect(readAuthor('   ')).toBeNull();
 	});
 });

@@ -206,20 +206,28 @@ export async function getListingsPage(
 		sort?: BrowseSort;
 		order?: BrowseOrder;
 		category?: ListingCategory | null;
+		author?: string | null;
 	}
 ): Promise<ListingPage> {
 	const sort = page.sort ?? DEFAULT_BROWSE_SORT;
 	const order = page.order ?? defaultOrderFor(sort);
 	const category = page.category ?? null;
+	const author = page.author ?? null;
+
+	const conditions = [eq(schema.listings.isPublished, true)];
+
+	if (category !== null) {
+		conditions.push(eq(schema.listings.category, category));
+	}
+
+	if (author !== null) {
+		conditions.push(sql`lower(${schema.listings.author}) = lower(${author})`);
+	}
 
 	const rows = await db
 		.select(summaryColumns)
 		.from(schema.listings)
-		.where(
-			category === null
-				? eq(schema.listings.isPublished, true)
-				: and(eq(schema.listings.isPublished, true), eq(schema.listings.category, category))
-		)
+		.where(and(...conditions))
 		.orderBy(...orderByFor(sort, order))
 		.limit(page.limit + 1)
 		.offset(page.offset);

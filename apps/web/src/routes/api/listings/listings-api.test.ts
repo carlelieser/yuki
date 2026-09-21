@@ -94,10 +94,30 @@ describe('GET /api/listings', () => {
 			offset: 24,
 			sort: 'newest',
 			order: 'asc',
-			category: null
+			category: null,
+			author: null
 		});
 		expect(getFeaturedListings).not.toHaveBeenCalled();
 		await expect(response.json()).resolves.toEqual({ results: [summary()], hasMore: true });
+	});
+
+	it('passes an author through to the query', async () => {
+		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
+
+		await listings(listingsEvent('?author=zacharee'));
+
+		expect(getListingsPage).toHaveBeenCalledWith(
+			db,
+			expect.objectContaining({ author: 'zacharee' })
+		);
+	});
+
+	it('treats a blank author as unfiltered', async () => {
+		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
+
+		await listings(listingsEvent('?author=%20%20'));
+
+		expect(getListingsPage).toHaveBeenCalledWith(db, expect.objectContaining({ author: null }));
 	});
 
 	it('passes a known category through to the query', async () => {
