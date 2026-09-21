@@ -3,12 +3,14 @@ import { decodeRaster } from './raster.ts';
 
 const CHANNELS = 4;
 const OUTPUT_SIZE = 432;
-const VIEWPORT_SCALE = 108 / 72;
+const VIEWPORT_SCALE = 72 / 108;
 const CORNER_RADIUS = 0.2;
 
 function sample(image: RgbaImage, x: number, y: number): [number, number, number, number] {
-	const column = Math.min(image.width - 1, Math.max(0, Math.round(x)));
-	const row = Math.min(image.height - 1, Math.max(0, Math.round(y)));
+	const column = Math.round(x);
+	const row = Math.round(y);
+	if (column < 0 || row < 0 || column >= image.width || row >= image.height) return [0, 0, 0, 0];
+
 	const offset = (row * image.width + column) * CHANNELS;
 
 	return [

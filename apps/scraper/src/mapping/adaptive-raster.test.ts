@@ -71,10 +71,21 @@ describe('composeAdaptiveRaster', () => {
 
 		const image = decodePng(composed);
 		const size = image?.width ?? 0;
-		const nearEdge = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.12));
+		const nearEdge = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.06));
 
 		expect(nearEdge[0]).toBeGreaterThan(nearEdge[2]);
 		expect(nearEdge[3]).toBe(255);
+	});
+
+	it('crops into the safe zone rather than zooming away from it', async () => {
+		const composed = await composeAdaptiveRaster(background, foreground);
+		if (composed === null) throw new Error('expected a composed icon');
+
+		const image = decodePng(composed);
+		const size = image?.width ?? 0;
+
+		const inset = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.2));
+		expect(inset[2]).toBeGreaterThan(inset[0]);
 	});
 
 	it('clears the corners so the icon reads as a rounded tile', async () => {

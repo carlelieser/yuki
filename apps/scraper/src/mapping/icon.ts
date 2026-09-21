@@ -276,6 +276,21 @@ export function findRasterForReference(
 	);
 }
 
+export function findVectorForReference(
+	tree: GithubTree,
+	reference: ResourceReference
+): string | null {
+	return pickBest(
+		blobs(tree).filter((path) => {
+			const { dir, filename, stem } = splitPath(path);
+			if (stem !== reference.name || !filename.endsWith('.xml')) return false;
+
+			const directory = dir.split('/').pop() ?? '';
+			return new RegExp(`^${reference.kind}(-|$)`).test(directory);
+		})
+	);
+}
+
 export function findAdaptiveIconPath(tree: GithubTree): string | null {
 	return pickBest(
 		blobs(tree).filter((path) => {

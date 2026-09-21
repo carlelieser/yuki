@@ -11,6 +11,14 @@ export function isWebp(source: Buffer): boolean {
 	);
 }
 
+declare const WebAssembly: {
+	compile(bytes: Uint8Array): Promise<object>;
+};
+
+async function compileWasm(bytes: Uint8Array): Promise<never> {
+	return WebAssembly.compile(bytes) as Promise<never>;
+}
+
 let webpReady: Promise<void> | null = null;
 
 async function initWebp(): Promise<void> {
@@ -23,7 +31,7 @@ async function initWebp(): Promise<void> {
 		new URL('../../node_modules/@jsquash/webp/codec/dec/webp_dec.wasm', import.meta.url)
 	);
 
-	await init(await WebAssembly.compile(wasm));
+	await init(await compileWasm(wasm));
 }
 
 async function decodeWebp(source: Buffer): Promise<RgbaImage | null> {
