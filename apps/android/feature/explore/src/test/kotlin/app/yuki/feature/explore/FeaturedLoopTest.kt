@@ -31,4 +31,10 @@ class FeaturedLoopTest {
 
         assertEquals(0, startPageFor(count) % count)
     }
+
+    @Test
+    fun aFeaturedDescriptionNamesItsPosition() {
+        assertEquals("Alpha, featured 1 of 3", describeFeaturedListing("Alpha", 0, 3))
+        assertEquals("Beta, featured 3 of 3", describeFeaturedListing("Beta", 2, 3))
+    }
 }
