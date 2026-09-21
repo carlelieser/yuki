@@ -42,6 +42,7 @@ internal class FakeListingRepository : ListingRepository {
 
     val browsedOffsets = mutableListOf<Int>()
     val browsedCategories = mutableListOf<ListingCategory?>()
+    val browsedAuthors = mutableListOf<String?>()
     val browsedSorts = mutableListOf<String>()
     val searchedQueries = mutableListOf<String>()
     val searchedSorts = mutableListOf<String>()
@@ -49,6 +50,7 @@ internal class FakeListingRepository : ListingRepository {
     override suspend fun browse(query: BrowseQuery): Result<ListingPage> {
         browsedOffsets += query.offset
         browsedCategories += query.category
+        browsedAuthors += query.author
         browsedSorts += "${query.sort}-${query.order}"
         return browseResult
     }

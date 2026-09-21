@@ -68,4 +68,66 @@ class ListingPagingSourceTest {
         val error = result as PagingSource.LoadResult.Error
         assertEquals(FailureReason.Offline, (error.throwable as TypedFailure).reason)
     }
+
+    @Test
+    fun `an author filter reaches the browse query`() = runTest {
+        repository.browseResult = Result.success(ListingPage(emptyList(), false))
+
+        ListingPagingSource(repository, BrowseFilter(author = "acme")).load(refresh(0))
+
+        assertEquals(listOf("acme"), repository.browsedAuthors)
+    }
+
+    @Test
+    fun `listings by another author are dropped when the server ignores the filter`() = runTest {
+        repository.browseResult = Result.success(
+            ListingPage(listOf(listing("alpha"), listing("beta")), false),
+        )
+
+        val result = ListingPagingSource(repository, BrowseFilter(author = "nobody"))
+            .load(refresh(0))
+
+        assertTrue((result as PagingSource.LoadResult.Page).data.isEmpty())
+    }
+
+    @Test
+    fun `paging stops instead of looping when the server ignores the filter`() = runTest {
+        repository.browseResult = Result.success(
+            ListingPage(listOf(listing("alpha"), listing("beta")), true),
+        )
+
+        val result = ListingPagingSource(repository, BrowseFilter(author = "nobody"))
+            .load(refresh(0))
+
+        assertNull((result as PagingSource.LoadResult.Page).nextKey)
+    }
+
+    @Test
+    fun `an honestly empty page still stops paging`() = runTest {
+        repository.browseResult = Result.success(ListingPage(emptyList(), false))
+
+        val result = ListingPagingSource(repository, BrowseFilter(author = "acme"))
+            .load(refresh(0))
+
+        assertNull((result as PagingSource.LoadResult.Page).nextKey)
+    }
+
+    @Test
+    fun `the requested author is kept regardless of casing`() = runTest {
+        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
+
+        val result = ListingPagingSource(repository, BrowseFilter(author = "YUKI"))
+            .load(refresh(0))
+
+        assertEquals(1, (result as PagingSource.LoadResult.Page).data.size)
+    }
+
+    @Test
+    fun `an unfiltered browse sends no author`() = runTest {
+        repository.browseResult = Result.success(ListingPage(emptyList(), false))
+
+        ListingPagingSource(repository).load(refresh(0))
+
+        assertEquals(listOf<String?>(null), repository.browsedAuthors)
+    }
 }

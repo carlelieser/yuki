@@ -15,19 +15,32 @@ import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.ListingInstalls
+import app.yuki.core.designsystem.component.ListingSectionActions
+import app.yuki.core.designsystem.component.ListingSectionContent
 import app.yuki.core.designsystem.component.ScreenshotCarousel
 import app.yuki.core.designsystem.component.SectionHeader
+import app.yuki.core.designsystem.component.listingSection
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.ScreenshotSelection
 
 const val LISTING_DETAIL_TAG = "listingDetail"
+const val MORE_FROM_AUTHOR_KEY = "moreFromAuthor"
 
 data class ListingCallbacks(
     val onInstallAction: InstallActionHandler,
     val onOpenLink: LinkOpener,
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onVersionInstallAction: VersionInstallHandler,
+    val onAuthorSelected: ((String) -> Unit)? = null,
+    val onListingSelected: (ListingSummary) -> Unit = {},
+)
+
+data class AuthoredListings(
+    val listings: List<ListingSummary> = emptyList(),
+    val installs: ListingInstalls = ListingInstalls(),
 )
 
 fun interface VersionInstallHandler {
@@ -45,8 +58,16 @@ private fun LazyListScope.bannerSection(model: ListingUiModel) {
     item { ListingBanner(bannerUrl = bannerUrl) }
 }
 
-private fun LazyListScope.headerSection(model: ListingUiModel) {
-    item { ListingHeader(summary = model.detail.summary) }
+private fun LazyListScope.headerSection(
+    model: ListingUiModel,
+    onAuthorSelected: ((String) -> Unit)?,
+) {
+    item {
+        ListingHeader(
+            summary = model.detail.summary,
+            onAuthorClick = onAuthorSelected,
+        )
+    }
 }
 
 private fun LazyListScope.installSection(
@@ -101,6 +122,31 @@ private fun LazyListScope.screenshotSection(
     item { ScreenshotCarousel(screenshots = screenshots, onSelect = onScreenshotSelected) }
 }
 
+private fun LazyListScope.moreFromAuthorSection(
+    model: ListingUiModel,
+    authored: AuthoredListings,
+    callbacks: ListingCallbacks,
+) {
+    if (authored.listings.isEmpty()) return
+
+    val author = model.detail.summary.author
+    val onAuthorSelected = callbacks.onAuthorSelected
+
+    listingSection(
+        content = ListingSectionContent(
+            title = "More from $author",
+            keyPrefix = MORE_FROM_AUTHOR_KEY,
+            listings = authored.listings,
+            installs = authored.installs,
+            seeAllLabel = author,
+        ),
+        actions = ListingSectionActions(
+            onListingSelected = callbacks.onListingSelected,
+            onSeeAll = onAuthorSelected?.let { select -> { select(author) } },
+        ),
+    )
+}
+
 private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpener) {
     val rows = linkRows(model.detail)
 
@@ -142,6 +188,7 @@ internal fun ListingDetailBody(
     model: ListingUiModel,
     status: ListingUninstallStatus,
     callbacks: ListingCallbacks,
+    authored: AuthoredListings = AuthoredListings(),
 ) {
     LazyColumn(
         modifier = Modifier
@@ -151,11 +198,12 @@ internal fun ListingDetailBody(
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
     ) {
         bannerSection(model)
-        headerSection(model)
+        headerSection(model, callbacks.onAuthorSelected)
         installSection(model, status, callbacks.onInstallAction)
         warningSection(model)
         descriptionSection(model)
         screenshotSection(model, callbacks.onScreenshotSelected)
+        moreFromAuthorSection(model, authored, callbacks)
         linkSection(model, callbacks.onOpenLink)
         versionSection(model, status.install, callbacks.onVersionInstallAction)
     }

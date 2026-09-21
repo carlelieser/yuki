@@ -84,6 +84,28 @@ class ListingRepositoryBrowseTest {
     }
 
     @Test
+    fun `sends the author the caller asked to filter by`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repository = repositoryRecording(requests, BROWSE_PAGE_JSON)
+
+        repository.browse(BrowseQuery(author = "zacharee")).getOrThrow()
+
+        assertEquals("zacharee", requests.single().url.parameters["author"])
+    }
+
+    @Test
+    fun `omits the author parameter when browsing every author`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val repository = repositoryRecording(requests, BROWSE_PAGE_JSON)
+
+        repository.browse(BrowseQuery()).getOrThrow()
+
+        val parameters = requests.single().url.parameters
+        assertTrue(parameters.contains("author").not())
+        assertNull(parameters["author"])
+    }
+
+    @Test
     fun `sends the sort order and offset the server expects`() = runTest {
         val requests = mutableListOf<HttpRequestData>()
         val repository = repositoryRecording(requests, BROWSE_PAGE_JSON)

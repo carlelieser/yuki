@@ -27,6 +27,8 @@ const val LISTING_LOADING_TAG = "listingLoading"
 data class ListingNavigation(
     val onBackClick: () -> Unit,
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
+    val onAuthorSelected: (String) -> Unit = {},
+    val onListingSelected: (String) -> Unit = {},
 )
 
 @Composable
@@ -40,6 +42,8 @@ fun ListingRoute(
     val installStatus by viewModel.installStatus.collectAsStateWithLifecycle()
     val isConfirmingUninstall by viewModel.isConfirmingUninstall.collectAsStateWithLifecycle()
     val hasUninstallFailed by viewModel.hasUninstallFailed.collectAsStateWithLifecycle()
+    val authorListings by viewModel.authorListings.collectAsStateWithLifecycle()
+    val installs by viewModel.installs.collectAsStateWithLifecycle()
     val actions = listingActions(listing = listing, viewModel = viewModel)
 
 
@@ -50,8 +54,9 @@ fun ListingRoute(
             isConfirmingUninstall = isConfirmingUninstall,
             hasUninstallFailed = hasUninstallFailed,
             actions = actions,
+            authored = AuthoredListings(listings = authorListings, installs = installs),
         ),
-        callbacks = rememberListingCallbacks(viewModel, navigation.onScreenshotSelected),
+        callbacks = rememberListingCallbacks(viewModel, navigation),
         onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
@@ -60,7 +65,7 @@ fun ListingRoute(
 @Composable
 private fun rememberListingCallbacks(
     viewModel: ListingViewModel,
-    onScreenshotSelected: (ScreenshotSelection) -> Unit,
+    navigation: ListingNavigation,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
 
@@ -68,8 +73,10 @@ private fun rememberListingCallbacks(
         callbacks = ListingCallbacks(
             onInstallAction = InstallActionHandler(viewModel::onInstallAction),
             onOpenLink = opener,
-            onScreenshotSelected = onScreenshotSelected,
+            onScreenshotSelected = navigation.onScreenshotSelected,
             onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
+            onAuthorSelected = navigation.onAuthorSelected,
+            onListingSelected = { listing -> navigation.onListingSelected(listing.slug) },
         ),
         onRetry = viewModel::refresh,
         onUninstallConfirmed = viewModel::onUninstallConfirmed,
@@ -90,6 +97,7 @@ data class ListingScreenState(
     val isConfirmingUninstall: Boolean = false,
     val hasUninstallFailed: Boolean = false,
     val actions: List<ListingAction> = emptyList(),
+    val authored: AuthoredListings = AuthoredListings(),
 )
 
 @Composable
@@ -128,6 +136,7 @@ internal fun ListingScreen(
                             hasUninstallFailed = state.hasUninstallFailed,
                         ),
                         callbacks = callbacks.callbacks,
+                        authored = state.authored,
                     )
 
                     if (state.isConfirmingUninstall) {

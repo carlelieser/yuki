@@ -49,6 +49,7 @@ internal data class BrowseCallbacks(
     val onRecentRemoved: (String) -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val categoryFilter: (@Composable (SearchContent) -> Unit)? = null,
+    val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
 @Composable
@@ -150,7 +151,11 @@ private fun SearchMode(
     contentPadding: PaddingValues,
 ) {
     if (content.isSearching) {
-        SearchResults(state = content, onSelect = callbacks.onListingSelected)
+        SearchResults(
+            state = content,
+            onSelect = callbacks.onListingSelected,
+            onAuthorSelected = callbacks.onAuthorSelected,
+        )
         return
     }
 
@@ -199,6 +204,7 @@ private fun BrowseListing(
                     listings = listings,
                     installs = content.installs,
                     onSelect = callbacks.onListingSelected,
+                    onAuthorSelected = callbacks.onAuthorSelected,
                 )
             }
         }

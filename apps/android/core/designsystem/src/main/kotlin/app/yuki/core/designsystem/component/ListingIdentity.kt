@@ -76,6 +76,7 @@ fun ListingIdentity(
     modifier: Modifier = Modifier,
     variant: ListingIdentityVariant = ListingIdentityVariant.Compact,
     isInstalled: Boolean = false,
+    onAuthorClick: ((String) -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -99,7 +100,7 @@ fun ListingIdentity(
                 maxLines = 1,
             )
             ListingBadgeRow(
-                badges = listing.toBadges(),
+                badges = listing.toBadges(onAuthorClick = onAuthorClick),
                 modifier = badgeSpacing(),
             )
         }

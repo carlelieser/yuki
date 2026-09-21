@@ -5,9 +5,12 @@ import android.content.Intent
 import androidx.core.net.toUri
 import app.yuki.core.database.InstallStore
 import app.yuki.core.installer.InstallProgress
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstallScheduler
-import app.yuki.core.installer.Uninstaller
+import app.yuki.core.installer.InstalledListings
 import app.yuki.core.installer.UninstallOutcome
+import app.yuki.core.installer.Uninstaller
+import app.yuki.core.installer.observeActiveStates
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.feature.listing.ListingInstallGateway
@@ -24,11 +27,18 @@ import kotlinx.coroutines.flow.map
 internal class CoordinatorListingInstallGateway @Inject constructor(
     private val scheduler: InstallScheduler,
     private val installs: InstalledAppLookup,
+    private val installedListings: InstalledListings,
+    private val progress: InstallProgressStore,
     private val dependencies: UninstallDependencies,
     @ApplicationContext private val context: Context,
 ) : ListingInstallGateway {
     override suspend fun install(request: ListingInstallRequest) =
         scheduler.start(request.toInstallRequest(installs.baseUrl))
+
+    override fun observeInstalledIds(): Flow<Set<Long>> = installedListings.observeInstalledIds()
+
+    override fun observeActiveStates(): Flow<Map<Long, InstallState>> =
+        progress.observeActiveStates()
 
     override fun observe(githubRepoId: Long): Flow<ListingInstallStatus> =
         combine(

@@ -4,10 +4,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.yuki.core.designsystem.component.InstallAction
+import app.yuki.core.designsystem.component.ListingInstalls
+import app.yuki.core.designsystem.component.observeListingInstalls
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.ListingDetail
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
+import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.YukiBaseUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +49,19 @@ class ListingViewModel @Inject constructor(
 
     val listing: StateFlow<UiState<ListingUiModel>> = mutableListing.asStateFlow()
 
+    private val mutableAuthorListings = MutableStateFlow<List<ListingSummary>>(emptyList())
+
+    val authorListings: StateFlow<List<ListingSummary>> = mutableAuthorListings.asStateFlow()
+
+    val installs: StateFlow<ListingInstalls> = observeListingInstalls(
+        installedIds = installGateway.observeInstalledIds(),
+        activeStates = installGateway.observeActiveStates(),
+    ).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = ListingInstalls(),
+    )
+
     private val mutableConfirmingUninstall = MutableStateFlow(false)
 
     val isConfirmingUninstall: StateFlow<Boolean> = mutableConfirmingUninstall.asStateFlow()
@@ -67,10 +85,27 @@ class ListingViewModel @Inject constructor(
 
     fun refresh() {
         mutableListing.value = UiState.Loading
+        mutableAuthorListings.value = emptyList()
         viewModelScope.launch {
             val detail = repository.detail(slug)
             mutableListing.value = detail.map { it.toUiModel() }.toUiState()
+            detail.getOrNull()?.let { loaded -> loadAuthorListings(loaded) }
         }
+    }
+
+    private suspend fun loadAuthorListings(detail: ListingDetail) {
+        val author = detail.summary.author.trim()
+        if (author.isEmpty()) return
+
+        val page = repository.browse(
+            BrowseQuery(author = author, sort = AUTHOR_SORT, order = AUTHOR_ORDER),
+        )
+
+        mutableAuthorListings.value = page.getOrNull()
+            ?.results
+            .orEmpty()
+            .filter { it.githubRepoId != detail.githubRepoId }
+            .take(AUTHOR_LISTING_COUNT)
     }
 
     fun onInstallAction(action: InstallAction) {
@@ -159,6 +194,9 @@ class ListingViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MILLIS = 5_000L
+        const val AUTHOR_LISTING_COUNT = 3
+        const val AUTHOR_SORT = "stars"
+        const val AUTHOR_ORDER = "desc"
 
         val IDLE_STATUS = ListingInstallStatus(InstallState.NotInstalled, versionTag = null)
     }

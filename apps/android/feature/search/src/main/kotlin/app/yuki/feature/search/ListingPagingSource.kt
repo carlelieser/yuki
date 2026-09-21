@@ -13,6 +13,7 @@ const val BROWSE_PAGE_SIZE = 24
 data class BrowseFilter(
     val sort: BrowseSortOption = BrowseSortOption.Default,
     val category: ListingCategory? = null,
+    val author: String? = null,
 )
 
 internal fun BrowseFilter.toQuery(offset: Int): BrowseQuery = BrowseQuery(
@@ -20,6 +21,7 @@ internal fun BrowseFilter.toQuery(offset: Int): BrowseQuery = BrowseQuery(
     order = sort.order.wireValue,
     offset = offset,
     category = category,
+    author = author,
 )
 
 internal class ListingPagingSource(
@@ -32,10 +34,19 @@ internal class ListingPagingSource(
         val offset = params.key ?: 0
 
         return repository.browse(filter.toQuery(offset)).fold(
-            onSuccess = { page -> page.toLoadResult(offset) },
+            onSuccess = { page -> filter.enforce(page).toLoadResult(offset) },
             onFailure = { error -> LoadResult.Error(error) },
         )
     }
+}
+
+private fun BrowseFilter.enforce(page: ListingPage): ListingPage {
+    val requested = author ?: return page
+
+    val kept = page.results.filter { it.author.equals(requested, true) }
+    val isServerIgnoringFilter = kept.isEmpty() && page.results.isNotEmpty()
+
+    return page.copy(results = kept, hasMore = page.hasMore && !isServerIgnoringFilter)
 }
 
 private fun ListingPage.toLoadResult(offset: Int): PagingSource.LoadResult<Int, ListingSummary> =

@@ -50,12 +50,19 @@ private fun ratingBadge(summary: ListingSummary): BadgeContent? {
 }
 
 @Composable
-fun ListingSummary.toBadges(): ListingBadges = ListingBadges(
+fun ListingSummary.toBadges(
+    onAuthorClick: ((String) -> Unit)? = null,
+): ListingBadges = ListingBadges(
     listOfNotNull(
         categoryBadge(this),
         starsBadge(this),
         ratingBadge(this),
-        BadgeContent(label = author, icon = YukiIcons.Person, description = "By $author"),
+        BadgeContent(
+            label = author,
+            icon = YukiIcons.Person,
+            description = "By $author",
+            onClick = onAuthorClick?.let { click -> { click(author) } },
+        ),
     ),
 )
 

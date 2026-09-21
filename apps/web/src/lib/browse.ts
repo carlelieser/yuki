@@ -50,6 +50,11 @@ export function isFeaturedRequested(raw: string | null): boolean {
 	return raw === 'true';
 }
 
+export function readAuthor(raw: string | null): string | null {
+	const trimmed = raw?.trim() ?? '';
+	return trimmed.length === 0 ? null : trimmed;
+}
+
 export function defaultOrderFor(sort: BrowseSort): BrowseOrder {
 	return DEFAULT_ORDERS[sort];
 }

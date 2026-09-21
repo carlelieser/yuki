@@ -21,6 +21,7 @@ import app.yuki.feature.library.LibraryScreen
 import app.yuki.feature.listing.ListingNavigation
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
 import app.yuki.feature.listing.ScreenshotViewerRoute
+import app.yuki.feature.search.AuthorRoute as AuthorScreenRoute
 import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
 import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
@@ -88,6 +89,7 @@ private fun YukiRoutedContent(
         screenshotDestination(navigator, destinations.sharedScope)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
+        authorDestination(navigator, bottomBarPadding)
         settingsDestination(navigator, bottomBarPadding)
         signInDestination(navigator)
         signUpDestination(navigator)
@@ -108,6 +110,7 @@ private fun NavGraphBuilder.exploreDestination(
             onListingSelected = navigator::openListing,
             onCategorySelected = navigator::openCategory,
             contentPadding = bottomBarPadding,
+            onAuthorSelected = navigator::openAuthor,
             trailing = { AccountButton(onClick = navigator::openSettings) },
         )
     }
@@ -164,6 +167,8 @@ private fun NavGraphBuilder.listingDestination(
                     onScreenshotSelected = { selection ->
                         navigator.openScreenshots(slug, selection)
                     },
+                    onAuthorSelected = navigator::openAuthor,
+                    onListingSelected = navigator::openListing,
                 ),
             )
         }
@@ -195,6 +200,7 @@ private fun NavGraphBuilder.searchDestination(
         SearchScreenRoute(
             onListingSelected = navigator::openListing,
             contentPadding = bottomBarPadding,
+            onAuthorSelected = navigator::openAuthor,
         )
     }
 }
@@ -208,6 +214,21 @@ private fun NavGraphBuilder.categoryDestination(
             onListingSelected = navigator::openListing,
             onBackClick = navigator::navigateUp,
             contentPadding = bottomBarPadding,
+            onAuthorSelected = navigator::openAuthor,
+        )
+    }
+}
+
+private fun NavGraphBuilder.authorDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<AuthorRoute> {
+        AuthorScreenRoute(
+            onListingSelected = navigator::openListing,
+            onBackClick = navigator::navigateUp,
+            contentPadding = bottomBarPadding,
+            onAuthorSelected = navigator::openAuthor,
         )
     }
 }

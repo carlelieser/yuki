@@ -35,12 +35,14 @@ data class ProductListItemContent(
 )
 
 @Composable
-fun ListingSummary.toProductListItemContent(): ProductListItemContent = ProductListItemContent(
+fun ListingSummary.toProductListItemContent(
+    onAuthorClick: ((String) -> Unit)? = null,
+): ProductListItemContent = ProductListItemContent(
     title = title,
     supporting = author,
     iconUrl = iconUrl,
     description = description,
-    badges = toBadges(),
+    badges = toBadges(onAuthorClick = onAuthorClick),
 )
 
 @Composable

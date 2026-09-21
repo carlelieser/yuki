@@ -89,6 +89,11 @@ export const listings = pgTable(
 			table.category,
 			table.stars
 		),
+		index('listings_published_author_stars_idx').on(
+			table.isPublished,
+			sql`lower(${table.author})`,
+			table.stars
+		),
 		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
 		index('listings_published_pushed_idx').on(table.isPublished, table.repoPushedAt),
 		index('listings_published_title_idx').on(table.isPublished, sql`lower(${table.title})`),

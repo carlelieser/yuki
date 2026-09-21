@@ -78,3 +78,15 @@ cd apps/android
 The site runs at http://localhost:5173, and mail is caught by Mailpit at
 http://localhost:8025. Scraping needs a `GITHUB_TOKEN` in `.env` with public read
 access.
+
+The Android client talks to https://yukistore.org by default. To point it at the
+local web server instead, pass `yukiBaseUrl` and forward the port to the device:
+
+```sh
+adb reverse tcp:5173 tcp:5173
+cd apps/android
+./gradlew installDebug -PyukiBaseUrl="http://localhost:5173/"
+```
+
+Use `http://10.0.2.2:5173/` on an emulator, where `adb reverse` is unnecessary.
+Debug builds allow cleartext to localhost only; release builds stay HTTPS-only.

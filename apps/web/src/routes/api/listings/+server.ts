@@ -6,6 +6,7 @@ import {
 	BROWSE_PAGE_SIZE,
 	FEATURED_PAGE_SIZE,
 	isFeaturedRequested,
+	readAuthor,
 	readBrowseOffset,
 	readBrowseSorting
 } from '$lib/browse.ts';
@@ -24,12 +25,14 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const offset = readBrowseOffset(url.searchParams.get('offset'));
 	const { sort, order } = readBrowseSorting(url.searchParams);
 	const category = readCategory(url.searchParams.get('category'));
+	const author = readAuthor(url.searchParams.get('author'));
 	const page = await getListingsPage(locals.db, {
 		limit: BROWSE_PAGE_SIZE,
 		offset,
 		sort,
 		order,
-		category
+		category,
+		author
 	});
 
 	return json(page);

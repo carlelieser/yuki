@@ -52,6 +52,10 @@ internal class YukiNavigator(
         navController.navigate(CategoryRoute(category = category.wireValue))
     }
 
+    fun openAuthor(author: String) {
+        navController.navigate(AuthorRoute(author = author))
+    }
+
     fun openScreenshots(slug: String, selection: ScreenshotSelection) {
         navController.navigate(
             ScreenshotRoute(

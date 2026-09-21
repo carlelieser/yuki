@@ -30,6 +30,9 @@ data object SearchRoute
 data class CategoryRoute(val category: String)
 
 @Serializable
+data class AuthorRoute(val author: String)
+
+@Serializable
 data class ScreenshotRoute(
     val slug: String,
     val startIndex: Int,

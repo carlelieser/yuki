@@ -124,6 +124,7 @@ internal fun FeaturedRow(
     onSelect: (ListingSummary) -> Unit,
     modifier: Modifier = Modifier,
     installs: ListingInstalls = ListingInstalls(),
+    onAuthorSelected: ((String) -> Unit)? = null,
     onSettledIndexChanged: ((Int) -> Unit)? = null,
 ) {
     val count = listings.size
@@ -175,6 +176,7 @@ internal fun FeaturedRow(
                     isAnimated = isAnimated,
                 ),
                 isInstalled = listing.githubRepoId in installs.installedIds,
+                onAuthorClick = onAuthorSelected,
                 contentDescription = describeFeaturedListing(listing.title, index, count),
             )
         }
