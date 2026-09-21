@@ -18,6 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import app.yuki.core.designsystem.theme.YukiRatio
 import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
@@ -86,6 +88,14 @@ private fun CardMedia(imageUrl: String?, kind: CardMediaKind) {
     )
 }
 
+private fun Modifier.cardDescription(contentDescription: String?): Modifier {
+    if (contentDescription == null) return this
+
+    return semantics(mergeDescendants = true) {
+        this.contentDescription = contentDescription
+    }
+}
+
 @Composable
 fun FeaturedCard(
     listing: ListingSummary,
@@ -93,12 +103,15 @@ fun FeaturedCard(
     modifier: Modifier = Modifier,
     isInstalled: Boolean = false,
     onAuthorClick: ((String) -> Unit)? = null,
+    contentDescription: String? = null,
 ) {
     Card(
         onClick = onClick,
         shape = YukiShape.Card,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .cardDescription(contentDescription),
     ) {
         CardMedia(imageUrl = listing.bannerUrl, kind = CardMediaKind.Banner)
         ListingIdentity(

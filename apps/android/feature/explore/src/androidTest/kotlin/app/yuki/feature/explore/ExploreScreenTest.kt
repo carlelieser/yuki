@@ -3,6 +3,7 @@ package app.yuki.feature.explore
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -10,13 +11,17 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.onNodeWithText
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.INSTALLED_BADGE_TAG
+import app.yuki.core.designsystem.component.PAGE_INDICATOR_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
+import app.yuki.core.designsystem.theme.LocalReduceMotion
+import app.yuki.core.designsystem.theme.LocalTouchExploration
 import app.yuki.core.model.CategorySection
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingCategory
@@ -55,17 +60,24 @@ class ExploreScreenTest {
     private fun render(
         state: UiState<ExploreContent>,
         onPullToRefresh: () -> Unit = {},
+        isReduceMotion: Boolean = true,
+        isTouchExploration: Boolean = false,
     ) {
         composeRule.setContent {
-            ExploreScreen(
-                state = state,
-                refresh = ExploreRefresh(
-                    isRefreshing = false,
-                    onPullToRefresh = onPullToRefresh,
-                ),
-                callbacks = noCallbacks,
-                contentPadding = PaddingValues(),
-            )
+            CompositionLocalProvider(
+                LocalReduceMotion provides isReduceMotion,
+                LocalTouchExploration provides isTouchExploration,
+            ) {
+                ExploreScreen(
+                    state = state,
+                    refresh = ExploreRefresh(
+                        isRefreshing = false,
+                        onPullToRefresh = onPullToRefresh,
+                    ),
+                    callbacks = noCallbacks,
+                    contentPadding = PaddingValues(),
+                )
+            }
         }
     }
 
@@ -251,6 +263,60 @@ class ExploreScreenTest {
     }
 
     @Test
+    fun theCarouselShowsAPageIndicator() {
+        render(
+            browsing(
+                featured = UiState.Success(
+                    listOf(listing("alpha"), listing("beta"), listing("gamma")),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithTag(PAGE_INDICATOR_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun aSingleFeaturedListingHasNoIndicator() {
+        render(browsing(featured = UiState.Success(listOf(listing("alpha")))))
+
+        composeRule.onNodeWithTag(PAGE_INDICATOR_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun aFeaturedCardAnnouncesItsPosition() {
+        render(
+            browsing(
+                featured = UiState.Success(
+                    listOf(listing("alpha"), listing("beta"), listing("gamma")),
+                ),
+            ),
+        )
+
+        composeRule
+            .onNodeWithContentDescription(describeFeaturedListing("Alpha", 0, 3))
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun theCarouselOffersNextAndPreviousActions() {
+        render(
+            browsing(
+                featured = UiState.Success(
+                    listOf(listing("alpha"), listing("beta"), listing("gamma")),
+                ),
+            ),
+        )
+
+        val actions = composeRule
+            .onNodeWithTag(FEATURED_ROW_TAG)
+            .fetchSemanticsNode()
+            .config[SemanticsActions.CustomActions]
+            .map { action -> action.label }
+
+        assertEquals(listOf(NEXT_PAGE_LABEL, PREVIOUS_PAGE_LABEL), actions)
+    }
+
+    @Test
     fun theFirstSectionKeepsItsPositionWhenFeaturedResolves() {
         val sections = UiState.Success(
             listOf(section(ListingCategory.SystemTweaks, listOf("alpha"))),
@@ -258,12 +324,14 @@ class ExploreScreenTest {
         val featured = mutableStateOf<UiState<List<ListingSummary>>>(UiState.Loading)
 
         composeRule.setContent {
-            ExploreScreen(
-                state = browsing(featured = featured.value, sections = sections),
-                refresh = ExploreRefresh(isRefreshing = false, onPullToRefresh = {}),
-                callbacks = noCallbacks,
-                contentPadding = PaddingValues(),
-            )
+            CompositionLocalProvider(LocalReduceMotion provides true) {
+                ExploreScreen(
+                    state = browsing(featured = featured.value, sections = sections),
+                    refresh = ExploreRefresh(isRefreshing = false, onPullToRefresh = {}),
+                    callbacks = noCallbacks,
+                    contentPadding = PaddingValues(),
+                )
+            }
         }
 
         val whileLoading = composeRule
