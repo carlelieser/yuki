@@ -12,6 +12,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@jsquash/webp": "^1.5.0",
 		"@yuki/db": "workspace:*",
 		"@yuki/github": "workspace:*",
 		"drizzle-orm": "0.45.2"

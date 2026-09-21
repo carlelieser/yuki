@@ -50,8 +50,8 @@ describe('composeAdaptiveRaster', () => {
 	const background = encodePng(solid(108, [255, 0, 0, 255]));
 	const foreground = encodePng(centredSquare(108, [0, 0, 255, 255]));
 
-	it('keeps the foreground artwork rather than serving a layer on its own', () => {
-		const composed = composeAdaptiveRaster(background, foreground);
+	it('keeps the foreground artwork rather than serving a layer on its own', async () => {
+		const composed = await composeAdaptiveRaster(background, foreground);
 		if (composed === null) throw new Error('expected a composed icon');
 
 		const image = decodePng(composed);
@@ -65,32 +65,45 @@ describe('composeAdaptiveRaster', () => {
 		expect(centre[3]).toBe(255);
 	});
 
-	it('paints the background where the foreground is transparent', () => {
-		const composed = composeAdaptiveRaster(background, foreground);
+	it('paints the background where the foreground is transparent', async () => {
+		const composed = await composeAdaptiveRaster(background, foreground);
 		if (composed === null) throw new Error('expected a composed icon');
 
 		const image = decodePng(composed);
 		const size = image?.width ?? 0;
-		const nearEdge = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.12));
+		const nearEdge = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.06));
 
 		expect(nearEdge[0]).toBeGreaterThan(nearEdge[2]);
 		expect(nearEdge[3]).toBe(255);
 	});
 
-	it('clears the corners so the icon reads as a rounded tile', () => {
-		const composed = composeAdaptiveRaster(background, foreground);
+	it('crops into the safe zone rather than zooming away from it', async () => {
+		const composed = await composeAdaptiveRaster(background, foreground);
+		if (composed === null) throw new Error('expected a composed icon');
+
+		const image = decodePng(composed);
+		const size = image?.width ?? 0;
+
+		const inset = pixelAt(composed, Math.floor(size / 2), Math.floor(size * 0.2));
+		expect(inset[2]).toBeGreaterThan(inset[0]);
+	});
+
+	it('clears the corners so the icon reads as a rounded tile', async () => {
+		const composed = await composeAdaptiveRaster(background, foreground);
 		if (composed === null) throw new Error('expected a composed icon');
 
 		expect(pixelAt(composed, 0, 0)[3]).toBe(0);
 	});
 
-	it('returns null when neither layer decodes', () => {
-		expect(composeAdaptiveRaster(Buffer.from('not a png'), Buffer.from('also not'))).toBeNull();
+	it('returns null when neither layer decodes', async () => {
+		await expect(
+			composeAdaptiveRaster(Buffer.from('not a png'), Buffer.from('also not'))
+		).resolves.toBeNull();
 	});
 });
 
 describe('png round trip', () => {
-	it('decodes what it encodes', () => {
+	it('decodes what it encodes', async () => {
 		const source = solid(4, [10, 20, 30, 255]);
 		const decoded = decodePng(encodePng(source));
 
@@ -98,7 +111,7 @@ describe('png round trip', () => {
 		expect(decoded?.pixels.subarray(0, 4)).toEqual(Buffer.from([10, 20, 30, 255]));
 	});
 
-	it('rejects input that is not a png', () => {
+	it('rejects input that is not a png', async () => {
 		expect(decodePng(Buffer.from('nope'))).toBeNull();
 	});
 });

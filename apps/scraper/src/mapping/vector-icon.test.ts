@@ -217,9 +217,20 @@ describe('composeAdaptiveSvg', () => {
 			colors: new Map()
 		});
 
-		expect(svg).toContain('viewBox="0 0 108 108"');
+		expect(svg).toContain('viewBox="18 18 72 72"');
 		expect(svg).toContain('<g transform="scale(4.5 4.5)">');
 		expect(svg).not.toContain('scale(1 1)');
+	});
+
+	it('declares a raster size so clients do not rasterise at viewbox units', () => {
+		const svg = composeAdaptiveSvg({
+			background: { kind: 'color', value: '#FFFFFF' },
+			foreground: `<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#000000" android:pathData="M0,0h108v108h-108z" /></vector>`,
+			colors: new Map()
+		});
+
+		expect(svg).toContain('width="432"');
+		expect(svg).toContain('height="432"');
 	});
 
 	it('paints a colour background beneath the foreground', () => {

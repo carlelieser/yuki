@@ -35,7 +35,13 @@ const FLAVOUR_PENALTY = ['nightly', 'debug', 'dev', 'beta', 'alpha', 'staging', 
 const MANIFEST_FILE = /(^|\/)AndroidManifest\.xml$/;
 
 export function findManifestPath(tree: GithubTree): string | null {
-	return pickBest(blobs(tree).filter((path) => MANIFEST_FILE.test(path)));
+	return pickBest(findManifestPaths(tree));
+}
+
+export function findManifestPaths(tree: GithubTree): string[] {
+	return blobs(tree)
+		.filter((path) => MANIFEST_FILE.test(path))
+		.sort((left, right) => (isBetter(left, right) ? -1 : isBetter(right, left) ? 1 : 0));
 }
 
 export function splitPath(path: string): { dir: string; filename: string; stem: string } {
@@ -170,14 +176,18 @@ function findByPattern(paths: string[], pattern: RegExp): string | null {
 	return pickBest(paths.filter((path) => pattern.test(path.toLowerCase())));
 }
 
-export function findIconPath(tree: GithubTree): string | null {
+export function findCuratedIconPath(tree: GithubTree): string | null {
+	return findByPattern(blobs(tree), FASTLANE_ICON);
+}
+
+export function findPrebakedIconPath(tree: GithubTree): string | null {
 	const paths = blobs(tree);
 
-	return (
-		findByPattern(paths, FASTLANE_ICON) ??
-		findByPattern(paths, PLAYSTORE_ICON) ??
-		findMipmapIcon(paths)
-	);
+	return findByPattern(paths, PLAYSTORE_ICON) ?? findMipmapIcon(paths);
+}
+
+export function findIconPath(tree: GithubTree): string | null {
+	return findCuratedIconPath(tree) ?? findPrebakedIconPath(tree);
 }
 
 export async function resolveSymlinkPath(
@@ -210,9 +220,10 @@ export async function buildIconUrl(
 	owner: string,
 	name: string,
 	defaultBranch: string,
-	readBlob: (sha: string) => Promise<string | null>
+	readBlob: (sha: string) => Promise<string | null>,
+	find: (tree: GithubTree) => string | null = findIconPath
 ): Promise<string | null> {
-	const path = findIconPath(tree);
+	const path = find(tree);
 	if (path === null) return null;
 
 	const resolved = await resolveSymlinkPath(tree, path, readBlob);
@@ -258,6 +269,21 @@ export function findRasterForReference(
 		blobs(tree).filter((path) => {
 			const { dir, filename, stem } = splitPath(path);
 			if (stem !== reference.name || !isRaster(filename)) return false;
+
+			const directory = dir.split('/').pop() ?? '';
+			return new RegExp(`^${reference.kind}(-|$)`).test(directory);
+		})
+	);
+}
+
+export function findVectorForReference(
+	tree: GithubTree,
+	reference: ResourceReference
+): string | null {
+	return pickBest(
+		blobs(tree).filter((path) => {
+			const { dir, filename, stem } = splitPath(path);
+			if (stem !== reference.name || !filename.endsWith('.xml')) return false;
 
 			const directory = dir.split('/').pop() ?? '';
 			return new RegExp(`^${reference.kind}(-|$)`).test(directory);
