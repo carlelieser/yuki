@@ -16,6 +16,8 @@ function qualifierRank(loweredPath: string, loweredResourceDir: string): number 
 	return null;
 }
 
+const SOURCE_SET_BONUS = 10;
+
 const COLOR_VALUES_FILE =
 	/\/[^/]*colou?rs?[^/]*\.xml$|\/[^/]*ic_launcher[^/]*background[^/]*\.xml$/;
 
@@ -24,23 +26,47 @@ function resourceDirOf(adaptivePath: string): string {
 	return marker === -1 ? '' : adaptivePath.slice(0, marker);
 }
 
+function moduleOf(resourceDir: string): string {
+	const marker = resourceDir.search(/\/src\/[^/]+\/res$/);
+	return marker === -1 ? resourceDir : resourceDir.slice(0, marker);
+}
+
+function siblingResourceDirs(tree: GithubTree, resourceDir: string): string[] {
+	const module = moduleOf(resourceDir);
+	if (module === resourceDir) return [resourceDir];
+
+	const found = new Set<string>([resourceDir]);
+	for (const path of blobs(tree)) {
+		const match = path.match(/^(.*\/src\/[^/]+\/res)\//);
+		const sibling = match?.[1];
+		if (sibling !== undefined && moduleOf(sibling) === module) found.add(sibling);
+	}
+
+	return [...found];
+}
+
 export async function readColorResources(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>,
 	resourceDir: string
 ): Promise<Map<string, string>> {
 	const buckets: { rank: number; path: string }[] = [];
-	for (const path of blobs(tree)) {
-		const lowered = path.toLowerCase();
-		if (!lowered.startsWith(`${resourceDir.toLowerCase()}/values`)) continue;
-		if (!COLOR_VALUES_FILE.test(lowered)) continue;
+	for (const directory of siblingResourceDirs(tree, resourceDir)) {
+		const isOwn = directory === resourceDir;
+		const loweredDirectory = directory.toLowerCase();
 
-		const rank = qualifierRank(lowered, resourceDir.toLowerCase());
-		if (rank === null) continue;
-		buckets.push({ rank, path });
+		for (const path of blobs(tree)) {
+			const lowered = path.toLowerCase();
+			if (!lowered.startsWith(`${loweredDirectory}/values`)) continue;
+			if (!COLOR_VALUES_FILE.test(lowered)) continue;
+
+			const qualifier = qualifierRank(lowered, loweredDirectory);
+			if (qualifier === null) continue;
+			buckets.push({ rank: qualifier + (isOwn ? SOURCE_SET_BONUS : 0), path });
+		}
 	}
 
-	buckets.sort((left, right) => right.rank - left.rank || right.path.localeCompare(left.path));
+	buckets.sort((left, right) => left.rank - right.rank || left.path.localeCompare(right.path));
 
 	const colors = new Map<string, string>();
 	for (const { path } of buckets) {

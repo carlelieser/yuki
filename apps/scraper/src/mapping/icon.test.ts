@@ -552,6 +552,42 @@ describe('buildVectorIcon', () => {
 		expect(svg).toContain('#0A0C10');
 	});
 
+	it('reads colours from a sibling source set when the icon lives in another', async () => {
+		const split = new Map([
+			['app/src/nonlib/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
+			['app/src/nonlib/res/drawable/launcher_foreground.xml', VECTOR],
+			['app/src/main/res/values/colors.xml', COLORS]
+		]);
+
+		const icon = await buildVectorIcon(tree([...split.keys()]), (path) =>
+			Promise.resolve(split.get(path) ?? null)
+		);
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+
+		expect(svg).toContain('#FBFCFD');
+		expect(svg).toContain('#0A0C10');
+	});
+
+	it('prefers its own source set over a sibling that declares the same colour', async () => {
+		const split = new Map([
+			['app/src/nonlib/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
+			['app/src/nonlib/res/drawable/launcher_foreground.xml', VECTOR],
+			['app/src/nonlib/res/values/colors.xml', COLORS],
+			[
+				'app/src/main/res/values/colors.xml',
+				`<resources><color name="launcher_background">#111111</color><color name="launcher_tint">#222222</color></resources>`
+			]
+		]);
+
+		const icon = await buildVectorIcon(tree([...split.keys()]), (path) =>
+			Promise.resolve(split.get(path) ?? null)
+		);
+		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+
+		expect(svg).toContain('#FBFCFD');
+		expect(svg).not.toContain('#111111');
+	});
+
 	it('prefers the baseline values directory over qualified variants', async () => {
 		const qualified = new Map([
 			['app/src/main/res/mipmap-anydpi-v26/launcher.xml', ADAPTIVE],
