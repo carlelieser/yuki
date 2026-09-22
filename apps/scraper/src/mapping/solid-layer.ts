@@ -4,6 +4,8 @@ import { resolveColor } from './vector-icon.ts';
 const CHANNELS = 4;
 const FULL_CANVAS = /^M0,0[hH]([\d.]+)[vV]([\d.]+)[hH]-?([\d.]+)[zZ]$/;
 const PATH_TAG = /<path\b[^>]*>/g;
+const SHAPE_TAG = /<shape\b/;
+const SOLID_TAG = /<solid\b[^>]*>/;
 const SIZE = 432;
 
 function attribute(tag: string, name: string): string | null {
@@ -21,6 +23,15 @@ export function readSolidFill(xml: string, colors: Map<string, string>): string 
 	if (data === undefined || data === null || !FULL_CANVAS.test(data)) return null;
 
 	return resolveColor(attribute(tag, 'fillColor'), colors);
+}
+
+export function readShapeFill(xml: string): string | null {
+	if (!SHAPE_TAG.test(xml)) return null;
+
+	const solid = xml.match(SOLID_TAG)?.[0];
+	if (solid === undefined) return null;
+
+	return attribute(solid, 'color');
 }
 
 export function solidLayer(color: string): Buffer {

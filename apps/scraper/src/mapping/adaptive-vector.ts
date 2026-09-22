@@ -1,6 +1,7 @@
 import type { GithubTree } from '@yuki/github';
 import { blobs, findAdaptiveIconPath, splitPath } from './icon.ts';
 import { parseAdaptiveIcon, parseColors, vectorToSvg } from './vector-icon.ts';
+import { readShapeFill } from './solid-layer.ts';
 import { composeAdaptiveSvg, toDataUri } from './adaptive-svg.ts';
 
 function qualifierRank(loweredPath: string, loweredResourceDir: string): number | null {
@@ -166,7 +167,10 @@ export async function buildVectorIcon(
 			background = { kind: 'color', value: reference };
 		} else {
 			const backgroundXml = await readDrawable(refs.background.name);
-			if (backgroundXml !== null) background = { kind: 'vector', value: backgroundXml };
+			const shapeFill = backgroundXml === null ? null : readShapeFill(backgroundXml);
+
+			if (shapeFill !== null) background = { kind: 'color', value: shapeFill };
+			else if (backgroundXml !== null) background = { kind: 'vector', value: backgroundXml };
 		}
 	}
 
