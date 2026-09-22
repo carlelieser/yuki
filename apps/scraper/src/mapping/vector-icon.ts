@@ -1,62 +1,21 @@
-import { gradientToSvg, parseGradient, type VectorGradient } from './vector-gradient.ts';
+import { convertPaths } from './vector-render.ts';
+export { resolveColor, resolveColorGradient } from './vector-colors.ts';
+import { numeric } from './vector-attributes.ts';
 
 const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(color|drawable|mipmap)\/([^"]+)"/g;
 const VECTOR_TAG = /<vector\b[^>]*>/;
-const PATH_TAG = /<path\b[^>]*?(?:\/>|>([\s\S]*?)<\/path>)/g;
-const GROUP_TAG = /<group\b[^>]*?>/g;
 const COLOR_ENTRY = /<color\s+name="([^"]+)"\s*>\s*([^<\s]+)\s*<\/color>/g;
 
 const MAX_SOURCE_BYTES = 64 * 1024;
-const MAX_PATHS = 64;
-const MAX_GROUP_DEPTH = 16;
 export const CANVAS = 108;
 export const VIEWPORT_INSET = 18;
 export const CORNER_RADIUS = 0.2;
-const MAX_COLOR_HOPS = 8;
-
-const FRAMEWORK_COLORS = new Map([
-	['white', '#FFFFFFFF'],
-	['black', '#FF000000'],
-	['transparent', '#00000000'],
-	['background_light', '#FFFFFFFF'],
-	['background_dark', '#FF000000'],
-	['primary_text_light', '#FF000000'],
-	['primary_text_dark', '#FFFFFFFF'],
-	['secondary_text_light', '#FF666666'],
-	['secondary_text_dark', '#FFBEBEBE'],
-	['holo_blue_light', '#FF33B5E5'],
-	['holo_blue_dark', '#FF0099CC'],
-	['holo_blue_bright', '#FF00DDFF'],
-	['holo_green_light', '#FF99CC00'],
-	['holo_green_dark', '#FF669900'],
-	['holo_red_light', '#FFFF4444'],
-	['holo_red_dark', '#FFCC0000'],
-	['holo_orange_light', '#FFFFBB33'],
-	['holo_orange_dark', '#FFFF8800'],
-	['holo_purple', '#FFAA66CC'],
-	['darker_gray', '#FFAAAAAA'],
-	['background_holo_dark', '#FF000000'],
-	['background_holo_light', '#FFFFFFFF']
-]);
 
 export type AdaptiveIconRefs = {
 	background: { kind: 'color' | 'drawable'; name: string } | null;
 	foreground: { kind: 'color' | 'drawable'; name: string } | null;
 };
-
-function attribute(source: string, name: string): string | null {
-	const match = source.match(new RegExp(`android:${name}="([^"]*)"`));
-	return match?.[1] ?? null;
-}
-
-function numeric(source: string, name: string, fallback: number): number {
-	const raw = attribute(source, name);
-	if (raw === null) return fallback;
-
-	const parsed = Number.parseFloat(raw.replace(/(dp|dip|px|sp)$/, ''));
-	return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 export function parseColors(xml: string): Map<string, string> {
 	const colors = new Map<string, string>();
@@ -97,162 +56,6 @@ export function parseAdaptiveIcon(xml: string): AdaptiveIconRefs {
 	}
 
 	return refs;
-}
-
-export function resolveColor(raw: string | null, colors: Map<string, string>): string | null {
-	if (raw === null) return null;
-
-	let value: string | null = raw;
-	const seen = new Set<string>();
-
-	for (let hop = 0; value !== null && value.startsWith('@'); hop += 1) {
-		if (hop >= MAX_COLOR_HOPS || seen.has(value)) return null;
-		seen.add(value);
-
-		const reference: string = value;
-		const isFramework = reference.startsWith('@android:color/');
-		const key = reference.replace(/^@(android:)?color\//, '');
-
-		value = isFramework ? (FRAMEWORK_COLORS.get(key) ?? null) : (colors.get(key) ?? null);
-	}
-
-	if (value === null || !/^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) return null;
-
-	if (value.length === 9) {
-		const alpha = value.slice(1, 3);
-		const rgb = value.slice(3);
-		return `#${rgb}${alpha}`;
-	}
-
-	return value;
-}
-
-export function resolveColorGradient(
-	raw: string | null,
-	colors: Map<string, string>,
-	gradients: Map<string, string>
-): VectorGradient | null {
-	if (raw === null || !raw.startsWith('@color/')) return null;
-
-	const source = gradients.get(raw.slice('@color/'.length));
-	if (source === undefined) return null;
-
-	return parseGradient(source, (value) => resolveColor(value, colors));
-}
-
-function escapeXml(value: string): string {
-	return value
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;');
-}
-
-function transformOf(group: string): string[] {
-	const parts: string[] = [];
-	const translateX = numeric(group, 'translateX', 0);
-	const translateY = numeric(group, 'translateY', 0);
-	const scaleX = numeric(group, 'scaleX', 1);
-	const scaleY = numeric(group, 'scaleY', 1);
-	const rotation = numeric(group, 'rotation', 0);
-	const pivotX = numeric(group, 'pivotX', 0);
-	const pivotY = numeric(group, 'pivotY', 0);
-
-	if (translateX !== 0 || translateY !== 0) parts.push(`translate(${translateX} ${translateY})`);
-
-	const pivoted = pivotX !== 0 || pivotY !== 0;
-	if (pivoted) parts.push(`translate(${pivotX} ${pivotY})`);
-	if (rotation !== 0) parts.push(`rotate(${rotation})`);
-	if (scaleX !== 1 || scaleY !== 1) parts.push(`scale(${scaleX} ${scaleY})`);
-	if (pivoted) parts.push(`translate(${-pivotX} ${-pivotY})`);
-
-	return parts;
-}
-
-function groupTransform(vector: string): string | null {
-	const parts: string[] = [];
-	for (const match of vector.matchAll(GROUP_TAG)) {
-		if (parts.length >= MAX_GROUP_DEPTH) break;
-		parts.push(...transformOf(match[0]));
-	}
-
-	return parts.length === 0 ? null : parts.join(' ');
-}
-
-function convertPaths(
-	vector: string,
-	colors: Map<string, string>,
-	fallbackFill: string | null,
-	idPrefix: string,
-	gradients: Map<string, string>
-): string {
-	const rendered: string[] = [];
-	const definitions: string[] = [];
-
-	for (const match of vector.matchAll(PATH_TAG)) {
-		if (rendered.length >= MAX_PATHS) break;
-
-		const tag = match[0];
-		const data = attribute(tag, 'pathData');
-		if (data === null || data.trim() === '') continue;
-
-		const gradient =
-			parseGradient(match[1] ?? '', (raw) => resolveColor(raw, colors)) ??
-			resolveColorGradient(attribute(tag, 'fillColor'), colors, gradients);
-		const fill = resolveColor(attribute(tag, 'fillColor'), colors);
-		const stroke = resolveColor(attribute(tag, 'strokeColor'), colors);
-		const strokeWidth = numeric(tag, 'strokeWidth', 0);
-
-		const declaresFill = attribute(tag, 'fillColor') !== null;
-		const declaresStroke = attribute(tag, 'strokeColor') !== null;
-		if (gradient === null && !declaresFill && !declaresStroke) continue;
-
-		const attributes = [`d="${escapeXml(data.trim())}"`];
-
-		if (gradient !== null) {
-			const id = `${idPrefix}${definitions.length}`;
-			const definition = gradientToSvg(gradient, id);
-
-			if (definition === '') {
-				const first = gradient.stops[0]?.color ?? fallbackFill;
-				if (first === null) continue;
-				attributes.push(`fill="${first}"`);
-			} else {
-				definitions.push(definition);
-				attributes.push(`fill="url(#${id})"`);
-			}
-		} else {
-			const resolved = fill ?? (stroke === null ? fallbackFill : 'none');
-			if (resolved === null) continue;
-			attributes.push(`fill="${resolved}"`);
-		}
-
-		if (stroke !== null && strokeWidth > 0) {
-			attributes.push(`stroke="${stroke}"`, `stroke-width="${strokeWidth}"`);
-
-			const cap = attribute(tag, 'strokeLineCap');
-			const join = attribute(tag, 'strokeLineJoin');
-			if (cap !== null) attributes.push(`stroke-linecap="${escapeXml(cap)}"`);
-			if (join !== null) attributes.push(`stroke-linejoin="${escapeXml(join)}"`);
-		}
-
-		const alpha = attribute(tag, 'fillAlpha');
-		if (alpha !== null) attributes.push(`fill-opacity="${escapeXml(alpha)}"`);
-
-		if (attribute(tag, 'fillType')?.toLowerCase() === 'evenodd') {
-			attributes.push('fill-rule="evenodd"');
-		}
-
-		rendered.push(`<path ${attributes.join(' ')}/>`);
-	}
-
-	if (rendered.length === 0) return '';
-
-	const defs = definitions.length === 0 ? '' : `<defs>${definitions.join('')}</defs>`;
-	const transform = groupTransform(vector);
-	return transform === null
-		? `${defs}${rendered.join('')}`
-		: `${defs}<g transform="${transform}">${rendered.join('')}</g>`;
 }
 
 export function vectorToSvg(

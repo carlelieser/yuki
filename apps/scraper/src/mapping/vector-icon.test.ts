@@ -152,8 +152,39 @@ describe('nested groups', () => {
 		);
 
 		expect(svg).toContain(
-			'transform="translate(25.83 25.2) scale(0.05869 0.05869) translate(0 960)"'
+			'<g transform="translate(25.83 25.2) scale(0.05869 0.05869)"><g transform="translate(0 960)">'
 		);
+	});
+});
+
+describe('sibling groups', () => {
+	const SIBLINGS = `<vector android:viewportWidth="96" android:viewportHeight="96"><group android:scaleX="0.65" android:scaleY="0.65"><group android:name="small" android:pivotX="46" android:pivotY="28" android:scaleX="0.6" android:scaleY="0.6"><path android:fillColor="#FF0000" android:pathData="M0,0h10v10h-10z" /></group><group android:name="large" android:pivotX="48" android:pivotY="48" android:scaleX="2.5" android:scaleY="2.5"><path android:fillColor="#00FF00" android:pathData="M0,0h10v10h-10z" /></group></group></vector>`;
+
+	it('scales each sibling by its own transform, not the product of them all', () => {
+		const svg = vectorToSvg(SIBLINGS, new Map());
+
+		expect(svg).toContain('scale(0.6 0.6)');
+		expect(svg).toContain('scale(2.5 2.5)');
+		expect(svg).not.toContain('scale(0.6 0.6) translate(-46 -28) translate(48 48) scale(2.5 2.5)');
+	});
+
+	it('keeps a sibling transform off the paths of its neighbour', () => {
+		const svg = vectorToSvg(SIBLINGS, new Map()) ?? '';
+		const small = svg.slice(svg.indexOf('scale(0.6 0.6)'), svg.indexOf('#FF0000'));
+
+		expect(small).not.toContain('2.5');
+	});
+});
+
+describe('clip paths', () => {
+	it('masks a group that declares a clip-path', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="96" android:viewportHeight="96"><clip-path android:pathData="M48,0A48,48 0 1,1 48,96A48,48 0 1,1 48,0Z" /><path android:fillColor="#FF0000" android:pathData="M0,0h96v96h-96z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('<clipPath id="gclip0">');
+		expect(svg).toContain('clip-path="url(#gclip0)"');
 	});
 });
 

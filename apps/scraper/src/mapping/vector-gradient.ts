@@ -1,5 +1,6 @@
 const GRADIENT_TAG = /<gradient\b[^>]*?(?:\/>|>([\s\S]*?)<\/gradient>)/;
 const GRADIENT_ITEM = /<item\b[^>]*\/>/g;
+const AAPT_ATTR = /<aapt:attr\b[^>]*name="android:([A-Za-z]+)"[^>]*>([\s\S]*?)<\/aapt:attr>/g;
 
 export type GradientStop = {
 	color: string;
@@ -61,6 +62,14 @@ function readAttributeStops(
 	if (end !== null) stops.push({ color: end, offset: 1 });
 
 	return stops.length < 2 ? [] : stops;
+}
+
+export function readAaptAttr(body: string, name: string): string | null {
+	for (const match of body.matchAll(AAPT_ATTR)) {
+		if (match[1] === name) return match[2] ?? null;
+	}
+
+	return null;
 }
 
 export function parseGradient(

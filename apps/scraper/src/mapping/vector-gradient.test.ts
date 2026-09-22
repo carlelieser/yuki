@@ -192,3 +192,73 @@ describe('self-closing paths', () => {
 		expect(vectorToSvg(flat, new Map())).toContain('fill="#FF0000"');
 	});
 });
+
+describe('stroke gradients', () => {
+	const STROKE_PATH = `<vector xmlns:android="http://schemas.android.com/apk/res/android"
+	android:viewportWidth="108" android:viewportHeight="108">
+	<path
+		android:strokeWidth="13.5"
+		android:strokeLineCap="round"
+		android:strokeLineJoin="round"
+		android:pathData="M 42,34 L 42,64 Q 42,74 52,74 L 66,74">
+		<aapt:attr name="android:strokeColor">
+			<gradient android:startX="42" android:startY="34" android:endX="54" android:endY="74" android:type="linear">
+				<item android:offset="0.0" android:color="#FF8EED70" />
+				<item android:offset="1.0" android:color="#FF38C666" />
+			</gradient>
+		</aapt:attr>
+	</path>
+</vector>`;
+
+	it('paints an aapt gradient onto the stroke it was declared on', () => {
+		const svg = vectorToSvg(STROKE_PATH, new Map());
+
+		expect(svg).toContain('stroke="url(#g0)"');
+		expect(svg).toContain('stroke-width="13.5"');
+		expect(svg).toContain('stroke-linecap="round"');
+	});
+
+	it('leaves a stroke-only path unfilled', () => {
+		const svg = vectorToSvg(STROKE_PATH, new Map());
+
+		expect(svg).toContain('fill="none"');
+		expect(svg).not.toContain('fill="url(#g0)"');
+	});
+
+	it('carries strokeAlpha onto the stroke it dims', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="96" android:viewportHeight="96"><path android:strokeColor="#FFFFFF" android:strokeAlpha="0.5" android:strokeWidth="5" android:pathData="M10,10h40v40h-40z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('stroke-opacity="0.5"');
+		expect(svg).toContain('stroke="#FFFFFF"');
+	});
+
+	it('leaves a stroke undimmed when no strokeAlpha is declared', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="96" android:viewportHeight="96"><path android:strokeColor="#FFFFFF" android:strokeWidth="5" android:pathData="M10,10h40v40h-40z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).not.toContain('stroke-opacity');
+	});
+
+	it('keeps a fill gradient on the fill', () => {
+		const svg = vectorToSvg(GRADIENT_PATH, new Map());
+
+		expect(svg).toContain('fill="url(#g0)"');
+		expect(svg).not.toContain('stroke="url(#g0)"');
+	});
+
+	it('paints both when a path declares a fill and a stroke', () => {
+		const svg = vectorToSvg(
+			`<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#FFFFFF" android:strokeColor="#FF0000" android:strokeWidth="4" android:pathData="M0,0h108v108h-108z" /></vector>`,
+			new Map()
+		);
+
+		expect(svg).toContain('fill="#FFFFFF"');
+		expect(svg).toContain('stroke="#FF0000"');
+		expect(svg).toContain('stroke-width="4"');
+	});
+});
