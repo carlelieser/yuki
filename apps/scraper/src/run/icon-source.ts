@@ -231,6 +231,8 @@ async function declaredIconFrom(
 
 		const direct = pickBestDeclared(found.raster);
 		if (direct !== null) return { xml: found.xml[0] ?? null, raster: direct, layers: null };
+
+		if (resolved.xml !== null) return resolved;
 	}
 
 	return null;
