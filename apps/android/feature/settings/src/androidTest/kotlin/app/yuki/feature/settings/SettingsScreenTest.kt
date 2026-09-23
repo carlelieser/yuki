@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performScrollToNode
@@ -153,6 +154,57 @@ class SettingsScreenTest {
         assertEquals(listOf(AppearanceMode.Dark), modes)
     }
 
+    @Test
+    fun theInstallSourceRowNamesTheActiveSource() {
+        setContent(ShizukuState.Ready)
+        scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
+
+        composeRule.onNodeWithText(SHELL_PRESET_LABEL).assertIsDisplayed()
+    }
+
+    @Test
+    fun theInstallSourceRowNamesAChosenApp() {
+        setContent(ShizukuState.Ready, installSourceLabel = "Acme Store")
+        scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
+
+        composeRule.onNodeWithText("Acme Store").assertIsDisplayed()
+    }
+
+    @Test
+    fun theInstallSourceRowIsDisabledWhenInstallsAlwaysAsk() {
+        setContent(ShizukuState.Ready, isInstallSourceEnabled = false)
+        scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
+
+        composeRule.onNodeWithTag(INSTALL_SOURCE_SELECTOR_TAG).assertIsNotEnabled()
+    }
+
+    @Test
+    fun openingTheChooserListsInstalledApps() {
+        setContent(ShizukuState.Ready, chooser = InstallSourceChooser(INSTALLED_APPS))
+
+        composeRule.onNodeWithTag(INSTALL_SOURCE_DIALOG_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText("Acme Store").assertIsDisplayed()
+        composeRule.onNodeWithText("net.example.files").assertIsDisplayed()
+    }
+
+    @Test
+    fun choosingAnAppReportsItsPackage() {
+        val packages = mutableListOf<String>()
+        setContent(
+            ShizukuState.Ready,
+            chooser = InstallSourceChooser(INSTALLED_APPS),
+            onInstallerPackageChange = packages::add,
+        )
+
+        composeRule.onNodeWithText("Acme Store").performClick()
+
+        assertEquals(listOf("com.acme.store"), packages)
+    }
+
+    private fun scrollTo(tag: String) {
+        composeRule.onNodeWithTag(SETTINGS_LIST_TAG).performScrollToNode(hasTestTag(tag))
+    }
+
     private fun scrollToInstallMode() {
         composeRule.onNodeWithTag(SETTINGS_LIST_TAG)
             .performScrollToNode(hasTestTag(INSTALL_MODE_SELECTOR_TAG))
@@ -165,6 +217,10 @@ class SettingsScreenTest {
         onShizukuAction: (ShizukuActionKind) -> Unit = {},
         onInstallModeChange: (InstallMode) -> Unit = {},
         onAppearanceChange: (AppearanceMode) -> Unit = {},
+        onInstallerPackageChange: (String) -> Unit = {},
+        installSourceLabel: String = SHELL_PRESET_LABEL,
+        isInstallSourceEnabled: Boolean = true,
+        chooser: InstallSourceChooser? = null,
     ) {
         val content = SettingsContent(
             shizuku = detailFor(state),
@@ -172,7 +228,14 @@ class SettingsScreenTest {
                 PermissionRow(permission = permission, status = permissionStatus)
             },
             preferences = YukiPreferences.Defaults,
+            installSource = InstallSourceSelection(
+                label = installSourceLabel,
+                isPlayStoreInstalled = true,
+                isEnabled = isInstallSourceEnabled,
+            ),
         )
+        val actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange)
+            .withInstallerPackageChange(onInstallerPackageChange)
 
         composeRule.setContent {
             Column(
@@ -180,14 +243,35 @@ class SettingsScreenTest {
                     .verticalScroll(rememberScrollState())
                     .testTag(SETTINGS_LIST_TAG),
             ) {
-                SystemSettings(
-                    state = UiState.Success(content),
-                    actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange),
-                )
+                SystemSettings(state = UiState.Success(content), actions = actions)
             }
+
+            if (chooser == null) return@setContent
+
+            InstallSourceDialog(
+                InstallSourcePrompt(
+                    apps = chooser.apps,
+                    iconOf = { null },
+                    onSelect = onInstallerPackageChange,
+                    onDismiss = {},
+                ),
+            )
         }
     }
 }
+
+private const val SHELL_PRESET_LABEL = "Shell"
+
+private val INSTALLED_APPS = listOf(
+    InstalledApp(packageName = "com.acme.store", label = "Acme Store"),
+    InstalledApp(packageName = "net.example.files", label = "Files"),
+)
+
+private fun SettingsActions.withInstallerPackageChange(
+    onInstallerPackageChange: (String) -> Unit,
+): SettingsActions = copy(
+    preferences = preferences.copy(onInstallerPackageChange = onInstallerPackageChange),
+)
 
 private fun actionsWith(
     onShizukuAction: (ShizukuActionKind) -> Unit,
@@ -202,6 +286,8 @@ private fun actionsWith(
             onInstallModeChange = onInstallModeChange,
             onAppearanceChange = onAppearanceChange,
             onDynamicColorChange = {},
+            onInstallerPackageChange = {},
+            onChooseInstallerApp = {},
         ),
     )
 

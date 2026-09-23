@@ -10,10 +10,17 @@ class YukiInstallerService : IYukiInstaller.Stub() {
         apk: ParcelFileDescriptor,
         packageName: String,
         size: Long,
+        installerPackage: String,
         callback: IInstallCallback,
     ) = report(callback) {
+        val target = InstallTarget(
+            packageName = packageName,
+            size = size,
+            installerPackage = installerPackage,
+        )
+
         ParcelFileDescriptor.AutoCloseInputStream(apk).use { stream ->
-            sessions.install(packageName, size) { target -> stream.copyTo(target) }
+            sessions.install(target) { sink -> stream.copyTo(sink) }
         }
     }
 

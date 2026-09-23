@@ -1,5 +1,6 @@
 package app.yuki.di
 
+import app.yuki.core.shizuku.InstallerPackagePreference
 import app.yuki.feature.settings.YukiPreferenceReader
 import app.yuki.feature.updates.PrereleasePreference
 import dagger.Module
@@ -15,4 +16,10 @@ internal object PreferencesModule {
     @Singleton
     fun prereleasePreference(reader: YukiPreferenceReader): PrereleasePreference =
         PrereleasePreference { reader.includePrereleases() }
+
+    @Provides
+    @Singleton
+    fun installerPackagePreference(
+        reader: YukiPreferenceReader,
+    ): InstallerPackagePreference = InstallerPackagePreference { reader.installerPackage() }
 }

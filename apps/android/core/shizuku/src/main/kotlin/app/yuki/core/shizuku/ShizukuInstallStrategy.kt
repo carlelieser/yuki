@@ -10,11 +10,13 @@ import java.io.FileNotFoundException
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class ShizukuInstallStrategy @Inject constructor(
     private val binder: UserServiceBinder,
+    private val installerPackages: InstallerPackagePreference,
 ) : InstallStrategy {
     override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
         emit(runInstall(apk, identity))
@@ -24,14 +26,23 @@ internal class ShizukuInstallStrategy @Inject constructor(
         awaitCallback { callback -> installer.uninstall(packageName, callback) }
     }
 
-    private suspend fun runInstall(apk: File, identity: ApkIdentity): InstallOutcome =
-        openDescriptor(apk).use { descriptor ->
+    private suspend fun runInstall(apk: File, identity: ApkIdentity): InstallOutcome {
+        val installerPackage = installerPackages.installerPackage().first()
+
+        return openDescriptor(apk).use { descriptor ->
             binder.withInstaller { installer ->
                 awaitCallback { callback ->
-                    installer.install(descriptor, identity.packageName, apk.length(), callback)
+                    installer.install(
+                        descriptor,
+                        identity.packageName,
+                        apk.length(),
+                        installerPackage,
+                        callback,
+                    )
                 }
             }
         }
+    }
 
     private fun openDescriptor(apk: File): ParcelFileDescriptor = try {
         ParcelFileDescriptor.open(apk, ParcelFileDescriptor.MODE_READ_ONLY)

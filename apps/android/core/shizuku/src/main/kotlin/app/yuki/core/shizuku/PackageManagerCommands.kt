@@ -1,19 +1,17 @@
 package app.yuki.core.shizuku
 
-internal const val INSTALLER_PACKAGE = "shell"
-
 internal const val INSTALL_STATUS_SUCCESS = 0
 internal const val INSTALL_STATUS_FAILURE = 1
 
 internal const val UNINSTALL_SUCCESS = "Success"
 
 internal object PackageManagerCommands {
-    fun createSession(packageName: String): List<String> = listOf(
+    fun createSession(packageName: String, installerPackage: String): List<String> = listOf(
         "pm",
         "install-create",
         "-r",
         "-i",
-        INSTALLER_PACKAGE,
+        installerPackage,
         "--pkg",
         packageName,
     )

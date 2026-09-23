@@ -29,10 +29,19 @@ data class PermissionRow(
     val statusLabel: String get() = if (isGranted) STATUS_GRANTED else STATUS_DENIED
 }
 
+data class InstallSourceChooser(val apps: List<InstalledApp>?)
+
+data class InstallSourceSelection(
+    val label: String,
+    val isPlayStoreInstalled: Boolean,
+    val isEnabled: Boolean,
+)
+
 data class SettingsContent(
     val shizuku: ShizukuDetail,
     val permissions: List<PermissionRow>,
     val preferences: YukiPreferences,
+    val installSource: InstallSourceSelection,
 ) {
     val card: ShizukuCard get() = cardFor(shizuku)
 
