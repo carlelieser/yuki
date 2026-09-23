@@ -27,13 +27,13 @@ class SettingsViewModel @Inject internal constructor(
         .map { dependencies.readPermissions() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, dependencies.readPermissions())
 
-    private val installerPackage: Flow<String> = dependencies.store.preferences
-        .map { preferences -> preferences.installerPackage }
+    private val installChoice: Flow<InstallChoice> = dependencies.store.preferences
+        .map { preferences -> InstallChoice(preferences.installerPackage, preferences.installMode) }
         .distinctUntilChanged()
 
     private val installSource: Flow<InstallSourceSelection> =
-        combine(installerPackage, permissionReads) { packageName, _ ->
-            dependencies.installSourceOf(packageName)
+        combine(installChoice, permissionReads) { choice, _ ->
+            dependencies.installSourceOf(choice)
         }
 
     val chooser: StateFlow<InstallSourceChooser?> = openChooser
@@ -110,12 +110,18 @@ internal class SettingsDependencies @Inject constructor(
         PermissionRow(permission = permission, status = readers.permissions.statusOf(permission))
     }
 
-    suspend fun installSourceOf(packageName: String): InstallSourceSelection =
+    suspend fun installSourceOf(choice: InstallChoice): InstallSourceSelection =
         InstallSourceSelection(
-            label = installSourceLabel(packageName, readers.apps.labelOf(packageName)),
+            label = installSourceLabel(
+                choice.installerPackage,
+                readers.apps.labelOf(choice.installerPackage),
+            ),
             isPlayStoreInstalled = readers.apps.labelOf(PLAY_STORE_PACKAGE) != null,
+            isEnabled = installSourceApplies(choice.mode),
         )
 }
+
+internal data class InstallChoice(val installerPackage: String, val mode: InstallMode)
 
 internal class SettingsReaders @Inject constructor(
     val permissions: PermissionStatusReader,

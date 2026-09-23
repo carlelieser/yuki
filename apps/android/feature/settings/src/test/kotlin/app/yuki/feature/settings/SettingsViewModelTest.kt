@@ -193,6 +193,22 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun alwaysAskDisablesTheInstallSourceRow() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(successOf(awaitItem()).installSource.isEnabled)
+
+            viewModel.onInstallModeChange(InstallMode.AlwaysAsk)
+            runCurrent()
+
+            assertFalse(successOf(expectMostRecentItem()).installSource.isEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun theInstallSourceRowNamesThePresetBehindTheStoredPackage() = runTest {
         val viewModel = viewModel()
 

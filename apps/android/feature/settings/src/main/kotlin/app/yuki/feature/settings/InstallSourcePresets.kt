@@ -11,6 +11,8 @@ internal val INSTALL_SOURCE_PRESETS: List<InstallSourcePreset> = listOf(
     InstallSourcePreset(label = "Google Play Store", packageName = PLAY_STORE_PACKAGE),
 )
 
+internal fun installSourceApplies(mode: InstallMode): Boolean = mode == InstallMode.Automatic
+
 internal fun installSourceLabel(packageName: String, appLabel: String?): String =
     presetLabel(packageName) ?: appLabel ?: packageName
 

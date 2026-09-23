@@ -34,6 +34,7 @@ data class InstallSourceChooser(val apps: List<InstalledApp>?)
 data class InstallSourceSelection(
     val label: String,
     val isPlayStoreInstalled: Boolean,
+    val isEnabled: Boolean,
 )
 
 data class SettingsContent(

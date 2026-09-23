@@ -2,6 +2,8 @@ package app.yuki.feature.settings
 
 import app.yuki.core.shizuku.SHELL_INSTALLER_PACKAGE
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class InstallSourceFilteringTest {
@@ -34,6 +36,12 @@ class InstallSourceFilteringTest {
     @Test
     fun aQueryThatMatchesNothingKeepsNoApp() {
         assertEquals(emptyList<String>(), labelsOf(matchingApps(apps, "zzz")))
+    }
+
+    @Test
+    fun theInstallSourceAppliesOnlyToSilentInstalls() {
+        assertTrue(installSourceApplies(InstallMode.Automatic))
+        assertFalse(installSourceApplies(InstallMode.AlwaysAsk))
     }
 
     @Test

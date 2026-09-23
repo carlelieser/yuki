@@ -5,7 +5,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,10 +40,12 @@ internal fun InstallSourceRow(
         position = position,
         title = INSTALL_SOURCE_TITLE,
         supporting = source.label,
+        isEnabled = source.isEnabled,
         onClick = { isExpanded = true },
         trailing = {
             InstallSourceSelector(
                 state = InstallSourceMenuState(isExpanded, source.isPlayStoreInstalled),
+                isEnabled = source.isEnabled,
                 onExpandedChange = { expanded -> isExpanded = expanded },
                 actions = collapsingActions(actions, collapse),
             )
@@ -69,19 +70,17 @@ private fun collapsingActions(
 @Composable
 private fun InstallSourceSelector(
     state: InstallSourceMenuState,
+    isEnabled: Boolean,
     onExpandedChange: (Boolean) -> Unit,
     actions: InstallSourceActions,
 ) {
     Box {
         IconButton(
             onClick = { onExpandedChange(true) },
+            enabled = isEnabled,
             modifier = Modifier.testTag(INSTALL_SOURCE_SELECTOR_TAG),
         ) {
-            Icon(
-                imageVector = YukiIcons.ArrowDropDown,
-                contentDescription = INSTALL_SOURCE_TITLE,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Icon(imageVector = YukiIcons.ArrowDropDown, contentDescription = INSTALL_SOURCE_TITLE)
         }
 
         DropdownMenu(

@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performScrollToNode
@@ -170,6 +171,14 @@ class SettingsScreenTest {
     }
 
     @Test
+    fun theInstallSourceRowIsDisabledWhenInstallsAlwaysAsk() {
+        setContent(ShizukuState.Ready, isInstallSourceEnabled = false)
+        scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
+
+        composeRule.onNodeWithTag(INSTALL_SOURCE_SELECTOR_TAG).assertIsNotEnabled()
+    }
+
+    @Test
     fun openingTheChooserListsInstalledApps() {
         setContent(ShizukuState.Ready, chooser = InstallSourceChooser(INSTALLED_APPS))
 
@@ -210,6 +219,7 @@ class SettingsScreenTest {
         onAppearanceChange: (AppearanceMode) -> Unit = {},
         onInstallerPackageChange: (String) -> Unit = {},
         installSourceLabel: String = SHELL_PRESET_LABEL,
+        isInstallSourceEnabled: Boolean = true,
         chooser: InstallSourceChooser? = null,
     ) {
         val content = SettingsContent(
@@ -221,6 +231,7 @@ class SettingsScreenTest {
             installSource = InstallSourceSelection(
                 label = installSourceLabel,
                 isPlayStoreInstalled = true,
+                isEnabled = isInstallSourceEnabled,
             ),
         )
         val actions = actionsWith(onShizukuAction, onInstallModeChange, onAppearanceChange)
