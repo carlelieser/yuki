@@ -1,5 +1,6 @@
 package app.yuki.feature.settings
 
+import android.graphics.drawable.Drawable
 import app.yuki.core.shizuku.ShizukuDetail
 import app.yuki.core.shizuku.ShizukuMode
 import app.yuki.core.shizuku.ShizukuState
@@ -71,6 +72,31 @@ internal class FakePreferenceStore(initial: YukiPreferences = YukiPreferences.De
         stored.value = stored.value.copy(installerPackage = packageName)
     }
 }
+
+internal class FakeInstalledAppsReader(
+    private var apps: List<InstalledApp> = emptyList(),
+) : InstalledAppsReader {
+    var reads: Int = 0
+        private set
+
+    fun install(app: InstalledApp) {
+        apps = apps + app
+    }
+
+    override suspend fun read(): List<InstalledApp> {
+        reads += 1
+
+        return apps.sortedBy { app -> app.label.lowercase() }
+    }
+
+    override suspend fun labelOf(packageName: String): String? =
+        apps.firstOrNull { app -> app.packageName == packageName }?.label
+
+    override suspend fun iconOf(packageName: String): Drawable? = null
+}
+
+internal fun installedAppOf(packageName: String, label: String): InstalledApp =
+    InstalledApp(packageName = packageName, label = label)
 
 internal class RecordingSystemDestinations : SystemDestinations {
     var websiteOpens: Int = 0

@@ -5,6 +5,8 @@ data class PreferenceActions(
     val onInstallModeChange: (InstallMode) -> Unit,
     val onAppearanceChange: (AppearanceMode) -> Unit,
     val onDynamicColorChange: (Boolean) -> Unit,
+    val onInstallerPackageChange: (String) -> Unit,
+    val onChooseInstallerApp: () -> Unit,
 )
 
 data class SettingsActions(

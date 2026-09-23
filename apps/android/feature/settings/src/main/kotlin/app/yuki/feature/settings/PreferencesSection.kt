@@ -21,7 +21,7 @@ import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.YukiIcons
 
 private const val APPEARANCE_ROW_COUNT = 2
-private const val PREFERENCE_ROW_COUNT = 2
+private const val PREFERENCE_ROW_COUNT = 3
 
 @Composable
 internal fun AppearanceSection(
@@ -50,10 +50,12 @@ internal fun AppearanceSection(
 
 @Composable
 internal fun PreferencesSection(
-    preferences: YukiPreferences,
+    content: SettingsContent,
     actions: PreferenceActions,
     modifier: Modifier = Modifier,
 ) {
+    val preferences = content.preferences
+
     SettingsGroup(modifier = modifier, label = PREFERENCES_SECTION_TITLE) {
         ToggleRow(
             position = SettingsRowPosition(index = 0, count = PREFERENCE_ROW_COUNT),
@@ -69,6 +71,15 @@ internal fun PreferencesSection(
             position = SettingsRowPosition(index = 1, count = PREFERENCE_ROW_COUNT),
             mode = preferences.installMode,
             onChange = actions.onInstallModeChange,
+        )
+
+        InstallSourceRow(
+            position = SettingsRowPosition(index = 2, count = PREFERENCE_ROW_COUNT),
+            source = content.installSource,
+            actions = InstallSourceActions(
+                onSelect = actions.onInstallerPackageChange,
+                onChooseApp = actions.onChooseInstallerApp,
+            ),
         )
     }
 }

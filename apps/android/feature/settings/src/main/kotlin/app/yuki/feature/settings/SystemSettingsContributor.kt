@@ -23,6 +23,7 @@ class SystemSettingsContributor @Inject constructor() : SettingsContributor {
     override fun Content() {
         val viewModel: SettingsViewModel = hiltViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val chooser by viewModel.chooser.collectAsStateWithLifecycle()
         val destinations = rememberSystemDestinations()
 
         ResumeEffect(viewModel::onResume)
@@ -32,6 +33,20 @@ class SystemSettingsContributor @Inject constructor() : SettingsContributor {
         }
 
         SystemSettings(state = state, actions = actions)
+
+        chooser?.let { open ->
+            InstallSourceDialog(
+                InstallSourcePrompt(
+                    apps = open.apps,
+                    iconOf = viewModel::installedAppIcon,
+                    onSelect = { packageName ->
+                        viewModel.onInstallerPackageChange(packageName)
+                        viewModel.onDismissInstallerChooser()
+                    },
+                    onDismiss = viewModel::onDismissInstallerChooser,
+                ),
+            )
+        }
     }
 }
 
@@ -49,6 +64,8 @@ internal fun settingsActions(
             onInstallModeChange = viewModel::onInstallModeChange,
             onAppearanceChange = viewModel::onAppearanceChange,
             onDynamicColorChange = viewModel::onDynamicColorChange,
+            onInstallerPackageChange = viewModel::onInstallerPackageChange,
+            onChooseInstallerApp = viewModel::onChooseInstallerApp,
         ),
     )
 }
@@ -89,6 +106,6 @@ private fun SettingsSections(
 
         AppearanceSection(preferences = content.preferences, actions = actions.preferences)
 
-        PreferencesSection(preferences = content.preferences, actions = actions.preferences)
+        PreferencesSection(content = content, actions = actions.preferences)
     }
 }
