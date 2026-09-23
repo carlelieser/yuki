@@ -16,7 +16,7 @@ class ShizukuStrategySelectionTest {
     private val gateway = FakeShizukuGateway()
     private val monitor = ShizukuMonitor(gateway)
     private val binder = FakeUserServiceBinder()
-    private val silent = ShizukuInstallStrategy(binder)
+    private val silent = ShizukuInstallStrategy(binder) { flowOf(SHELL_INSTALLER_PACKAGE) }
     private val privileged = ShizukuPrivilegedInstaller(monitor, silent)
     private val fallback = RecordingStrategy()
 

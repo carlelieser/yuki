@@ -13,7 +13,7 @@ class PrivilegedSessionsTest {
 
     @Test
     fun `creates writes and commits a session in order`() {
-        sessions.install("com.acme.app", size = 4L) { target -> target.write(byteArrayOf(1, 2, 3, 4)) }
+        sessions.install(targetOf(size = 4L)) { sink -> sink.write(byteArrayOf(1, 2, 3, 4)) }
 
         assertEquals(
             listOf("install-create", "install-write", "install-commit"),
@@ -23,14 +23,23 @@ class PrivilegedSessionsTest {
 
     @Test
     fun `names shell as the installer package so the install is silent`() {
-        sessions.install("com.acme.app", size = 1L) { target -> target.write(byteArrayOf(0)) }
+        sessions.install(targetOf()) { sink -> sink.write(byteArrayOf(0)) }
 
-        assertTrue(shell.commands.first().containsInOrder("-i", INSTALLER_PACKAGE))
+        assertTrue(shell.commands.first().containsInOrder("-i", SHELL_INSTALLER_PACKAGE))
+    }
+
+    @Test
+    fun `names the chosen installer package on the session`() {
+        val target = targetOf(installerPackage = "com.android.vending")
+
+        sessions.install(target) { sink -> sink.write(byteArrayOf(0)) }
+
+        assertTrue(shell.commands.first().containsInOrder("-i", "com.android.vending"))
     }
 
     @Test
     fun `streams the apk bytes into the write command`() {
-        sessions.install("com.acme.app", size = 3L) { target -> target.write("apk".toByteArray()) }
+        sessions.install(targetOf(size = 3L)) { sink -> sink.write("apk".toByteArray()) }
 
         assertEquals("apk", shell.writtenInput)
     }
@@ -40,7 +49,7 @@ class PrivilegedSessionsTest {
         shell.failOn = "install-commit"
 
         assertThrows(PrivilegedInstallException::class.java) {
-            sessions.install("com.acme.app", size = 1L) { target -> target.write(byteArrayOf(0)) }
+            sessions.install(targetOf()) { sink -> sink.write(byteArrayOf(0)) }
         }
 
         assertEquals("install-abandon", shell.subcommands().last())
@@ -51,7 +60,7 @@ class PrivilegedSessionsTest {
         shell.failOn = "install-write"
 
         assertThrows(PrivilegedInstallException::class.java) {
-            sessions.install("com.acme.app", size = 1L) { target -> target.write(byteArrayOf(0)) }
+            sessions.install(targetOf()) { sink -> sink.write(byteArrayOf(0)) }
         }
 
         assertEquals("install-abandon", shell.subcommands().last())
@@ -62,7 +71,7 @@ class PrivilegedSessionsTest {
         shell.failOn = "install-create"
 
         val error = assertThrows(PrivilegedInstallException::class.java) {
-            sessions.install("com.acme.app", size = 1L) { target -> target.write(byteArrayOf(0)) }
+            sessions.install(targetOf()) { sink -> sink.write(byteArrayOf(0)) }
         }
 
         assertTrue(error.message.orEmpty().contains("com.acme.app"))
@@ -104,6 +113,15 @@ class PrivilegedSessionsTest {
         assertTrue(error.message.orEmpty().contains("DELETE_FAILED_INTERNAL_ERROR"))
     }
 }
+
+private fun targetOf(
+    size: Long = 1L,
+    installerPackage: String = SHELL_INSTALLER_PACKAGE,
+): InstallTarget = InstallTarget(
+    packageName = "com.acme.app",
+    size = size,
+    installerPackage = installerPackage,
+)
 
 private fun List<String>.containsInOrder(first: String, second: String): Boolean {
     val index = indexOf(first)

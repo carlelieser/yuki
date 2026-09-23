@@ -12,7 +12,7 @@ android {
     }
 
     defaultConfig {
-        buildConfigField("int", "VERSION_CODE", "1")
+        buildConfigField("int", "VERSION_CODE", "2")
         consumerProguardFiles("consumer-rules.pro")
     }
 }

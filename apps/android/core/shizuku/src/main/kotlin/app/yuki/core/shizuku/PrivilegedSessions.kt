@@ -2,12 +2,19 @@ package app.yuki.core.shizuku
 
 import java.io.OutputStream
 
+internal data class InstallTarget(
+    val packageName: String,
+    val size: Long,
+    val installerPackage: String,
+)
+
 internal class PrivilegedSessions(private val shell: ShellCommandRunner) {
-    fun install(packageName: String, size: Long, source: (OutputStream) -> Unit) {
-        val sessionId = createSession(packageName)
+    fun install(target: InstallTarget, source: (OutputStream) -> Unit) {
+        val packageName = target.packageName
+        val sessionId = createSession(packageName, target.installerPackage)
 
         try {
-            writeApk(sessionId, size, source)
+            writeApk(sessionId, target.size, source)
             commit(sessionId, packageName)
         } catch (error: PrivilegedInstallException) {
             shell.run(PackageManagerCommands.abandonSession(sessionId))
@@ -24,8 +31,9 @@ internal class PrivilegedSessions(private val shell: ShellCommandRunner) {
         )
     }
 
-    private fun createSession(packageName: String): Int {
-        val result = shell.run(PackageManagerCommands.createSession(packageName))
+    private fun createSession(packageName: String, installerPackage: String): Int {
+        val command = PackageManagerCommands.createSession(packageName, installerPackage)
+        val result = shell.run(command)
         if (!result.isSuccess) {
             throw PrivilegedInstallException(
                 "Failed to create an install session for $packageName: ${result.output.trim()}",
