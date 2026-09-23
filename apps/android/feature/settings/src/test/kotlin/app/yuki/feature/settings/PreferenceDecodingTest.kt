@@ -1,5 +1,6 @@
 package app.yuki.feature.settings
 
+import app.yuki.core.shizuku.SHELL_INSTALLER_PACKAGE
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -14,6 +15,7 @@ class PreferenceDecodingTest {
         assertEquals(InstallMode.Automatic, YukiPreferences.Defaults.installMode)
         assertEquals(AppearanceMode.System, YukiPreferences.Defaults.appearance)
         assertTrue(YukiPreferences.Defaults.isDynamicColorEnabled)
+        assertEquals(SHELL_INSTALLER_PACKAGE, YukiPreferences.Defaults.installerPackage)
     }
 
     @Test
@@ -44,11 +46,13 @@ class PreferenceDecodingTest {
         store.setInstallMode(InstallMode.AlwaysAsk)
         store.setAppearance(AppearanceMode.Dark)
         store.setDynamicColorEnabled(false)
+        store.setInstallerPackage("com.android.vending")
 
         assertTrue(reader.includePrereleases().first())
         assertEquals(InstallMode.AlwaysAsk, reader.installMode().first())
         assertEquals(AppearanceMode.Dark, reader.appearance().first())
         assertFalse(reader.isDynamicColorEnabled().first())
+        assertEquals("com.android.vending", reader.installerPackage().first())
     }
 
     @Test
@@ -59,5 +63,6 @@ class PreferenceDecodingTest {
         assertEquals(InstallMode.Automatic, reader.installMode().first())
         assertEquals(AppearanceMode.System, reader.appearance().first())
         assertTrue(reader.isDynamicColorEnabled().first())
+        assertEquals(SHELL_INSTALLER_PACKAGE, reader.installerPackage().first())
     }
 }

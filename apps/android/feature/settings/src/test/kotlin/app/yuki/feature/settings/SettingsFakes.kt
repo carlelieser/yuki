@@ -66,6 +66,10 @@ internal class FakePreferenceStore(initial: YukiPreferences = YukiPreferences.De
     override suspend fun setDynamicColorEnabled(isEnabled: Boolean) {
         stored.value = stored.value.copy(isDynamicColorEnabled = isEnabled)
     }
+
+    override suspend fun setInstallerPackage(packageName: String) {
+        stored.value = stored.value.copy(installerPackage = packageName)
+    }
 }
 
 internal class RecordingSystemDestinations : SystemDestinations {

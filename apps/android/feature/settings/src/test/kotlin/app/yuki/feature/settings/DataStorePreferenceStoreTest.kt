@@ -3,6 +3,7 @@ package app.yuki.feature.settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import app.yuki.core.shizuku.SHELL_INSTALLER_PACKAGE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -62,12 +63,33 @@ class DataStorePreferenceStoreTest {
     }
 
     @Test
+    fun installerPackageSurvivesAWriteAndReadBack() = runTest {
+        withStore { store ->
+            store.setInstallerPackage("com.android.vending")
+            assertEquals("com.android.vending", store.preferences.first().installerPackage)
+
+            store.setInstallerPackage(SHELL_INSTALLER_PACKAGE)
+            assertEquals(SHELL_INSTALLER_PACKAGE, store.preferences.first().installerPackage)
+        }
+    }
+
+    @Test
+    fun aBlankStoredInstallerPackageReadsBackAsShell() = runTest {
+        withStore { store ->
+            store.setInstallerPackage("   ")
+
+            assertEquals(SHELL_INSTALLER_PACKAGE, store.preferences.first().installerPackage)
+        }
+    }
+
+    @Test
     fun eachPreferenceIsStoredUnderItsOwnKey() = runTest {
         withStore { store ->
             store.setIncludePrereleases(true)
             store.setInstallMode(InstallMode.AlwaysAsk)
             store.setAppearance(AppearanceMode.Dark)
             store.setDynamicColorEnabled(false)
+            store.setInstallerPackage("com.android.vending")
 
             assertEquals(
                 YukiPreferences(
@@ -75,6 +97,7 @@ class DataStorePreferenceStoreTest {
                     installMode = InstallMode.AlwaysAsk,
                     appearance = AppearanceMode.Dark,
                     isDynamicColorEnabled = false,
+                    installerPackage = "com.android.vending",
                 ),
                 store.preferences.first(),
             )

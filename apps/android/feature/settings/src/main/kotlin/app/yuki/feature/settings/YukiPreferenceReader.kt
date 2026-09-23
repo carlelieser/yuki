@@ -18,6 +18,8 @@ interface YukiPreferenceReader {
     fun appearance(): Flow<AppearanceMode>
 
     fun isDynamicColorEnabled(): Flow<Boolean>
+
+    fun installerPackage(): Flow<String>
 }
 
 @Singleton
@@ -32,6 +34,8 @@ internal class StoreBackedPreferenceReader @Inject constructor(
 
     override fun isDynamicColorEnabled(): Flow<Boolean> =
         read(YukiPreferences::isDynamicColorEnabled)
+
+    override fun installerPackage(): Flow<String> = read(YukiPreferences::installerPackage)
 
     private fun <T> read(select: (YukiPreferences) -> T): Flow<T> =
         store.preferences.map(select).distinctUntilChanged()
