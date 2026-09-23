@@ -241,7 +241,8 @@ private data class LibraryRowActions(
 private fun LibraryEmpty(onExploreClick: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
-            title = LIBRARY_EMPTY_TITLE,
+            title = LibraryFilter.All.emptyTitle,
+            description = LibraryFilter.All.emptyDescription,
             icon = YukiIcons.GridView,
             actionLabel = LIBRARY_EMPTY_ACTION,
             onAction = onExploreClick,
@@ -253,15 +254,13 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 private fun LibraryNoMatches(filter: LibraryFilter) {
     CollectionEmpty(
         content = EmptyContent(
-            title = LIBRARY_NO_MATCHES_TITLE,
-            description = filter.emptyMessage,
+            title = filter.emptyTitle,
+            description = filter.emptyDescription,
             icon = YukiIcons.GridView,
         ),
     )
 }
 
 internal const val LIBRARY_TITLE = "Library"
-internal const val LIBRARY_EMPTY_TITLE = "Nothing installed yet"
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."
-internal const val LIBRARY_NO_MATCHES_TITLE = "No apps match that filter"

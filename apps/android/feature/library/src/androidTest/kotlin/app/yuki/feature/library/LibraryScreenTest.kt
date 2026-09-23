@@ -174,8 +174,8 @@ class LibraryScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(LIBRARY_NO_MATCHES_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(LIBRARY_EMPTY_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(LibraryFilter.NotInstalled.emptyTitle).assertIsDisplayed()
+        composeRule.onNodeWithText(LibraryFilter.All.emptyTitle).assertDoesNotExist()
     }
 
     @Test
