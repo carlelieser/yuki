@@ -157,7 +157,12 @@ private fun LibraryList(
     }
 
     if (content.hasNoMatches) {
-        YukiScreenCenter(contentPadding) { LibraryNoMatches(filter = content.filter) }
+        YukiScreenCenter(contentPadding) {
+            LibraryNoMatches(
+                filter = content.filter,
+                onClearFilter = { actions.onFilterSelected(LibraryFilter.All) },
+            )
+        }
         return
     }
 
@@ -251,16 +256,19 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 }
 
 @Composable
-private fun LibraryNoMatches(filter: LibraryFilter) {
+private fun LibraryNoMatches(filter: LibraryFilter, onClearFilter: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
             title = filter.emptyTitle,
             description = filter.emptyDescription,
             icon = YukiIcons.GridView,
+            actionLabel = LIBRARY_CLEAR_FILTER_ACTION,
+            onAction = onClearFilter,
         ),
     )
 }
 
 internal const val LIBRARY_TITLE = "Library"
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
+internal const val LIBRARY_CLEAR_FILTER_ACTION = "Clear filter"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."
