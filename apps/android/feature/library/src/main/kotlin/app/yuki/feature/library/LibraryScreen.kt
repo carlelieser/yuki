@@ -157,7 +157,12 @@ private fun LibraryList(
     }
 
     if (content.hasNoMatches) {
-        YukiScreenCenter(contentPadding) { LibraryNoMatches(filter = content.filter) }
+        YukiScreenCenter(contentPadding) {
+            LibraryNoMatches(
+                filter = content.filter,
+                onClearFilter = { actions.onFilterSelected(LibraryFilter.All) },
+            )
+        }
         return
     }
 
@@ -241,7 +246,8 @@ private data class LibraryRowActions(
 private fun LibraryEmpty(onExploreClick: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
-            title = LIBRARY_EMPTY_TITLE,
+            title = LibraryFilter.All.emptyTitle,
+            description = LibraryFilter.All.emptyDescription,
             icon = YukiIcons.GridView,
             actionLabel = LIBRARY_EMPTY_ACTION,
             onAction = onExploreClick,
@@ -250,18 +256,19 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 }
 
 @Composable
-private fun LibraryNoMatches(filter: LibraryFilter) {
+private fun LibraryNoMatches(filter: LibraryFilter, onClearFilter: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
-            title = LIBRARY_NO_MATCHES_TITLE,
-            description = filter.emptyMessage,
+            title = filter.emptyTitle,
+            description = filter.emptyDescription,
             icon = YukiIcons.GridView,
+            actionLabel = LIBRARY_CLEAR_FILTER_ACTION,
+            onAction = onClearFilter,
         ),
     )
 }
 
 internal const val LIBRARY_TITLE = "Library"
-internal const val LIBRARY_EMPTY_TITLE = "Nothing installed yet"
 internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
+internal const val LIBRARY_CLEAR_FILTER_ACTION = "Clear filter"
 internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."
-internal const val LIBRARY_NO_MATCHES_TITLE = "No apps match that filter"

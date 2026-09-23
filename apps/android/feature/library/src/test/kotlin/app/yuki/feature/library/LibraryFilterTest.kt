@@ -57,4 +57,13 @@ class LibraryFilterTest {
         assertTrue(empty.isEmpty)
         assertFalse(empty.hasNoMatches)
     }
+
+    @Test
+    fun `each filter names its own empty state`() {
+        val titles = LibraryFilter.entries.map(LibraryFilter::emptyTitle)
+        val descriptions = LibraryFilter.entries.map(LibraryFilter::emptyDescription)
+
+        assertEquals(titles.size, titles.toSet().size)
+        assertEquals(descriptions.size, descriptions.toSet().size)
+    }
 }

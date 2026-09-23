@@ -113,6 +113,7 @@ class LibraryScreenTest {
         onExploreClick: () -> Unit = {},
         onPullToRefresh: () -> Unit = {},
         onDismiss: (Long) -> Unit = {},
+        onFilterSelected: (LibraryFilter) -> Unit = {},
     ) {
         composeRule.setContent {
             LibraryContentScreen(
@@ -125,7 +126,7 @@ class LibraryScreenTest {
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
                     onDismiss = onDismiss,
-                    onFilterSelected = {},
+                    onFilterSelected = onFilterSelected,
                 ),
                 contentPadding = PaddingValues(),
             )
@@ -174,8 +175,23 @@ class LibraryScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(LIBRARY_NO_MATCHES_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(LIBRARY_EMPTY_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(LibraryFilter.NotInstalled.emptyTitle).assertIsDisplayed()
+        composeRule.onNodeWithText(LibraryFilter.All.emptyTitle).assertDoesNotExist()
+    }
+
+    @Test
+    fun clearingTheFilterFromTheEmptyStateSelectsAll() {
+        val selected = mutableListOf<LibraryFilter>()
+        setContent(
+            UiState.Success(
+                LibraryContent(items = listOf(item()), filter = LibraryFilter.NotInstalled),
+            ),
+            onFilterSelected = selected::add,
+        )
+
+        composeRule.onNodeWithText(LIBRARY_CLEAR_FILTER_ACTION).performClick()
+
+        assertEquals(listOf(LibraryFilter.All), selected)
     }
 
     @Test
