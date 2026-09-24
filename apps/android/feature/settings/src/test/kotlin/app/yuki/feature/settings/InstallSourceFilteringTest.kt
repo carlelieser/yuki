@@ -39,7 +39,7 @@ class InstallSourceFilteringTest {
     }
 
     @Test
-    fun theInstallSourceAppliesOnlyToSilentInstalls() {
+    fun theInstallSourceAppliesOnlyToPrivilegedInstalls() {
         assertTrue(installSourceApplies(InstallMode.Automatic))
         assertFalse(installSourceApplies(InstallMode.AlwaysAsk))
     }
