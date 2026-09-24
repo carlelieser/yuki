@@ -105,7 +105,7 @@ class SettingsScreenTest {
         setContent(ShizukuState.Ready)
         scrollToInstallMode()
 
-        composeRule.onNodeWithText(InstallMode.Automatic.label).assertIsDisplayed()
+        composeRule.onAllNodesWithText(InstallMode.Shizuku.label).onLast().assertIsDisplayed()
     }
 
     @Test
@@ -127,9 +127,9 @@ class SettingsScreenTest {
         scrollToInstallMode()
 
         composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
-        composeRule.onAllNodesWithText(InstallMode.AlwaysAsk.label).onLast().performClick()
+        composeRule.onAllNodesWithText(InstallMode.System.label).onLast().performClick()
 
-        assertEquals(listOf(InstallMode.AlwaysAsk), modes)
+        assertEquals(listOf(InstallMode.System), modes)
     }
 
     @Test
@@ -171,7 +171,7 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun theInstallSourceRowIsDisabledWhenInstallsAlwaysAsk() {
+    fun theInstallSourceRowIsDisabledWhenTheSystemInstallerIsPreferred() {
         setContent(ShizukuState.Ready, isInstallSourceEnabled = false)
         scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
 

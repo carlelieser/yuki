@@ -34,6 +34,6 @@ internal object PreferencesModule {
 }
 
 private fun toPreferredInstaller(mode: InstallMode): PreferredInstaller = when (mode) {
-    InstallMode.Automatic -> PreferredInstaller.Privileged
-    InstallMode.AlwaysAsk -> PreferredInstaller.System
+    InstallMode.Shizuku -> PreferredInstaller.Privileged
+    InstallMode.System -> PreferredInstaller.System
 }

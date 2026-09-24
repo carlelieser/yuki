@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 enum class InstallMode(val label: String) {
-    Automatic("Silent"),
-    AlwaysAsk("Always ask"),
+    Shizuku("Shizuku"),
+    System("System installer"),
 }
 
 enum class AppearanceMode(val label: String) {
@@ -32,7 +32,7 @@ data class YukiPreferences(
     companion object {
         val Defaults: YukiPreferences = YukiPreferences(
             includePrereleases = false,
-            installMode = InstallMode.Automatic,
+            installMode = InstallMode.Shizuku,
             appearance = AppearanceMode.System,
             isDynamicColorEnabled = true,
             installerPackage = SHELL_INSTALLER_PACKAGE,
@@ -73,8 +73,14 @@ internal fun decode(stored: Preferences): YukiPreferences = YukiPreferences(
 private fun decodeInstallerPackage(raw: String?): String =
     raw?.takeIf(String::isNotBlank) ?: YukiPreferences.Defaults.installerPackage
 
+private val LegacyInstallModes: Map<String, InstallMode> = mapOf(
+    "Automatic" to InstallMode.Shizuku,
+    "AlwaysAsk" to InstallMode.System,
+)
+
 private fun decodeInstallMode(raw: String?): InstallMode =
     InstallMode.entries.firstOrNull { mode -> mode.name == raw }
+        ?: LegacyInstallModes[raw]
         ?: YukiPreferences.Defaults.installMode
 
 private fun decodeAppearance(raw: String?): AppearanceMode =

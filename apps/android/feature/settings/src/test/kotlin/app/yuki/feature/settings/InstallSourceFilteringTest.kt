@@ -40,8 +40,8 @@ class InstallSourceFilteringTest {
 
     @Test
     fun theInstallSourceAppliesOnlyToPrivilegedInstalls() {
-        assertTrue(installSourceApplies(InstallMode.Automatic))
-        assertFalse(installSourceApplies(InstallMode.AlwaysAsk))
+        assertTrue(installSourceApplies(InstallMode.Shizuku))
+        assertFalse(installSourceApplies(InstallMode.System))
     }
 
     @Test
