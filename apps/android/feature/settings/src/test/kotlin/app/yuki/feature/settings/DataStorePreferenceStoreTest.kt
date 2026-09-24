@@ -3,6 +3,8 @@ package app.yuki.feature.settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import app.yuki.core.shizuku.SHELL_INSTALLER_PACKAGE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +18,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+
+private val InstallModeKey = stringPreferencesKey("install_mode")
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DataStorePreferenceStoreTest {
@@ -43,11 +47,30 @@ class DataStorePreferenceStoreTest {
     @Test
     fun installModeSurvivesAWriteAndReadBack() = runTest {
         withStore { store ->
-            store.setInstallMode(InstallMode.AlwaysAsk)
-            assertEquals(InstallMode.AlwaysAsk, store.preferences.first().installMode)
+            store.setInstallMode(InstallMode.System)
+            assertEquals(InstallMode.System, store.preferences.first().installMode)
 
-            store.setInstallMode(InstallMode.Automatic)
-            assertEquals(InstallMode.Automatic, store.preferences.first().installMode)
+            store.setInstallMode(InstallMode.Shizuku)
+            assertEquals(InstallMode.Shizuku, store.preferences.first().installMode)
+        }
+    }
+
+    @Test
+    fun legacyInstallModeNamesStillDecode() = runTest {
+        val file = folder.newFile("legacy.preferences_pb").also(java.io.File::delete)
+        val scope = CoroutineScope(UnconfinedTestDispatcher())
+        val raw: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = scope) { file }
+
+        try {
+            val store = DataStorePreferenceStore(raw)
+
+            raw.edit { stored -> stored[InstallModeKey] = "AlwaysAsk" }
+            assertEquals(InstallMode.System, store.preferences.first().installMode)
+
+            raw.edit { stored -> stored[InstallModeKey] = "Automatic" }
+            assertEquals(InstallMode.Shizuku, store.preferences.first().installMode)
+        } finally {
+            scope.cancel()
         }
     }
 
@@ -86,7 +109,7 @@ class DataStorePreferenceStoreTest {
     fun eachPreferenceIsStoredUnderItsOwnKey() = runTest {
         withStore { store ->
             store.setIncludePrereleases(true)
-            store.setInstallMode(InstallMode.AlwaysAsk)
+            store.setInstallMode(InstallMode.System)
             store.setAppearance(AppearanceMode.Dark)
             store.setDynamicColorEnabled(false)
             store.setInstallerPackage("com.android.vending")
@@ -94,7 +117,7 @@ class DataStorePreferenceStoreTest {
             assertEquals(
                 YukiPreferences(
                     includePrereleases = true,
-                    installMode = InstallMode.AlwaysAsk,
+                    installMode = InstallMode.System,
                     appearance = AppearanceMode.Dark,
                     isDynamicColorEnabled = false,
                     installerPackage = "com.android.vending",

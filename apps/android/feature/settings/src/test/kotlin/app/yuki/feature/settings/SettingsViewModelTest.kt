@@ -125,11 +125,11 @@ class SettingsViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(InstallMode.Automatic, successOf(awaitItem()).preferences.installMode)
+            assertEquals(InstallMode.Shizuku, successOf(awaitItem()).preferences.installMode)
 
-            viewModel.onInstallModeChange(InstallMode.AlwaysAsk)
+            viewModel.onInstallModeChange(InstallMode.System)
 
-            assertEquals(InstallMode.AlwaysAsk, successOf(awaitItem()).preferences.installMode)
+            assertEquals(InstallMode.System, successOf(awaitItem()).preferences.installMode)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -193,14 +193,14 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun alwaysAskDisablesTheInstallSourceRow() = runTest {
+    fun theSystemInstallerDisablesTheInstallSourceRow() = runTest {
         val viewModel = viewModel()
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
             assertTrue(successOf(awaitItem()).installSource.isEnabled)
 
-            viewModel.onInstallModeChange(InstallMode.AlwaysAsk)
+            viewModel.onInstallModeChange(InstallMode.System)
             runCurrent()
 
             assertFalse(successOf(expectMostRecentItem()).installSource.isEnabled)

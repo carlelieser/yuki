@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import java.util.Optional
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -35,15 +36,28 @@ internal abstract class InstallerModule {
 internal object InstallStrategySelectorModule {
     @Provides
     @Singleton
+    @Gated
+    fun provideGatedInstaller(
+        privileged: Optional<PrivilegedInstaller>,
+        preference: InstallModePreference,
+    ): Optional<PrivilegedInstaller> =
+        privileged.map { installer -> InstallModeGatedInstaller(installer, preference) }
+
+    @Provides
+    @Singleton
     fun provideSelector(
         identityReader: ApkIdentityReader,
         fallback: InstallStrategy,
-        privileged: Optional<PrivilegedInstaller>,
+        @Gated privileged: Optional<PrivilegedInstaller>,
     ): InstallStrategySelector =
         InstallStrategySelector(identityReader, fallback, privileged.orElse(null))
 
     @Provides
     @Singleton
-    fun provideUninstaller(privileged: Optional<PrivilegedInstaller>): Uninstaller =
+    fun provideUninstaller(@Gated privileged: Optional<PrivilegedInstaller>): Uninstaller =
         Uninstaller(privileged.orElse(null))
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class Gated

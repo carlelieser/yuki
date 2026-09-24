@@ -10,9 +10,9 @@ import org.junit.Test
 
 class PreferenceDecodingTest {
     @Test
-    fun defaultsFavourStableReleasesAutomaticInstallsAndDynamicColor() {
+    fun defaultsFavourStableReleasesShizukuInstallsAndDynamicColor() {
         assertFalse(YukiPreferences.Defaults.includePrereleases)
-        assertEquals(InstallMode.Automatic, YukiPreferences.Defaults.installMode)
+        assertEquals(InstallMode.Shizuku, YukiPreferences.Defaults.installMode)
         assertEquals(AppearanceMode.System, YukiPreferences.Defaults.appearance)
         assertTrue(YukiPreferences.Defaults.isDynamicColorEnabled)
         assertEquals(SHELL_INSTALLER_PACKAGE, YukiPreferences.Defaults.installerPackage)
@@ -27,14 +27,14 @@ class PreferenceDecodingTest {
 
     @Test
     fun eachInstallModeOffersAName() {
-        assertEquals("Silent", InstallMode.Automatic.label)
-        assertEquals("Always ask", InstallMode.AlwaysAsk.label)
+        assertEquals("Shizuku", InstallMode.Shizuku.label)
+        assertEquals("System installer", InstallMode.System.label)
     }
 
     @Test
     fun theStoredNameIsIndependentOfTheDisplayedLabel() {
-        assertEquals("Automatic", InstallMode.Automatic.name)
-        assertEquals("AlwaysAsk", InstallMode.AlwaysAsk.name)
+        assertEquals("Shizuku", InstallMode.Shizuku.name)
+        assertEquals("System", InstallMode.System.name)
     }
 
     @Test
@@ -43,13 +43,13 @@ class PreferenceDecodingTest {
         val reader = StoreBackedPreferenceReader(store)
 
         store.setIncludePrereleases(true)
-        store.setInstallMode(InstallMode.AlwaysAsk)
+        store.setInstallMode(InstallMode.System)
         store.setAppearance(AppearanceMode.Dark)
         store.setDynamicColorEnabled(false)
         store.setInstallerPackage("com.android.vending")
 
         assertTrue(reader.includePrereleases().first())
-        assertEquals(InstallMode.AlwaysAsk, reader.installMode().first())
+        assertEquals(InstallMode.System, reader.installMode().first())
         assertEquals(AppearanceMode.Dark, reader.appearance().first())
         assertFalse(reader.isDynamicColorEnabled().first())
         assertEquals("com.android.vending", reader.installerPackage().first())
@@ -60,7 +60,7 @@ class PreferenceDecodingTest {
         val reader = StoreBackedPreferenceReader(FakePreferenceStore())
 
         assertFalse(reader.includePrereleases().first())
-        assertEquals(InstallMode.Automatic, reader.installMode().first())
+        assertEquals(InstallMode.Shizuku, reader.installMode().first())
         assertEquals(AppearanceMode.System, reader.appearance().first())
         assertTrue(reader.isDynamicColorEnabled().first())
         assertEquals(SHELL_INSTALLER_PACKAGE, reader.installerPackage().first())
