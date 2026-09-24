@@ -2,6 +2,10 @@ import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
 import { httpApkSource } from './apk/http-source.ts';
 import { readApkPackageName } from './apk/package-name.ts';
+import { requireIconConfig } from './icon/env.ts';
+import { createApkIconExtractor } from './icon/extract.ts';
+import { createR2Bucket } from './icon/r2-bucket.ts';
+import { createIconStore } from './icon/store.ts';
 import {
 	listKnownRepoIds,
 	listListingsBySlug,
@@ -60,6 +64,9 @@ const maxRefresh = readOptionalNumberFlag('--max-refresh');
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());
+const iconConfig = requireIconConfig();
+const extractIcon = createApkIconExtractor(iconConfig.extractorBinary);
+const icons = createIconStore(createR2Bucket(iconConfig.r2), iconConfig.assetsBaseUrl);
 
 const discoveryRange = shouldDiscover ? await resolveDiscoveryRange() : undefined;
 const runId = await startRun(db);
@@ -106,7 +113,13 @@ try {
 			},
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),
-			readApkPackage: (downloadUrl) => readApkPackageName(httpApkSource(downloadUrl)),
+			apk: {
+				readPackage: (downloadUrl) => readApkPackageName(httpApkSource(downloadUrl)),
+				resolveIcon: async (downloadUrl) => {
+					const png = await extractIcon(downloadUrl);
+					return png === null ? null : icons.publish(png);
+				}
+			},
 			log: (message) => console.log(message)
 		},
 		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange }

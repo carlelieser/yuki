@@ -5,10 +5,9 @@ import {
 	type DetectedEvidence
 } from '../detection/evidence.ts';
 import { GithubSkip, type GithubClient } from '@yuki/github';
-import { iconFrom, readOptional } from './icon-source.ts';
 import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
-import { collectLfsPaths } from '../mapping/icon.ts';
+import { collectLfsPaths } from '../mapping/lfs.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
 import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
@@ -19,7 +18,8 @@ export type EtagStore = {
 };
 
 export type RefreshOutcome =
-	{ kind: 'updated'; input: PersistInput } | { kind: 'skipped'; reason: string };
+	| { kind: 'updated'; input: PersistInput; warnings: string[] }
+	| { kind: 'skipped'; reason: string };
 
 export type RefreshTarget = {
 	owner: string;
@@ -32,13 +32,22 @@ export type RefreshTarget = {
 
 export type ApkPackageReader = (downloadUrl: string) => Promise<string | null>;
 
+export type ApkIconResolver = (downloadUrl: string) => Promise<string | null>;
+
+export type ApkReaders = {
+	readPackage?: ApkPackageReader;
+	resolveIcon?: ApkIconResolver;
+};
+
+type IconOutcome = { iconUrl: string | null; warnings: string[] };
+
 type Resource<Body> = { state: 'fresh'; body: Body } | { state: 'unchanged' } | { state: 'absent' };
 
 export async function refreshListing(
 	client: GithubClient,
 	etags: EtagStore,
 	target: RefreshTarget,
-	readApkPackage?: ApkPackageReader
+	apk: ApkReaders = {}
 ): Promise<RefreshOutcome> {
 	const { owner, name } = target;
 	const repoResource = `repos/${owner}/${name}`;
@@ -89,6 +98,7 @@ export async function refreshListing(
 		const bannerUrl =
 			readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch, lfsPaths);
 		const isAndroidApp = androidVerdict(tree);
+		const icon = await iconFrom(versions, apk.resolveIcon);
 
 		return {
 			kind: 'updated',
@@ -100,10 +110,9 @@ export async function refreshListing(
 					repo.state === 'fresh'
 						? mapRepository(repo.body, scoreConfidence(evidence), readmeBody)
 						: null,
-				iconUrl:
-					tree.state === 'fresh' ? await iconFrom(client, tree.body, owner, name, branch) : null,
+				iconUrl: icon.iconUrl,
 				bannerUrl: readme.state === 'unchanged' ? null : bannerUrl,
-				packageName: await packageNameFrom(target, versions, readApkPackage),
+				packageName: await packageNameFrom(target, versions, apk.readPackage),
 				screenshots:
 					readme.state === 'unchanged'
 						? null
@@ -114,7 +123,8 @@ export async function refreshListing(
 				hasApk: versions === null ? null : hasDistributableApk(versions),
 				isAndroidApp,
 				evidence
-			}
+			},
+			warnings: icon.warnings
 		};
 	} catch (cause) {
 		if (cause instanceof GithubSkip) {
@@ -140,6 +150,27 @@ async function packageNameFrom(
 		return await read(downloadUrl);
 	} catch {
 		return null;
+	}
+}
+
+async function iconFrom(
+	versions: MappedVersion[] | null,
+	resolve: ApkIconResolver | undefined
+): Promise<IconOutcome> {
+	if (resolve === undefined) return { iconUrl: null, warnings: [] };
+	if (versions === null) return { iconUrl: null, warnings: [] };
+
+	const downloadUrl = newestDownloadUrl(versions);
+	if (downloadUrl === null) return { iconUrl: null, warnings: [] };
+
+	try {
+		return { iconUrl: await resolve(downloadUrl), warnings: [] };
+	} catch (cause) {
+		const reason = cause instanceof Error ? cause.message : String(cause);
+		return {
+			iconUrl: null,
+			warnings: [`resolving the icon from ${downloadUrl} failed: ${reason}`]
+		};
 	}
 }
 
@@ -208,6 +239,18 @@ function parseRepoEtag(stored: string): { etag: string; branch: string | null } 
 	if (index === -1) return { etag: stored, branch: null };
 
 	return { branch: stored.slice(0, index), etag: stored.slice(index + 1) };
+}
+
+async function readOptional<Body>(
+	load: () => Promise<{ isModified: true; body: Body; etag: string | null } | { isModified: false }>
+): Promise<Body | null> {
+	try {
+		const response = await load();
+		return response.isModified ? response.body : null;
+	} catch (cause) {
+		if (cause instanceof GithubSkip) return null;
+		throw cause;
+	}
 }
 
 async function readResource<Body>(
