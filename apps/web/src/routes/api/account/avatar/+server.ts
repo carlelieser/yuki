@@ -3,16 +3,12 @@ import { APIError } from 'better-auth/api';
 import type { RequestHandler } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
 import {
-	avatarUrlFor,
 	isSupportedAvatarType,
 	MAX_AVATAR_BYTES,
-	saveAvatar
+	removeAvatar,
+	uploadAvatar,
+	type AvatarUpload
 } from '$lib/server/avatars.ts';
-
-type AvatarUpload = {
-	contentType: string;
-	bytes: Buffer;
-};
 
 async function readUpload(request: Request): Promise<AvatarUpload> {
 	const payload = await request.json().catch(() => null);
@@ -49,24 +45,21 @@ function decodeBase64(data: string): Buffer {
 	return bytes;
 }
 
-export const POST: RequestHandler = async ({ locals, request, url }) => {
+export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) error(401, 'Sign in to change your picture');
 
-	const { contentType, bytes } = await readUpload(request);
-
-	const updatedAt = await saveAvatar(locals.db, {
-		userId: locals.user.id,
-		contentType,
-		bytes
-	});
-	const image = avatarUrlFor(locals.user.id, updatedAt, url.origin);
+	const upload = await readUpload(request);
+	const image = await uploadAvatar(locals.user.id, upload);
 
 	try {
 		await getAuth().api.updateUser({ body: { image }, headers: request.headers });
 	} catch (cause) {
+		await removeAvatar(image);
 		if (cause instanceof APIError) error(400, 'Could not save the picture');
 		throw cause;
 	}
+
+	await removeAvatar(locals.user.image);
 
 	return json({ image });
 };
