@@ -1,6 +1,9 @@
 import { convertPaths } from './vector-render.ts';
 export { resolveColor, resolveColorGradient } from './vector-colors.ts';
 import { numeric } from './vector-attributes.ts';
+import { drawableKindOf } from './drawable-kind.ts';
+import { createFidelity, markUnresolved, type Fidelity } from './fidelity.ts';
+export { createFidelity, markUnresolved, type Fidelity } from './fidelity.ts';
 
 const ADAPTIVE_LAYER =
 	/<(background|foreground)\b[^>]*android:drawable="@(android:)?(color|drawable|mipmap)\/([^"]+)"/g;
@@ -13,8 +16,8 @@ export const VIEWPORT_INSET = 18;
 export const CORNER_RADIUS = 0.2;
 
 export type AdaptiveIconRefs = {
-	background: { kind: 'color' | 'drawable'; name: string } | null;
-	foreground: { kind: 'color' | 'drawable'; name: string } | null;
+	background: { kind: 'color' | 'drawable' | 'mipmap'; name: string } | null;
+	foreground: { kind: 'color' | 'drawable' | 'mipmap'; name: string } | null;
 };
 
 export function parseColors(xml: string): Map<string, string> {
@@ -45,10 +48,15 @@ export function parseAdaptiveIcon(xml: string): AdaptiveIconRefs {
 		const framework = match[2] !== undefined;
 		const kind = match[3];
 		const name = match[4];
-		if (name === undefined || kind === 'mipmap') continue;
+		if (name === undefined || kind === undefined) continue;
 
 		const ref = {
-			kind: kind === 'color' ? ('color' as const) : ('drawable' as const),
+			kind:
+				kind === 'color'
+					? ('color' as const)
+					: kind === 'mipmap'
+						? ('mipmap' as const)
+						: ('drawable' as const),
 			name: kind === 'color' && framework ? `android:${name}` : name
 		};
 		if (layer === 'background') refs.background = ref;
@@ -65,16 +73,29 @@ export function vectorToSvg(
 		fallbackFill?: string | null;
 		idPrefix?: string;
 		gradients?: Map<string, string>;
+		fidelity?: Fidelity;
 	} = {}
 ): string | null {
 	const fallbackFill = options.fallbackFill === undefined ? '#000000' : options.fallbackFill;
 	const idPrefix = options.idPrefix ?? 'g';
 	const gradients = options.gradients ?? new Map<string, string>();
+	const fidelity = options.fidelity ?? createFidelity();
 
-	if (vector.length > MAX_SOURCE_BYTES) return null;
+	if (vector.length > MAX_SOURCE_BYTES) {
+		markUnresolved(fidelity, 'source-too-large');
+		return null;
+	}
+
+	const kind = drawableKindOf(vector);
+	if (kind !== 'vector' && kind !== 'adaptive-icon' && kind !== 'unknown') {
+		markUnresolved(fidelity, `unsupported-root:${kind}`);
+	}
 
 	const header = vector.match(VECTOR_TAG)?.[0];
-	if (header === undefined) return null;
+	if (header === undefined) {
+		markUnresolved(fidelity, 'no-vector-tag');
+		return null;
+	}
 
 	const width = numeric(header, 'viewportWidth', CANVAS);
 	const height = numeric(header, 'viewportHeight', CANVAS);

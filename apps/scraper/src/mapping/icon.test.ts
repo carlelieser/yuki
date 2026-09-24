@@ -525,12 +525,12 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(layout, read);
 
 		expect(icon).not.toBeNull();
-		expect(icon?.startsWith('data:image/svg+xml;base64,')).toBe(true);
+		expect(icon?.svg.startsWith('data:image/svg+xml;base64,')).toBe(true);
 	});
 
 	it('resolves colour references from the values directory', async () => {
 		const icon = await buildVectorIcon(layout, read);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');
@@ -546,7 +546,7 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(tree([...spread.keys()]), (path) =>
 			Promise.resolve(spread.get(path) ?? null)
 		);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');
@@ -562,7 +562,7 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(tree([...split.keys()]), (path) =>
 			Promise.resolve(split.get(path) ?? null)
 		);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');
@@ -582,7 +582,7 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(tree([...split.keys()]), (path) =>
 			Promise.resolve(split.get(path) ?? null)
 		);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).not.toContain('#111111');
@@ -606,7 +606,7 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(tree([...qualified.keys()]), (path) =>
 			Promise.resolve(qualified.get(path) ?? null)
 		);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 		expect(svg).toContain('#0A0C10');
@@ -622,7 +622,7 @@ describe('buildVectorIcon', () => {
 		const icon = await buildVectorIcon(tree([...nightOnly.keys()]), (path) =>
 			Promise.resolve(nightOnly.get(path) ?? null)
 		);
-		const svg = Buffer.from(icon?.split(',')[1] ?? '', 'base64').toString('utf8');
+		const svg = Buffer.from(icon?.svg.split(',')[1] ?? '', 'base64').toString('utf8');
 
 		expect(svg).toContain('#FBFCFD');
 	});

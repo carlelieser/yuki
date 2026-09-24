@@ -46,12 +46,12 @@ describe('parseAdaptiveIcon', () => {
 		expect(refs.foreground).toEqual({ kind: 'drawable', name: 'launcher_foreground' });
 	});
 
-	it('ignores mipmap references, which point at raster assets', () => {
+	it('reports mipmap references so callers can fall back to the raster', () => {
 		const refs = parseAdaptiveIcon(
 			`<adaptive-icon><foreground android:drawable="@mipmap/ic_launcher_foreground" /></adaptive-icon>`
 		);
 
-		expect(refs.foreground).toBeNull();
+		expect(refs.foreground).toEqual({ kind: 'mipmap', name: 'ic_launcher_foreground' });
 	});
 });
 

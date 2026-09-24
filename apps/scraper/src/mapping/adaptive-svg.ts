@@ -7,6 +7,7 @@ import {
 	VIEWPORT_INSET,
 	CORNER_RADIUS
 } from './vector-icon.ts';
+import { createFidelity, markUnresolved, type Fidelity } from './fidelity.ts';
 
 const RASTER_SIZE = 432;
 
@@ -31,12 +32,14 @@ export function composeAdaptiveSvg(input: {
 	foreground: string | null;
 	colors: Map<string, string>;
 	gradients?: Map<string, string>;
+	fidelity?: Fidelity;
 }): string | null {
 	const gradients = input.gradients ?? new Map<string, string>();
+	const fidelity = input.fidelity ?? createFidelity();
 	const foreground =
 		input.foreground === null
 			? null
-			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg', gradients });
+			: vectorToSvg(input.foreground, input.colors, { idPrefix: 'fg', gradients, fidelity });
 	if (foreground === null) return null;
 
 	const width = CANVAS;
@@ -63,14 +66,18 @@ export function composeAdaptiveSvg(input: {
 				}
 			} else if (color !== null) {
 				layers.push(`<rect width="${width}" height="${height}" fill="${color}"/>`);
+			} else {
+				markUnresolved(fidelity, `unresolved-background-color:${input.background.value}`);
 			}
 		} else {
 			const backgroundSvg = vectorToSvg(input.background.value, input.colors, {
 				idPrefix: 'bg',
 				gradients,
-				fallbackFill: null
+				fallbackFill: null,
+				fidelity
 			});
 			if (backgroundSvg !== null) layers.push(normaliseLayer(backgroundSvg));
+			else markUnresolved(fidelity, 'unresolved-background-vector');
 		}
 	}
 

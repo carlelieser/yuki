@@ -3,6 +3,10 @@ import { blobs, findAdaptiveIconPath, splitPath } from './icon.ts';
 import { parseAdaptiveIcon, parseColors, vectorToSvg } from './vector-icon.ts';
 import { readShapeFill } from './solid-layer.ts';
 import { composeAdaptiveSvg, toDataUri } from './adaptive-svg.ts';
+import { drawableKindOf, readLayerItems } from './drawable-kind.ts';
+import { createFidelity, markUnresolved, type Fidelity } from './fidelity.ts';
+
+export type VectorIconResult = { svg: string; fidelity: Fidelity };
 
 function qualifierRank(loweredPath: string, loweredResourceDir: string): number | null {
 	const rest = loweredPath.slice(`${loweredResourceDir}/`.length);
@@ -18,6 +22,53 @@ function qualifierRank(loweredPath: string, loweredResourceDir: string): number 
 }
 
 const SOURCE_SET_BONUS = 10;
+
+const MAX_LAYER_DEPTH = 4;
+
+const VECTOR_OPEN = /<vector\b[^>]*>/;
+
+function viewportOf(vector: string): { width: number; height: number } | null {
+	const header = vector.match(VECTOR_OPEN)?.[0];
+	if (header === undefined) return null;
+
+	const width = Number.parseFloat(header.match(/android:viewportWidth="([\d.]+)"/)?.[1] ?? '');
+	const height = Number.parseFloat(header.match(/android:viewportHeight="([\d.]+)"/)?.[1] ?? '');
+	if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+
+	return { width, height };
+}
+
+function mergeVectors(layers: string[]): string | null {
+	const base = layers[0];
+	if (base === undefined) return null;
+
+	const target = viewportOf(base);
+	if (target === null) return null;
+
+	const bodies: string[] = [];
+	for (const layer of layers) {
+		const header = layer.match(VECTOR_OPEN)?.[0];
+		if (header === undefined) continue;
+
+		const inner = layer.slice(layer.indexOf(header) + header.length).replace(/<\/vector>\s*$/, '');
+		if (inner.trim() === '') continue;
+
+		const viewport = viewportOf(layer);
+		if (viewport === null) continue;
+
+		const scaleX = target.width / viewport.width;
+		const scaleY = target.height / viewport.height;
+		bodies.push(
+			scaleX === 1 && scaleY === 1
+				? inner
+				: `<group android:scaleX="${scaleX}" android:scaleY="${scaleY}">${inner}</group>`
+		);
+	}
+
+	if (bodies.length === 0) return null;
+
+	return `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:viewportWidth="${target.width}" android:viewportHeight="${target.height}">${bodies.join('')}</vector>`;
+}
 
 const COLOR_VALUES_FILE =
 	/\/[^/]*colou?rs?[^/]*\.xml$|\/[^/]*ic_launcher[^/]*background[^/]*\.xml$/;
@@ -87,7 +138,9 @@ export async function buildVectorIcon(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>,
 	declaredPath: string | null = null
-): Promise<string | null> {
+): Promise<VectorIconResult | null> {
+	const fidelity = createFidelity();
+
 	const adaptivePath = declaredPath ?? findAdaptiveIconPath(tree);
 	if (adaptivePath === null) return null;
 
@@ -95,7 +148,8 @@ export async function buildVectorIcon(
 	if (adaptiveXml === null) return null;
 
 	const refs = parseAdaptiveIcon(adaptiveXml);
-	const isPlainVector = refs.foreground === null && /<vector\b/.test(adaptiveXml);
+	const rootKind = drawableKindOf(adaptiveXml);
+	const isPlainVector = refs.foreground === null && rootKind === 'vector';
 	if (refs.foreground === null && !isPlainVector) return null;
 
 	const resourceDir = resourceDirOf(adaptivePath);
@@ -149,13 +203,71 @@ export async function buildVectorIcon(
 		return null;
 	};
 
+	const flatten = async (xml: string, depth: number): Promise<string | null> => {
+		const kind = drawableKindOf(xml);
+		if (kind === 'vector') return xml;
+
+		if (kind !== 'layer-list') {
+			markUnresolved(fidelity, `unsupported-drawable:${kind}`);
+			return null;
+		}
+
+		if (depth >= MAX_LAYER_DEPTH) {
+			markUnresolved(fidelity, 'layer-list-too-deep');
+			return null;
+		}
+
+		const items = readLayerItems(xml);
+		if (items.length === 0) {
+			markUnresolved(fidelity, 'layer-list-empty');
+			return null;
+		}
+
+		const rendered: string[] = [];
+		for (const item of items) {
+			if (item.kind === 'reference') {
+				if (item.reference.kind !== 'drawable') {
+					markUnresolved(fidelity, `layer-reference:${item.reference.kind}`);
+					continue;
+				}
+
+				const nested = await readDrawable(item.reference.name);
+				if (nested === null) {
+					markUnresolved(fidelity, `missing-drawable:${item.reference.name}`);
+					continue;
+				}
+
+				const flat = await flatten(nested, depth + 1);
+				if (flat !== null) rendered.push(flat);
+				continue;
+			}
+
+			const flat = await flatten(item.xml, depth + 1);
+			if (flat !== null) rendered.push(flat);
+		}
+
+		if (rendered.length === 0) return null;
+
+		return rendered.length === 1 ? (rendered[0] ?? null) : mergeVectors(rendered);
+	};
+
 	if (refs.foreground === null) {
-		const svg = vectorToSvg(adaptiveXml, colors, { gradients });
-		return svg === null ? null : toDataUri(svg);
+		const svg = vectorToSvg(adaptiveXml, colors, { gradients, fidelity });
+		return svg === null ? null : { svg: toDataUri(svg), fidelity };
 	}
 
-	const foregroundXml =
-		refs.foreground.kind === 'drawable' ? await readDrawable(refs.foreground.name) : null;
+	if (refs.foreground.kind !== 'drawable') {
+		markUnresolved(fidelity, `foreground-reference:${refs.foreground.kind}`);
+		return null;
+	}
+
+	const declaredForeground = await readDrawable(refs.foreground.name);
+	if (declaredForeground === null) {
+		markUnresolved(fidelity, `missing-drawable:${refs.foreground.name}`);
+		return null;
+	}
+
+	const foregroundXml = await flatten(declaredForeground, 0);
 	if (foregroundXml === null) return null;
 
 	let background: { kind: 'color' | 'vector'; value: string } | null = null;
@@ -165,15 +277,26 @@ export async function buildVectorIcon(
 				? `@android:color/${refs.background.name.slice('android:'.length)}`
 				: `@color/${refs.background.name}`;
 			background = { kind: 'color', value: reference };
+		} else if (refs.background.kind === 'mipmap') {
+			markUnresolved(fidelity, 'background-reference:mipmap');
 		} else {
 			const backgroundXml = await readDrawable(refs.background.name);
 			const shapeFill = backgroundXml === null ? null : readShapeFill(backgroundXml);
 
 			if (shapeFill !== null) background = { kind: 'color', value: shapeFill };
-			else if (backgroundXml !== null) background = { kind: 'vector', value: backgroundXml };
+			else if (backgroundXml !== null) {
+				const flat = await flatten(backgroundXml, 0);
+				if (flat !== null) background = { kind: 'vector', value: flat };
+			} else markUnresolved(fidelity, `missing-drawable:${refs.background.name}`);
 		}
 	}
 
-	const svg = composeAdaptiveSvg({ background, foreground: foregroundXml, colors, gradients });
-	return svg === null ? null : toDataUri(svg);
+	const svg = composeAdaptiveSvg({
+		background,
+		foreground: foregroundXml,
+		colors,
+		gradients,
+		fidelity
+	});
+	return svg === null ? null : { svg: toDataUri(svg), fidelity };
 }

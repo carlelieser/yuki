@@ -17,7 +17,8 @@ import { composeAdaptiveRaster, toPngDataUri } from '../mapping/adaptive-raster.
 import { findExpoConfigPaths, readExpoIcon, resolveExpoAsset } from '../mapping/expo-config.ts';
 import { buildVectorIcon, readColorResources, resourceDirFor } from '../mapping/adaptive-vector.ts';
 import { readSolidFill, solidLayer } from '../mapping/solid-layer.ts';
-import { resolveColor } from '../mapping/vector-icon.ts';
+import { parseAdaptiveIcon, resolveColor } from '../mapping/vector-icon.ts';
+import { readLayerItems } from '../mapping/drawable-kind.ts';
 import {
 	buildBlobUrl,
 	buildIconUrl,
@@ -57,11 +58,27 @@ export async function iconFrom(
 	const curatedUrl = await buildIconUrl(tree, owner, name, branch, readBlob, findCuratedIconPath);
 	if (curatedUrl !== null) return curatedUrl;
 
+	const rasterFallback = async (declaredXml: string | null): Promise<string | null> => {
+		const composed = await composedRasterFrom(tree, read, owner, name, branch, declaredXml);
+		if (composed !== null) return composed;
+
+		const discovered = await discoveredRasterFrom(tree, read, owner, name, branch);
+		if (discovered !== null) return discovered;
+
+		return buildIconUrl(tree, owner, name, branch, readBlob, findPrebakedIconPath);
+	};
+
 	const declared = await declaredIconFrom(tree, read);
 	if (declared !== null) {
 		if (declared.xml !== null) {
-			const svg = await buildVectorIcon(tree, read, declared.xml);
-			if (svg !== null) return svg;
+			const vector = await buildVectorIcon(tree, read, declared.xml);
+			if (vector !== null && !vector.fidelity.unresolved) return vector.svg;
+
+			if (vector !== null) {
+				const raster = await rasterFallback(declared.xml);
+				if (raster !== null) return raster;
+				return vector.svg;
+			}
 		}
 
 		if (declared.layers !== null) {
@@ -87,13 +104,15 @@ export async function iconFrom(
 	}
 
 	const vector = await buildVectorIcon(tree, read);
-	if (vector !== null) return vector;
+	if (vector !== null && !vector.fidelity.unresolved) return vector.svg;
 
 	const discovered = await discoveredRasterFrom(tree, read, owner, name, branch);
 	if (discovered !== null) return discovered;
 
 	const prebakedUrl = await buildIconUrl(tree, owner, name, branch, readBlob, findPrebakedIconPath);
 	if (prebakedUrl !== null) return prebakedUrl;
+
+	if (vector !== null) return vector.svg;
 
 	return expoIconFrom(tree, read, owner, name, branch);
 }
@@ -116,6 +135,79 @@ async function expoIconFrom(
 		if (asset === null) continue;
 
 		return buildBlobUrl(owner, name, branch, asset, false);
+	}
+
+	return null;
+}
+
+async function composedRasterFrom(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	owner: string,
+	name: string,
+	branch: string,
+	declaredXml: string | null
+): Promise<string | null> {
+	if (declaredXml === null) return null;
+
+	const adaptiveXml = await read(declaredXml);
+	if (adaptiveXml === null) return null;
+
+	const refs = parseAdaptiveIcon(adaptiveXml);
+	if (refs.foreground === null) return null;
+
+	const foreground = await rasterForLayer(tree, read, refs.foreground);
+	if (foreground === null) return null;
+
+	const background =
+		refs.background === null ? null : await rasterForLayer(tree, read, refs.background);
+
+	const colors = await readColorResources(tree, read, resourceDirFor(declaredXml));
+
+	const composed = await composeLayers(
+		{
+			foreground,
+			background: background === null ? null : { kind: 'raster', path: background }
+		},
+		(path) => downloadBlob(owner, name, branch, path),
+		read,
+		colors
+	);
+	if (composed !== null) return composed;
+
+	return buildBlobUrl(owner, name, branch, foreground, false);
+}
+
+async function rasterForLayer(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	reference: { kind: string; name: string }
+): Promise<string | null> {
+	if (reference.kind === 'color') return null;
+
+	const direct = findRasterForReference(tree, { kind: reference.kind, name: reference.name });
+	if (direct !== null) return direct;
+
+	const wrappers = findDeclaredIconPaths(tree, {
+		kind: reference.kind,
+		name: reference.name
+	}).xml;
+
+	for (const wrapper of wrappers) {
+		const xml = await read(wrapper);
+		if (xml === null) continue;
+
+		for (const nested of readLayerItems(xml)) {
+			if (nested.kind !== 'reference' || nested.reference.kind === 'color') continue;
+
+			const raster = findRasterForReference(tree, nested.reference);
+			if (raster !== null) return raster;
+		}
+
+		for (const nested of readRasterReferences(xml)) {
+			const raster = findRasterForReference(tree, nested);
+			if (raster !== null) return raster;
+		}
 	}
 
 	return null;
