@@ -1,0 +1,10 @@
+{
+	"identities": [
+		{
+			"name": "yuki",
+			"credentials": [{ "accessKey": "yuki", "secretKey": "yuki-secret" }],
+			"actions": ["Admin", "Read", "List", "Write"]
+		},
+		{ "name": "anonymous", "actions": ["Read:yuki-assets"] }
+	]
+}

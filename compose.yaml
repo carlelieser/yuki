@@ -28,19 +28,60 @@ services:
       timeout: 5s
       retries: 10
 
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.47
+    restart: unless-stopped
+    command: ['server', '-s3', '-s3.config=/etc/seaweedfs/s3.json', '-dir=/data']
+    ports:
+      - '8333:8333'
+    volumes:
+      - ./apps/scraper/seaweedfs.json:/etc/seaweedfs/s3.json:ro
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8333/status']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  icons-bucket:
+    image: amazon/aws-cli:2.34.0
+    environment:
+      AWS_ACCESS_KEY_ID: yuki
+      AWS_SECRET_ACCESS_KEY: yuki-secret
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        aws --endpoint-url http://seaweedfs:8333 s3api head-bucket --bucket yuki-assets ||
+        aws --endpoint-url http://seaweedfs:8333 s3api create-bucket --bucket yuki-assets
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+
   scraper:
     profiles: ['scrape']
-    image: oven/bun:1.4-alpine
+    build:
+      context: .
+      dockerfile: apps/scraper/Dockerfile
     working_dir: /app
     command: ['bun', 'run', 'apps/scraper/src/main.ts']
     environment:
       DATABASE_URL: postgres://yuki:yuki@postgres:5432/yuki
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      R2_ENDPOINT: http://seaweedfs:8333
+      R2_ACCESS_KEY_ID: yuki
+      R2_SECRET_ACCESS_KEY: yuki-secret
+      R2_BUCKET: yuki-assets
+      ASSETS_BASE_URL: http://localhost:8333/yuki-assets
     volumes:
       - .:/app
     depends_on:
       postgres:
         condition: service_healthy
+      icons-bucket:
+        condition: service_completed_successfully
 
 volumes:
   postgres-data:
+  seaweedfs-data:
