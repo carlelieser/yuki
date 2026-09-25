@@ -20,6 +20,7 @@ private object FailureName {
     const val DOWNLOAD_UNREADABLE = "download_unreadable"
     const val NOT_AN_APK = "not_an_apk"
     const val ABORTED = "aborted"
+    const val SESSION_FAILED = "session_failed"
     const val INSUFFICIENT_STORAGE = "insufficient_storage"
     const val INCOMPATIBLE = "incompatible"
     const val INVALID_APK = "invalid_apk"
@@ -75,6 +76,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
     FailureName.DOWNLOAD_UNREADABLE -> InstallFailure.DownloadUnreadable
     FailureName.NOT_AN_APK -> InstallFailure.NotAnApk
     FailureName.ABORTED -> InstallFailure.Aborted
+    FailureName.SESSION_FAILED -> InstallFailure.SessionFailed
     FailureName.INSUFFICIENT_STORAGE -> InstallFailure.InsufficientStorage
     FailureName.INCOMPATIBLE -> InstallFailure.Incompatible
     FailureName.INVALID_APK -> InstallFailure.InvalidApk
@@ -118,6 +120,7 @@ private fun InstallFailure.name(): String = when (this) {
     InstallFailure.DownloadUnreadable -> FailureName.DOWNLOAD_UNREADABLE
     InstallFailure.NotAnApk -> FailureName.NOT_AN_APK
     InstallFailure.Aborted -> FailureName.ABORTED
+    InstallFailure.SessionFailed -> FailureName.SESSION_FAILED
     InstallFailure.InsufficientStorage -> FailureName.INSUFFICIENT_STORAGE
     InstallFailure.Incompatible -> FailureName.INCOMPATIBLE
     InstallFailure.InvalidApk -> FailureName.INVALID_APK

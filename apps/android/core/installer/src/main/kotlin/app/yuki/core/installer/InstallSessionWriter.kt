@@ -21,7 +21,7 @@ internal class InstallSessionWriter(private val context: Context) {
             return installer.createSession(params)
         } catch (error: IOException) {
             throw InstallException(
-                InstallFailure.InsufficientStorage,
+                sessionFailure(error),
                 "Could not create an install session for ${identity.packageName}",
                 error,
             )
@@ -34,7 +34,7 @@ internal class InstallSessionWriter(private val context: Context) {
         } catch (error: IOException) {
             abandon(sessionId)
             throw InstallException(
-                InstallFailure.InsufficientStorage,
+                sessionFailure(error),
                 "Could not stream ${apk.absolutePath} into install session $sessionId",
                 error,
             )
@@ -58,7 +58,7 @@ internal class InstallSessionWriter(private val context: Context) {
         } catch (error: IOException) {
             abandon(sessionId)
             throw InstallException(
-                InstallFailure.Aborted,
+                InstallFailure.SessionFailed,
                 "Could not commit install session $sessionId",
                 error,
             )
@@ -80,3 +80,13 @@ internal class InstallSessionWriter(private val context: Context) {
         ).intentSender
     }
 }
+
+private const val OUT_OF_SPACE_ERRNO = "ENOSPC"
+
+internal fun sessionFailure(error: IOException): InstallFailure =
+    if (error.isOutOfSpace()) InstallFailure.InsufficientStorage else InstallFailure.SessionFailed
+
+private fun Throwable.isOutOfSpace(): Boolean =
+    generateSequence(this, Throwable::cause).any { cause ->
+        cause.message.orEmpty().contains(OUT_OF_SPACE_ERRNO)
+    }

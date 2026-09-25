@@ -9,6 +9,8 @@ sealed interface InstallFailure {
 
     data object Aborted : InstallFailure
 
+    data object SessionFailed : InstallFailure
+
     data object InsufficientStorage : InstallFailure
 
     data object Incompatible : InstallFailure

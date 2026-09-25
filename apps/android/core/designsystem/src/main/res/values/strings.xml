@@ -35,6 +35,7 @@
     <string name="designsystem_install_failure_download_unreadable">Download incomplete</string>
     <string name="designsystem_install_failure_not_an_apk">Not an app</string>
     <string name="designsystem_install_failure_aborted">Install cancelled</string>
+    <string name="designsystem_install_failure_session_failed">Couldn\'t start install</string>
     <string name="designsystem_install_failure_insufficient_storage">Not enough space</string>
     <string name="designsystem_install_failure_incompatible">Not compatible</string>
     <string name="designsystem_install_failure_invalid_apk">Damaged app file</string>

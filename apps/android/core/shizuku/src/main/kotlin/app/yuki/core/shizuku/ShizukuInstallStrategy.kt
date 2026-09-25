@@ -76,7 +76,7 @@ internal fun toOutcome(status: Int, message: String?): InstallOutcome =
     }
 
 private fun toFailure(message: String?): InstallFailure {
-    val detail = message?.takeIf(String::isNotBlank) ?: return InstallFailure.Aborted
+    val detail = message?.takeIf(String::isNotBlank) ?: return InstallFailure.SessionFailed
 
     return when {
         detail.contains("INSUFFICIENT_STORAGE") -> InstallFailure.InsufficientStorage

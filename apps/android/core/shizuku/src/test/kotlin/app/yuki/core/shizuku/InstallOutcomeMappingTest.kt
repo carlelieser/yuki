@@ -63,8 +63,11 @@ class InstallOutcomeMappingTest {
     }
 
     @Test
-    fun `maps a failure with no message to aborted`() {
-        assertEquals(InstallOutcome.Failed(InstallFailure.Aborted), toOutcome(STATUS_FAILURE, null))
+    fun `maps a failure with no message to a failed session`() {
+        assertEquals(
+            InstallOutcome.Failed(InstallFailure.SessionFailed),
+            toOutcome(STATUS_FAILURE, null),
+        )
     }
 
     @Test
