@@ -26,14 +26,6 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-          cache: false
-
-      - name: Install the APK icon extractor
-        run: go install github.com/chenhuifeng/androidbinary/v2/apk/cmd/extract-icons@v2.0.10
-
       - name: Exhaust the search space
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

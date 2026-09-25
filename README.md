@@ -37,9 +37,9 @@ repository is only indexed if it ships a downloadable APK and holds an
 Title - The readme's first heading, when it names the repository and reads like a
 title rather than a tagline or version. Otherwise the repository name, humanized.
 
-Icons - Extracted as a PNG from the newest release APK with
-[androidbinary](https://github.com/chenhuifeng/androidbinary), then served from
-Cloudflare R2.
+Icons - Fastlane and Play Store icons first, then the highest-density launcher
+icon in `mipmap`. Adaptive icons are composed from their foreground, background,
+and color resources. Every icon is uploaded to Cloudflare R2 and served from there.
 
 Banners - The first readme image whose filename reads as a banner, hero, cover,
 header, or splash.
@@ -77,16 +77,15 @@ cd apps/android
 
 The site runs at http://localhost:5173, and mail is caught by Mailpit at
 http://localhost:8025. Scraping needs a `GITHUB_TOKEN` in `.env` with public read
-access, and the icon extractor on your `PATH`:
+access:
 
 ```sh
-go install github.com/chenhuifeng/androidbinary/v2/apk/cmd/extract-icons@v2.0.10
 bun run scrape --slug=<listing>
 ```
 
 Locally, assets such as icons and avatars are stored in SeaweedFS instead of R2 and served from
 http://localhost:8333/yuki-assets. `docker compose --profile scrape up scraper` runs the
-scraper with the extractor built in.
+scraper against them.
 
 The Android client talks to https://yukistore.org by default. To point it at the
 local web server instead, pass `yukiBaseUrl` and forward the port to the device:
