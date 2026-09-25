@@ -10,7 +10,7 @@ export type IconConfig = {
 
 export function requireIconConfig(): IconConfig {
 	return {
-		extractorBinary: process.env.APK_ICON_BIN || DEFAULT_EXTRACTOR_BINARY,
+		extractorBinary: process.env.ICON_EXTRACTOR_BIN || DEFAULT_EXTRACTOR_BINARY,
 		assetsBaseUrl: requireVariable('ASSETS_BASE_URL'),
 		r2: {
 			endpoint: process.env.R2_ENDPOINT || r2Endpoint(requireVariable('R2_ACCOUNT_ID')),
