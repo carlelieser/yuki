@@ -11,8 +11,6 @@ import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
-import app.yuki.core.model.formatRating
-import app.yuki.core.model.formatStarCount
 
 const val LISTING_BADGE_ROW_TAG = "listingBadgeRow"
 
@@ -34,7 +32,7 @@ private fun categoryBadge(summary: ListingSummary): BadgeContent? {
 @Composable
 private fun starsBadge(summary: ListingSummary): BadgeContent {
     return BadgeContent(
-        label = formatStarCount(summary.stars),
+        label = formatStarCount(summary.stars, currentLocale()),
         icon = YukiIcons.Star,
         description = pluralStringResource(R.plurals.designsystem_badge_stars, summary.stars, summary.stars),
     )
@@ -43,11 +41,12 @@ private fun starsBadge(summary: ListingSummary): BadgeContent {
 @Composable
 private fun ratingBadge(summary: ListingSummary): BadgeContent? {
     val average = summary.ratingAverage ?: return null
+    val rating = formatRating(average, currentLocale())
 
     return BadgeContent(
-        label = formatRating(average),
+        label = rating,
         icon = YukiIcons.ThumbUp,
-        description = stringResource(R.string.designsystem_badge_rating, formatRating(average)),
+        description = stringResource(R.string.designsystem_badge_rating, rating),
     )
 }
 
