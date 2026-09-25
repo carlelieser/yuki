@@ -9,10 +9,20 @@ import app.yuki.core.model.InstallFailure
 import java.io.File
 import java.io.IOException
 
-internal class InstallSessionWriter(private val context: Context) {
+internal interface InstallSessions {
+    fun createSession(identity: ApkIdentity): Int
+
+    fun writeApk(sessionId: Int, apk: File)
+
+    fun commit(sessionId: Int)
+
+    fun abandon(sessionId: Int)
+}
+
+internal class InstallSessionWriter(private val context: Context) : InstallSessions {
     private val installer: PackageInstaller get() = context.packageManager.packageInstaller
 
-    fun createSession(identity: ApkIdentity): Int {
+    override fun createSession(identity: ApkIdentity): Int {
         val params = PackageInstaller.SessionParams(
             PackageInstaller.SessionParams.MODE_FULL_INSTALL,
         ).apply { setAppPackageName(identity.packageName) }
@@ -28,7 +38,7 @@ internal class InstallSessionWriter(private val context: Context) {
         }
     }
 
-    fun writeApk(sessionId: Int, apk: File) {
+    override fun writeApk(sessionId: Int, apk: File) {
         try {
             streamApk(sessionId, apk)
         } catch (error: IOException) {
@@ -50,7 +60,7 @@ internal class InstallSessionWriter(private val context: Context) {
         }
     }
 
-    fun commit(sessionId: Int) {
+    override fun commit(sessionId: Int) {
         try {
             installer.openSession(sessionId).use { session ->
                 session.commit(statusSender(sessionId))
@@ -65,7 +75,7 @@ internal class InstallSessionWriter(private val context: Context) {
         }
     }
 
-    fun abandon(sessionId: Int) {
+    override fun abandon(sessionId: Int) {
         installer.abandonSession(sessionId)
     }
 

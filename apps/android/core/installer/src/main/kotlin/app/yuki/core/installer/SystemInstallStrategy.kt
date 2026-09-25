@@ -13,10 +13,21 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
-internal class SystemInstallStrategy @Inject constructor(
-    @ApplicationContext private val context: Context,
+internal fun interface UserActionLauncher {
+    fun launch(intent: Intent)
+}
+
+internal class SystemInstallStrategy(
+    private val sessions: InstallSessions,
+    private val launcher: UserActionLauncher,
 ) : InstallStrategy {
-    private val sessions = InstallSessionWriter(context)
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(
+        sessions = InstallSessionWriter(context),
+        launcher = UserActionLauncher { intent ->
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        },
+    )
 
     override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
         val sessionId = sessions.createSession(identity)
@@ -43,6 +54,6 @@ internal class SystemInstallStrategy @Inject constructor(
 
     private fun launchUserAction(status: SessionStatus) {
         val intent = status.userAction ?: return
-        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        launcher.launch(intent)
     }
 }
