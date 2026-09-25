@@ -1,10 +1,12 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Database } from '@yuki/db';
-import { parseArchitecture, pickApkAsset } from '@yuki/github';
+import { architectureOfName, parseArchitecture, pickApkAsset } from '@yuki/github';
 import { getListingBySlug, type ListingDetail } from '$lib/server/listings.ts';
-import { fetchReleaseAssets } from '$lib/server/release-assets.ts';
+import { fetchReleaseAssets, ReleaseLookupFailed } from '$lib/server/release-assets.ts';
 import { recordDownload } from '$lib/server/reviews.ts';
+
+type StoredDownload = { tag: string; downloadUrl: string; assetName: string | null };
 
 async function recordQuietly(
 	db: Database,
@@ -13,15 +15,31 @@ async function recordQuietly(
 	await recordDownload(db, input).catch(() => undefined);
 }
 
+function isUniversal(stored: StoredDownload): boolean {
+	return stored.assetName !== null && architectureOfName(stored.assetName) === null;
+}
+
+function fallbackFor(stored: StoredDownload): string {
+	if (isUniversal(stored)) return stored.downloadUrl;
+
+	error(502, 'GitHub unavailable');
+}
+
 async function resolveForArchitecture(
 	listing: ListingDetail,
-	tag: string,
+	stored: StoredDownload,
 	architecture: string
-): Promise<string | null> {
-	const assets = await fetchReleaseAssets(listing, tag);
-	if (assets === null) return null;
+): Promise<string> {
+	try {
+		const release = await fetchReleaseAssets(listing, stored.tag);
+		if (release.kind === 'missing') error(404, 'Release not found');
 
-	return pickApkAsset(assets, parseArchitecture(architecture))?.browser_download_url ?? null;
+		const asset = pickApkAsset(release.assets, parseArchitecture(architecture));
+		return asset?.browser_download_url ?? stored.downloadUrl;
+	} catch (thrown) {
+		if (!(thrown instanceof ReleaseLookupFailed)) throw thrown;
+		return fallbackFor(stored);
+	}
 }
 
 export const GET: RequestHandler = async ({ locals, params, url }) => {
@@ -31,10 +49,15 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 	const version = listing.versions.find((entry) => entry.tag === params.tag);
 	if (!version?.downloadUrl) error(404, 'Download not found');
 
+	const stored = {
+		tag: version.tag,
+		downloadUrl: version.downloadUrl,
+		assetName: version.assetName
+	};
 	const architecture = url.searchParams.get('arch');
 	const resolved = architecture
-		? await resolveForArchitecture(listing, version.tag, architecture)
-		: null;
+		? await resolveForArchitecture(listing, stored, architecture)
+		: stored.downloadUrl;
 
 	if (locals.user) {
 		await recordQuietly(locals.db, {
@@ -44,5 +67,5 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		});
 	}
 
-	redirect(302, resolved ?? version.downloadUrl);
+	redirect(302, resolved);
 };

@@ -4,13 +4,14 @@ import type { RequestEvent } from './[tag]/$types';
 import type { Database } from '@yuki/db';
 import type { ListingDetail } from '$lib/server/listings.ts';
 
-const { getListingBySlug, getReleaseArchitectures } = vi.hoisted(() => ({
+const { getListingBySlug, getReleaseArchitectures, ReleaseLookupFailed } = vi.hoisted(() => ({
 	getListingBySlug: vi.fn(),
-	getReleaseArchitectures: vi.fn()
+	getReleaseArchitectures: vi.fn(),
+	ReleaseLookupFailed: class extends Error {}
 }));
 
 vi.mock('$lib/server/listings.ts', () => ({ getListingBySlug }));
-vi.mock('$lib/server/release-assets.ts', () => ({ getReleaseArchitectures }));
+vi.mock('$lib/server/release-assets.ts', () => ({ getReleaseArchitectures, ReleaseLookupFailed }));
 
 const { GET: architectures } = await import('./[tag]/+server.ts');
 
@@ -59,23 +60,31 @@ function event(slug: string, tag: string) {
 	} as unknown as RequestEvent;
 }
 
-async function expectNotFound(slug: string, tag: string, message: string): Promise<void> {
+function found(architectures: string[]) {
+	return { kind: 'found', architectures };
+}
+
+async function expectFailure(slug: string, tag: string, status: number, message: string) {
 	try {
 		await architectures(event(slug, tag));
 		expect.unreachable('the handler should have failed');
 	} catch (thrown) {
 		expect(isHttpError(thrown)).toBe(true);
 		if (isHttpError(thrown)) {
-			expect(thrown.status).toBe(404);
+			expect(thrown.status).toBe(status);
 			expect(thrown.body.message).toBe(message);
 		}
 	}
 }
 
+async function expectNotFound(slug: string, tag: string, message: string): Promise<void> {
+	await expectFailure(slug, tag, 404, message);
+}
+
 describe('GET /api/listings/[slug]/architectures/[tag]', () => {
 	it('returns the architectures the release ships', async () => {
 		getListingBySlug.mockResolvedValue(detail());
-		getReleaseArchitectures.mockResolvedValue(['arm64-v8a', 'x86_64']);
+		getReleaseArchitectures.mockResolvedValue(found(['arm64-v8a', 'x86_64']));
 
 		const response = await architectures(event('acme-tools', 'v1.2.0'));
 
@@ -87,7 +96,7 @@ describe('GET /api/listings/[slug]/architectures/[tag]', () => {
 
 	it('caches the response so reopening the menu skips github', async () => {
 		getListingBySlug.mockResolvedValue(detail());
-		getReleaseArchitectures.mockResolvedValue([]);
+		getReleaseArchitectures.mockResolvedValue(found([]));
 
 		const request = event('acme-tools', 'v1.2.0');
 		await architectures(request);
@@ -99,7 +108,7 @@ describe('GET /api/listings/[slug]/architectures/[tag]', () => {
 
 	it('returns an empty list when the release ships no splits', async () => {
 		getListingBySlug.mockResolvedValue(detail());
-		getReleaseArchitectures.mockResolvedValue([]);
+		getReleaseArchitectures.mockResolvedValue(found([]));
 
 		const response = await architectures(event('acme-tools', 'v1.2.0'));
 
@@ -123,5 +132,19 @@ describe('GET /api/listings/[slug]/architectures/[tag]', () => {
 		getListingBySlug.mockResolvedValue(detail({ versions: [version] }));
 
 		await expectNotFound('acme-tools', 'v1.2.0', 'Download not found');
+	});
+
+	it('fails with a 404 when github has no such release', async () => {
+		getListingBySlug.mockResolvedValue(detail());
+		getReleaseArchitectures.mockResolvedValue({ kind: 'missing' });
+
+		await expectNotFound('acme-tools', 'v1.2.0', 'Release not found');
+	});
+
+	it('fails with a 502 instead of an empty list when github cannot be reached', async () => {
+		getListingBySlug.mockResolvedValue(detail());
+		getReleaseArchitectures.mockRejectedValue(new ReleaseLookupFailed('down'));
+
+		await expectFailure('acme-tools', 'v1.2.0', 502, 'GitHub unavailable');
 	});
 });
