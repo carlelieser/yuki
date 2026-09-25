@@ -17,9 +17,7 @@ import app.yuki.core.network.ListingRepository
 import app.yuki.core.network.SearchQuery
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 internal class FakeInstallStore(private val initial: List<InstalledApp>) : InstallStore {
     private val rows = MutableStateFlow(initial)
@@ -76,17 +74,25 @@ internal class FakeListingRepository(
 }
 
 internal class RecordingUpdateInstaller : UpdateInstaller {
-    private val progress = MutableSharedFlow<InstallState>(replay = 8)
+    private val active = MutableStateFlow<Map<Long, InstallState>>(emptyMap())
 
     val requested: MutableList<AvailableUpdate> = mutableListOf()
 
-    suspend fun emit(next: InstallState) {
-        progress.emit(next)
+    val cancelled: MutableList<Long> = mutableListOf()
+
+    fun publish(githubRepoId: Long, state: InstallState) {
+        active.value = active.value + (githubRepoId to state)
     }
 
-    override fun install(update: AvailableUpdate): Flow<InstallState> {
+    override fun install(update: AvailableUpdate) {
         requested += update
-        return progress.asSharedFlow()
+    }
+
+    override fun observeActiveStates(): Flow<Map<Long, InstallState>> = active
+
+    override suspend fun cancel(githubRepoId: Long) {
+        cancelled += githubRepoId
+        active.value = active.value - githubRepoId
     }
 }
 

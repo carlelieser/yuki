@@ -3,6 +3,7 @@ package app.yuki.feature.updates
 import app.cash.turbine.test
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.model.FailureReason
+import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.InstalledApp
@@ -195,7 +196,7 @@ class UpdatesViewModelTest {
             )
 
             viewModel.onInstallAction(TERMUX.githubRepoId, InstallAction.Update)
-            installer.emit(InstallState.Downloading(HALF_DOWNLOADED))
+            installer.publish(TERMUX.githubRepoId, InstallState.Downloading(HALF_DOWNLOADED))
 
             assertEquals(
                 InstallState.Downloading(HALF_DOWNLOADED),
@@ -205,6 +206,55 @@ class UpdatesViewModelTest {
         }
 
         assertEquals(listOf("v0.119.0"), installer.requested.map { it.version.tag })
+    }
+
+    @Test
+    fun aFailureStoredByTheSchedulerShowsOnTheRow() = runTest {
+        val viewModel = viewModelFor(
+            installs = listOf(TERMUX),
+            details = mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+        val failed = InstallState.Failed(InstallFailure.DownloadFailed(httpStatus = 404))
+
+        installer.publish(TERMUX.githubRepoId, failed)
+        advanceUntilIdle()
+
+        assertEquals(failed, successOf(viewModel.state.value).updates.single().install)
+    }
+
+    @Test
+    fun cancellingGoesThroughTheScheduler() = runTest {
+        val viewModel = viewModelFor(
+            installs = listOf(TERMUX),
+            details = mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+        advanceUntilIdle()
+        installer.publish(TERMUX.githubRepoId, InstallState.Downloading(HALF_DOWNLOADED))
+
+        viewModel.onInstallAction(TERMUX.githubRepoId, InstallAction.Cancel)
+        advanceUntilIdle()
+
+        assertEquals(listOf(TERMUX.githubRepoId), installer.cancelled)
+        assertEquals(
+            InstallState.UpdateAvailable(from = "v0.118.0", to = "v0.119.0"),
+            successOf(viewModel.state.value).updates.single().install,
+        )
+    }
+
+    @Test
+    fun anEarlierInstallDoesNotHideANewerUpdate() = runTest {
+        val viewModel = viewModelFor(
+            installs = listOf(TERMUX),
+            details = mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
+        )
+
+        installer.publish(TERMUX.githubRepoId, InstallState.Installed("v0.118.0"))
+        advanceUntilIdle()
+
+        assertEquals(
+            InstallState.UpdateAvailable(from = "v0.118.0", to = "v0.119.0"),
+            successOf(viewModel.state.value).updates.single().install,
+        )
     }
 
     private fun viewModelFor(

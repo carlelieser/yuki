@@ -1,9 +1,11 @@
 package app.yuki.feature.updates
 
-import app.yuki.core.installer.InstallCoordinator
+import app.yuki.core.installer.InstallProgressStore
 import app.yuki.core.installer.InstallRequest
+import app.yuki.core.installer.InstallScheduler
 import app.yuki.core.installer.InstallSource
 import app.yuki.core.installer.InstallTarget
+import app.yuki.core.installer.observeActiveStates
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.deviceArchitecture
@@ -18,7 +20,11 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
 interface UpdateInstaller {
-    fun install(update: AvailableUpdate): Flow<InstallState>
+    fun install(update: AvailableUpdate)
+
+    fun observeActiveStates(): Flow<Map<Long, InstallState>>
+
+    suspend fun cancel(githubRepoId: Long)
 }
 
 internal fun AvailableUpdate.toInstallState(): InstallState =
@@ -44,17 +50,22 @@ private fun AvailableUpdate.toRequest(baseUrl: String): InstallRequest = Install
 )
 
 @Singleton
-internal class CoordinatorUpdateInstaller @Inject constructor(
-    private val coordinator: InstallCoordinator,
+internal class SchedulerUpdateInstaller @Inject constructor(
+    private val scheduler: InstallScheduler,
+    private val progress: InstallProgressStore,
     @param:YukiBaseUrl private val baseUrl: String,
 ) : UpdateInstaller {
-    override fun install(update: AvailableUpdate): Flow<InstallState> =
-        coordinator.install(update.toRequest(baseUrl))
+    override fun install(update: AvailableUpdate) = scheduler.start(update.toRequest(baseUrl))
+
+    override fun observeActiveStates(): Flow<Map<Long, InstallState>> =
+        progress.observeActiveStates()
+
+    override suspend fun cancel(githubRepoId: Long) = scheduler.cancel(githubRepoId)
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class UpdateInstallerModule {
     @Binds
-    abstract fun bindInstaller(installer: CoordinatorUpdateInstaller): UpdateInstaller
+    abstract fun bindInstaller(installer: SchedulerUpdateInstaller): UpdateInstaller
 }

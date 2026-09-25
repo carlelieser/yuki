@@ -9,7 +9,6 @@ import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +24,6 @@ class UpdatesViewModel @Inject internal constructor(
     private val mutableState = MutableStateFlow<UiState<UpdatesContent>>(UiState.Loading)
     private val installs = MutableStateFlow<Map<Long, InstallState>>(emptyMap())
     private val refreshing = MutableStateFlow(false)
-    private val jobs = mutableMapOf<Long, Job>()
 
     val state: StateFlow<UiState<UpdatesContent>> = mutableState.asStateFlow()
 
@@ -33,6 +31,9 @@ class UpdatesViewModel @Inject internal constructor(
 
     init {
         refresh()
+        viewModelScope.launch {
+            dependencies.installer.observeActiveStates().collect(::publish)
+        }
     }
 
     fun refresh() {
@@ -63,29 +64,20 @@ class UpdatesViewModel @Inject internal constructor(
         val update = updateFor(githubRepoId) ?: return
 
         when (action) {
-            InstallAction.Update, InstallAction.Retry, InstallAction.Install -> start(update)
+            InstallAction.Update, InstallAction.Retry, InstallAction.Install ->
+                dependencies.installer.install(update)
             InstallAction.Cancel, InstallAction.Dismiss -> cancel(githubRepoId)
             InstallAction.Open, InstallAction.Uninstall -> Unit
         }
     }
 
-    private fun start(update: AvailableUpdate) {
-        val githubRepoId = update.installed.githubRepoId
-        jobs.remove(githubRepoId)?.cancel()
-        jobs[githubRepoId] = viewModelScope.launch {
-            dependencies.installer.install(update).collect { next -> publish(githubRepoId, next) }
-        }
-    }
-
     private fun cancel(githubRepoId: Long) {
-        jobs.remove(githubRepoId)?.cancel()
-        val update = updateFor(githubRepoId) ?: return
-        publish(githubRepoId, update.toInstallState())
+        viewModelScope.launch { dependencies.installer.cancel(githubRepoId) }
     }
 
-    private fun publish(githubRepoId: Long, next: InstallState) {
-        installs.update { current -> current + (githubRepoId to next) }
-        mutableState.update { current -> current.mapContent(installs.value) }
+    private fun publish(active: Map<Long, InstallState>) {
+        installs.value = active
+        mutableState.update { current -> current.mapContent(active) }
     }
 
     private fun updateFor(githubRepoId: Long): AvailableUpdate? = contentOrNull()
@@ -107,6 +99,12 @@ private fun UpdatesContent.withInstallStates(
     installs: Map<Long, InstallState>,
 ): UpdatesContent = copy(
     updates = updates.map { row ->
-        row.copy(install = installs[row.githubRepoId] ?: row.update.toInstallState())
+        row.copy(install = installs[row.githubRepoId].forUpdate(row.update))
     },
 )
+
+private fun InstallState?.forUpdate(update: AvailableUpdate): InstallState {
+    val isEarlierInstall = this is InstallState.Installed && versionTag != update.version.tag
+
+    return if (this == null || isEarlierInstall) update.toInstallState() else this
+}
