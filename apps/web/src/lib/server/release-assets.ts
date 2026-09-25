@@ -28,7 +28,11 @@ export async function fetchReleaseAssets(
 	const path = repositoryPath(listing);
 	if (!token || path === null) return null;
 
-	const release = await createGithubClient(token, fetch, sleep, MAX_ATTEMPTS)
+	const release = await createGithubClient(
+		token,
+		{ fetch, wait: sleep },
+		{ maxAttempts: MAX_ATTEMPTS }
+	)
 		.getReleaseByTag(path.owner, path.name, tag)
 		.catch(() => null);
 	if (release === null || !release.isModified) return null;

@@ -1,4 +1,4 @@
-import { decideRetry } from './backoff.ts';
+import { MAX_ATTEMPTS, decideRetry } from './backoff.ts';
 import type {
 	GithubCodeSearchResult,
 	GithubRelease,
@@ -12,6 +12,15 @@ const API_ORIGIN = 'https://api.github.com';
 const USER_AGENT = 'yuki-scraper';
 
 export type FetchImpl = (input: string, init?: RequestInit) => Promise<Response>;
+
+export type GithubTransport = {
+	fetch: FetchImpl;
+	wait: (ms: number) => Promise<void>;
+};
+
+export type RetryPolicy = {
+	maxAttempts: number;
+};
 
 export type GithubClient = ReturnType<typeof createGithubClient>;
 
@@ -33,11 +42,17 @@ function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const DEFAULT_TRANSPORT: GithubTransport = {
+	fetch: (input, init) => fetch(input, init),
+	wait: sleep
+};
+
+const DEFAULT_POLICY: RetryPolicy = { maxAttempts: MAX_ATTEMPTS };
+
 export function createGithubClient(
 	token: string,
-	fetchImpl: FetchImpl = fetch,
-	wait: (ms: number) => Promise<void> = sleep,
-	maxAttempts?: number
+	transport: GithubTransport = DEFAULT_TRANSPORT,
+	policy: RetryPolicy = DEFAULT_POLICY
 ) {
 	const stats: ClientStats = { requestCount: 0, notModifiedCount: 0, pacedWaitMs: 0 };
 
@@ -62,7 +77,7 @@ export function createGithubClient(
 			}
 
 			stats.requestCount += 1;
-			const response = await fetchImpl(url, { headers });
+			const response = await transport.fetch(url, { headers });
 
 			if (response.status === 304) {
 				stats.notModifiedCount += 1;
@@ -73,7 +88,7 @@ export function createGithubClient(
 				status: response.status,
 				headers: response.headers,
 				attempt,
-				maxAttempts,
+				maxAttempts: policy.maxAttempts,
 				isCodeSearch,
 				resource: path
 			});
@@ -88,13 +103,13 @@ export function createGithubClient(
 
 			if (decision.kind === 'pace') {
 				stats.pacedWaitMs += decision.waitMs;
-				await wait(decision.waitMs);
+				await transport.wait(decision.waitMs);
 				continue;
 			}
 
 			if (decision.kind === 'retry') {
 				attempt += 1;
-				await wait(decision.waitMs);
+				await transport.wait(decision.waitMs);
 				continue;
 			}
 

@@ -1,4 +1,11 @@
-export { createGithubClient, GithubSkip, type GithubClient, type FetchImpl } from './client.ts';
+export {
+	createGithubClient,
+	GithubSkip,
+	type GithubClient,
+	type GithubTransport,
+	type FetchImpl,
+	type RetryPolicy
+} from './client.ts';
 export { requireGithubToken } from './env.ts';
 export { parseTimestamp } from './timestamp.ts';
 export {

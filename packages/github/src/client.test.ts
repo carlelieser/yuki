@@ -30,7 +30,7 @@ const noWait = async () => {};
 describe('createGithubClient', () => {
 	it('sends If-None-Match when an etag exists', async () => {
 		const { fetchImpl, calls } = recorder([jsonResponse({ id: 1 })]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		await client.getRepository('acme', 'app', 'W/"abc123"');
 
@@ -39,7 +39,7 @@ describe('createGithubClient', () => {
 
 	it('omits If-None-Match when no etag is known', async () => {
 		const { fetchImpl, calls } = recorder([jsonResponse({ id: 1 })]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		await client.getRepository('acme', 'app');
 
@@ -48,7 +48,7 @@ describe('createGithubClient', () => {
 
 	it('reports 304 as an explicit not-modified outcome, not an empty body', async () => {
 		const { fetchImpl } = recorder([new Response(null, { status: 304 })]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		const response = await client.getRepository('acme', 'app', 'W/"abc123"');
 
@@ -60,7 +60,7 @@ describe('createGithubClient', () => {
 		const { fetchImpl } = recorder([
 			jsonResponse({ id: 7 }, { headers: { etag: 'W/"new"', 'content-type': 'application/json' } })
 		]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		const response = await client.getRepository('acme', 'app');
 
@@ -72,7 +72,7 @@ describe('createGithubClient', () => {
 			new Response(null, { status: 404 }),
 			jsonResponse({ total_count: 1, incomplete_results: false, items: [] })
 		]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		const response = await client.searchCode('rikka.shizuku.ShizukuProvider', 1, 100);
 
@@ -82,7 +82,7 @@ describe('createGithubClient', () => {
 
 	it('skips a deleted repository without failing the run', async () => {
 		const { fetchImpl } = recorder([new Response(null, { status: 404 })]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		await expect(client.getRepository('acme', 'gone')).rejects.toBeInstanceOf(GithubSkip);
 	});
@@ -91,7 +91,7 @@ describe('createGithubClient', () => {
 		const { fetchImpl, calls } = recorder([
 			new Response('# Title', { status: 200, headers: { etag: 'W/"r"' } })
 		]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		const response = await client.getReadme('acme', 'app');
 
@@ -101,7 +101,7 @@ describe('createGithubClient', () => {
 
 	it('counts every request it makes', async () => {
 		const { fetchImpl } = recorder([jsonResponse({ id: 1 }), new Response(null, { status: 304 })]);
-		const client = createGithubClient('token', fetchImpl, noWait);
+		const client = createGithubClient('token', { fetch: fetchImpl, wait: noWait });
 
 		await client.getRepository('acme', 'app');
 		await client.getRepository('acme', 'app', 'W/"abc"');
@@ -111,7 +111,7 @@ describe('createGithubClient', () => {
 
 	it('authenticates every request', async () => {
 		const { fetchImpl, calls } = recorder([jsonResponse({ id: 1 })]);
-		const client = createGithubClient('secret-token', fetchImpl, noWait);
+		const client = createGithubClient('secret-token', { fetch: fetchImpl, wait: noWait });
 
 		await client.getRepository('acme', 'app');
 
