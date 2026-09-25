@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_permissions_title">Permissions</string>
+    <string name="settings_permission_required">Required</string>
+    <string name="settings_permission_granted">Granted</string>
+    <string name="settings_permission_denied">Denied</string>
+    <string name="settings_permission_network">Network access</string>
+    <string name="settings_permission_network_reason">Browse listings and download apps</string>
+    <string name="settings_permission_install">Install unknown apps</string>
+    <string name="settings_permission_install_reason">Install apps when Shizuku is unavailable</string>
+    <string name="settings_permission_notifications">Notifications</string>
+    <string name="settings_permission_shizuku">Shizuku</string>
+    <string name="settings_permission_shizuku_reason">Required to install apps without confirmation</string>
+
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="settings_preferences_title">Preferences</string>
+    <string name="settings_prereleases_title">Include prereleases</string>
+    <string name="settings_prereleases_supporting">Offer beta and release-candidate versions as updates</string>
+    <string name="settings_install_mode_title">Install mode</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_dynamic_color_title">Dynamic color</string>
+    <string name="settings_dynamic_color_supporting">Match Yuki\'s palette to your wallpaper</string>
+
+    <string name="settings_install_mode_shizuku">Shizuku</string>
+    <string name="settings_install_mode_system">System installer</string>
+    <string name="settings_appearance_system">System default</string>
+    <string name="settings_appearance_light">Light</string>
+    <string name="settings_appearance_dark">Dark</string>
+
+    <string name="settings_install_source_title">Install source</string>
+    <string name="settings_install_source_choose">Choose app…</string>
+    <string name="settings_install_source_dismiss">Cancel</string>
+    <string name="settings_install_source_shell">Shell</string>
+    <string name="settings_install_source_play_store">Google Play Store</string>
+
+    <string name="settings_shizuku_title">Shizuku</string>
+    <string name="settings_shizuku_mode_title">Privilege mode</string>
+    <string name="settings_shizuku_api_title">Version</string>
+    <string name="settings_shizuku_mode_adb">ADB shell</string>
+    <string name="settings_shizuku_mode_root">Root</string>
+    <string name="settings_shizuku_mode_unknown">Not resolved</string>
+    <string name="settings_shizuku_api_version">API %1$d</string>
+    <string name="settings_shizuku_api_unknown">Version unknown</string>
+
+    <string name="settings_card_not_installed_title">Silent install unavailable</string>
+    <string name="settings_card_not_installed_description">Shizuku is not installed. Without it, every install needs a system prompt</string>
+    <string name="settings_card_not_running_title">Shizuku installed, not started</string>
+    <string name="settings_card_not_running_description">Start the Shizuku service to let Yuki install apps without a prompt</string>
+    <string name="settings_card_permission_title">Awaiting authorization</string>
+    <string name="settings_card_permission_description">Shizuku is running. Authorize Yuki to use it for silent installs</string>
+    <string name="settings_card_ready_title">Silent install active</string>
+    <string name="settings_card_ready_description">Yuki installs without a prompt through %1$s, %2$s</string>
+
+    <string name="settings_action_open_website">Get Shizuku</string>
+    <string name="settings_action_launch_shizuku">Launch Shizuku</string>
+    <string name="settings_action_request_permission">Request permission</string>
+</resources>

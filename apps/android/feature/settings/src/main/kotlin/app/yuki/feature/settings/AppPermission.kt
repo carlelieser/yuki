@@ -1,6 +1,7 @@
 package app.yuki.feature.settings
 
 import android.Manifest
+import androidx.annotation.StringRes
 
 enum class PermissionKind {
     Runtime,
@@ -9,9 +10,9 @@ enum class PermissionKind {
 
 data class AppPermission(
     val permission: String,
-    val label: String,
+    @StringRes val label: Int,
     val isRequired: Boolean,
-    val reason: String? = null,
+    @StringRes val reason: Int? = null,
     val kind: PermissionKind = PermissionKind.Runtime,
 )
 
@@ -20,26 +21,26 @@ const val SHIZUKU_PERMISSION = "moe.shizuku.manager.permission.API_V23"
 val YUKI_PERMISSIONS: List<AppPermission> = listOf(
     AppPermission(
         permission = Manifest.permission.INTERNET,
-        label = "Network access",
-        reason = "Browse listings and download apps",
+        label = R.string.settings_permission_network,
+        reason = R.string.settings_permission_network_reason,
         isRequired = true,
     ),
     AppPermission(
         permission = Manifest.permission.REQUEST_INSTALL_PACKAGES,
-        label = "Install unknown apps",
-        reason = "Install apps when Shizuku is unavailable",
+        label = R.string.settings_permission_install,
+        reason = R.string.settings_permission_install_reason,
         isRequired = true,
         kind = PermissionKind.InstallPackagesAppOp,
     ),
     AppPermission(
         permission = Manifest.permission.POST_NOTIFICATIONS,
-        label = "Notifications",
+        label = R.string.settings_permission_notifications,
         isRequired = false,
     ),
     AppPermission(
         permission = SHIZUKU_PERMISSION,
-        label = "Shizuku",
-        reason = "Required to install apps without confirmation",
+        label = R.string.settings_permission_shizuku,
+        reason = R.string.settings_permission_shizuku_reason,
         isRequired = false,
     ),
 )

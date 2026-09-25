@@ -18,18 +18,7 @@ class PreferenceDecodingTest {
         assertEquals(SHELL_INSTALLER_PACKAGE, YukiPreferences.Defaults.installerPackage)
     }
 
-    @Test
-    fun eachAppearanceModeOffersAName() {
-        assertEquals("System default", AppearanceMode.System.label)
-        assertEquals("Light", AppearanceMode.Light.label)
-        assertEquals("Dark", AppearanceMode.Dark.label)
-    }
 
-    @Test
-    fun eachInstallModeOffersAName() {
-        assertEquals("Shizuku", InstallMode.Shizuku.label)
-        assertEquals("System installer", InstallMode.System.label)
-    }
 
     @Test
     fun theStoredNameIsIndependentOfTheDisplayedLabel() {

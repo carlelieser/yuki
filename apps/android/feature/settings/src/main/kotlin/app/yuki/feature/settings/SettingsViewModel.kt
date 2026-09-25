@@ -112,7 +112,7 @@ internal class SettingsDependencies @Inject constructor(
 
     suspend fun installSourceOf(choice: InstallChoice): InstallSourceSelection =
         InstallSourceSelection(
-            label = installSourceLabel(
+            name = installSourceName(
                 choice.installerPackage,
                 readers.apps.labelOf(choice.installerPackage),
             ),

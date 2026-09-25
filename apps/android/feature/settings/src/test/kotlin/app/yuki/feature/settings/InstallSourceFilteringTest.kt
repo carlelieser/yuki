@@ -46,18 +46,30 @@ class InstallSourceFilteringTest {
 
     @Test
     fun aPresetPackageResolvesToItsPresetLabel() {
-        assertEquals("Shell", installSourceLabel(SHELL_INSTALLER_PACKAGE, null))
-        assertEquals("Google Play Store", installSourceLabel(PLAY_STORE_PACKAGE, "Play Store"))
+        assertEquals(
+            InstallSourceName.Preset(R.string.settings_install_source_shell),
+            installSourceName(SHELL_INSTALLER_PACKAGE, null),
+        )
+        assertEquals(
+            InstallSourceName.Preset(R.string.settings_install_source_play_store),
+            installSourceName(PLAY_STORE_PACKAGE, "Play Store"),
+        )
     }
 
     @Test
     fun anInstalledAppResolvesToItsOwnLabel() {
-        assertEquals("Acme Store", installSourceLabel("com.acme.store", "Acme Store"))
+        assertEquals(
+            InstallSourceName.App("Acme Store"),
+            installSourceName("com.acme.store", "Acme Store"),
+        )
     }
 
     @Test
     fun anAbsentAppResolvesToItsPackageName() {
-        assertEquals("com.gone.app", installSourceLabel("com.gone.app", null))
+        assertEquals(
+            InstallSourceName.Package("com.gone.app"),
+            installSourceName("com.gone.app", null),
+        )
     }
 }
 

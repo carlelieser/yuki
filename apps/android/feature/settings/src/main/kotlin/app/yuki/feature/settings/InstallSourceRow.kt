@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.SettingsRow
 import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.YukiIcons
@@ -38,8 +39,8 @@ internal fun InstallSourceRow(
 
     SettingsRow(
         position = position,
-        title = INSTALL_SOURCE_TITLE,
-        supporting = source.label,
+        title = stringResource(R.string.settings_install_source_title),
+        supporting = source.name.text(),
         isEnabled = source.isEnabled,
         onClick = { isExpanded = true },
         trailing = {
@@ -80,7 +81,10 @@ private fun InstallSourceSelector(
             enabled = isEnabled,
             modifier = Modifier.testTag(INSTALL_SOURCE_SELECTOR_TAG),
         ) {
-            Icon(imageVector = YukiIcons.ArrowDropDown, contentDescription = INSTALL_SOURCE_TITLE)
+            Icon(
+                imageVector = YukiIcons.ArrowDropDown,
+                contentDescription = stringResource(R.string.settings_install_source_title),
+            )
         }
 
         DropdownMenu(
@@ -93,7 +97,7 @@ private fun InstallSourceSelector(
             )
 
             DropdownMenuItem(
-                text = { Text(text = INSTALL_SOURCE_CHOOSE) },
+                text = { Text(text = stringResource(R.string.settings_install_source_choose)) },
                 onClick = actions.onChooseApp,
             )
         }
@@ -106,7 +110,7 @@ private fun PresetItems(isPlayStoreInstalled: Boolean, onSelect: (String) -> Uni
         val isPlayStore = preset.packageName == PLAY_STORE_PACKAGE
 
         DropdownMenuItem(
-            text = { Text(text = preset.label) },
+            text = { Text(text = stringResource(preset.label)) },
             enabled = !isPlayStore || isPlayStoreInstalled,
             onClick = { onSelect(preset.packageName) },
         )

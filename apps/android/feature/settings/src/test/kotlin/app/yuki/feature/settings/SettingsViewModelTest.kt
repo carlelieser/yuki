@@ -67,8 +67,8 @@ class SettingsViewModelTest {
 
             val ready = successOf(awaitItem())
             assertEquals(null, ready.card.actionKind)
-            assertEquals(MODE_ROOT, ready.modeLabel)
-            assertEquals("API 13", ready.apiVersionLabel)
+            assertEquals(R.string.settings_shizuku_mode_root, ready.modeLabel)
+            assertEquals(ShizukuApiVersion.Known(13), ready.apiVersion)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -214,7 +214,10 @@ class SettingsViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals("Shell", successOf(awaitItem()).installSource.label)
+            assertEquals(
+                InstallSourceName.Preset(R.string.settings_install_source_shell),
+                successOf(awaitItem()).installSource.name,
+            )
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -227,7 +230,10 @@ class SettingsViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals("Acme Store", successOf(awaitItem()).installSource.label)
+            assertEquals(
+                InstallSourceName.App("Acme Store"),
+                successOf(awaitItem()).installSource.name,
+            )
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -239,7 +245,10 @@ class SettingsViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals("com.gone.app", successOf(awaitItem()).installSource.label)
+            assertEquals(
+                InstallSourceName.Package("com.gone.app"),
+                successOf(awaitItem()).installSource.name,
+            )
             cancelAndIgnoreRemainingEvents()
         }
     }

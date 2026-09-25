@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.SettingsGroup
 import app.yuki.core.designsystem.component.SettingsRow
 import app.yuki.core.designsystem.component.SettingsRowPosition
@@ -29,7 +30,7 @@ internal fun AppearanceSection(
     actions: PreferenceActions,
     modifier: Modifier = Modifier,
 ) {
-    SettingsGroup(modifier = modifier, label = APPEARANCE_SECTION_TITLE) {
+    SettingsGroup(modifier = modifier, label = stringResource(R.string.settings_appearance_title)) {
         ThemeRow(
             position = SettingsRowPosition(index = 0, count = APPEARANCE_ROW_COUNT),
             mode = preferences.appearance,
@@ -39,8 +40,8 @@ internal fun AppearanceSection(
         ToggleRow(
             position = SettingsRowPosition(index = 1, count = APPEARANCE_ROW_COUNT),
             content = ToggleContent(
-                title = DYNAMIC_COLOR_TITLE,
-                supporting = DYNAMIC_COLOR_SUPPORTING,
+                title = stringResource(R.string.settings_dynamic_color_title),
+                supporting = stringResource(R.string.settings_dynamic_color_supporting),
                 isChecked = preferences.isDynamicColorEnabled,
             ),
             onCheckedChange = actions.onDynamicColorChange,
@@ -56,12 +57,15 @@ internal fun PreferencesSection(
 ) {
     val preferences = content.preferences
 
-    SettingsGroup(modifier = modifier, label = PREFERENCES_SECTION_TITLE) {
+    SettingsGroup(
+        modifier = modifier,
+        label = stringResource(R.string.settings_preferences_title),
+    ) {
         ToggleRow(
             position = SettingsRowPosition(index = 0, count = PREFERENCE_ROW_COUNT),
             content = ToggleContent(
-                title = PRERELEASES_TITLE,
-                supporting = PRERELEASES_SUPPORTING,
+                title = stringResource(R.string.settings_prereleases_title),
+                supporting = stringResource(R.string.settings_prereleases_supporting),
                 isChecked = preferences.includePrereleases,
             ),
             onCheckedChange = actions.onIncludePrereleasesChange,
@@ -115,8 +119,8 @@ private fun ThemeRow(
 
     SettingsRow(
         position = position,
-        title = THEME_TITLE,
-        supporting = mode.label,
+        title = stringResource(R.string.settings_theme_title),
+        supporting = stringResource(mode.label),
         onClick = { isExpanded = true },
         trailing = {
             ThemeSelector(
@@ -143,7 +147,7 @@ private fun ThemeSelector(
         IconButton(onClick = onExpand, modifier = Modifier.testTag(APPEARANCE_SELECTOR_TAG)) {
             Icon(
                 imageVector = YukiIcons.ArrowDropDown,
-                contentDescription = THEME_TITLE,
+                contentDescription = stringResource(R.string.settings_theme_title),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -151,7 +155,7 @@ private fun ThemeSelector(
         DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
             AppearanceMode.entries.forEach { entry ->
                 DropdownMenuItem(
-                    text = { Text(text = entry.label) },
+                    text = { Text(text = stringResource(entry.label)) },
                     onClick = { onSelect(entry) },
                 )
             }
@@ -169,8 +173,8 @@ private fun InstallModeRow(
 
     SettingsRow(
         position = position,
-        title = INSTALL_MODE_TITLE,
-        supporting = mode.label,
+        title = stringResource(R.string.settings_install_mode_title),
+        supporting = stringResource(mode.label),
         onClick = { isExpanded = true },
         trailing = {
             InstallModeSelector(
@@ -197,7 +201,7 @@ private fun InstallModeSelector(
         IconButton(onClick = onExpand, modifier = Modifier.testTag(INSTALL_MODE_SELECTOR_TAG)) {
             Icon(
                 imageVector = YukiIcons.ArrowDropDown,
-                contentDescription = INSTALL_MODE_TITLE,
+                contentDescription = stringResource(R.string.settings_install_mode_title),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -205,7 +209,7 @@ private fun InstallModeSelector(
         DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
             InstallMode.entries.forEach { entry ->
                 DropdownMenuItem(
-                    text = { Text(text = entry.label) },
+                    text = { Text(text = stringResource(entry.label)) },
                     onClick = { onSelect(entry) },
                 )
             }
@@ -213,13 +217,5 @@ private fun InstallModeSelector(
     }
 }
 
-internal const val APPEARANCE_SECTION_TITLE = "Appearance"
-internal const val PREFERENCES_SECTION_TITLE = "Preferences"
-internal const val PRERELEASES_TITLE = "Include prereleases"
-internal const val PRERELEASES_SUPPORTING = "Offer beta and release-candidate versions as updates"
-internal const val INSTALL_MODE_TITLE = "Install mode"
 const val INSTALL_MODE_SELECTOR_TAG = "installModeSelector"
-internal const val THEME_TITLE = "Theme"
 const val APPEARANCE_SELECTOR_TAG = "appearanceSelector"
-internal const val DYNAMIC_COLOR_TITLE = "Dynamic color"
-internal const val DYNAMIC_COLOR_SUPPORTING = "Match Yuki's palette to your wallpaper"

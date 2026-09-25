@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.yuki.core.designsystem.component.SearchBar
 import app.yuki.core.designsystem.component.SearchBarState
@@ -80,7 +81,10 @@ internal fun InstallSourceDialog(prompt: InstallSourcePrompt) {
                         .padding(top = YukiSpacing.Small),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    YukiTextButton(label = INSTALL_SOURCE_DISMISS, onClick = prompt.onDismiss)
+                    YukiTextButton(
+                        label = stringResource(R.string.settings_install_source_dismiss),
+                        onClick = prompt.onDismiss,
+                    )
                 }
             }
         }
@@ -93,7 +97,7 @@ private fun InstallSourceBody(prompt: InstallSourcePrompt) {
 
     Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large)) {
         Text(
-            text = INSTALL_SOURCE_DIALOG_TITLE,
+            text = stringResource(R.string.settings_install_source_title),
             style = MaterialTheme.typography.headlineSmall,
             color = AlertDialogDefaults.titleContentColor,
         )

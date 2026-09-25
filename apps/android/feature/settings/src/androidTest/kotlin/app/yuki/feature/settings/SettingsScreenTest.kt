@@ -1,5 +1,6 @@
 package app.yuki.feature.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,14 +10,15 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.model.UiState
 import app.yuki.core.shizuku.ShizukuDetail
 import app.yuki.core.shizuku.ShizukuMode
@@ -30,28 +32,31 @@ class SettingsScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    private fun text(@StringRes id: Int): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
+
     @Test
     fun notInstalledRendersTheWebsiteAction() {
         setContent(ShizukuState.NotInstalled)
 
-        composeRule.onNodeWithText(CARD_NOT_INSTALLED_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(ACTION_OPEN_WEBSITE).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_card_not_installed_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_action_open_website)).assertIsDisplayed()
     }
 
     @Test
     fun notRunningRendersTheLaunchAction() {
         setContent(ShizukuState.NotRunning)
 
-        composeRule.onNodeWithText(CARD_NOT_RUNNING_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(ACTION_LAUNCH_SHIZUKU).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_card_not_running_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_action_launch_shizuku)).assertIsDisplayed()
     }
 
     @Test
     fun permissionRequiredRendersTheRequestAction() {
         setContent(ShizukuState.PermissionRequired)
 
-        composeRule.onNodeWithText(CARD_PERMISSION_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(ACTION_REQUEST_PERMISSION).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_card_permission_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_action_request_permission)).assertIsDisplayed()
     }
 
     @Test
@@ -59,7 +64,7 @@ class SettingsScreenTest {
         val kinds = mutableListOf<ShizukuActionKind>()
         setContent(ShizukuState.NotRunning, onShizukuAction = kinds::add)
 
-        composeRule.onNodeWithText(ACTION_LAUNCH_SHIZUKU).performClick()
+        composeRule.onNodeWithText(text(R.string.settings_action_launch_shizuku)).performClick()
 
         assertEquals(listOf(ShizukuActionKind.LaunchShizuku), kinds)
     }
@@ -72,7 +77,7 @@ class SettingsScreenTest {
             permissions = listOf(requiredPermission()),
         )
 
-        composeRule.onNodeWithContentDescription(STATUS_GRANTED).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.settings_permission_granted)).assertIsDisplayed()
     }
 
     @Test
@@ -83,21 +88,21 @@ class SettingsScreenTest {
             permissions = listOf(requiredPermission()),
         )
 
-        composeRule.onNodeWithContentDescription(STATUS_DENIED).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.settings_permission_denied)).assertIsDisplayed()
     }
 
     @Test
     fun aRequiredPermissionRendersTheRequiredBadge() {
         setContent(ShizukuState.Ready, permissions = listOf(requiredPermission()))
 
-        composeRule.onNodeWithText(REQUIRED_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_permission_required)).assertIsDisplayed()
     }
 
     @Test
     fun anOptionalPermissionRendersNoIndicator() {
         setContent(ShizukuState.Ready, permissions = listOf(optionalPermission()))
 
-        composeRule.onNodeWithText(REQUIRED_LABEL).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.settings_permission_required)).assertDoesNotExist()
     }
 
     @Test
@@ -105,7 +110,7 @@ class SettingsScreenTest {
         setContent(ShizukuState.Ready)
         scrollToInstallMode()
 
-        composeRule.onAllNodesWithText(InstallMode.Shizuku.label).onLast().assertIsDisplayed()
+        composeRule.onAllNodesWithText(text(InstallMode.Shizuku.label)).onLast().assertIsDisplayed()
     }
 
     @Test
@@ -116,7 +121,7 @@ class SettingsScreenTest {
         composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
 
         InstallMode.entries.forEach { mode ->
-            composeRule.onAllNodesWithText(mode.label).onFirst().assertIsDisplayed()
+            composeRule.onAllNodesWithText(text(mode.label)).onFirst().assertIsDisplayed()
         }
     }
 
@@ -127,7 +132,7 @@ class SettingsScreenTest {
         scrollToInstallMode()
 
         composeRule.onNodeWithTag(INSTALL_MODE_SELECTOR_TAG).performClick()
-        composeRule.onAllNodesWithText(InstallMode.System.label).onLast().performClick()
+        composeRule.onAllNodesWithText(text(InstallMode.System.label)).onLast().performClick()
 
         assertEquals(listOf(InstallMode.System), modes)
     }
@@ -139,7 +144,7 @@ class SettingsScreenTest {
         composeRule.onNodeWithTag(APPEARANCE_SELECTOR_TAG).performClick()
 
         AppearanceMode.entries.forEach { mode ->
-            composeRule.onAllNodesWithText(mode.label).onFirst().assertIsDisplayed()
+            composeRule.onAllNodesWithText(text(mode.label)).onFirst().assertIsDisplayed()
         }
     }
 
@@ -149,7 +154,7 @@ class SettingsScreenTest {
         setContent(ShizukuState.Ready, onAppearanceChange = modes::add)
 
         composeRule.onNodeWithTag(APPEARANCE_SELECTOR_TAG).performClick()
-        composeRule.onAllNodesWithText(AppearanceMode.Dark.label).onLast().performClick()
+        composeRule.onAllNodesWithText(text(AppearanceMode.Dark.label)).onLast().performClick()
 
         assertEquals(listOf(AppearanceMode.Dark), modes)
     }
@@ -159,12 +164,12 @@ class SettingsScreenTest {
         setContent(ShizukuState.Ready)
         scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
 
-        composeRule.onNodeWithText(SHELL_PRESET_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_install_source_shell)).assertIsDisplayed()
     }
 
     @Test
     fun theInstallSourceRowNamesAChosenApp() {
-        setContent(ShizukuState.Ready, installSourceLabel = "Acme Store")
+        setContent(ShizukuState.Ready, installSource = InstallSourceName.App("Acme Store"))
         scrollTo(INSTALL_SOURCE_SELECTOR_TAG)
 
         composeRule.onNodeWithText("Acme Store").assertIsDisplayed()
@@ -218,7 +223,7 @@ class SettingsScreenTest {
         onInstallModeChange: (InstallMode) -> Unit = {},
         onAppearanceChange: (AppearanceMode) -> Unit = {},
         onInstallerPackageChange: (String) -> Unit = {},
-        installSourceLabel: String = SHELL_PRESET_LABEL,
+        installSource: InstallSourceName = SHELL_PRESET,
         isInstallSourceEnabled: Boolean = true,
         chooser: InstallSourceChooser? = null,
     ) {
@@ -229,7 +234,7 @@ class SettingsScreenTest {
             },
             preferences = YukiPreferences.Defaults,
             installSource = InstallSourceSelection(
-                label = installSourceLabel,
+                name = installSource,
                 isPlayStoreInstalled = true,
                 isEnabled = isInstallSourceEnabled,
             ),
@@ -260,7 +265,7 @@ class SettingsScreenTest {
     }
 }
 
-private const val SHELL_PRESET_LABEL = "Shell"
+private val SHELL_PRESET = InstallSourceName.Preset(R.string.settings_install_source_shell)
 
 private val INSTALLED_APPS = listOf(
     InstalledApp(packageName = "com.acme.store", label = "Acme Store"),

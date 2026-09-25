@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.SettingsGroup
 import app.yuki.core.designsystem.component.SettingsRow
 import app.yuki.core.designsystem.component.SettingsRowPosition
@@ -34,19 +35,19 @@ internal fun ShizukuSection(
     onShizukuAction: (ShizukuActionKind) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsGroup(modifier = modifier, label = SHIZUKU_SECTION_TITLE) {
+    SettingsGroup(modifier = modifier, label = stringResource(R.string.settings_shizuku_title)) {
         ShizukuStatusRow(card = content.card, onShizukuAction = onShizukuAction)
 
         SettingsRow(
             position = SettingsRowPosition(index = 1, count = SHIZUKU_ROW_COUNT),
-            title = SHIZUKU_MODE_TITLE,
-            supporting = content.modeLabel,
+            title = stringResource(R.string.settings_shizuku_mode_title),
+            supporting = stringResource(content.modeLabel),
         )
 
         SettingsRow(
             position = SettingsRowPosition(index = 2, count = SHIZUKU_ROW_COUNT),
-            title = SHIZUKU_API_TITLE,
-            supporting = content.apiVersionLabel,
+            title = stringResource(R.string.settings_shizuku_api_title),
+            supporting = content.apiVersion.text(),
         )
     }
 }
@@ -75,9 +76,12 @@ private fun ShizukuStatusRow(card: ShizukuCard, onShizukuAction: (ShizukuActionK
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall)) {
-                    Text(text = card.title, style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        text = card.description,
+                        text = stringResource(card.title),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = card.description.text(),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -91,14 +95,13 @@ private fun ShizukuStatusRow(card: ShizukuCard, onShizukuAction: (ShizukuActionK
 
 @Composable
 private fun ShizukuAction(card: ShizukuCard, onShizukuAction: (ShizukuActionKind) -> Unit) {
-    val label = card.actionLabel ?: return
     val kind = card.actionKind ?: return
 
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        YukiTextButton(label = label, onClick = { onShizukuAction(kind) })
+        YukiTextButton(label = stringResource(kind.label), onClick = { onShizukuAction(kind) })
     }
 }
 
@@ -109,6 +112,3 @@ private fun statusIconFor(tone: StatusTone): ImageVector = when (tone) {
     StatusTone.Informative, StatusTone.Neutral -> YukiIcons.Info
 }
 
-internal const val SHIZUKU_SECTION_TITLE = "Shizuku"
-internal const val SHIZUKU_MODE_TITLE = "Privilege mode"
-internal const val SHIZUKU_API_TITLE = "Version"

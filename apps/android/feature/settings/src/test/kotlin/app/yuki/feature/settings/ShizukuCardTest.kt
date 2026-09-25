@@ -7,7 +7,6 @@ import app.yuki.core.shizuku.UNKNOWN_API_VERSION
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ShizukuCardTest {
@@ -15,36 +14,32 @@ class ShizukuCardTest {
     fun notInstalledOffersTheShizukuWebsite() {
         val card = cardFor(detailOf(ShizukuState.NotInstalled))
 
-        assertEquals(CARD_NOT_INSTALLED_TITLE, card.title)
+        assertEquals(R.string.settings_card_not_installed_title, card.title)
         assertEquals(ShizukuActionKind.OpenWebsite, card.actionKind)
-        assertEquals(ACTION_OPEN_WEBSITE, card.actionLabel)
     }
 
     @Test
     fun notRunningOffersLaunchingShizuku() {
         val card = cardFor(detailOf(ShizukuState.NotRunning))
 
-        assertEquals(CARD_NOT_RUNNING_TITLE, card.title)
+        assertEquals(R.string.settings_card_not_running_title, card.title)
         assertEquals(ShizukuActionKind.LaunchShizuku, card.actionKind)
-        assertEquals(ACTION_LAUNCH_SHIZUKU, card.actionLabel)
     }
 
     @Test
     fun permissionRequiredOffersRequestingPermission() {
         val card = cardFor(detailOf(ShizukuState.PermissionRequired, apiVersion = 13))
 
-        assertEquals(CARD_PERMISSION_TITLE, card.title)
+        assertEquals(R.string.settings_card_permission_title, card.title)
         assertEquals(ShizukuActionKind.RequestPermission, card.actionKind)
-        assertEquals(ACTION_REQUEST_PERMISSION, card.actionLabel)
     }
 
     @Test
     fun readyCarriesNoActionBecauseNothingIsLeftToDo() {
         val card = cardFor(detailOf(ShizukuState.Ready, ShizukuMode.AdbShell, apiVersion = 13))
 
-        assertEquals(CARD_READY_TITLE, card.title)
+        assertEquals(R.string.settings_card_ready_title, card.title)
         assertNull(card.actionKind)
-        assertNull(card.actionLabel)
         assertEquals(StatusTone.Positive, card.tone)
     }
 
@@ -57,9 +52,7 @@ class ShizukuCardTest {
         )
 
         unready.forEach { state ->
-            val card = cardFor(detailOf(state))
-            assertNotNull("$state must offer an action", card.actionKind)
-            assertNotNull("$state must label its action", card.actionLabel)
+            assertNotNull("$state must offer an action", cardFor(detailOf(state)).actionKind)
         }
     }
 
@@ -68,24 +61,31 @@ class ShizukuCardTest {
         val adb = cardFor(detailOf(ShizukuState.Ready, ShizukuMode.AdbShell, apiVersion = 13))
         val root = cardFor(detailOf(ShizukuState.Ready, ShizukuMode.Root, apiVersion = 12))
 
-        assertTrue(adb.description.contains(MODE_ADB))
-        assertTrue(adb.description.contains("API 13"))
-        assertTrue(root.description.contains(MODE_ROOT))
-        assertTrue(root.description.contains("API 12"))
+        assertEquals(
+            ShizukuCardDescription.Ready(ShizukuMode.AdbShell, ShizukuApiVersion.Known(13)),
+            adb.description,
+        )
+        assertEquals(
+            ShizukuCardDescription.Ready(ShizukuMode.Root, ShizukuApiVersion.Known(12)),
+            root.description,
+        )
     }
 
     @Test
     fun anUnknownApiVersionReadsAsUnknownRatherThanMinusOne() {
-        assertEquals(API_UNKNOWN, apiVersionLabelFor(UNKNOWN_API_VERSION))
-        assertEquals("API 13", apiVersionLabelFor(13))
+        assertEquals(ShizukuApiVersion.Unknown, apiVersionOf(UNKNOWN_API_VERSION))
+        assertEquals(ShizukuApiVersion.Known(13), apiVersionOf(13))
     }
 
     @Test
     fun modeIsUnresolvedUntilShizukuIsReady() {
-        assertEquals(MODE_UNKNOWN, modeLabelFor(detailOf(ShizukuState.PermissionRequired)))
         assertEquals(
-            MODE_ADB,
-            modeLabelFor(detailOf(ShizukuState.Ready, ShizukuMode.AdbShell, 13)),
+            R.string.settings_shizuku_mode_unknown,
+            modeLabelFor(detailOf(ShizukuState.PermissionRequired).mode),
+        )
+        assertEquals(
+            R.string.settings_shizuku_mode_adb,
+            modeLabelFor(detailOf(ShizukuState.Ready, ShizukuMode.AdbShell, 13).mode),
         )
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.SettingsGroup
 import app.yuki.core.designsystem.component.SettingsRow
@@ -23,12 +24,15 @@ internal fun PermissionsSection(
     onPermissionClick: (PermissionRow) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SettingsGroup(modifier = modifier, label = PERMISSIONS_SECTION_TITLE) {
+    SettingsGroup(
+        modifier = modifier,
+        label = stringResource(R.string.settings_permissions_title),
+    ) {
         rows.forEachIndexed { index, row ->
             SettingsRow(
                 position = SettingsRowPosition(index = index, count = rows.size),
-                title = row.permission.label,
-                supporting = row.permission.reason,
+                title = stringResource(row.permission.label),
+                supporting = row.permission.reason?.let { reason -> stringResource(reason) },
                 onClick = { onPermissionClick(row) },
                 trailing = { PermissionTrailing(row) },
             )
@@ -54,7 +58,7 @@ private fun PermissionTrailing(row: PermissionRow) {
 private fun PermissionStatusIcon(row: PermissionRow) {
     Icon(
         imageVector = if (row.isGranted) YukiIcons.Check else YukiIcons.Warning,
-        contentDescription = row.statusLabel,
+        contentDescription = stringResource(row.statusLabel),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.size(YukiSize.IconSmall),
     )
@@ -62,14 +66,14 @@ private fun PermissionStatusIcon(row: PermissionRow) {
 
 @Composable
 private fun RequiredBadge() {
+    val label = stringResource(R.string.settings_permission_required)
+
     YukiBadge(
         content = BadgeContent(
-            label = REQUIRED_LABEL,
+            label = label,
             icon = YukiIcons.Asterisk,
-            description = REQUIRED_LABEL,
+            description = label,
         ),
     )
 }
 
-internal const val PERMISSIONS_SECTION_TITLE = "Permissions"
-internal const val REQUIRED_LABEL = "Required"

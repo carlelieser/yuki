@@ -12,7 +12,7 @@ class PermissionRowTest {
         val row = rowFor(requiredPermission(), PermissionStatus.Granted)
 
         assertTrue(row.isGranted)
-        assertEquals(STATUS_GRANTED, row.statusLabel)
+        assertEquals(R.string.settings_permission_granted, row.statusLabel)
     }
 
     @Test
@@ -20,8 +20,8 @@ class PermissionRowTest {
         val required = rowFor(requiredPermission(), PermissionStatus.Denied)
         val optional = rowFor(optionalPermission(), PermissionStatus.Denied)
 
-        assertEquals(STATUS_DENIED, required.statusLabel)
-        assertEquals(STATUS_DENIED, optional.statusLabel)
+        assertEquals(R.string.settings_permission_denied, required.statusLabel)
+        assertEquals(R.string.settings_permission_denied, optional.statusLabel)
     }
 
     @Test
@@ -30,16 +30,16 @@ class PermissionRowTest {
 
         assertEquals(4, YUKI_PERMISSIONS.size)
         assertEquals(
-            "Browse listings and download apps",
+            R.string.settings_permission_network_reason,
             permissions.getValue(Manifest.permission.INTERNET).reason,
         )
         assertEquals(
-            "Install apps when Shizuku is unavailable",
+            R.string.settings_permission_install_reason,
             permissions.getValue(Manifest.permission.REQUEST_INSTALL_PACKAGES).reason,
         )
         assertNull(permissions.getValue(Manifest.permission.POST_NOTIFICATIONS).reason)
         assertEquals(
-            "Required to install apps without confirmation",
+            R.string.settings_permission_shizuku_reason,
             permissions.getValue(SHIZUKU_PERMISSION).reason,
         )
     }

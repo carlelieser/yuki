@@ -1,5 +1,6 @@
 package app.yuki.feature.settings
 
+import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -11,15 +12,15 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-enum class InstallMode(val label: String) {
-    Shizuku("Shizuku"),
-    System("System installer"),
+enum class InstallMode(@StringRes val label: Int) {
+    Shizuku(R.string.settings_install_mode_shizuku),
+    System(R.string.settings_install_mode_system),
 }
 
-enum class AppearanceMode(val label: String) {
-    System("System default"),
-    Light("Light"),
-    Dark("Dark"),
+enum class AppearanceMode(@StringRes val label: Int) {
+    System(R.string.settings_appearance_system),
+    Light(R.string.settings_appearance_light),
+    Dark(R.string.settings_appearance_dark),
 }
 
 data class YukiPreferences(
