@@ -90,21 +90,6 @@ class LibraryScreenTest {
     }
 
     @Test
-    fun aFailedRowOffersDismiss() {
-        val dismissed = mutableListOf<Long>()
-        setContent(
-            UiState.Success(
-                LibraryContent(listOf(item(InstallState.Failed(InstallFailure.TimedOut)))),
-            ),
-            onDismiss = dismissed::add,
-        )
-
-        composeRule.onNodeWithTag(LIBRARY_DISMISS_TAG).performClick()
-
-        assertEquals(listOf(TERMUX.githubRepoId), dismissed)
-    }
-
-    @Test
     fun aFailureRendersTheFailureStateAndNotTheEmptyState() {
         setContent(UiState.Failure(FailureReason.Offline))
 
@@ -117,7 +102,6 @@ class LibraryScreenTest {
         onListingClick: (String) -> Unit = {},
         onExploreClick: () -> Unit = {},
         onPullToRefresh: () -> Unit = {},
-        onDismiss: (Long) -> Unit = {},
         onFilterSelected: (LibraryFilter) -> Unit = {},
     ) {
         composeRule.setContent {
@@ -130,7 +114,6 @@ class LibraryScreenTest {
                 actions = LibraryActions(
                     onListingClick = onListingClick,
                     onExploreClick = onExploreClick,
-                    onDismiss = onDismiss,
                     onFilterSelected = onFilterSelected,
                 ),
                 contentPadding = PaddingValues(),

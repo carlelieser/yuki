@@ -284,7 +284,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun aFailedFirstTimeDownloadStaysVisibleSoItCanBeRetried() = runTest {
+    fun aFailedFirstTimeDownloadLeavesTheLibrary() = runTest {
         val progress = FakeLibraryProgressStore()
         val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
 
@@ -299,10 +299,30 @@ class LibraryViewModelTest {
                     InstallState.Failed(InstallFailure.InsufficientStorage),
                 ),
             )
+            advanceUntilIdle()
 
-            val item = singleItem(awaitItem())
-            assertTrue(item.isFailed)
-            assertEquals(InstallFailure.InsufficientStorage, item.failure)
+            assertTrue(content(viewModel.state.value).isEmpty)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun anInstalledAppWhoseUpdateFailedKeepsItsInstalledRow() = runTest {
+        val packages = FakeInstalledPackages().apply { install(TERMUX.packageName) }
+        val progress = FakeLibraryProgressStore()
+        val viewModel = viewModelFor(FakeInstallStore(listOf(TERMUX)), packages, progress)
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            val before = singleItem(awaitItem())
+
+            progress.write(
+                InstallProgress(TERMUX.target, "v0.119.0", InstallState.Failed(InstallFailure.Aborted)),
+            )
+
+            advanceUntilIdle()
+
+            assertEquals(before, singleItem(viewModel.state.value))
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -365,7 +385,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun aFailedInstallSurvivesAResumeSoTheUserCanSeeWhatWentWrong() = runTest {
+    fun aFailedInstallIsKeptForItsNoticeAcrossAResume() = runTest {
         val progress = FakeLibraryProgressStore()
         progress.write(
             InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
@@ -374,7 +394,7 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertTrue(singleItem(awaitItem()).isFailed)
+            assertTrue(content(awaitItem()).isEmpty)
 
             viewModel.onPullToRefresh()
             advanceUntilIdle()
@@ -385,7 +405,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun aFailedInstallSurvivesAPullToRefresh() = runTest {
+    fun aFailedInstallIsKeptForItsNoticeAcrossAPullToRefresh() = runTest {
         val progress = FakeLibraryProgressStore()
         val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
 
@@ -396,7 +416,8 @@ class LibraryViewModelTest {
             progress.write(
                 InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
             )
-            assertTrue(singleItem(awaitItem()).isFailed)
+            advanceUntilIdle()
+            assertTrue(content(viewModel.state.value).isEmpty)
 
             viewModel.onPullToRefresh()
             advanceUntilIdle()
@@ -404,24 +425,6 @@ class LibraryViewModelTest {
         }
 
         assertTrue(progress.find(OBSIDIAN.githubRepoId)?.state is InstallState.Failed)
-    }
-
-    @Test
-    fun dismissingAFailedInstallRemovesTheRow() = runTest {
-        val progress = FakeLibraryProgressStore()
-        progress.write(
-            InstallProgress(OBSIDIAN, "v1.5.0", InstallState.Failed(InstallFailure.InsufficientStorage)),
-        )
-        val viewModel = viewModelFor(FakeInstallStore(), FakeInstalledPackages(), progress)
-
-        viewModel.state.test {
-            assertEquals(UiState.Loading, awaitItem())
-            assertTrue(singleItem(awaitItem()).isFailed)
-
-            viewModel.onDismiss(OBSIDIAN.githubRepoId)
-            assertTrue(content(awaitItem()).isEmpty)
-            cancelAndIgnoreRemainingEvents()
-        }
     }
 
     @Test

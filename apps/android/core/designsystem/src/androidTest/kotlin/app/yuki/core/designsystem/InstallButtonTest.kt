@@ -215,11 +215,10 @@ class InstallButtonTest {
     }
 
     @Test
-    fun failedOffersRetryWithoutABadge() {
+    fun failedOffersRetry() {
         render(InstallState.Failed(reason = InstallFailure.InsufficientStorage))
 
         composeRule.onNodeWithText(text(R.string.designsystem_install_retry)).assertIsEnabled()
-        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertDoesNotExist()
     }
 
     @Test

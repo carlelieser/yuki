@@ -4,7 +4,6 @@
     <string name="library_empty_action">Browse apps</string>
     <string name="library_clear_filter">Clear filter</string>
     <string name="library_missing">We couldn\'t load your library.</string>
-    <string name="library_dismiss">Dismiss</string>
     <string name="library_filter_description">Filter by %1$s</string>
 
     <string name="library_filter_all">All</string>

@@ -22,6 +22,8 @@ internal fun mergeLibrary(input: LibraryMergeInput): List<LibraryItem> {
 }
 
 private fun MutableMap<Long, LibraryItem>.applyProgress(progress: InstallProgress) {
+    if (progress.state is InstallState.Failed) return
+
     val existing = this[progress.githubRepoId]
 
     if (existing != null) {

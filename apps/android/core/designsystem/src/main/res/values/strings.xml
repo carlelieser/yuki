@@ -44,18 +44,6 @@
     <string name="designsystem_install_error_signature_conflict">%1$s is signed differently from the installed version.</string>
     <string name="designsystem_install_error_timed_out">Installing %1$s timed out.</string>
     <string name="designsystem_install_error_rejected">Android couldn\'t install %1$s: %2$s</string>
-    <string name="designsystem_install_failure_download_failed">Download failed</string>
-    <string name="designsystem_install_failure_download_unreadable">Download incomplete</string>
-    <string name="designsystem_install_failure_not_an_apk">Not an app</string>
-    <string name="designsystem_install_failure_aborted">Install cancelled</string>
-    <string name="designsystem_install_failure_session_failed">Couldn\'t start install</string>
-    <string name="designsystem_install_failure_insufficient_storage">Not enough space</string>
-    <string name="designsystem_install_failure_incompatible">Not compatible</string>
-    <string name="designsystem_install_failure_invalid_apk">Damaged app file</string>
-    <string name="designsystem_install_failure_package_mismatch">Different app</string>
-    <string name="designsystem_install_failure_signature_conflict">Signed by someone else</string>
-    <string name="designsystem_install_failure_timed_out">Install timed out</string>
-    <string name="designsystem_install_failure_rejected">Install failed</string>
 
     <string name="designsystem_installed">Installed</string>
     <string name="designsystem_badge_category">Category %1$s</string>

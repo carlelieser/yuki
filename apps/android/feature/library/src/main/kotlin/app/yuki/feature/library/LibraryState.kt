@@ -1,7 +1,6 @@
 package app.yuki.feature.library
 
 import app.yuki.core.model.DownloadSize
-import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.LibraryEntry
 
@@ -18,26 +17,20 @@ data class LibraryItem(
 
     val isDownloading: Boolean get() = install is InstallState.Downloading
 
-    val isFailed: Boolean get() = install is InstallState.Failed
-
     val isInstalled: Boolean get() = presence == LibraryPresence.Installed
 
     internal val sortRank: Int get() = when {
         isDownloading -> RANK_DOWNLOADING
         install == InstallState.Installing -> RANK_DOWNLOADING
         install == InstallState.PendingUserAction -> RANK_PENDING
-        isFailed -> RANK_FAILED
         isInstalled -> RANK_INSTALLED
         else -> RANK_NOT_INSTALLED
     }
-
-    val failure: InstallFailure? get() = (install as? InstallState.Failed)?.reason
 
     val supporting: LibrarySupporting get() = when (install) {
         is InstallState.Downloading -> downloadSupporting(install)
         InstallState.Installing -> LibrarySupporting.Installing
         InstallState.PendingUserAction -> LibrarySupporting.Pending
-        is InstallState.Failed -> LibrarySupporting.Failure(install.reason)
         else -> settledSupporting()
     }
 
@@ -64,8 +57,6 @@ sealed interface LibrarySupporting {
 
     data class Download(val size: DownloadSize) : LibrarySupporting
 
-    data class Failure(val reason: InstallFailure) : LibrarySupporting
-
     data object None : LibrarySupporting
 }
 
@@ -84,6 +75,5 @@ data class LibraryContent(
 
 private const val RANK_DOWNLOADING = 0
 private const val RANK_PENDING = 1
-private const val RANK_FAILED = 2
-private const val RANK_INSTALLED = 3
-private const val RANK_NOT_INSTALLED = 4
+private const val RANK_INSTALLED = 2
+private const val RANK_NOT_INSTALLED = 3

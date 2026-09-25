@@ -67,10 +67,6 @@ class LibraryViewModel @Inject internal constructor(
         }
     }
 
-    fun onDismiss(githubRepoId: Long) {
-        viewModelScope.launch { progress.clear(githubRepoId) }
-    }
-
     private suspend fun loadRemoteLibrary() {
         remote.value = dependencies.library.entries()
     }
