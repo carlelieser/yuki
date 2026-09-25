@@ -35,28 +35,6 @@ class ListingCategoryTest {
     }
 
     @Test
-    fun `carries the labels the web app displays`() {
-        assertEquals(
-            listOf(
-                "System",
-                "Apps",
-                "Files",
-                "Media",
-                "Gaming",
-                "Automation",
-                "Network",
-                "Privacy",
-                "Developer",
-                "Device",
-                "Customization",
-                "Connectivity",
-                "Utilities",
-            ),
-            ListingCategory.entries.map { category -> category.label },
-        )
-    }
-
-    @Test
     fun `an unknown category is null rather than a crash`() {
         assertNull(readListingCategory("teleportation"))
         assertNull(readListingCategory(""))

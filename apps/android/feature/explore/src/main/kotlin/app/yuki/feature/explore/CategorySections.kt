@@ -32,12 +32,17 @@ internal data class CategorySectionActions(
     val onAuthorSelected: ((String) -> Unit)? = null,
 )
 
+internal data class CategorySectionsContent(
+    val sections: UiState<List<CategorySection>>,
+    val installs: ListingInstalls,
+    val labels: Map<ListingCategory, String>,
+)
+
 internal fun LazyListScope.categorySections(
-    sections: UiState<List<CategorySection>>,
-    installs: ListingInstalls,
+    content: CategorySectionsContent,
     actions: CategorySectionActions,
 ) {
-    when (sections) {
+    when (val sections = content.sections) {
         is UiState.Loading -> item(key = SECTIONS_STATUS_KEY) {
             SectionsLoading(modifier = Modifier.animateItem())
         }
@@ -47,16 +52,16 @@ internal fun LazyListScope.categorySections(
         }
 
         is UiState.Success -> sectionList(
+            content = content,
             entries = sections.data,
-            installs = installs,
             actions = actions,
         )
     }
 }
 
 private fun LazyListScope.sectionList(
+    content: CategorySectionsContent,
     entries: List<CategorySection>,
-    installs: ListingInstalls,
     actions: CategorySectionActions,
 ) {
     if (entries.isEmpty()) {
@@ -65,23 +70,23 @@ private fun LazyListScope.sectionList(
     }
 
     entries.forEach { entry ->
-        categorySection(section = entry, installs = installs, actions = actions)
+        categorySection(section = entry, content = content, actions = actions)
     }
 }
 
 private fun LazyListScope.categorySection(
     section: CategorySection,
-    installs: ListingInstalls,
+    content: CategorySectionsContent,
     actions: CategorySectionActions,
 ) {
     val category = section.category
 
     listingSection(
         content = ListingSectionContent(
-            title = category.label,
+            title = content.labels.getValue(category),
             keyPrefix = category.wireValue,
             listings = section.results,
-            installs = installs,
+            installs = content.installs,
         ),
         actions = ListingSectionActions(
             onListingSelected = actions.onListingSelected,

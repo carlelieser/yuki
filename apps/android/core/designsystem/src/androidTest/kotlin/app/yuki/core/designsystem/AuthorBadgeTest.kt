@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import app.yuki.core.designsystem.component.labelRes
 
 @RunWith(AndroidJUnit4::class)
 class AuthorBadgeTest {
@@ -73,6 +74,6 @@ class AuthorBadgeTest {
     fun theOtherBadgesStayInertWhenTheAuthorIsClickable() {
         render { }
 
-        composeRule.onNodeWithText(ListingCategory.Gaming.label).assertHasNoClickAction()
+        composeRule.onNodeWithText(composeRule.activity.getString(ListingCategory.Gaming.labelRes())).assertHasNoClickAction()
     }
 }

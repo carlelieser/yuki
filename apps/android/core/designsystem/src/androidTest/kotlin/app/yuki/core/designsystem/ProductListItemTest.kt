@@ -54,7 +54,7 @@ class ProductListItemTest {
     fun aListingRowCarriesCategoryStarsRatingAndAuthor() {
         render { summary().toProductListItemContent() }
 
-        composeRule.onNodeWithText("Gaming").assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.designsystem_category_gaming)).assertIsDisplayed()
         composeRule.onNodeWithText("1.2K").assertIsDisplayed()
         composeRule.onNodeWithText("4.6").assertIsDisplayed()
         composeRule.onNodeWithText("octocat").assertIsDisplayed()
@@ -72,7 +72,7 @@ class ProductListItemTest {
     fun anUncategorisedListingRowOmitsTheCategoryBadge() {
         render { summary(category = null).toProductListItemContent() }
 
-        composeRule.onNodeWithText("Gaming").assertDoesNotExist()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.designsystem_category_gaming)).assertDoesNotExist()
         composeRule.onNodeWithText("octocat").assertIsDisplayed()
     }
 

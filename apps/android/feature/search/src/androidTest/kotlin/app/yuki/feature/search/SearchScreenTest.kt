@@ -26,6 +26,7 @@ import app.yuki.core.model.UiState
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
+import app.yuki.core.designsystem.component.labelRes
 
 class SearchScreenTest {
     @get:Rule
@@ -174,7 +175,7 @@ class SearchScreenTest {
         render(browsing())
 
         composeRule.onNodeWithText("All").assertDoesNotExist()
-        composeRule.onNodeWithText(ListingCategory.Media.label).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(ListingCategory.Media.labelRes())).assertIsDisplayed()
     }
 
     @Test

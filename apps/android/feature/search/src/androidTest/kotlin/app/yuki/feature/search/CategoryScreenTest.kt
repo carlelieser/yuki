@@ -20,6 +20,7 @@ import app.yuki.core.model.ListingSummary
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
+import app.yuki.core.designsystem.component.labelRes
 
 class CategoryScreenTest {
     @get:Rule
@@ -58,7 +59,7 @@ class CategoryScreenTest {
     fun theCategoryNameTitlesTheScreen() {
         render(ListingCategory.Gaming)
 
-        composeRule.onNodeWithText(ListingCategory.Gaming.label).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(ListingCategory.Gaming.labelRes())).assertIsDisplayed()
     }
 
     @Test

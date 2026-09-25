@@ -86,7 +86,7 @@ class InstalledBadgeTest {
         render { summary().toProductListItemContent().copy(isInstalled = true) }
 
         composeRule.onNodeWithTag(LISTING_BADGE_ROW_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText("Gaming").assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.designsystem_category_gaming)).assertIsDisplayed()
         composeRule.onNodeWithText("octocat").assertIsDisplayed()
         composeRule.onNodeWithTag(INSTALLED_BADGE_TAG).assertIsDisplayed()
     }

@@ -33,6 +33,7 @@ import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
+import app.yuki.core.designsystem.component.labelRes
 
 class ExploreScreenTest {
     @get:Rule
@@ -102,8 +103,8 @@ class ExploreScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(ListingCategory.Gaming.label).assertIsDisplayed()
-        composeRule.onNodeWithText(ListingCategory.Media.label).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(ListingCategory.Gaming.labelRes())).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(ListingCategory.Media.labelRes())).assertIsDisplayed()
         composeRule.onNodeWithText("Alpha").assertIsDisplayed()
     }
 
@@ -175,7 +176,7 @@ class ExploreScreenTest {
             .onNodeWithContentDescription(
                 composeRule.activity.getString(
                     DesignR.string.designsystem_section_see_all,
-                    ListingCategory.Gaming.label,
+                    composeRule.activity.getString(ListingCategory.Gaming.labelRes()),
                 ),
             )
             .performClick()
@@ -339,7 +340,7 @@ class ExploreScreenTest {
         }
 
         val whileLoading = composeRule
-            .onNodeWithText(ListingCategory.SystemTweaks.label)
+            .onNodeWithText(composeRule.activity.getString(ListingCategory.SystemTweaks.labelRes()))
             .getUnclippedBoundsInRoot()
             .top
 
@@ -347,7 +348,7 @@ class ExploreScreenTest {
         composeRule.waitForIdle()
 
         val afterResolving = composeRule
-            .onNodeWithText(ListingCategory.SystemTweaks.label)
+            .onNodeWithText(composeRule.activity.getString(ListingCategory.SystemTweaks.labelRes()))
             .getUnclippedBoundsInRoot()
             .top
 

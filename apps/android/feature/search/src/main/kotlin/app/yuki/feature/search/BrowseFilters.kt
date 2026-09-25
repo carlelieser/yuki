@@ -25,6 +25,7 @@ import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.icon
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingCategory
+import app.yuki.core.designsystem.component.label
 
 const val CATEGORY_FILTER_TAG = "categoryFilter"
 const val SORT_SELECTOR_TAG = "sortSelector"
@@ -68,7 +69,7 @@ private fun CategoryChip(
     FilterChip(
         selected = isSelected,
         onClick = onSelect,
-        label = { Text(text = category.label) },
+        label = { Text(text = category.label()) },
         leadingIcon = { CategoryChipIcon(category = category) },
     )
 }

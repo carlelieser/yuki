@@ -16,6 +16,7 @@ import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
+import app.yuki.core.designsystem.component.label
 
 const val CATEGORY_SCREEN_TAG = "categoryScreen"
 
@@ -69,7 +70,7 @@ internal fun CategoryScreen(
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = browsed.category.label,
+        title = browsed.category.label(),
         onBackClick = callbacks.onBackClick,
         modifier = modifier.testTag(CATEGORY_SCREEN_TAG),
         trailing = {

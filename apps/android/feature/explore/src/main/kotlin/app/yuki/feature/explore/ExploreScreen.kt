@@ -22,6 +22,7 @@ import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
+import app.yuki.core.designsystem.component.categoryLabels
 
 const val EXPLORE_SCREEN_TAG = "exploreScreen"
 
@@ -134,6 +135,8 @@ private fun ExploreContentBody(
     callbacks: ExploreCallbacks,
     contentPadding: PaddingValues,
 ) {
+    val labels = categoryLabels()
+
     LazyColumn(
         contentPadding = contentPadding,
         modifier = Modifier
@@ -143,8 +146,11 @@ private fun ExploreContentBody(
         featuredSection(content = content, callbacks = callbacks)
 
         categorySections(
-            sections = content.sections,
-            installs = content.installs,
+            content = CategorySectionsContent(
+                sections = content.sections,
+                installs = content.installs,
+                labels = labels,
+            ),
             actions = CategorySectionActions(
                 onListingSelected = callbacks.onListingSelected,
                 onCategorySelected = callbacks.onCategorySelected,

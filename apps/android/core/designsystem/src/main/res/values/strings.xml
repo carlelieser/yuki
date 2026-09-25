@@ -57,4 +57,18 @@
     <string name="designsystem_back">Back</string>
     <string name="designsystem_avatar_edit">Change your picture</string>
     <string name="designsystem_avatar_open">Open your account</string>
+
+    <string name="designsystem_category_system_tweaks">System</string>
+    <string name="designsystem_category_app_management">Apps</string>
+    <string name="designsystem_category_file_management">Files</string>
+    <string name="designsystem_category_media">Media</string>
+    <string name="designsystem_category_gaming">Gaming</string>
+    <string name="designsystem_category_automation">Automation</string>
+    <string name="designsystem_category_networking">Network</string>
+    <string name="designsystem_category_privacy_security">Privacy</string>
+    <string name="designsystem_category_developer_tools">Developer</string>
+    <string name="designsystem_category_device_specific">Device</string>
+    <string name="designsystem_category_customization">Customization</string>
+    <string name="designsystem_category_connectivity">Connectivity</string>
+    <string name="designsystem_category_utilities">Utilities</string>
 </resources>

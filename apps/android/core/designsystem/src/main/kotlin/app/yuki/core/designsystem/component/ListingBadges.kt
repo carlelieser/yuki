@@ -22,11 +22,12 @@ value class ListingBadges(val items: List<BadgeContent>)
 @Composable
 private fun categoryBadge(summary: ListingSummary): BadgeContent? {
     val category = summary.category ?: return null
+    val label = category.label()
 
     return BadgeContent(
-        label = category.label,
+        label = label,
         icon = category.icon,
-        description = stringResource(R.string.designsystem_badge_category, category.label),
+        description = stringResource(R.string.designsystem_badge_category, label),
     )
 }
 
