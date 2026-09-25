@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -10,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.yuki.core.designsystem.component.INSTALL_DISMISS_DESCRIPTION
 import app.yuki.core.designsystem.component.INSTALL_PROGRESS_TAG
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
@@ -30,6 +30,9 @@ import org.junit.runner.RunWith
 class InstallButtonTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        composeRule.activity.getString(id, *args)
 
     private fun render(state: InstallState, onAction: InstallActionHandler = InstallActionHandler { }) {
         composeRule.setContent {
@@ -70,7 +73,7 @@ class InstallButtonTest {
             position = InstallProgressPosition.None,
         )
 
-        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).assertIsEnabled()
         composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
         composeRule.onNodeWithTag(INSTALL_PROGRESS_TAG).assertDoesNotExist()
     }
@@ -88,8 +91,8 @@ class InstallButtonTest {
             }
         }
 
-        composeRule.onNodeWithText("Not enough space").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription(INSTALL_DISMISS_DESCRIPTION).performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.designsystem_install_dismiss)).performClick()
 
         assertEquals(listOf(InstallAction.Dismiss), actions)
     }
@@ -102,7 +105,7 @@ class InstallButtonTest {
         )
 
         composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
-        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).assertIsEnabled()
     }
 
     @Test
@@ -113,7 +116,7 @@ class InstallButtonTest {
         )
 
         composeRule
-            .onNodeWithContentDescription("Downloading, 33 percent, 4.1 MB / 12.1 MB")
+            .onNodeWithContentDescription(text(R.string.designsystem_install_downloading_progress, 33, "4.1 MB / 12.1 MB"))
             .assertExists()
     }
 
@@ -121,14 +124,14 @@ class InstallButtonTest {
     fun notInstalledOffersInstall() {
         render(InstallState.NotInstalled)
 
-        composeRule.onNodeWithText("Install").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install)).assertIsEnabled()
     }
 
     @Test
     fun downloadingOffersCancel() {
         render(InstallState.Downloading(PARTLY_DOWNLOADED))
 
-        composeRule.onNodeWithText("Cancel").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).assertIsEnabled()
     }
 
     @Test
@@ -149,8 +152,8 @@ class InstallButtonTest {
     fun anUnreadableDownloadIsNotReportedAsIncompatible() {
         render(InstallState.Failed(InstallFailure.DownloadUnreadable))
 
-        composeRule.onNodeWithText("Download incomplete").assertExists()
-        composeRule.onNodeWithText("Not compatible").assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_download_unreadable)).assertExists()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_incompatible)).assertDoesNotExist()
     }
 
     @Test
@@ -158,7 +161,7 @@ class InstallButtonTest {
         val actions = mutableListOf<InstallAction>()
         render(InstallState.PendingUserAction, InstallActionHandler { action -> actions += action })
 
-        composeRule.onNodeWithText("Waiting for confirmation").assertIsEnabled().performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_pending)).assertIsEnabled().performClick()
 
         assertEquals(listOf(InstallAction.Cancel), actions)
     }
@@ -167,7 +170,7 @@ class InstallButtonTest {
     fun installingShowsItsLabel() {
         render(InstallState.Installing)
 
-        composeRule.onNodeWithText("Installing").assertExists()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_installing)).assertExists()
     }
 
     @Test
@@ -175,7 +178,7 @@ class InstallButtonTest {
         val actions = mutableListOf<InstallAction>()
         render(InstallState.Installing, InstallActionHandler { action -> actions += action })
 
-        composeRule.onNodeWithText("Installing").assertIsNotEnabled().performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_installing)).assertIsNotEnabled().performClick()
 
         assertEquals(emptyList<InstallAction>(), actions)
     }
@@ -184,29 +187,29 @@ class InstallButtonTest {
     fun installedOffersOpen() {
         render(InstallState.Installed(versionTag = "v1.2.0"))
 
-        composeRule.onNodeWithText("Open").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_open)).assertIsEnabled()
     }
 
     @Test
     fun installedOffersUninstallAlongsideOpenWhenAllowed() {
         renderUninstallable(InstallState.Installed(versionTag = "v1.2.0"))
 
-        composeRule.onNodeWithText("Uninstall").assertIsEnabled()
-        composeRule.onNodeWithText("Open").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_uninstall)).assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_open)).assertIsEnabled()
     }
 
     @Test
     fun installedHidesUninstallByDefault() {
         render(InstallState.Installed(versionTag = "v1.2.0"))
 
-        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_uninstall)).assertDoesNotExist()
     }
 
     @Test
     fun uninstallIsNotOfferedBeforeAnAppIsInstalled() {
         renderUninstallable(InstallState.NotInstalled)
 
-        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_uninstall)).assertDoesNotExist()
     }
 
     @Test
@@ -217,7 +220,7 @@ class InstallButtonTest {
             onAction = InstallActionHandler { action -> actions.add(action) },
         )
 
-        composeRule.onNodeWithText("Uninstall").performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_uninstall)).performClick()
 
         assertEquals(listOf(InstallAction.Uninstall), actions)
     }
@@ -226,15 +229,15 @@ class InstallButtonTest {
     fun updateAvailableOffersUpdate() {
         render(InstallState.UpdateAvailable(from = "v1.0.0", to = "v1.2.0"))
 
-        composeRule.onNodeWithText("Update").assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_update)).assertIsEnabled()
     }
 
     @Test
     fun failedOffersRetryAndNamesTheFailure() {
         render(InstallState.Failed(reason = InstallFailure.InsufficientStorage))
 
-        composeRule.onNodeWithText("Retry").assertIsEnabled()
-        composeRule.onNodeWithText("Not enough space").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_retry)).assertIsEnabled()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertIsDisplayed()
     }
 
     @Test
@@ -242,7 +245,7 @@ class InstallButtonTest {
         val actions = mutableListOf<InstallAction>()
         render(InstallState.NotInstalled, InstallActionHandler { action -> actions.add(action) })
 
-        composeRule.onNodeWithText("Install").performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install)).performClick()
 
         assertEquals(listOf(InstallAction.Install), actions)
     }
@@ -255,7 +258,7 @@ class InstallButtonTest {
             InstallActionHandler { action -> actions.add(action) },
         )
 
-        composeRule.onNodeWithText("Update").performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_update)).performClick()
 
         assertEquals(listOf(InstallAction.Update), actions)
     }

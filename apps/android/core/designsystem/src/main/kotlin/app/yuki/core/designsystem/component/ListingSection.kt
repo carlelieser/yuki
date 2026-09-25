@@ -5,9 +5,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import app.yuki.core.designsystem.R
 import app.yuki.core.model.ListingSummary
-
-const val LISTING_SECTION_ARROW_DESCRIPTION = "See all"
 
 data class ListingSectionActions(
     val onListingSelected: (ListingSummary) -> Unit,
@@ -61,7 +61,7 @@ private fun ListingSectionHeader(
                 IconButton(onClick = seeAll) {
                     Icon(
                         imageVector = YukiIcons.Forward,
-                        contentDescription = "$LISTING_SECTION_ARROW_DESCRIPTION $seeAllLabel",
+                        contentDescription = stringResource(R.string.designsystem_section_see_all, seeAllLabel),
                     )
                 }
             }

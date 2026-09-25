@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.formatRating
@@ -23,18 +26,16 @@ private fun categoryBadge(summary: ListingSummary): BadgeContent? {
     return BadgeContent(
         label = category.label,
         icon = category.icon,
-        description = "Category ${category.label}",
+        description = stringResource(R.string.designsystem_badge_category, category.label),
     )
 }
 
 @Composable
 private fun starsBadge(summary: ListingSummary): BadgeContent {
-    val noun = if (summary.stars == 1) "star" else "stars"
-
     return BadgeContent(
         label = formatStarCount(summary.stars),
         icon = YukiIcons.Star,
-        description = "${summary.stars} $noun",
+        description = pluralStringResource(R.plurals.designsystem_badge_stars, summary.stars, summary.stars),
     )
 }
 
@@ -45,7 +46,7 @@ private fun ratingBadge(summary: ListingSummary): BadgeContent? {
     return BadgeContent(
         label = formatRating(average),
         icon = YukiIcons.ThumbUp,
-        description = "Rated ${formatRating(average)} out of 5",
+        description = stringResource(R.string.designsystem_badge_rating, formatRating(average)),
     )
 }
 
@@ -60,7 +61,7 @@ fun ListingSummary.toBadges(
         BadgeContent(
             label = author,
             icon = YukiIcons.Person,
-            description = "By $author",
+            description = stringResource(R.string.designsystem_badge_author, author),
             onClick = onAuthorClick?.let { click -> { click(author) } },
         ),
     ),

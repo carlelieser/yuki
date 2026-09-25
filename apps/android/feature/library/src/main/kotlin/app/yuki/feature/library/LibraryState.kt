@@ -1,7 +1,6 @@
 package app.yuki.feature.library
 
 import app.yuki.core.designsystem.component.ProductListItemContent
-import app.yuki.core.designsystem.component.installFailureLabel
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.LibraryEntry
@@ -45,7 +44,6 @@ data class LibraryItem(
         is InstallState.Downloading -> if (install.size.isTotalKnown) install.size.label else ""
         InstallState.Installing -> LIBRARY_INSTALLING_SUPPORTING
         InstallState.PendingUserAction -> LIBRARY_PENDING_SUPPORTING
-        is InstallState.Failed -> installFailureLabel(install.reason)
         else -> settledSupportingText()
     }
 

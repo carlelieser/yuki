@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -10,7 +11,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
-import app.yuki.core.designsystem.component.FAILURE_RETRY_LABEL
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.theme.YukiTheme
@@ -20,13 +20,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val OFFLINE_TITLE = "You're offline"
-private const val SERVER_TITLE = "Yuki is having trouble"
 
 @RunWith(AndroidJUnit4::class)
 class EmptyVersusFailureTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        composeRule.activity.getString(id, *args)
 
     @Test
     fun emptyStateIsNotRenderedAsAFailure() {
@@ -43,7 +44,7 @@ class EmptyVersusFailureTest {
 
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
-        composeRule.onNodeWithText(FAILURE_RETRY_LABEL).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_retry)).assertDoesNotExist()
     }
 
     @Test
@@ -56,7 +57,7 @@ class EmptyVersusFailureTest {
 
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertDoesNotExist()
-        composeRule.onNodeWithText(OFFLINE_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_title_offline)).assertIsDisplayed()
     }
 
     @Test
@@ -67,8 +68,8 @@ class EmptyVersusFailureTest {
             }
         }
 
-        composeRule.onNodeWithText(SERVER_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(OFFLINE_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_title_server)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_title_offline)).assertDoesNotExist()
     }
 
     @Test
@@ -80,7 +81,7 @@ class EmptyVersusFailureTest {
             }
         }
 
-        composeRule.onNodeWithText(FAILURE_RETRY_LABEL).performClick()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_retry)).performClick()
 
         assertEquals(1, retryCount)
     }

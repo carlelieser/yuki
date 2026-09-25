@@ -8,17 +8,17 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
-import androidx.compose.ui.test.performClick
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import app.yuki.core.designsystem.R as DesignR
 import app.yuki.core.designsystem.component.BACK_ACTION_TAG
-import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
-import app.yuki.core.designsystem.component.SEARCH_PLACEHOLDER
+import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -134,7 +134,9 @@ class SearchScreenTest {
     fun focusingTheSearchBarRevealsRecentSearchesAndHidesTheBrowseList() {
         render(browsingWithRecent(listOf("beta")))
 
-        composeRule.onNodeWithText(SEARCH_PLACEHOLDER).performClick()
+        composeRule.onNodeWithText(
+            composeRule.activity.getString(DesignR.string.designsystem_search_placeholder),
+        ).performClick()
 
         composeRule.onNodeWithTag(RECENT_SEARCHES_TAG).assertIsDisplayed()
         composeRule.onNodeWithText(RECENT_SEARCHES_TITLE.uppercase()).assertIsDisplayed()

@@ -16,12 +16,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallState
+import kotlin.reflect.KClass
 
 fun interface InstallActionHandler {
     fun onAction(action: InstallAction)
@@ -50,15 +53,15 @@ enum class InstallProgressPosition {
     None,
 }
 
-private fun labelFor(state: InstallState): String = when (state) {
-    InstallState.NotInstalled -> "Install"
-    is InstallState.Downloading -> "Cancel"
-    InstallState.Installing -> "Installing"
-    InstallState.PendingUserAction -> "Waiting for confirmation"
-    is InstallState.Installed -> "Open"
-    is InstallState.UpdateAvailable -> "Update"
-    is InstallState.Failed -> "Retry"
-}
+private val labels: Map<KClass<out InstallState>, Int> = mapOf(
+    InstallState.NotInstalled::class to R.string.designsystem_install,
+    InstallState.Downloading::class to R.string.designsystem_install_cancel,
+    InstallState.Installing::class to R.string.designsystem_install_installing,
+    InstallState.PendingUserAction::class to R.string.designsystem_install_pending,
+    InstallState.Installed::class to R.string.designsystem_install_open,
+    InstallState.UpdateAvailable::class to R.string.designsystem_install_update,
+    InstallState.Failed::class to R.string.designsystem_install_retry,
+)
 
 private fun actionFor(state: InstallState): InstallAction = when (state) {
     InstallState.NotInstalled -> InstallAction.Install
@@ -70,14 +73,17 @@ private fun actionFor(state: InstallState): InstallAction = when (state) {
     is InstallState.Failed -> InstallAction.Retry
 }
 
+@Composable
 private fun describe(state: InstallState): String = when (state) {
-    InstallState.NotInstalled -> "Install"
+    InstallState.NotInstalled -> stringResource(R.string.designsystem_install)
     is InstallState.Downloading -> describeDownload(state.size)
-    InstallState.Installing -> "Installing"
-    InstallState.PendingUserAction -> "Waiting for confirmation"
-    is InstallState.Installed -> "Installed, version ${state.versionTag}"
-    is InstallState.UpdateAvailable -> "Update from ${state.from} to ${state.to}"
-    is InstallState.Failed -> installFailureLabel(state.reason)
+    InstallState.Installing -> stringResource(R.string.designsystem_install_installing)
+    InstallState.PendingUserAction -> stringResource(R.string.designsystem_install_pending)
+    is InstallState.Installed ->
+        stringResource(R.string.designsystem_install_installed_version, state.versionTag)
+    is InstallState.UpdateAvailable ->
+        stringResource(R.string.designsystem_install_update_range, state.from, state.to)
+    is InstallState.Failed -> stringResource(installFailureLabel(state.reason))
 }
 
 private fun isFilled(state: InstallState, canUninstall: Boolean): Boolean {
@@ -90,11 +96,15 @@ private fun isFilled(state: InstallState, canUninstall: Boolean): Boolean {
 
 private fun isBlocking(state: InstallState): Boolean = state is InstallState.Installing
 
+@Composable
 private fun describeDownload(size: DownloadSize): String {
-    val fraction = size.fraction ?: return "Downloading"
+    val fraction = size.fraction ?: return stringResource(R.string.designsystem_install_downloading)
+    val percent = (fraction * PERCENT).toInt()
 
-    return "Downloading, ${(fraction * 100).toInt()} percent, ${size.label}"
+    return stringResource(R.string.designsystem_install_downloading_progress, percent, size.label)
 }
+
+private const val PERCENT = 100
 
 @Composable
 private fun FailureAccessory(state: InstallState, onAction: InstallActionHandler) {
@@ -143,7 +153,7 @@ private fun InstallControl(
 
     if (presentation.isGhost) {
         YukiTextButton(
-            label = labelFor(state),
+            label = stringResource(labels.getValue(state::class)),
             onClick = { onAction.onAction(action) },
             isEnabled = isClickable,
         )
@@ -152,7 +162,7 @@ private fun InstallControl(
 
     if (isFilled(state, presentation.canUninstall)) {
         YukiButton(
-            label = labelFor(state),
+            label = stringResource(labels.getValue(state::class)),
             onClick = { onAction.onAction(action) },
             isEnabled = isClickable,
         )
@@ -160,7 +170,7 @@ private fun InstallControl(
     }
 
     YukiSecondaryButton(
-        label = labelFor(state),
+        label = stringResource(labels.getValue(state::class)),
         onClick = { onAction.onAction(action) },
         isEnabled = isClickable,
     )
@@ -171,15 +181,12 @@ private data class InstallControlPresentation(
     val canUninstall: Boolean,
 )
 
-const val INSTALL_DISMISS_DESCRIPTION = "Dismiss"
-const val INSTALL_UNINSTALL_LABEL = "Uninstall"
-
 @Composable
 private fun DismissControl(onAction: InstallActionHandler) {
     IconButton(onClick = { onAction.onAction(InstallAction.Dismiss) }) {
         Icon(
             imageVector = YukiIcons.Close,
-            contentDescription = INSTALL_DISMISS_DESCRIPTION,
+            contentDescription = stringResource(R.string.designsystem_install_dismiss),
         )
     }
 }
@@ -187,7 +194,7 @@ private fun DismissControl(onAction: InstallActionHandler) {
 @Composable
 private fun UninstallControl(onAction: InstallActionHandler, isEnabled: Boolean) {
     YukiSecondaryButton(
-        label = INSTALL_UNINSTALL_LABEL,
+        label = stringResource(R.string.designsystem_install_uninstall),
         onClick = { onAction.onAction(InstallAction.Uninstall) },
         isEnabled = isEnabled,
     )
@@ -204,9 +211,11 @@ fun InstallButton(
     progressShape: InstallProgressShape = InstallProgressShape.Linear,
     progressPosition: InstallProgressPosition = InstallProgressPosition.Trailing,
 ) {
+    val description = describe(state)
+
     Row(
         modifier = modifier
-            .semantics { contentDescription = describe(state) },
+            .semantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {

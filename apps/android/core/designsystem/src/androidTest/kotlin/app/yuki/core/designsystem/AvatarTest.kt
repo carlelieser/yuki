@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -17,7 +18,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.yuki.core.designsystem.component.AVATAR_EDIT_DESCRIPTION
 import app.yuki.core.designsystem.component.AVATAR_GLYPH_TAG
 import app.yuki.core.designsystem.component.AVATAR_TAG
 import app.yuki.core.designsystem.component.AccountAvatar
@@ -34,6 +34,9 @@ import org.junit.runner.RunWith
 class AvatarTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        composeRule.activity.getString(id, *args)
 
     private fun render(
         content: AvatarContent,
@@ -66,7 +69,7 @@ class AvatarTest {
     fun aPlainAvatarHasNoEditAffordance() {
         render(AvatarContent(imageUrl = null, displayName = "Ada Lovelace"))
 
-        composeRule.onNodeWithContentDescription(AVATAR_EDIT_DESCRIPTION).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription(text(R.string.designsystem_avatar_edit)).assertDoesNotExist()
     }
 
     @Test
@@ -78,7 +81,7 @@ class AvatarTest {
             onEditClick = { clicks += 1 },
         )
 
-        composeRule.onNodeWithContentDescription(AVATAR_EDIT_DESCRIPTION).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.designsystem_avatar_edit)).assertIsDisplayed()
         composeRule.onNodeWithTag(AVATAR_TAG).performClick()
 
         assertEquals(1, clicks)

@@ -15,9 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import app.yuki.core.designsystem.R
 
 const val OVERFLOW_MENU_TAG = "overflowMenu"
-const val OVERFLOW_DESCRIPTION = "More options"
 
 data class OverflowAction(
     val label: String,
@@ -42,7 +43,7 @@ fun OverflowMenu(
         ) {
             Icon(
                 imageVector = YukiIcons.MoreVert,
-                contentDescription = OVERFLOW_DESCRIPTION,
+                contentDescription = stringResource(R.string.designsystem_overflow),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

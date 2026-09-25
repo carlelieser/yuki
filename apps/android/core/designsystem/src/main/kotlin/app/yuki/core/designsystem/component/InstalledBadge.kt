@@ -12,18 +12,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSize
 
 const val INSTALLED_BADGE_TAG = "installedBadge"
-const val INSTALLED_BADGE_LABEL = "Installed"
 
 private const val GLYPH_FRACTION = 0.7f
 
 @Composable
 fun InstalledBadge(isInstalled: Boolean, modifier: Modifier = Modifier) {
     if (!isInstalled) return
+
+    val description = stringResource(R.string.designsystem_installed)
 
     Box(
         modifier = modifier
@@ -36,7 +39,7 @@ fun InstalledBadge(isInstalled: Boolean, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.surface,
                 shape = CircleShape,
             )
-            .semantics(mergeDescendants = true) { contentDescription = INSTALLED_BADGE_LABEL },
+            .semantics(mergeDescendants = true) { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

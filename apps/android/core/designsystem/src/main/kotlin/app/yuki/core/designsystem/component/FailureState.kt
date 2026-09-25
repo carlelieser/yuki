@@ -15,36 +15,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.FailureReason
+import kotlin.reflect.KClass
 
 const val FAILURE_STATE_TAG = "failureState"
-const val FAILURE_RETRY_LABEL = "Try again"
 
-private const val DEFAULT_MISSING_MESSAGE = "We couldn't find what you were looking for."
+private val titles: Map<KClass<out FailureReason>, Int> = mapOf(
+    FailureReason.Offline::class to R.string.designsystem_failure_title_offline,
+    FailureReason.NotFound::class to R.string.designsystem_failure_title_not_found,
+    FailureReason.Unauthorized::class to R.string.designsystem_failure_title_unauthorized,
+    FailureReason.EmailNotVerified::class to R.string.designsystem_failure_title_email_not_verified,
+    FailureReason.AccountExists::class to R.string.designsystem_failure_title_account_exists,
+    FailureReason.Rejected::class to R.string.designsystem_failure_title_rejected,
+    FailureReason.Server::class to R.string.designsystem_failure_title_server,
+    FailureReason.Unexpected::class to R.string.designsystem_failure_title_unexpected,
+)
 
-private fun titleFor(reason: FailureReason): String = when (reason) {
-    FailureReason.Offline -> "You're offline"
-    FailureReason.NotFound -> "Nothing here"
-    FailureReason.Unauthorized -> "Sign in to continue"
-    FailureReason.EmailNotVerified -> "Verify your email"
-    FailureReason.AccountExists -> "That email is taken"
-    is FailureReason.Rejected -> "That didn't work"
-    is FailureReason.Server -> "Yuki is having trouble"
-    is FailureReason.Unexpected -> "Something went wrong"
-}
+private val descriptions: Map<KClass<out FailureReason>, Int> = mapOf(
+    FailureReason.Offline::class to R.string.designsystem_failure_description_offline,
+    FailureReason.NotFound::class to R.string.designsystem_failure_description_not_found,
+    FailureReason.Unauthorized::class to R.string.designsystem_failure_description_unauthorized,
+    FailureReason.EmailNotVerified::class to R.string.designsystem_failure_description_email_not_verified,
+    FailureReason.AccountExists::class to R.string.designsystem_failure_description_account_exists,
+    FailureReason.Server::class to R.string.designsystem_failure_description_server,
+    FailureReason.Unexpected::class to R.string.designsystem_failure_description_unexpected,
+)
 
-private fun descriptionFor(reason: FailureReason, missingMessage: String): String = when (reason) {
-    FailureReason.Offline -> "Check your connection and try again."
-    FailureReason.NotFound -> missingMessage
-    FailureReason.Unauthorized -> "Your session has expired. Sign in again to continue."
-    FailureReason.EmailNotVerified -> "Open the link we emailed you to finish signing in."
-    FailureReason.AccountExists -> "An account with that email already exists."
-    is FailureReason.Rejected -> reason.explanation
-    is FailureReason.Server -> "Our server is not responding right now. Try again in a moment."
-    is FailureReason.Unexpected -> "This didn't load as expected. Try again."
+@Composable
+private fun descriptionFor(reason: FailureReason, missingMessage: String?): String = when {
+    reason is FailureReason.Rejected -> reason.explanation
+    reason == FailureReason.NotFound && missingMessage != null -> missingMessage
+    else -> stringResource(descriptions.getValue(reason::class))
 }
 
 @Composable
@@ -72,7 +78,7 @@ private fun RetryButton(onRetry: (() -> Unit)?) {
     val retry = onRetry ?: return
 
     YukiButton(
-        label = FAILURE_RETRY_LABEL,
+        label = stringResource(R.string.designsystem_failure_retry),
         onClick = retry,
         modifier = Modifier.padding(top = YukiSpacing.Small),
     )
@@ -82,7 +88,7 @@ private fun RetryButton(onRetry: (() -> Unit)?) {
 fun FailureState(
     reason: FailureReason,
     modifier: Modifier = Modifier,
-    missingMessage: String = DEFAULT_MISSING_MESSAGE,
+    missingMessage: String? = null,
     onRetry: (() -> Unit)? = null,
 ) {
     Column(
@@ -95,7 +101,7 @@ fun FailureState(
     ) {
         FailureIcon()
         Text(
-            text = titleFor(reason),
+            text = stringResource(titles.getValue(reason::class)),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,

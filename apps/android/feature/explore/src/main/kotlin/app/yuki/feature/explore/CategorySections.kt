@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
-import app.yuki.core.designsystem.component.LISTING_SECTION_ARROW_DESCRIPTION
 import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.ListingSectionActions
 import app.yuki.core.designsystem.component.ListingSectionContent
@@ -21,7 +20,6 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
 const val CATEGORY_SECTIONS_TAG = "categorySections"
-const val CATEGORY_SECTION_ARROW_DESCRIPTION = LISTING_SECTION_ARROW_DESCRIPTION
 
 private val NothingToExplore = EmptyContent(
     title = "No apps yet",

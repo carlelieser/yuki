@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="designsystem_failure_retry">Try again</string>
+    <string name="designsystem_failure_title_offline">You\'re offline</string>
+    <string name="designsystem_failure_title_not_found">Nothing here</string>
+    <string name="designsystem_failure_title_unauthorized">Sign in to continue</string>
+    <string name="designsystem_failure_title_email_not_verified">Verify your email</string>
+    <string name="designsystem_failure_title_account_exists">That email is taken</string>
+    <string name="designsystem_failure_title_rejected">That didn\'t work</string>
+    <string name="designsystem_failure_title_server">Yuki is having trouble</string>
+    <string name="designsystem_failure_title_unexpected">Something went wrong</string>
+    <string name="designsystem_failure_description_offline">Check your connection and try again.</string>
+    <string name="designsystem_failure_description_not_found">We couldn\'t find what you were looking for.</string>
+    <string name="designsystem_failure_description_unauthorized">Your session has expired. Sign in again to continue.</string>
+    <string name="designsystem_failure_description_email_not_verified">Open the link we emailed you to finish signing in.</string>
+    <string name="designsystem_failure_description_account_exists">An account with that email already exists.</string>
+    <string name="designsystem_failure_description_server">Our server is not responding right now. Try again in a moment.</string>
+    <string name="designsystem_failure_description_unexpected">This didn\'t load as expected. Try again.</string>
+
+    <string name="designsystem_install">Install</string>
+    <string name="designsystem_install_cancel">Cancel</string>
+    <string name="designsystem_install_installing">Installing</string>
+    <string name="designsystem_install_pending">Waiting for confirmation</string>
+    <string name="designsystem_install_open">Open</string>
+    <string name="designsystem_install_update">Update</string>
+    <string name="designsystem_install_retry">Retry</string>
+    <string name="designsystem_install_dismiss">Dismiss</string>
+    <string name="designsystem_install_uninstall">Uninstall</string>
+    <string name="designsystem_install_installed_version">Installed, version %1$s</string>
+    <string name="designsystem_install_update_range">Update from %1$s to %2$s</string>
+    <string name="designsystem_install_downloading">Downloading</string>
+    <string name="designsystem_install_downloading_progress">Downloading, %1$d percent, %2$s</string>
+
+    <string name="designsystem_install_failure_download_failed">Download failed</string>
+    <string name="designsystem_install_failure_download_unreadable">Download incomplete</string>
+    <string name="designsystem_install_failure_aborted">Install cancelled</string>
+    <string name="designsystem_install_failure_insufficient_storage">Not enough space</string>
+    <string name="designsystem_install_failure_incompatible">Not compatible</string>
+    <string name="designsystem_install_failure_package_mismatch">Different app</string>
+    <string name="designsystem_install_failure_timed_out">Install timed out</string>
+    <string name="designsystem_install_failure_rejected">Install failed</string>
+
+    <string name="designsystem_installed">Installed</string>
+    <string name="designsystem_badge_category">Category %1$s</string>
+    <plurals name="designsystem_badge_stars">
+        <item quantity="one">%1$d star</item>
+        <item quantity="other">%1$d stars</item>
+    </plurals>
+    <string name="designsystem_badge_rating">Rated %1$s out of 5</string>
+    <string name="designsystem_badge_author">By %1$s</string>
+
+    <string name="designsystem_screenshot_position">Screenshot %1$d of %2$d</string>
+    <string name="designsystem_section_see_all">See all %1$s</string>
+    <string name="designsystem_overflow">More options</string>
+    <string name="designsystem_search_clear">Clear search</string>
+    <string name="designsystem_search_placeholder">Search apps</string>
+    <string name="designsystem_back">Back</string>
+    <string name="designsystem_avatar_edit">Change your picture</string>
+    <string name="designsystem_avatar_open">Open your account</string>
+</resources>

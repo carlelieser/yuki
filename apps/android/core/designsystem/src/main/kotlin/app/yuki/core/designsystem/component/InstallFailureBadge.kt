@@ -1,30 +1,41 @@
 package app.yuki.core.designsystem.component
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import app.yuki.core.designsystem.R
 import app.yuki.core.model.InstallFailure
+import kotlin.reflect.KClass
 
 const val INSTALL_FAILURE_BADGE_TAG = "installFailureBadge"
 
-fun installFailureLabel(reason: InstallFailure): String = when (reason) {
-    InstallFailure.DownloadFailed -> "Download failed"
-    InstallFailure.DownloadUnreadable -> "Download incomplete"
-    InstallFailure.Aborted -> "Install cancelled"
-    InstallFailure.InsufficientStorage -> "Not enough space"
-    InstallFailure.Incompatible -> "Not compatible"
-    InstallFailure.PackageMismatch -> "Different app"
-    InstallFailure.TimedOut -> "Install timed out"
-    is InstallFailure.Rejected -> "Install failed"
-}
+private val failureLabels: Map<KClass<out InstallFailure>, Int> = mapOf(
+    InstallFailure.DownloadFailed::class to R.string.designsystem_install_failure_download_failed,
+    InstallFailure.DownloadUnreadable::class to R.string.designsystem_install_failure_download_unreadable,
+    InstallFailure.Aborted::class to R.string.designsystem_install_failure_aborted,
+    InstallFailure.InsufficientStorage::class to R.string.designsystem_install_failure_insufficient_storage,
+    InstallFailure.Incompatible::class to R.string.designsystem_install_failure_incompatible,
+    InstallFailure.PackageMismatch::class to R.string.designsystem_install_failure_package_mismatch,
+    InstallFailure.TimedOut::class to R.string.designsystem_install_failure_timed_out,
+    InstallFailure.Rejected::class to R.string.designsystem_install_failure_rejected,
+)
+
+@StringRes
+fun installFailureLabel(reason: InstallFailure): Int = failureLabels.getValue(reason::class)
 
 @Composable
-fun installFailureBadge(reason: InstallFailure): BadgeContent = BadgeContent(
-    label = installFailureLabel(reason),
-    icon = YukiIcons.Error,
-    description = installFailureLabel(reason),
-    tone = BadgeTone.Error,
-)
+fun installFailureBadge(reason: InstallFailure): BadgeContent {
+    val label = stringResource(installFailureLabel(reason))
+
+    return BadgeContent(
+        label = label,
+        icon = YukiIcons.Error,
+        description = label,
+        tone = BadgeTone.Error,
+    )
+}
 
 @Composable
 fun InstallFailureBadge(reason: InstallFailure, modifier: Modifier = Modifier) {

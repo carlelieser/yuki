@@ -22,17 +22,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val SCREEN_ACTION_TAG = "screenAction"
 const val BACK_ACTION_TAG = "backAction"
 
-private const val BACK_DESCRIPTION = "Back"
 
 data class ScreenAction(
     val icon: ImageVector,
@@ -141,7 +142,7 @@ private fun YukiDetailHeader(
             onClick = onBackClick,
             modifier = Modifier.testTag(BACK_ACTION_TAG),
         ) {
-            Icon(imageVector = YukiIcons.Back, contentDescription = BACK_DESCRIPTION)
+            Icon(imageVector = YukiIcons.Back, contentDescription = stringResource(R.string.designsystem_back))
         }
         Text(
             text = title,

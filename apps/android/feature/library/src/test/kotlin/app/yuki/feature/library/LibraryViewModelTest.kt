@@ -296,7 +296,7 @@ class LibraryViewModelTest {
 
             val item = singleItem(awaitItem())
             assertTrue(item.isFailed)
-            assertEquals("Not enough space", item.listItem.supporting)
+            assertEquals(InstallFailure.InsufficientStorage, item.failure)
             cancelAndIgnoreRemainingEvents()
         }
     }

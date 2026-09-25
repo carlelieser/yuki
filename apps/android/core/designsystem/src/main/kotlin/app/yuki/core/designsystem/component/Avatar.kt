@@ -17,18 +17,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSize
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 
 const val AVATAR_TAG = "avatar"
 const val AVATAR_GLYPH_TAG = "avatarGlyph"
-const val AVATAR_EDIT_DESCRIPTION = "Change your picture"
-const val AVATAR_OPEN_DESCRIPTION = "Open your account"
 
 private const val GLYPH_FRACTION = 0.5f
 private const val COMPACT_GLYPH_FRACTION = 1f
@@ -98,13 +98,16 @@ private fun AvatarBox(
     }
 }
 
+@Composable
 private fun Modifier.clickable(click: AvatarClick?): Modifier {
     if (click == null) return this
 
     return clickable(
         onClick = click.onClick,
         role = Role.Button,
-        onClickLabel = if (click.isEditable) AVATAR_EDIT_DESCRIPTION else AVATAR_OPEN_DESCRIPTION,
+        onClickLabel = stringResource(
+            if (click.isEditable) R.string.designsystem_avatar_edit else R.string.designsystem_avatar_open,
+        ),
     )
 }
 
@@ -186,7 +189,7 @@ private fun EditBadge(diameter: Dp, modifier: Modifier = Modifier) {
     ) {
         Icon(
             imageVector = YukiIcons.Edit,
-            contentDescription = AVATAR_EDIT_DESCRIPTION,
+            contentDescription = stringResource(R.string.designsystem_avatar_edit),
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(diameter * BADGE_GLYPH_FRACTION),
         )

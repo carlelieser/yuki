@@ -6,34 +6,36 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.ClickableProductListItem
-import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingBadges
+import app.yuki.core.designsystem.component.ProductListItem
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiIcons
-import app.yuki.core.designsystem.component.installFailureBadge
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
+import app.yuki.core.designsystem.component.installFailureBadge
+import app.yuki.core.designsystem.component.installFailureLabel
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
@@ -223,6 +225,7 @@ private fun LibraryRow(
     if (install is InstallState.Failed) {
         return ProductListItem(
             content = item.listItem.copy(
+                supporting = stringResource(installFailureLabel(install.reason)),
                 badges = ListingBadges(listOf(installFailureBadge(install.reason))),
             ),
             modifier = modifier.clickable(onClick = rowActions.onClick),

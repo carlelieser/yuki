@@ -12,15 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiShape
 
-const val SEARCH_CLEAR_DESCRIPTION = "Clear search"
-const val SEARCH_PLACEHOLDER = "Search apps"
 
 data class SearchBarState(
     val query: String,
-    val placeholder: String = SEARCH_PLACEHOLDER,
+    val placeholder: String? = null,
 )
 
 data class SearchBarFocus(
@@ -32,7 +32,7 @@ private fun ClearAction(query: String, onQueryChange: (String) -> Unit) {
     if (query.isEmpty()) return
 
     IconButton(onClick = { onQueryChange("") }) {
-        Icon(imageVector = YukiIcons.Close, contentDescription = SEARCH_CLEAR_DESCRIPTION)
+        Icon(imageVector = YukiIcons.Close, contentDescription = stringResource(R.string.designsystem_search_clear))
     }
 }
 
@@ -49,7 +49,7 @@ fun SearchBar(
         onValueChange = onQueryChange,
         placeholder = {
             Text(
-                text = state.placeholder,
+                text = state.placeholder ?: stringResource(R.string.designsystem_search_placeholder),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

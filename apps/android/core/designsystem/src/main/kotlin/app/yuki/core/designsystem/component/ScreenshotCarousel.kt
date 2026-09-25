@@ -12,6 +12,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiRatio
 import app.yuki.core.designsystem.theme.YukiShape
 import app.yuki.core.designsystem.theme.YukiSize
@@ -20,8 +22,9 @@ import app.yuki.core.model.Screenshot
 import app.yuki.core.model.ScreenshotSelection
 import coil3.compose.AsyncImage
 
+@Composable
 fun describeScreenshot(alt: String?, index: Int, total: Int): String =
-    alt ?: "Screenshot ${index + 1} of $total"
+    alt ?: stringResource(R.string.designsystem_screenshot_position, index + 1, total)
 
 @Composable
 fun ScreenshotCarousel(

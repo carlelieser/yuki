@@ -1,6 +1,7 @@
 package app.yuki.core.designsystem
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -8,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.yuki.core.designsystem.component.INSTALLED_BADGE_LABEL
 import app.yuki.core.designsystem.component.INSTALLED_BADGE_TAG
 import app.yuki.core.designsystem.component.LISTING_BADGE_ROW_TAG
 import app.yuki.core.designsystem.component.ProductListItem
@@ -25,6 +25,9 @@ import org.junit.runner.RunWith
 class InstalledBadgeTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        composeRule.activity.getString(id, *args)
 
     private fun summary() = ListingSummary(
         id = "6f1d0f3a-0000-4000-8000-000000000001",
@@ -92,6 +95,6 @@ class InstalledBadgeTest {
     fun theInstalledBadgeReadsAsOneNodeToScreenReaders() {
         render { summary().toProductListItemContent().copy(isInstalled = true) }
 
-        composeRule.onNodeWithContentDescription(INSTALLED_BADGE_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(R.string.designsystem_installed)).assertIsDisplayed()
     }
 }
