@@ -24,7 +24,7 @@ internal fun testSize(bytesDownloaded: Long, bytesTotal: Long = TEST_TOTAL_BYTES
 
 internal class FakeApkDownloader(
     private val sizes: List<DownloadSize> = listOf(testSize(500L)),
-    private val failure: InstallException? = null,
+    private val failure: Throwable? = null,
     private val cancelMidway: Boolean = false,
 ) : ApkDownloader {
     val discarded: MutableList<File> = mutableListOf()

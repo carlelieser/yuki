@@ -5,7 +5,6 @@ import app.yuki.core.model.InstallState
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
@@ -28,8 +27,8 @@ class InstallCoordinator @Inject constructor(
             downloader.discard(apk)
         }
     }.catch { error ->
-        if (error is CancellationException) throw error
-        emit(InstallState.Failed(error.toInstallFailure()))
+        if (error !is InstallException) throw error
+        emit(InstallState.Failed(error.failure))
     }
 
     private suspend fun FlowCollector<InstallState>.downloadApk(source: InstallSource): File {
@@ -83,9 +82,4 @@ private fun InstallOutcome.toInstallState(versionTag: String): InstallState = wh
     is InstallOutcome.Succeeded -> InstallState.Installed(versionTag)
     is InstallOutcome.AwaitingUserAction -> InstallState.PendingUserAction
     is InstallOutcome.Failed -> InstallState.Failed(reason)
-}
-
-private fun Throwable.toInstallFailure(): InstallFailure = when (this) {
-    is InstallException -> failure
-    else -> InstallFailure.Rejected(message ?: this::class.java.name)
 }

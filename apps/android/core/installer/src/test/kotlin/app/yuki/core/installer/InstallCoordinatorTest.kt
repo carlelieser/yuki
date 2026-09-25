@@ -152,6 +152,23 @@ class InstallCoordinatorTest {
     }
 
     @Test
+    fun `an unexpected error propagates instead of posing as a rejection`() = runTest {
+        val coordinator = InstallCoordinator(
+            downloader = FakeApkDownloader(failure = IllegalStateException("bug")),
+            recorder = FakeInstallRecorder(mutableMapOf()),
+            strategies = InstallStrategySelector(
+                identityReader = FakeApkIdentityReader(ApkIdentity("com.termux", 1L)),
+                fallback = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
+                privileged = null,
+            ),
+        )
+
+        val error = runCatching { coordinator.install(testRequest()).toList() }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+    }
+
+    @Test
     fun `strategy failure is surfaced and nothing is recorded`() = runTest {
         val recorder = FakeInstallRecorder(mutableMapOf())
         val coordinator = coordinatorOf(
