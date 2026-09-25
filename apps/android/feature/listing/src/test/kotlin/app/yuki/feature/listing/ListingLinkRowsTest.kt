@@ -1,6 +1,9 @@
 package app.yuki.feature.listing
 
 import app.yuki.core.model.ListingLinks
+import java.time.Instant
+import java.time.ZoneOffset
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -33,5 +36,13 @@ class ListingLinkRowsTest {
         val kinds = linkRows(detail()).map(ListingLinkRow::kind)
 
         assertEquals(ListingLinkKind.entries, kinds)
+    }
+
+    @Test
+    fun `formats a published date for the locale`() {
+        val published = Instant.parse("2024-01-05T12:00:00Z")
+
+        assertEquals("Jan 5, 2024", formatPublished(published, Locale.US, ZoneOffset.UTC))
+        assertEquals("05.01.2024", formatPublished(published, Locale.GERMANY, ZoneOffset.UTC))
     }
 }

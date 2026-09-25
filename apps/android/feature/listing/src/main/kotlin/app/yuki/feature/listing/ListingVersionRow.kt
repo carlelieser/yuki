@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.component.BadgeContent
@@ -24,6 +25,7 @@ import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
 import java.time.Instant
+import java.time.ZoneId
 
 @Composable
 private fun PrereleaseBadge() {
@@ -65,8 +67,11 @@ private fun TagBadge(tag: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun PublishedBadge(publishedAt: Instant?) {
-    val label = publishedAt?.let(::formatPublished)
-        ?: stringResource(R.string.listing_version_unreleased)
+    val locale = LocalConfiguration.current.locales[0]
+    val published = publishedAt?.let { instant ->
+        formatPublished(instant, locale, ZoneId.systemDefault())
+    }
+    val label = published ?: stringResource(R.string.listing_version_unreleased)
 
     YukiBadge(
         content = BadgeContent(

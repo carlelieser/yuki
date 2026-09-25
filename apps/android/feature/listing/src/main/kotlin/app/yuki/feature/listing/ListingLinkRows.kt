@@ -5,6 +5,8 @@ import app.yuki.core.model.ListingDetail
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 enum class ListingLinkKind(@StringRes val label: Int) {
     Repository(R.string.listing_link_repository),
@@ -63,7 +65,8 @@ fun linkRows(detail: ListingDetail): List<ListingLinkRow> = buildList {
     }
 }
 
-private val publishedFormatter: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("d MMM yyyy").withZone(ZoneId.systemDefault())
-
-fun formatPublished(publishedAt: Instant): String = publishedFormatter.format(publishedAt)
+fun formatPublished(publishedAt: Instant, locale: Locale, zone: ZoneId): String =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        .withLocale(locale)
+        .withZone(zone)
+        .format(publishedAt)
