@@ -5,10 +5,14 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -17,9 +21,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import app.yuki.core.designsystem.component.LocalYukiSnackbarHostState
 import app.yuki.core.designsystem.component.ProvideKeyboardInsets
 import app.yuki.core.designsystem.component.YukiNavBar
 import app.yuki.core.designsystem.component.YukiNavBarItem
+import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.feature.settings.AppearanceMode
 import app.yuki.navigation.YukiNavHost
@@ -86,25 +92,36 @@ private fun YukiScaffold(
     )
     val backStackEntry by navController.currentBackStackEntryAsState()
     val selectedTab = backStackEntry?.destination.selectedTab()
+    val snackbar = remember { SnackbarHostState() }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = WindowInsets(0),
-        bottomBar = {
-            if (selectedTab != null) {
-                YukiTabBar(selectedTab = selectedTab, onSelect = navigator::selectTab)
-            }
-        },
-    ) { contentPadding ->
-        YukiNavHost(
-            navController = navController,
-            navigator = navigator,
-            navigationHolder = navigationHolder,
-            bottomBarPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-        )
+    CompositionLocalProvider(LocalYukiSnackbarHostState provides snackbar) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            contentWindowInsets = WindowInsets(0),
+            bottomBar = {
+                if (selectedTab != null) {
+                    YukiTabBar(selectedTab = selectedTab, onSelect = navigator::selectTab)
+                }
+            },
+            snackbarHost = { AppSnackbarHost(snackbar, isTabBarShown = selectedTab != null) },
+        ) { contentPadding ->
+            YukiNavHost(
+                navController = navController,
+                navigator = navigator,
+                navigationHolder = navigationHolder,
+                bottomBarPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+            )
+        }
     }
 
     NotificationRationaleDialog(state = consent)
+}
+
+@Composable
+private fun AppSnackbarHost(hostState: SnackbarHostState, isTabBarShown: Boolean) {
+    val insets = if (isTabBarShown) Modifier else Modifier.navigationBarsPadding()
+
+    YukiSnackbarHost(hostState = hostState, modifier = insets)
 }
 
 @Composable

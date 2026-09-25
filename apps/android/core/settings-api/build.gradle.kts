@@ -8,5 +8,6 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.designsystem)
     testImplementation(libs.junit)
 }

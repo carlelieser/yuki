@@ -10,15 +10,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiSpacing
-import app.yuki.core.settings.api.ProvideSettingsSnackbar
 import app.yuki.core.settings.api.SettingsContributor
 import app.yuki.core.settings.api.SettingsGroup
 
@@ -31,39 +27,29 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val sections = remember(contributors) { contributors.ordered().partitionFooter() }
-    val hostState = remember { SnackbarHostState() }
 
-    ProvideSettingsSnackbar(hostState = hostState) {
-        BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .heightIn(min = maxHeight)
+                .verticalScroll(rememberScrollState())
+                .padding(contentPadding)
+                .padding(YukiSpacing.Large),
+        ) {
             Column(
-                modifier = Modifier
-                    .heightIn(min = maxHeight)
-                    .verticalScroll(rememberScrollState())
-                    .padding(contentPadding)
-                    .padding(YukiSpacing.Large),
+                modifier = Modifier.testTag(SETTINGS_LIST_TAG),
+                verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
             ) {
-                Column(
-                    modifier = Modifier.testTag(SETTINGS_LIST_TAG),
-                    verticalArrangement = Arrangement.spacedBy(YukiSpacing.Large),
-                ) {
-                    sections.body.forEach { contributor -> contributor.Content() }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .heightIn(min = YukiSpacing.Section)
-                        .weight(1f),
-                )
-
-                sections.footer.forEach { contributor -> contributor.Content() }
+                sections.body.forEach { contributor -> contributor.Content() }
             }
 
-            YukiSnackbarHost(
-                hostState = hostState,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(contentPadding),
+                    .heightIn(min = YukiSpacing.Section)
+                    .weight(1f),
             )
+
+            sections.footer.forEach { contributor -> contributor.Content() }
         }
     }
 }

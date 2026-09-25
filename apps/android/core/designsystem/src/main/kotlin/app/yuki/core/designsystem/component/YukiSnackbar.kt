@@ -4,11 +4,16 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.theme.YukiShape
 
 const val YUKI_SNACKBAR_TAG = "yukiSnackbar"
+
+val LocalYukiSnackbarHostState: ProvidableCompositionLocal<SnackbarHostState> =
+    staticCompositionLocalOf { error("No snackbar host provided") }
 
 @Composable
 fun YukiSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
