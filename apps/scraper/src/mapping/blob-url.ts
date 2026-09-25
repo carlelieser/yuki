@@ -28,3 +28,33 @@ export async function collectLfsPaths(
 
 	return paths;
 }
+
+export async function isLfsBlob(
+	entry: { sha?: string; size?: number } | undefined,
+	readBlob: (sha: string) => Promise<string | null>
+): Promise<boolean> {
+	if (entry?.sha === undefined || entry.size === undefined) return false;
+	if (entry.size > LFS_POINTER_MAX_BYTES) return false;
+
+	const content = await readBlob(entry.sha);
+	return content !== null && isLfsPointer(content);
+}
+
+export function buildBlobUrl(
+	owner: string,
+	name: string,
+	defaultBranch: string,
+	path: string,
+	isLfs: boolean
+): string {
+	const encoded = path
+		.split('/')
+		.map((segment) => encodeURIComponent(segment))
+		.join('/');
+
+	const host = isLfs
+		? 'https://media.githubusercontent.com/media'
+		: 'https://raw.githubusercontent.com';
+
+	return `${host}/${owner}/${name}/${defaultBranch}/${encoded}`;
+}

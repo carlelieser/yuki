@@ -12,6 +12,7 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@jsquash/webp": "^1.5.0",
 		"@yuki/db": "workspace:*",
 		"@yuki/github": "workspace:*",
 		"aws4fetch": "^1.0.20",

@@ -330,9 +330,12 @@ describe('android structure', () => {
 			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
 		});
 
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			readPackage: async () => 'com.acme.app'
-		});
+		const outcome = await refreshListing(
+			client,
+			storedEtags(repoEtag),
+			target,
+			async () => 'com.acme.app'
+		);
 
 		expect(outcome.kind).toBe('updated');
 		if (outcome.kind !== 'updated') return;
@@ -349,11 +352,9 @@ describe('android structure', () => {
 			client,
 			storedEtags(repoEtag),
 			{ ...target, packageName: 'com.acme.app' },
-			{
-				readPackage: async (url) => {
-					reads.push(url);
-					return 'com.acme.other';
-				}
+			async (url) => {
+				reads.push(url);
+				return 'com.acme.other';
 			}
 		);
 
@@ -369,11 +370,9 @@ describe('android structure', () => {
 		});
 		const reads: string[] = [];
 
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			readPackage: async (url) => {
-				reads.push(url);
-				return 'com.acme.app';
-			}
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
+			reads.push(url);
+			return 'com.acme.app';
 		});
 
 		expect(reads).toEqual([]);
@@ -387,10 +386,8 @@ describe('android structure', () => {
 			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
 		});
 
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			readPackage: async () => {
-				throw new Error('range request rejected');
-			}
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async () => {
+			throw new Error('range request rejected');
 		});
 
 		expect(outcome.kind).toBe('updated');
@@ -409,72 +406,11 @@ describe('android structure', () => {
 		});
 		const reads: string[] = [];
 
-		await refreshListing(client, storedEtags(repoEtag), target, {
-			readPackage: async (url) => {
-				reads.push(url);
-				return 'com.acme.app';
-			}
+		await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
+			reads.push(url);
+			return 'com.acme.app';
 		});
 
 		expect(reads).toEqual([]);
-	});
-
-	it('resolves the icon from the newest release apk', async () => {
-		const client = fakeClient({
-			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
-		});
-		const reads: string[] = [];
-
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			resolveIcon: async (url) => {
-				reads.push(url);
-				return 'https://icons.example.com/icons/abc.png';
-			}
-		});
-
-		expect(reads).toEqual(['https://github.com/acme/app/releases/v2/app.apk']);
-		expect(outcome.kind).toBe('updated');
-		if (outcome.kind !== 'updated') return;
-		expect(outcome.input.iconUrl).toBe('https://icons.example.com/icons/abc.png');
-		expect(outcome.warnings).toEqual([]);
-	});
-
-	it('leaves the icon alone when the releases did not change', async () => {
-		const client = fakeClient({
-			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo2"' })
-		});
-		const reads: string[] = [];
-
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			resolveIcon: async (url) => {
-				reads.push(url);
-				return 'https://icons.example.com/icons/abc.png';
-			}
-		});
-
-		expect(reads).toEqual([]);
-		expect(outcome.kind).toBe('updated');
-		if (outcome.kind !== 'updated') return;
-		expect(outcome.input.iconUrl).toBeNull();
-	});
-
-	it('reports a warning and keeps refreshing when resolving the icon fails', async () => {
-		const client = fakeClient({
-			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
-		});
-
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
-			resolveIcon: async () => {
-				throw new Error('upload rejected');
-			}
-		});
-
-		expect(outcome.kind).toBe('updated');
-		if (outcome.kind !== 'updated') return;
-		expect(outcome.input.iconUrl).toBeNull();
-		expect(outcome.input.versions?.map((version) => version.tag)).toEqual(['v2']);
-		expect(outcome.warnings).toEqual([
-			'resolving the icon from https://github.com/acme/app/releases/v2/app.apk failed: upload rejected'
-		]);
 	});
 });
