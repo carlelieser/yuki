@@ -141,6 +141,13 @@
       "when": 1790293053628,
       "tag": "0019_clear_inline_icons",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790297529416,
+      "tag": "0020_drop_user_avatar",
+      "breakpoints": true
     }
   ]
 }

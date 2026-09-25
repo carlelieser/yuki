@@ -1,10 +1,4 @@
-import { boolean, customType, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
-
-const bytea = customType<{ data: Buffer; driverData: Buffer }>({
-	dataType() {
-		return 'bytea';
-	}
-});
+import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -49,15 +43,6 @@ export const account = pgTable('account', {
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 });
 
-export const userAvatar = pgTable('user_avatar', {
-	userId: text('user_id')
-		.primaryKey()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	contentType: text('content_type').notNull(),
-	bytes: bytea('bytes').notNull(),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
-});
-
 export const verification = pgTable('verification', {
 	id: text('id').primaryKey(),
 	identifier: text('identifier').notNull(),
@@ -73,7 +58,5 @@ export type Session = typeof session.$inferSelect;
 export type NewSession = typeof session.$inferInsert;
 export type Account = typeof account.$inferSelect;
 export type NewAccount = typeof account.$inferInsert;
-export type UserAvatar = typeof userAvatar.$inferSelect;
-export type NewUserAvatar = typeof userAvatar.$inferInsert;
 export type Verification = typeof verification.$inferSelect;
 export type NewVerification = typeof verification.$inferInsert;
