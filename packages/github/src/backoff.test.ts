@@ -193,4 +193,56 @@ describe('quota pacing', () => {
 
 		expect(decision.kind).toBe('fail');
 	});
+
+	it('fails instead of pacing an exhausted quota when told not to wait', () => {
+		const decision = decideRetry({
+			status: 403,
+			headers: headers({ 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '9999999999' }),
+			attempt: 1,
+			isCodeSearch: false,
+			resource: 'repos/acme/app',
+			onRateLimit: 'fail'
+		});
+
+		expect(decision.kind).toBe('fail');
+	});
+
+	it('fails instead of honouring Retry-After when told not to wait', () => {
+		const decision = decideRetry({
+			status: 429,
+			headers: headers({ 'retry-after': '30' }),
+			attempt: 1,
+			isCodeSearch: false,
+			resource: 'repos/acme/app',
+			onRateLimit: 'fail'
+		});
+
+		expect(decision.kind).toBe('fail');
+	});
+
+	it('fails instead of backing off a secondary limit when told not to wait', () => {
+		const decision = decideRetry({
+			status: 403,
+			headers: headers(),
+			attempt: 1,
+			isCodeSearch: false,
+			resource: 'repos/acme/app',
+			onRateLimit: 'fail'
+		});
+
+		expect(decision.kind).toBe('fail');
+	});
+
+	it('still retries a server error when told not to wait on rate limits', () => {
+		const decision = decideRetry({
+			status: 502,
+			headers: headers(),
+			attempt: 1,
+			isCodeSearch: false,
+			resource: 'repos/acme/app',
+			onRateLimit: 'fail'
+		});
+
+		expect(decision.kind).toBe('retry');
+	});
 });

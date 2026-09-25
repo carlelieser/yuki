@@ -10,6 +10,8 @@ export type RetryDecision =
 	| { kind: 'skip'; reason: string }
 	| { kind: 'fail'; reason: string };
 
+export type RateLimitPolicy = 'wait' | 'fail';
+
 export type RetryContext = {
 	status: number;
 	headers: Headers;
@@ -17,6 +19,7 @@ export type RetryContext = {
 	isCodeSearch: boolean;
 	resource: string;
 	maxAttempts?: number;
+	onRateLimit?: RateLimitPolicy;
 	now?: Date;
 };
 
@@ -24,7 +27,26 @@ function exponentialWait(attempt: number): number {
 	return 2 ** attempt * 1000;
 }
 
-export function decideRetry({
+export function decideRetry(context: RetryContext): RetryDecision {
+	const decision = classify(context);
+	if (context.onRateLimit !== 'fail') return decision;
+	if (!isRateLimitWait(decision, context.status)) return decision;
+
+	return { kind: 'fail', reason: `rate limited instead of waiting: ${decision.reason}` };
+}
+
+function isRateLimitWait(
+	decision: RetryDecision,
+	status: number
+): decision is Extract<RetryDecision, { kind: 'pace' | 'retry' }> {
+	if (decision.kind === 'pace') return true;
+
+	return decision.kind === 'retry' && RATE_LIMIT_STATUSES.has(status);
+}
+
+const RATE_LIMIT_STATUSES = new Set([403, 429]);
+
+function classify({
 	status,
 	headers,
 	attempt,

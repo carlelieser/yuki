@@ -117,4 +117,19 @@ describe('createGithubClient', () => {
 
 		expect(calls[0]?.headers.get('authorization')).toBe('Bearer secret-token');
 	});
+
+	it('fails a rate limited request without waiting when the policy says so', async () => {
+		const { fetchImpl } = recorder([
+			jsonResponse({}, { status: 429, headers: { 'retry-after': '30' } })
+		]);
+		const waits: number[] = [];
+		const client = createGithubClient(
+			'token',
+			{ fetch: fetchImpl, wait: async (ms) => void waits.push(ms) },
+			{ maxAttempts: 1, onRateLimit: 'fail' }
+		);
+
+		await expect(client.getReleaseByTag('acme', 'app', 'v1')).rejects.toThrow('rate limited');
+		expect(waits).toEqual([]);
+	});
 });

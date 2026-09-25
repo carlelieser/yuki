@@ -1,4 +1,4 @@
-import { MAX_ATTEMPTS, decideRetry } from './backoff.ts';
+import { MAX_ATTEMPTS, decideRetry, type RateLimitPolicy } from './backoff.ts';
 import type {
 	GithubCodeSearchResult,
 	GithubRelease,
@@ -20,6 +20,7 @@ export type GithubTransport = {
 
 export type RetryPolicy = {
 	maxAttempts: number;
+	onRateLimit: RateLimitPolicy;
 };
 
 export type GithubClient = ReturnType<typeof createGithubClient>;
@@ -47,7 +48,7 @@ const DEFAULT_TRANSPORT: GithubTransport = {
 	wait: sleep
 };
 
-const DEFAULT_POLICY: RetryPolicy = { maxAttempts: MAX_ATTEMPTS };
+const DEFAULT_POLICY: RetryPolicy = { maxAttempts: MAX_ATTEMPTS, onRateLimit: 'wait' };
 
 export function createGithubClient(
 	token: string,
@@ -89,6 +90,7 @@ export function createGithubClient(
 				headers: response.headers,
 				attempt,
 				maxAttempts: policy.maxAttempts,
+				onRateLimit: policy.onRateLimit,
 				isCodeSearch,
 				resource: path
 			});

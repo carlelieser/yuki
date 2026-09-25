@@ -31,7 +31,7 @@ export async function fetchReleaseAssets(
 	const release = await createGithubClient(
 		token,
 		{ fetch, wait: sleep },
-		{ maxAttempts: MAX_ATTEMPTS }
+		{ maxAttempts: MAX_ATTEMPTS, onRateLimit: 'wait' }
 	)
 		.getReleaseByTag(path.owner, path.name, tag)
 		.catch(() => null);
