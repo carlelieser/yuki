@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import app.yuki.R
 import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.theme.YukiSpacing
@@ -21,9 +23,6 @@ import javax.inject.Inject
 
 const val LEGAL_FOOTER_TAG = "legalFooter"
 
-private const val TERMS_LABEL = "Terms of Service"
-private const val PRIVACY_LABEL = "Privacy Policy"
-private const val SEPARATOR = "•"
 private const val TERMS_PATH = "terms"
 private const val PRIVACY_PATH = "privacy"
 
@@ -56,19 +55,19 @@ internal fun LegalFooter(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         LegalLink(
-            label = PRIVACY_LABEL,
+            label = stringResource(R.string.app_legal_privacy),
             url = legalUrl(baseUrl, PRIVACY_PATH),
             onLinkClick = onLinkClick,
         )
 
         Text(
-            text = SEPARATOR,
+            text = stringResource(R.string.app_legal_separator),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         LegalLink(
-            label = TERMS_LABEL,
+            label = stringResource(R.string.app_legal_terms),
             url = legalUrl(baseUrl, TERMS_PATH),
             onLinkClick = onLinkClick,
         )

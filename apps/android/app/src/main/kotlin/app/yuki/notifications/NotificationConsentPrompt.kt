@@ -4,24 +4,19 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import app.yuki.core.designsystem.component.YukiTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import app.yuki.R
+import app.yuki.core.designsystem.component.YukiTextButton
 
 const val NOTIFICATION_RATIONALE_TAG = "notification_rationale"
-
-private const val RATIONALE_TITLE = "Stay informed about downloads"
-private const val RATIONALE_MESSAGE =
-    "Yuki can notify you when a download or install finishes. " +
-        "Installs work either way, so you can skip this."
-private const val ALLOW_LABEL = "Allow"
-private const val NOT_NOW_LABEL = "Not now"
 
 @Composable
 internal fun rememberNotificationConsent(): NotificationConsentState {
@@ -62,13 +57,19 @@ internal fun NotificationRationaleDialog(state: NotificationConsentState) {
     AlertDialog(
         modifier = Modifier.testTag(NOTIFICATION_RATIONALE_TAG),
         onDismissRequest = { state.onDecision(false) },
-        title = { Text(text = RATIONALE_TITLE) },
-        text = { Text(text = RATIONALE_MESSAGE) },
+        title = { Text(text = stringResource(R.string.app_notification_rationale_title)) },
+        text = { Text(text = stringResource(R.string.app_notification_rationale_message)) },
         confirmButton = {
-            YukiTextButton(label = ALLOW_LABEL, onClick = { state.onDecision(true) })
+            YukiTextButton(
+                label = stringResource(R.string.app_notification_allow),
+                onClick = { state.onDecision(true) },
+            )
         },
         dismissButton = {
-            YukiTextButton(label = NOT_NOW_LABEL, onClick = { state.onDecision(false) })
+            YukiTextButton(
+                label = stringResource(R.string.app_notification_not_now),
+                onClick = { state.onDecision(false) },
+            )
         },
     )
 }

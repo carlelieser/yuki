@@ -10,20 +10,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.yuki.R
 import app.yuki.core.designsystem.component.AccountAvatar
 import app.yuki.core.designsystem.component.AvatarContent
 import app.yuki.core.designsystem.component.AvatarSize
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.feature.account.AccountViewModel
-
-private const val SETTINGS_DESCRIPTION = "Settings"
-private const val ACCOUNT_DESCRIPTION = "Account and settings"
 
 @Composable
 internal fun AccountButton(
@@ -34,7 +33,9 @@ internal fun AccountButton(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val account = state.account
 
-    val description = if (account == null) SETTINGS_DESCRIPTION else ACCOUNT_DESCRIPTION
+    val description = stringResource(
+        if (account == null) R.string.app_settings_description else R.string.app_account_description,
+    )
 
     Box(
         modifier = modifier

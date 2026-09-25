@@ -8,13 +8,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.yuki.MainActivity
+import app.yuki.R
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Rule
 import org.junit.Test
 
-private const val SETTINGS_TITLE = "Settings"
-private const val SETTINGS_DESCRIPTION = "Settings"
 
 @HiltAndroidTest
 class YukiNavigationTest {
@@ -27,24 +26,24 @@ class YukiNavigationTest {
     @Test
     fun everyTabIsReachableFromTheNavigationBar() {
         YukiTab.entries.forEach { tab ->
-            composeRule.onAllNodesWithText(tab.label).onFirst().performClick()
-            composeRule.onAllNodesWithText(tab.label).onFirst().assertIsDisplayed()
+            composeRule.onAllNodesWithText(composeRule.activity.getString(tab.label)).onFirst().performClick()
+            composeRule.onAllNodesWithText(composeRule.activity.getString(tab.label)).onFirst().assertIsDisplayed()
         }
     }
 
     @Test
     fun theAvatarOpensSettingsAsAFullScreen() {
-        composeRule.onNodeWithContentDescription(SETTINGS_DESCRIPTION).performClick()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.app_settings_description)).performClick()
 
-        composeRule.onNodeWithText(SETTINGS_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.app_settings_title)).assertIsDisplayed()
     }
 
     @Test
     fun everyTabIsOfferedInTheBarAndSettingsIsNot() {
         YukiTab.entries.forEach { tab ->
-            composeRule.onAllNodesWithText(tab.label).onFirst().assertIsDisplayed()
+            composeRule.onAllNodesWithText(composeRule.activity.getString(tab.label)).onFirst().assertIsDisplayed()
         }
 
-        composeRule.onNodeWithText(SETTINGS_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.app_settings_title)).assertDoesNotExist()
     }
 }
