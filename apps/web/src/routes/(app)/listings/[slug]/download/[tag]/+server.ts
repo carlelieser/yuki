@@ -20,8 +20,12 @@ async function recordQuietly(
 	await recordDownload(db, input).catch(() => undefined);
 }
 
+function storedArchitecture(stored: StoredDownload): Architecture | null | undefined {
+	return stored.assetName === null ? undefined : architectureOfName(stored.assetName);
+}
+
 function isUniversal(stored: StoredDownload): boolean {
-	return stored.assetName !== null && architectureOfName(stored.assetName) === null;
+	return storedArchitecture(stored) === null;
 }
 
 function fallbackFor(stored: StoredDownload): string {
@@ -45,6 +49,8 @@ async function resolveForArchitecture(
 	stored: StoredDownload,
 	architecture: Architecture
 ): Promise<string> {
+	if (storedArchitecture(stored) === architecture) return stored.downloadUrl;
+
 	try {
 		const release = await fetchReleaseAssets(listing, stored.tag);
 		if (release.kind === 'missing') error(404, 'Release not found');
