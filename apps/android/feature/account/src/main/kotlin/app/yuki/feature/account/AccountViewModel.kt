@@ -22,15 +22,10 @@ import kotlinx.coroutines.launch
 
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
-internal const val AVATAR_UPLOAD_FAILED = "Could not save that picture. Try again."
-internal const val AVATAR_UPLOAD_OFFLINE = "You're offline. Check your connection and try again."
-internal const val AVATAR_UPLOAD_SIGNED_OUT = "Your session has expired. Sign in again."
-internal const val AVATAR_UNREADABLE = "That image could not be read. Try a different one."
-
 data class AccountState(
     val account: AuthAccount? = null,
     val isUploadingAvatar: Boolean = false,
-    val message: String? = null,
+    val message: AccountMessage? = null,
 ) {
     val isSignedIn: Boolean get() = account != null
 }
@@ -58,7 +53,8 @@ class AccountViewModel @Inject internal constructor(
 
     internal fun onAvatarPicked(pick: AvatarPick) {
         when (pick) {
-            is AvatarPick.Unreadable -> transient.value = TransientState(message = AVATAR_UNREADABLE)
+            is AvatarPick.Unreadable ->
+                transient.value = TransientState(message = AccountMessage.AvatarUnreadable)
             is AvatarPick.Ready -> uploadAvatar(pick.upload)
         }
     }
@@ -97,13 +93,14 @@ class AccountViewModel @Inject internal constructor(
 
 private data class TransientState(
     val isUploadingAvatar: Boolean = false,
-    val message: String? = null,
+    val message: AccountMessage? = null,
     val isSigningOut: Boolean = false,
 )
 
-internal fun avatarFailureMessage(error: Throwable): String = when (val reason = error.failureReason()) {
-    is FailureReason.Rejected -> reason.explanation
-    FailureReason.Offline -> AVATAR_UPLOAD_OFFLINE
-    FailureReason.Unauthorized -> AVATAR_UPLOAD_SIGNED_OUT
-    else -> AVATAR_UPLOAD_FAILED
-}
+internal fun avatarFailureMessage(error: Throwable): AccountMessage =
+    when (val reason = error.failureReason()) {
+        is FailureReason.Rejected -> AccountMessage.Explanation(reason.explanation)
+        FailureReason.Offline -> AccountMessage.Offline
+        FailureReason.Unauthorized -> AccountMessage.SessionExpired
+        else -> AccountMessage.AvatarUploadFailed
+    }

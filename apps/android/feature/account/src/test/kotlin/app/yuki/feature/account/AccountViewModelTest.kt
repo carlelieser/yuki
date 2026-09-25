@@ -92,7 +92,7 @@ class AccountViewModelTest {
             awaitSettled { state -> state.isSignedIn }
             viewModel.onAvatarPicked(PICKED)
 
-            assertEquals(AVATAR_UPLOAD_OFFLINE, awaitSettled { it.message != null }.message)
+            assertEquals(AccountMessage.Offline, awaitSettled { it.message != null }.message)
             cancelAndIgnoreRemainingEvents()
         }
 
@@ -110,7 +110,10 @@ class AccountViewModelTest {
             awaitSettled { state -> state.isSignedIn }
             viewModel.onAvatarPicked(PICKED)
 
-            assertEquals(explanation, awaitSettled { it.message != null }.message)
+            assertEquals(
+                AccountMessage.Explanation(explanation),
+                awaitSettled { it.message != null }.message,
+            )
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -123,7 +126,7 @@ class AccountViewModelTest {
             awaitSettled { state -> state.isSignedIn }
             viewModel.onAvatarPicked(AvatarPick.Unreadable)
 
-            assertEquals(AVATAR_UNREADABLE, awaitSettled { it.message != null }.message)
+            assertEquals(AccountMessage.AvatarUnreadable, awaitSettled { it.message != null }.message)
             cancelAndIgnoreRemainingEvents()
         }
 

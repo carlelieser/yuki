@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_email_label">Email</string>
+    <string name="account_password_label">Password</string>
+    <string name="account_name_label">Name</string>
+
+    <string name="account_error_email_required">Email is required.</string>
+    <string name="account_error_email_invalid">Enter a valid email address.</string>
+    <string name="account_error_password_required">Password is required.</string>
+    <plurals name="account_error_password_too_short">
+        <item quantity="one">Password must be at least %1$d character.</item>
+        <item quantity="other">Password must be at least %1$d characters.</item>
+    </plurals>
+    <string name="account_error_name_required">Name is required.</string>
+
+    <string name="account_message_invalid_credentials">Invalid email or password.</string>
+    <string name="account_message_email_unverified">Verify your email address before signing in.</string>
+    <string name="account_message_verification_resent">We sent a new link to your email address.</string>
+    <string name="account_message_verification_resend_failed">We could not send a new link. Try again in a moment.</string>
+    <string name="account_message_offline">You\'re offline. Check your connection and try again.</string>
+    <string name="account_message_unavailable">Yuki is not responding right now. Try again in a moment.</string>
+    <string name="account_message_email_taken">An account with that email already exists.</string>
+    <string name="account_message_avatar_upload_failed">Could not save that picture. Try again.</string>
+    <string name="account_message_session_expired">Your session has expired. Sign in again.</string>
+    <string name="account_message_avatar_unreadable">That image could not be read. Try a different one.</string>
+    <string name="account_resend">Resend</string>
+
+    <string name="account_sign_in_submit">Sign in</string>
+    <string name="account_sign_in_title">Sign in to Yuki</string>
+    <string name="account_sign_in_prompt">New to Yuki?</string>
+    <string name="account_sign_in_create">Create an account</string>
+
+    <string name="account_sign_up_submit">Create account</string>
+    <string name="account_sign_up_title">Sign up for Yuki</string>
+    <string name="account_sign_up_prompt">Already have an account?</string>
+    <string name="account_sign_up_sign_in">Sign in</string>
+    <string name="account_verification_title">Check your email</string>
+    <string name="account_verification_back">Back to sign in</string>
+    <string name="account_verification_body">We sent a verification link to %1$s. Open it to finish setting up your account.</string>
+
+    <string name="account_legal_notice">By creating an account, you agree to our %1$s and %2$s.</string>
+    <string name="account_legal_terms">Terms of Service</string>
+    <string name="account_legal_privacy">Privacy Policy</string>
+
+    <string name="account_section">Account</string>
+    <string name="account_sign_out">Sign out</string>
+    <string name="account_signed_out_title">Sign in</string>
+    <string name="account_signed_out_supporting">Sync your library across devices</string>
+</resources>

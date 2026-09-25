@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -14,20 +15,16 @@ const val EMAIL_FIELD_TAG = "emailField"
 const val PASSWORD_FIELD_TAG = "passwordField"
 const val NAME_FIELD_TAG = "nameField"
 
-internal const val EMAIL_LABEL = "Email"
-internal const val PASSWORD_LABEL = "Password"
-internal const val NAME_LABEL = "Name"
-
 data class CredentialField(
     val value: String,
-    val error: String?,
+    val error: CredentialError?,
     val onValueChange: (String) -> Unit,
 )
 
 @Composable
 internal fun NameField(field: CredentialField, modifier: Modifier = Modifier) {
     CredentialTextField(
-        label = NAME_LABEL,
+        label = stringResource(R.string.account_name_label),
         field = field,
         modifier = modifier.testTag(NAME_FIELD_TAG),
         keyboardOptions = KeyboardOptions(
@@ -40,7 +37,7 @@ internal fun NameField(field: CredentialField, modifier: Modifier = Modifier) {
 @Composable
 internal fun EmailField(field: CredentialField, modifier: Modifier = Modifier) {
     CredentialTextField(
-        label = EMAIL_LABEL,
+        label = stringResource(R.string.account_email_label),
         field = field,
         modifier = modifier.testTag(EMAIL_FIELD_TAG),
         keyboardOptions = KeyboardOptions(
@@ -53,7 +50,7 @@ internal fun EmailField(field: CredentialField, modifier: Modifier = Modifier) {
 @Composable
 internal fun PasswordField(field: CredentialField, modifier: Modifier = Modifier) {
     CredentialTextField(
-        label = PASSWORD_LABEL,
+        label = stringResource(R.string.account_password_label),
         field = field,
         modifier = modifier.testTag(PASSWORD_FIELD_TAG),
         keyboardOptions = KeyboardOptions(
@@ -77,7 +74,7 @@ private fun CredentialTextField(
         onValueChange = field.onValueChange,
         label = label,
         modifier = modifier,
-        error = field.error,
+        error = field.error?.text(),
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
     )

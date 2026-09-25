@@ -51,8 +51,8 @@ class SignInViewModelTest {
         viewModel.onSubmit()
 
         val state = viewModel.state.value
-        assertEquals(EMAIL_REQUIRED, state.emailError)
-        assertEquals(PASSWORD_REQUIRED, state.passwordError)
+        assertEquals(CredentialError.EmailRequired, state.emailError)
+        assertEquals(CredentialError.PasswordRequired, state.passwordError)
     }
 
     @Test
@@ -62,7 +62,7 @@ class SignInViewModelTest {
         viewModel.fillIn(email = "ada-at-yuki")
         viewModel.onSubmit()
 
-        assertEquals(EMAIL_INVALID, viewModel.state.value.emailError)
+        assertEquals(CredentialError.EmailInvalid, viewModel.state.value.emailError)
     }
 
     @Test
@@ -87,14 +87,14 @@ class SignInViewModelTest {
     fun `a wrong password is reported as invalid credentials`() = runTest {
         repository.signInResult = Result.failure(TypedFailure(FailureReason.Unauthorized))
 
-        assertEquals(SIGN_IN_INVALID, messageAfterSubmit())
+        assertEquals(AccountMessage.InvalidCredentials, messageAfterSubmit())
     }
 
     @Test
     fun `an unverified account is told to check its email instead`() = runTest {
         repository.signInResult = Result.failure(TypedFailure(FailureReason.EmailNotVerified))
 
-        assertEquals(SIGN_IN_UNVERIFIED, messageAfterSubmit())
+        assertEquals(AccountMessage.EmailUnverified, messageAfterSubmit())
     }
 
     @Test
@@ -131,7 +131,7 @@ class SignInViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf("ada@yuki.test"), repository.verificationsSentTo)
-        assertEquals(SIGN_IN_RESENT, viewModel.state.value.message)
+        assertEquals(AccountMessage.VerificationResent, viewModel.state.value.message)
         assertFalse(viewModel.state.value.canResendVerification)
     }
 
@@ -148,21 +148,21 @@ class SignInViewModelTest {
         viewModel.onResendVerification()
         advanceUntilIdle()
 
-        assertEquals(SIGN_IN_RESEND_FAILED, viewModel.state.value.message)
+        assertEquals(AccountMessage.VerificationResendFailed, viewModel.state.value.message)
     }
 
     @Test
     fun `being offline is reported as a connection problem`() = runTest {
         repository.signInResult = Result.failure(TypedFailure(FailureReason.Offline))
 
-        assertEquals(SIGN_IN_OFFLINE, messageAfterSubmit())
+        assertEquals(AccountMessage.Offline, messageAfterSubmit())
     }
 
     @Test
     fun `a sign-in without a token does not claim to be signed in`() = runTest {
         repository.signInResult = Result.success(SignedIn(ADA, token = null))
 
-        assertEquals(SIGN_IN_UNVERIFIED, messageAfterSubmit())
+        assertEquals(AccountMessage.EmailUnverified, messageAfterSubmit())
         assertNull(store.current)
     }
 
@@ -176,9 +176,9 @@ class SignInViewModelTest {
         assertNull(viewModel.state.value.emailError)
     }
 
-    private suspend fun messageAfterSubmit(): String? {
+    private suspend fun messageAfterSubmit(): AccountMessage? {
         val viewModel = viewModel()
-        var settled: String? = null
+        var settled: AccountMessage? = null
 
         viewModel.state.test {
             awaitItem()
@@ -199,7 +199,7 @@ private suspend fun ReceiveTurbine<SignInState>.awaitSignedIn(): Boolean {
     }
 }
 
-private suspend fun ReceiveTurbine<SignInState>.awaitSettled(): String? {
+private suspend fun ReceiveTurbine<SignInState>.awaitSettled(): AccountMessage? {
     while (true) {
         val state = awaitItem()
         if (!state.isSubmitting && state.message != null) return state.message

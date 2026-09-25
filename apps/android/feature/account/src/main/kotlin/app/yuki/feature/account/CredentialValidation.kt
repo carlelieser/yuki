@@ -1,30 +1,53 @@
 package app.yuki.feature.account
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+
 const val MINIMUM_PASSWORD_LENGTH = 8
 
-internal const val EMAIL_REQUIRED = "Email is required."
-internal const val EMAIL_INVALID = "Enter a valid email address."
-internal const val PASSWORD_REQUIRED = "Password is required."
-internal const val PASSWORD_TOO_SHORT =
-    "Password must be at least $MINIMUM_PASSWORD_LENGTH characters."
-internal const val NAME_REQUIRED = "Name is required."
+enum class CredentialError {
+    EmailRequired,
+    EmailInvalid,
+    PasswordRequired,
+    PasswordTooShort,
+    NameRequired,
+}
 
 private val EMAIL_PATTERN = Regex("^[^@\\s]+@[^@\\s.]+\\.[^@\\s]+$")
 
-internal fun emailError(email: String): String? {
+private val errorText: Map<CredentialError, Int> = mapOf(
+    CredentialError.EmailRequired to R.string.account_error_email_required,
+    CredentialError.EmailInvalid to R.string.account_error_email_invalid,
+    CredentialError.PasswordRequired to R.string.account_error_password_required,
+    CredentialError.NameRequired to R.string.account_error_name_required,
+)
+
+internal fun emailError(email: String): CredentialError? {
     val trimmed = email.trim()
 
     return when {
-        trimmed.isEmpty() -> EMAIL_REQUIRED
-        !EMAIL_PATTERN.matches(trimmed) -> EMAIL_INVALID
+        trimmed.isEmpty() -> CredentialError.EmailRequired
+        !EMAIL_PATTERN.matches(trimmed) -> CredentialError.EmailInvalid
         else -> null
     }
 }
 
-internal fun passwordError(password: String): String? =
-    PASSWORD_REQUIRED.takeIf { password.isEmpty() }
+internal fun passwordError(password: String): CredentialError? =
+    CredentialError.PasswordRequired.takeIf { password.isEmpty() }
 
-internal fun newPasswordError(password: String): String? =
-    PASSWORD_TOO_SHORT.takeIf { password.length < MINIMUM_PASSWORD_LENGTH }
+internal fun newPasswordError(password: String): CredentialError? =
+    CredentialError.PasswordTooShort.takeIf { password.length < MINIMUM_PASSWORD_LENGTH }
 
-internal fun nameError(name: String): String? = NAME_REQUIRED.takeIf { name.isBlank() }
+internal fun nameError(name: String): CredentialError? =
+    CredentialError.NameRequired.takeIf { name.isBlank() }
+
+@Composable
+internal fun CredentialError.text(): String = when (this) {
+    CredentialError.PasswordTooShort -> pluralStringResource(
+        R.plurals.account_error_password_too_short,
+        MINIMUM_PASSWORD_LENGTH,
+        MINIMUM_PASSWORD_LENGTH,
+    )
+    else -> stringResource(errorText.getValue(this))
+}

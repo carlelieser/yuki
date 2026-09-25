@@ -7,16 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.YukiButton
 import app.yuki.core.designsystem.theme.YukiSpacing
-
-const val SIGN_IN_SUBMIT_LABEL = "Sign in"
-
-internal const val SIGN_IN_TITLE = "Sign in to Yuki"
-internal const val SIGN_IN_PROMPT = "New to Yuki?"
-internal const val SIGN_IN_CREATE_LABEL = "Create an account"
 
 data class SignInNavigation(
     val onSignedIn: () -> Unit,
@@ -65,7 +60,7 @@ internal fun SignInScreen(
     modifier: Modifier = Modifier,
 ) {
     AuthScaffold(
-        title = SIGN_IN_TITLE,
+        title = stringResource(R.string.account_sign_in_title),
         modifier = modifier,
         message = state.authMessage(actions),
     ) {
@@ -90,28 +85,30 @@ internal fun SignInScreen(
         }
 
         YukiButton(
-            label = SIGN_IN_SUBMIT_LABEL,
+            label = stringResource(R.string.account_sign_in_submit),
             onClick = actions.onSubmit,
             modifier = Modifier.fillMaxWidth(),
             isEnabled = !state.isSubmitting,
         )
 
         AuthFooterPrompt(
-            prompt = SIGN_IN_PROMPT,
-            actionLabel = SIGN_IN_CREATE_LABEL,
+            prompt = stringResource(R.string.account_sign_in_prompt),
+            actionLabel = stringResource(R.string.account_sign_in_create),
             onActionClick = actions.onCreateAccountClick,
         )
     }
 }
 
+@Composable
 private fun SignInState.authMessage(actions: SignInActions): AuthMessage? {
-    val text = message ?: return null
+    val text = message?.text() ?: return null
+    val resendLabel = stringResource(R.string.account_resend)
 
     return AuthMessage(
         text = text,
         onShown = actions.onMessageShown,
         action = if (canResendVerification) {
-            AuthMessageAction(SIGN_IN_RESEND_LABEL, actions.onResendVerification)
+            AuthMessageAction(resendLabel, actions.onResendVerification)
         } else {
             null
         },

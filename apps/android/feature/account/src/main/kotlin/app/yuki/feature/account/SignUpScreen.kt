@@ -9,23 +9,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.YukiButton
 import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.theme.YukiSpacing
 
-const val SIGN_UP_SUBMIT_LABEL = "Create account"
 const val VERIFICATION_SENT_TAG = "verificationSent"
-
-internal const val SIGN_UP_TITLE = "Sign up for Yuki"
-internal const val SIGN_UP_PROMPT = "Already have an account?"
-internal const val SIGN_UP_SIGN_IN_LABEL = "Sign in"
-internal const val VERIFICATION_TITLE = "Check your email"
-internal const val VERIFICATION_BACK_LABEL = "Back to sign in"
-
-private fun verificationBody(email: String) =
-    "We sent a verification link to $email. Open it to finish setting up your account."
 
 @Composable
 fun SignUpRoute(
@@ -84,22 +75,22 @@ private fun SignUpForm(
     modifier: Modifier = Modifier,
 ) {
     AuthScaffold(
-        title = SIGN_UP_TITLE,
+        title = stringResource(R.string.account_sign_up_title),
         modifier = modifier,
-        message = state.message?.let { text -> AuthMessage(text, actions.onMessageShown) },
+        message = state.message?.text()?.let { text -> AuthMessage(text, actions.onMessageShown) },
     ) {
         SignUpFields(state = state, actions = actions)
 
         YukiButton(
-            label = SIGN_UP_SUBMIT_LABEL,
+            label = stringResource(R.string.account_sign_up_submit),
             onClick = actions.onSubmit,
             modifier = Modifier.fillMaxWidth(),
             isEnabled = !state.isSubmitting,
         )
 
         AuthFooterPrompt(
-            prompt = SIGN_UP_PROMPT,
-            actionLabel = SIGN_UP_SIGN_IN_LABEL,
+            prompt = stringResource(R.string.account_sign_up_prompt),
+            actionLabel = stringResource(R.string.account_sign_up_sign_in),
             onActionClick = actions.onSignInClick,
         )
 
@@ -143,15 +134,18 @@ private fun VerificationSent(
     onSignInClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AuthScaffold(title = VERIFICATION_TITLE, modifier = modifier.testTag(VERIFICATION_SENT_TAG)) {
+    AuthScaffold(
+        title = stringResource(R.string.account_verification_title),
+        modifier = modifier.testTag(VERIFICATION_SENT_TAG),
+    ) {
         Text(
-            text = verificationBody(email),
+            text = stringResource(R.string.account_verification_body, email),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         YukiButton(
-            label = VERIFICATION_BACK_LABEL,
+            label = stringResource(R.string.account_verification_back),
             onClick = onSignInClick,
             modifier = Modifier.fillMaxWidth(),
         )

@@ -48,9 +48,9 @@ class SignUpViewModelTest {
         viewModel.onSubmit()
 
         val state = viewModel.state.value
-        assertEquals(NAME_REQUIRED, state.nameError)
-        assertEquals(EMAIL_REQUIRED, state.emailError)
-        assertEquals(PASSWORD_TOO_SHORT, state.passwordError)
+        assertEquals(CredentialError.NameRequired, state.nameError)
+        assertEquals(CredentialError.EmailRequired, state.emailError)
+        assertEquals(CredentialError.PasswordTooShort, state.passwordError)
     }
 
     @Test
@@ -60,7 +60,7 @@ class SignUpViewModelTest {
         viewModel.fillIn(password = "short")
         viewModel.onSubmit()
 
-        assertEquals(PASSWORD_TOO_SHORT, viewModel.state.value.passwordError)
+        assertEquals(CredentialError.PasswordTooShort, viewModel.state.value.passwordError)
     }
 
     @Test
@@ -87,7 +87,7 @@ class SignUpViewModelTest {
             viewModel.fillIn()
             viewModel.onSubmit()
 
-            assertEquals(SIGN_UP_TAKEN, awaitMessage())
+            assertEquals(AccountMessage.EmailTaken, awaitMessage())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -102,7 +102,7 @@ class SignUpViewModelTest {
             viewModel.fillIn()
             viewModel.onSubmit()
 
-            assertEquals(SIGN_UP_OFFLINE, awaitMessage())
+            assertEquals(AccountMessage.Offline, awaitMessage())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -132,7 +132,7 @@ private suspend fun ReceiveTurbine<SignUpState>.awaitVerificationSent(): String?
     }
 }
 
-private suspend fun ReceiveTurbine<SignUpState>.awaitMessage(): String? {
+private suspend fun ReceiveTurbine<SignUpState>.awaitMessage(): AccountMessage? {
     while (true) {
         val state = awaitItem()
         if (!state.isSubmitting && state.message != null) return state.message

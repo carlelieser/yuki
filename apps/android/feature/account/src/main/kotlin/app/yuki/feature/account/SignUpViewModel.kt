@@ -14,18 +14,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal const val SIGN_UP_TAKEN = "An account with that email already exists."
-internal const val SIGN_UP_OFFLINE = "You're offline. Check your connection and try again."
-internal const val SIGN_UP_UNAVAILABLE = "Yuki is not responding right now. Try again in a moment."
-
 data class SignUpState(
     val name: String = "",
     val email: String = "",
     val password: String = "",
-    val nameError: String? = null,
-    val emailError: String? = null,
-    val passwordError: String? = null,
-    val message: String? = null,
+    val nameError: CredentialError? = null,
+    val emailError: CredentialError? = null,
+    val passwordError: CredentialError? = null,
+    val message: AccountMessage? = null,
     val isSubmitting: Boolean = false,
     val verificationSentTo: String? = null,
 )
@@ -99,8 +95,8 @@ private fun SignUpState.validated(): SignUpState = copy(
     passwordError = newPasswordError(password),
 )
 
-private fun messageFor(reason: FailureReason): String = when (reason) {
-    FailureReason.AccountExists -> SIGN_UP_TAKEN
-    FailureReason.Offline -> SIGN_UP_OFFLINE
-    else -> SIGN_UP_UNAVAILABLE
+private fun messageFor(reason: FailureReason): AccountMessage = when (reason) {
+    FailureReason.AccountExists -> AccountMessage.EmailTaken
+    FailureReason.Offline -> AccountMessage.Offline
+    else -> AccountMessage.Unavailable
 }

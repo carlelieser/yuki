@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.Avatar
@@ -36,8 +37,8 @@ import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.AuthAccount
 import app.yuki.core.settings.api.SettingsContributor
-import app.yuki.core.settings.api.SettingsMessage
 import app.yuki.core.settings.api.SettingsGroup as SettingsGroupId
+import app.yuki.core.settings.api.SettingsMessage
 import javax.inject.Inject
 
 const val ACCOUNT_CARD_TAG = "accountCard"
@@ -47,13 +48,6 @@ const val PROFILE_ROW_TAG = "profileRow"
 private const val EXPANDED_ROTATION = 180f
 private const val COLLAPSED_ROTATION = 0f
 private const val EXPAND_ROTATION_LABEL = "expandRotation"
-
-internal const val ACCOUNT_SECTION_LABEL = "Account"
-
-const val SIGN_OUT_LABEL = "Sign out"
-
-internal const val SIGNED_OUT_ROW_TITLE = "Sign in"
-internal const val SIGNED_OUT_ROW_SUPPORTING = "Sync your library across devices"
 
 class AccountSettingsContributor @Inject constructor(
     private val navigation: AccountSettingsNavigation,
@@ -73,7 +67,7 @@ class AccountSettingsContributor @Inject constructor(
 
         val picker = rememberAvatarPicker(onPicked = viewModel::onAvatarPicked)
 
-        SettingsMessage(message = state.message, onShown = viewModel::onMessageShown)
+        SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
 
         AccountCard(
             account = account,
@@ -86,11 +80,14 @@ class AccountSettingsContributor @Inject constructor(
 
 @Composable
 private fun SignedOutCard(onSignInClick: () -> Unit, modifier: Modifier = Modifier) {
-    SettingsGroup(modifier = modifier.testTag(ACCOUNT_CARD_TAG), label = ACCOUNT_SECTION_LABEL) {
+    SettingsGroup(
+        modifier = modifier.testTag(ACCOUNT_CARD_TAG),
+        label = stringResource(R.string.account_section),
+    ) {
         SettingsRow(
             position = SettingsRowPosition(index = 0, count = 1),
-            title = SIGNED_OUT_ROW_TITLE,
-            supporting = SIGNED_OUT_ROW_SUPPORTING,
+            title = stringResource(R.string.account_signed_out_title),
+            supporting = stringResource(R.string.account_signed_out_supporting),
             icon = YukiIcons.Login,
             onClick = onSignInClick,
         )
@@ -108,7 +105,10 @@ private fun AccountCard(
     var isExpanded by remember { mutableStateOf(false) }
     val rowCount = if (isExpanded) 2 else 1
 
-    SettingsGroup(modifier = modifier.testTag(ACCOUNT_CARD_TAG), label = ACCOUNT_SECTION_LABEL) {
+    SettingsGroup(
+        modifier = modifier.testTag(ACCOUNT_CARD_TAG),
+        label = stringResource(R.string.account_section),
+    ) {
         SettingsSlotRow(
             position = SettingsRowPosition(index = 0, count = rowCount),
             modifier = Modifier.testTag(PROFILE_ROW_TAG),
@@ -125,7 +125,7 @@ private fun AccountCard(
         AnimatedVisibility(visible = isExpanded) {
             SettingsRow(
                 position = SettingsRowPosition(index = 1, count = 2),
-                title = SIGN_OUT_LABEL,
+                title = stringResource(R.string.account_sign_out),
                 icon = YukiIcons.Logout,
                 onClick = onSignOutClick,
                 modifier = Modifier.testTag(SIGN_OUT_ROW_TAG),
