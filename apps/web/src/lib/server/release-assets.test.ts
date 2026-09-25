@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ListingDetail } from './listings.ts';
 
-const { getReleaseByTag } = vi.hoisted(() => ({ getReleaseByTag: vi.fn() }));
+const { getReleaseByTag, createGithubClient } = vi.hoisted(() => ({
+	getReleaseByTag: vi.fn(),
+	createGithubClient: vi.fn()
+}));
 
 vi.mock('@yuki/github', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@yuki/github')>()),
-	createGithubClient: () => ({ getReleaseByTag })
+	createGithubClient
 }));
 
 const { GithubSkip } = await import('@yuki/github');
@@ -19,6 +22,7 @@ const listing = {
 beforeEach(() => {
 	vi.stubEnv('GITHUB_TOKEN', 'token');
 	getReleaseByTag.mockReset();
+	createGithubClient.mockReturnValue({ getReleaseByTag });
 });
 
 afterEach(() => {
@@ -31,6 +35,18 @@ describe('fetchReleaseAssets', () => {
 
 		await expect(fetchReleaseAssets(listing, 'v1')).resolves.toEqual({ kind: 'found', assets: [] });
 		expect(getReleaseByTag).toHaveBeenCalledWith('acme', 'tools', 'v1');
+	});
+
+	it('fails a rate limited lookup instead of holding the request open', async () => {
+		getReleaseByTag.mockResolvedValue({ isModified: true, body: { assets: [] }, etag: null });
+
+		await fetchReleaseAssets(listing, 'v1');
+
+		expect(createGithubClient).toHaveBeenCalledWith(
+			'token',
+			expect.anything(),
+			expect.objectContaining({ onRateLimit: 'fail' })
+		);
 	});
 
 	it('reports a release github does not have as missing', async () => {

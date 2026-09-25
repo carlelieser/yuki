@@ -9,7 +9,7 @@ import {
 } from '@yuki/github';
 import type { ListingDetail } from './listings.ts';
 
-const LOOKUP_POLICY: RetryPolicy = { maxAttempts: 1, onRateLimit: 'wait' };
+const LOOKUP_POLICY: RetryPolicy = { maxAttempts: 1, onRateLimit: 'fail' };
 
 export type ReleaseAssets = { kind: 'found'; assets: GithubReleaseAsset[] } | { kind: 'missing' };
 
