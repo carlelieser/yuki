@@ -123,4 +123,27 @@ describe('GET /listings/[slug]/download/[tag]', () => {
 
 		expect(await outcomeOf('arm64-v8a')).toEqual({ status: 404, target: 'Release not found' });
 	});
+
+	it('fails with a 404 when the release has no build for the device', async () => {
+		getListingBySlug.mockResolvedValue(detail('app-x86_64.apk'));
+		fetchReleaseAssets.mockResolvedValue({
+			kind: 'found',
+			assets: [asset('app-x86_64.apk', STORED_URL)]
+		});
+
+		expect(await outcomeOf('arm64-v8a')).toEqual({
+			status: 404,
+			target: 'No build for this architecture'
+		});
+	});
+
+	it('serves the universal apk when the release has no split for the device', async () => {
+		getListingBySlug.mockResolvedValue(detail('app.apk'));
+		fetchReleaseAssets.mockResolvedValue({
+			kind: 'found',
+			assets: [asset('app-x86_64.apk', SPLIT_URL), asset('app-universal.apk', STORED_URL)]
+		});
+
+		expect(await outcomeOf('arm64-v8a')).toEqual({ status: 302, target: STORED_URL });
+	});
 });

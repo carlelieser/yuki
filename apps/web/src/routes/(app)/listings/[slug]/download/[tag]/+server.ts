@@ -35,7 +35,9 @@ async function resolveForArchitecture(
 		if (release.kind === 'missing') error(404, 'Release not found');
 
 		const asset = pickApkAsset(release.assets, parseArchitecture(architecture));
-		return asset?.browser_download_url ?? stored.downloadUrl;
+		if (asset === null) error(404, 'No build for this architecture');
+
+		return asset.browser_download_url;
 	} catch (thrown) {
 		if (!(thrown instanceof ReleaseLookupFailed)) throw thrown;
 		return fallbackFor(stored);
