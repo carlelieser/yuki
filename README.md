@@ -84,7 +84,7 @@ go install github.com/chenhuifeng/androidbinary/v2/apk/cmd/extract-icons@v2.0.10
 bun run scrape --slug=<listing>
 ```
 
-Locally, icons are stored in SeaweedFS instead of R2 and served from
+Locally, assets such as icons and avatars are stored in SeaweedFS instead of R2 and served from
 http://localhost:8333/yuki-assets. `docker compose --profile scrape up scraper` runs the
 scraper with the extractor built in.
 

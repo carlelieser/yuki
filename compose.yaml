@@ -35,7 +35,7 @@ services:
     ports:
       - '8333:8333'
     volumes:
-      - ./apps/scraper/seaweedfs.json:/etc/seaweedfs/s3.json:ro
+      - ./seaweedfs.json:/etc/seaweedfs/s3.json:ro
       - seaweedfs-data:/data
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8333/status']
