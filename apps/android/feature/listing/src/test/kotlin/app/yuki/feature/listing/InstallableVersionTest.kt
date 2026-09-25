@@ -69,7 +69,10 @@ class InstallableVersionTest {
 
     @Test
     fun `exposes the download url of the selected version to the installer`() {
-        val request = ListingInstallRequest(detail = detail(), version = version("v2.0.0"))
+        val request = ListingInstallRequest(
+            detail = detail(),
+            version = requireNotNull(version("v2.0.0").toInstallable()),
+        )
 
         assertEquals("https://cdn.test/v2.0.0.apk", request.downloadUrl)
     }

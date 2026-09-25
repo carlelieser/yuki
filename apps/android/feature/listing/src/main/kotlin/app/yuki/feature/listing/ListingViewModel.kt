@@ -9,7 +9,6 @@ import app.yuki.core.designsystem.component.observeListingInstalls
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingSummary
-import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
 import app.yuki.core.network.BrowseQuery
@@ -108,11 +107,12 @@ class ListingViewModel @Inject constructor(
             .take(AUTHOR_LISTING_COUNT)
     }
 
-    fun onInstallAction(action: InstallAction) {
+    fun onInstallAction(action: InstallAction, version: InstallableVersion) {
         val model = successOrNull() ?: return
 
         when (action) {
-            InstallAction.Install, InstallAction.Update, InstallAction.Retry -> startInstall(model)
+            InstallAction.Install, InstallAction.Update, InstallAction.Retry ->
+                startInstall(model, version)
             InstallAction.Cancel ->
                 viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
@@ -120,7 +120,7 @@ class ListingViewModel @Inject constructor(
         }
     }
 
-    fun onVersionInstallAction(action: InstallAction, version: ListingVersion) {
+    fun onVersionInstallAction(action: InstallAction, version: InstallableVersion) {
         val model = successOrNull() ?: return
 
         when (action) {
@@ -165,15 +165,7 @@ class ListingViewModel @Inject constructor(
             }
     }
 
-    private fun startInstall(model: ListingUiModel) {
-        val version = model.installableVersion ?: return
-
-        startInstall(model, version)
-    }
-
-    private fun startInstall(model: ListingUiModel, version: ListingVersion) {
-        if (version.downloadUrl == null) return
-
+    private fun startInstall(model: ListingUiModel, version: InstallableVersion) {
         val request = ListingInstallRequest(detail = model.detail, version = version)
 
         viewModelScope.launch { installGateway.install(request) }

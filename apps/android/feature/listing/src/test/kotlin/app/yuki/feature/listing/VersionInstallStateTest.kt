@@ -4,6 +4,7 @@ import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -78,17 +79,17 @@ class VersionInstallStateTest {
 
     @Test
     fun `treats a version carrying a download url as having an asset`() {
-        assertTrue(version("v2.0.0").hasDownloadableAsset())
+        assertTrue(version("v2.0.0").toInstallable() != null)
     }
 
     @Test
     fun `treats a version without a download url as having no asset`() {
-        assertFalse(version("v2.0.0", downloadUrl = null).hasDownloadableAsset())
+        assertNull(version("v2.0.0", downloadUrl = null).toInstallable())
     }
 
     @Test
     fun `treats a prerelease with an asset as installable from its row`() {
-        assertTrue(version("v2.0.0-rc", isPrerelease = true).hasDownloadableAsset())
+        assertTrue(version("v2.0.0-rc", isPrerelease = true).toInstallable() != null)
     }
 }
 

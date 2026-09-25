@@ -131,26 +131,12 @@ class ListingViewModelTest {
             awaitItem()
         }
 
-        viewModel.onInstallAction(InstallAction.Install)
+        val offered = (viewModel.listing.value as UiState.Success).data.installableVersion
+        viewModel.onInstallAction(InstallAction.Install, requireNotNull(offered))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals("v9.0.0", installGateway.requests.single().version.tag)
         assertEquals(42L, installGateway.requests.single().detail.githubRepoId)
-    }
-
-    @Test
-    fun `install action is ignored when no version is installable`() = runTest {
-        val viewModel = viewModelWith(Result.success(detail(versions = emptyList())))
-
-        viewModel.listing.test {
-            awaitItem()
-            awaitItem()
-        }
-
-        viewModel.onInstallAction(InstallAction.Install)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(emptyList<ListingInstallRequest>(), installGateway.requests)
     }
 
     @Test
@@ -162,7 +148,7 @@ class ListingViewModelTest {
             awaitItem()
         }
 
-        viewModel.onInstallAction(InstallAction.Cancel)
+        viewModel.onInstallAction(InstallAction.Cancel, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(listOf(42L), installGateway.cancelled)
@@ -177,7 +163,7 @@ class ListingViewModelTest {
         viewModel.installStatus.filterNotNull().map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
 
-            viewModel.onInstallAction(InstallAction.Install)
+            viewModel.onInstallAction(InstallAction.Install, installable("v9.0.0"))
             dispatcher.scheduler.advanceUntilIdle()
 
             installGateway.emitObserved(InstallState.Downloading(HALF_DOWNLOADED))
@@ -198,7 +184,7 @@ class ListingViewModelTest {
 
         viewModel.installStatus.filterNotNull().map { it.state }.test {
             assertEquals(InstallState.NotInstalled, awaitItem())
-            viewModel.onInstallAction(InstallAction.Install)
+            viewModel.onInstallAction(InstallAction.Install, installable("v9.0.0"))
             dispatcher.scheduler.advanceUntilIdle()
             cancelAndIgnoreRemainingEvents()
         }
@@ -215,7 +201,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail(versions = versions)))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onVersionInstallAction(InstallAction.Install, version("v1.0.0"))
+        viewModel.onVersionInstallAction(InstallAction.Install, installable("v1.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(listOf("v1.0.0"), installGateway.requests.map { it.version.tag })
@@ -228,22 +214,10 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail(versions = versions)))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onVersionInstallAction(InstallAction.Install, prerelease)
+        viewModel.onVersionInstallAction(InstallAction.Install, requireNotNull(prerelease.toInstallable()))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(listOf("v4.0.0-rc"), installGateway.requests.map { it.version.tag })
-    }
-
-    @Test
-    fun `ignores a row install for a version without an asset`() = runTest {
-        val missing = version("v2.0.0", downloadUrl = null)
-        val viewModel = viewModelWith(Result.success(detail(versions = listOf(missing))))
-        dispatcher.scheduler.advanceUntilIdle()
-
-        viewModel.onVersionInstallAction(InstallAction.Install, missing)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(emptyList<ListingInstallRequest>(), installGateway.requests)
     }
 
     @Test
@@ -251,7 +225,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onVersionInstallAction(InstallAction.Cancel, version("v2.0.0"))
+        viewModel.onVersionInstallAction(InstallAction.Cancel, installable("v2.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(listOf(42L), installGateway.cancelled)
@@ -296,7 +270,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(viewModel.isConfirmingUninstall.value)
@@ -308,7 +282,7 @@ class ListingViewModelTest {
         installGateway.isSilent = true
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         viewModel.onUninstallConfirmed()
@@ -323,7 +297,7 @@ class ListingViewModelTest {
         installGateway.isSilent = true
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         viewModel.onUninstallDismissed()
@@ -338,7 +312,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.isConfirmingUninstall.value)
@@ -351,7 +325,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onVersionInstallAction(InstallAction.Uninstall, version("v1.5.0"))
+        viewModel.onVersionInstallAction(InstallAction.Uninstall, installable("v1.5.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.isConfirmingUninstall.value)
@@ -365,7 +339,7 @@ class ListingViewModelTest {
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
         viewModel.onUninstallConfirmed()
         dispatcher.scheduler.advanceUntilIdle()
@@ -379,11 +353,11 @@ class ListingViewModelTest {
         installGateway.uninstallError = IllegalStateException("pm refused")
         val viewModel = viewModelWith(Result.success(detail()))
         dispatcher.scheduler.advanceUntilIdle()
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         installGateway.uninstallError = null
-        viewModel.onInstallAction(InstallAction.Uninstall)
+        viewModel.onInstallAction(InstallAction.Uninstall, installable("v9.0.0"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertFalse(viewModel.hasUninstallFailed.value)
@@ -494,3 +468,5 @@ class ListingViewModelTest {
 private const val BASE_URL = "https://yukistore.org"
 
 private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)
+
+private fun installable(tag: String): InstallableVersion = requireNotNull(version(tag).toInstallable())

@@ -114,20 +114,16 @@ private fun VersionText(version: ListingVersion, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun VersionInstallControl(
-    version: ListingVersion,
-    installState: VersionInstallState,
-    onAction: InstallActionHandler,
-) {
-    if (!version.hasDownloadableAsset()) {
+private fun VersionInstallControl(install: VersionInstallPresentation?) {
+    if (install == null) {
         NoAssetBadge()
         return
     }
 
     InstallButton(
-        state = installState.state,
-        onAction = onAction,
-        isEnabled = installState.isEnabled,
+        state = install.state.state,
+        onAction = install.onAction,
+        isEnabled = install.state.isEnabled,
         isGhost = true,
         progressShape = InstallProgressShape.Circular,
         progressPosition = InstallProgressPosition.Leading,
@@ -137,7 +133,7 @@ private fun VersionInstallControl(
 @Composable
 internal fun ListingVersionItem(
     version: ListingVersion,
-    install: VersionInstallPresentation,
+    install: VersionInstallPresentation?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -153,11 +149,7 @@ internal fun ListingVersionItem(
             description = stringResource(R.string.listing_version_icon),
         )
         VersionText(version = version, modifier = Modifier.weight(1f))
-        VersionInstallControl(
-            version = version,
-            installState = install.state,
-            onAction = install.onAction,
-        )
+        VersionInstallControl(install = install)
     }
 }
 

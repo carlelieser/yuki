@@ -21,13 +21,11 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.designsystem.R as DesignR
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
-import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.OVERFLOW_MENU_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingSummary
-import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
 import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.UiState
@@ -462,7 +460,7 @@ private fun otherApp(
 
 private fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
     callbacks = ListingCallbacks(
-        onInstallAction = InstallActionHandler { },
+        onInstallAction = VersionInstallHandler { _, _ -> },
         onOpenLink = LinkOpener { },
         onScreenshotSelected = { },
         onVersionInstallAction = VersionInstallHandler { _, _ -> },
@@ -475,7 +473,9 @@ private fun withInstallHandler(
 ): ListingScreenCallbacks {
     val base = noopCallbacks()
     return base.copy(
-        callbacks = base.callbacks.copy(onInstallAction = InstallActionHandler(onAction)),
+        callbacks = base.callbacks.copy(
+            onInstallAction = VersionInstallHandler { action, _ -> onAction(action) },
+        ),
     )
 }
 
@@ -492,7 +492,7 @@ private fun withScreenshotHandler(
 }
 
 private fun withVersionInstallHandler(
-    onAction: (app.yuki.core.designsystem.component.InstallAction, ListingVersion) -> Unit,
+    onAction: (app.yuki.core.designsystem.component.InstallAction, InstallableVersion) -> Unit,
 ): ListingScreenCallbacks {
     val base = noopCallbacks()
     return base.copy(

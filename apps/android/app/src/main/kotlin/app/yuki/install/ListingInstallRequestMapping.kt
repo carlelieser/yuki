@@ -23,6 +23,6 @@ internal fun ListingInstallRequest.toInstallRequest(baseUrl: String): InstallReq
                 architecture = deviceArchitecture(),
             ),
             versionTag = version.tag,
-            assetName = version.assetName,
+            assetName = version.version.assetName,
         ),
     )

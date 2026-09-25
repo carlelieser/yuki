@@ -24,14 +24,13 @@ import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.listingSection
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
-import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.ScreenshotSelection
 
 const val LISTING_DETAIL_TAG = "listingDetail"
 const val MORE_FROM_AUTHOR_KEY = "moreFromAuthor"
 
 data class ListingCallbacks(
-    val onInstallAction: InstallActionHandler,
+    val onInstallAction: VersionInstallHandler,
     val onOpenLink: LinkOpener,
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onVersionInstallAction: VersionInstallHandler,
@@ -45,7 +44,7 @@ data class AuthoredListings(
 )
 
 fun interface VersionInstallHandler {
-    fun onAction(action: InstallAction, version: ListingVersion)
+    fun onAction(action: InstallAction, version: InstallableVersion)
 }
 
 data class ListingUninstallStatus(
@@ -74,10 +73,11 @@ private fun LazyListScope.headerSection(
 private fun LazyListScope.installSection(
     model: ListingUiModel,
     status: ListingUninstallStatus,
-    onInstallAction: InstallActionHandler,
+    onInstallAction: VersionInstallHandler,
 ) {
     val hasUninstallFailed = status.hasUninstallFailed
-    if (!model.isInstallable) {
+    val installable = model.installableVersion
+    if (installable == null) {
         item { NoInstallableVersionNotice(modifier = Modifier.padding(YukiSpacing.Large)) }
         return
     }
@@ -87,7 +87,9 @@ private fun LazyListScope.installSection(
     item {
         InstallButton(
             state = install.state,
-            onAction = onInstallAction,
+            onAction = InstallActionHandler { action ->
+                onInstallAction.onAction(action, installable)
+            },
             canUninstall = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -175,12 +177,14 @@ private fun LazyListScope.versionSection(
     items(items = versions, key = { it.tag }) { version ->
         ListingVersionItem(
             version = version,
-            install = VersionInstallPresentation(
-                state = versionInstallState(version = version, status = status),
-                onAction = InstallActionHandler { action ->
-                    onVersionInstallAction.onAction(action, version)
-                },
-            ),
+            install = version.toInstallable()?.let { installable ->
+                VersionInstallPresentation(
+                    state = versionInstallState(version = version, status = status),
+                    onAction = InstallActionHandler { action ->
+                        onVersionInstallAction.onAction(action, installable)
+                    },
+                )
+            },
             modifier = Modifier.animateItem(),
         )
     }

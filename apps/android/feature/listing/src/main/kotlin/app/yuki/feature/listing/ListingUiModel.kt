@@ -4,9 +4,19 @@ import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingVersion
 
+data class InstallableVersion(
+    val version: ListingVersion,
+    val downloadUrl: String,
+) {
+    val tag: String get() = version.tag
+}
+
+fun ListingVersion.toInstallable(): InstallableVersion? =
+    downloadUrl?.let { url -> InstallableVersion(version = this, downloadUrl = url) }
+
 data class ListingUiModel(
     val detail: ListingDetail,
-    val installableVersion: ListingVersion?,
+    val installableVersion: InstallableVersion?,
 ) {
     val isInstallable: Boolean get() = installableVersion != null
 }
@@ -16,12 +26,10 @@ data class VersionInstallState(
     val isEnabled: Boolean,
 )
 
-private fun ListingVersion.isInstallable(): Boolean = !isPrerelease && downloadUrl != null
-
-fun ListingVersion.hasDownloadableAsset(): Boolean = downloadUrl != null
-
-fun installableVersion(detail: ListingDetail): ListingVersion? =
-    detail.versions.firstOrNull(ListingVersion::isInstallable)
+fun installableVersion(detail: ListingDetail): InstallableVersion? =
+    detail.versions
+        .filterNot(ListingVersion::isPrerelease)
+        .firstNotNullOfOrNull(ListingVersion::toInstallable)
 
 fun ListingDetail.toUiModel(): ListingUiModel = ListingUiModel(
     detail = this,

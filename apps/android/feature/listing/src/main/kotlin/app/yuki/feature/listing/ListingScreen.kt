@@ -12,7 +12,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
-import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OverflowMenu
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
@@ -71,7 +70,7 @@ private fun rememberListingCallbacks(
 
     return ListingScreenCallbacks(
         callbacks = ListingCallbacks(
-            onInstallAction = InstallActionHandler(viewModel::onInstallAction),
+            onInstallAction = VersionInstallHandler(viewModel::onInstallAction),
             onOpenLink = opener,
             onScreenshotSelected = navigation.onScreenshotSelected,
             onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
