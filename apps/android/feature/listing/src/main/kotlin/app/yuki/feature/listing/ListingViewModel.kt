@@ -113,7 +113,7 @@ class ListingViewModel @Inject constructor(
 
         when (action) {
             InstallAction.Install, InstallAction.Update, InstallAction.Retry -> startInstall(model)
-            InstallAction.Cancel, InstallAction.Dismiss ->
+            InstallAction.Cancel ->
                 viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
             InstallAction.Uninstall -> requestUninstall(model)
@@ -126,7 +126,7 @@ class ListingViewModel @Inject constructor(
         when (action) {
             InstallAction.Install, InstallAction.Update, InstallAction.Retry ->
                 startInstall(model, version)
-            InstallAction.Cancel, InstallAction.Dismiss ->
+            InstallAction.Cancel ->
                 viewModelScope.launch { installGateway.cancel(model.repoId) }
             InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
             InstallAction.Uninstall -> Unit

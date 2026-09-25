@@ -88,25 +88,6 @@ class InstallButtonTest {
     }
 
     @Test
-    fun aFailureStillOffersDismissWithoutAProgressPosition() {
-        val actions = mutableListOf<InstallAction>()
-        composeRule.setContent {
-            YukiTheme(isDynamicColorEnabled = false) {
-                InstallButton(
-                    state = InstallState.Failed(InstallFailure.InsufficientStorage),
-                    onAction = InstallActionHandler { action -> actions += action },
-                    progressPosition = InstallProgressPosition.None,
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription(text(R.string.designsystem_install_dismiss)).performClick()
-
-        assertEquals(listOf(InstallAction.Dismiss), actions)
-    }
-
-    @Test
     fun aCircularDownloadDropsTheSizeLabel() {
         renderCircular(
             state = InstallState.Downloading(PARTLY_DOWNLOADED),
@@ -155,14 +136,6 @@ class InstallButtonTest {
         render(InstallState.Downloading(UNKNOWN_TOTAL))
 
         composeRule.onNodeWithText(bytes(PARTLY_DOWNLOADED.bytesDownloaded), substring = true).assertDoesNotExist()
-    }
-
-    @Test
-    fun anUnreadableDownloadIsNotReportedAsIncompatible() {
-        render(InstallState.Failed(InstallFailure.DownloadUnreadable))
-
-        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_download_unreadable)).assertExists()
-        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_incompatible)).assertDoesNotExist()
     }
 
     @Test
@@ -242,11 +215,11 @@ class InstallButtonTest {
     }
 
     @Test
-    fun failedOffersRetryAndNamesTheFailure() {
+    fun failedOffersRetryWithoutABadge() {
         render(InstallState.Failed(reason = InstallFailure.InsufficientStorage))
 
         composeRule.onNodeWithText(text(R.string.designsystem_install_retry)).assertIsEnabled()
-        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_failure_insufficient_storage)).assertDoesNotExist()
     }
 
     @Test

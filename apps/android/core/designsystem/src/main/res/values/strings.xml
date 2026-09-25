@@ -24,7 +24,6 @@
     <string name="designsystem_install_open">Open</string>
     <string name="designsystem_install_update">Update</string>
     <string name="designsystem_install_retry">Retry</string>
-    <string name="designsystem_install_dismiss">Dismiss</string>
     <string name="designsystem_install_uninstall">Uninstall</string>
     <string name="designsystem_install_installed_version">Installed, version %1$s</string>
     <string name="designsystem_install_update_range">Update from %1$s to %2$s</string>

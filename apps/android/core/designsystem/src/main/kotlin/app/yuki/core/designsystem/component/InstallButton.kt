@@ -9,10 +9,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +32,6 @@ enum class InstallAction {
     Update,
     Cancel,
     Retry,
-    Dismiss,
     Open,
     Uninstall,
 }
@@ -83,7 +79,7 @@ private fun describe(state: InstallState): String = when (state) {
         stringResource(R.string.designsystem_install_installed_version, state.versionTag)
     is InstallState.UpdateAvailable ->
         stringResource(R.string.designsystem_install_update_range, state.from, state.to)
-    is InstallState.Failed -> stringResource(installFailureLabel(state.reason))
+    is InstallState.Failed -> stringResource(R.string.designsystem_install_retry)
 }
 
 private fun isFilled(state: InstallState, canUninstall: Boolean): Boolean {
@@ -105,24 +101,6 @@ private fun describeDownload(size: DownloadSize): String {
 }
 
 private const val PERCENT = 100
-
-@Composable
-private fun FailureAccessory(state: InstallState, onAction: InstallActionHandler) {
-    val failure = state as? InstallState.Failed
-    val lastReason = remember { mutableStateOf(failure?.reason) }
-
-    if (failure != null) lastReason.value = failure.reason
-
-    SideAccessory(isVisible = failure != null) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            lastReason.value?.let { reason -> InstallFailureBadge(reason = reason) }
-            DismissControl(onAction = onAction)
-        }
-    }
-}
 
 @Composable
 private fun SideAccessory(isVisible: Boolean, content: @Composable () -> Unit) {
@@ -182,16 +160,6 @@ private data class InstallControlPresentation(
 )
 
 @Composable
-private fun DismissControl(onAction: InstallActionHandler) {
-    IconButton(onClick = { onAction.onAction(InstallAction.Dismiss) }) {
-        Icon(
-            imageVector = YukiIcons.Close,
-            contentDescription = stringResource(R.string.designsystem_install_dismiss),
-        )
-    }
-}
-
-@Composable
 private fun UninstallControl(onAction: InstallActionHandler, isEnabled: Boolean) {
     YukiSecondaryButton(
         label = stringResource(R.string.designsystem_install_uninstall),
@@ -237,7 +205,5 @@ fun InstallButton(
         if (progressPosition == InstallProgressPosition.Trailing) {
             ProgressAccessory(state = state, shape = progressShape)
         }
-
-        FailureAccessory(state = state, onAction = onAction)
     }
 }
