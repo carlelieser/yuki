@@ -1,10 +1,14 @@
 package app.yuki.core.installer
 
 import android.content.pm.PackageInstaller
+import app.yuki.core.model.InstallFailure
 import java.io.File
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -55,6 +59,36 @@ class SystemInstallStrategyTest {
         runCurrent()
         install.join()
 
+        assertEquals(emptyList<Int>(), sessions.abandoned)
+    }
+
+    @Test
+    fun `an unanswered prompt times out and abandons the session`() = runTest {
+        val sessions = RecordingSessions(sessionId = 9_004)
+        val strategy = SystemInstallStrategy(sessions) {}
+
+        val result = async { runCatching { strategy.install(APK, IDENTITY).toList() } }
+        runCurrent()
+        InstallStatusBus.publish(statusOf(9_004, PackageInstaller.STATUS_PENDING_USER_ACTION))
+        advanceTimeBy(CONFIRMATION_TIMEOUT + 1.seconds)
+
+        val failure = result.await().exceptionOrNull() as InstallException
+        assertEquals(InstallFailure.ConfirmationTimedOut, failure.failure)
+        assertEquals(listOf(9_004), sessions.abandoned)
+    }
+
+    @Test
+    fun `a prompt answered in time does not time out`() = runTest {
+        val sessions = RecordingSessions(sessionId = 9_005)
+        val strategy = SystemInstallStrategy(sessions) {}
+
+        val result = async { strategy.install(APK, IDENTITY).toList() }
+        runCurrent()
+        InstallStatusBus.publish(statusOf(9_005, PackageInstaller.STATUS_PENDING_USER_ACTION))
+        advanceTimeBy(CONFIRMATION_TIMEOUT - 1.seconds)
+        InstallStatusBus.publish(statusOf(9_005, PackageInstaller.STATUS_SUCCESS))
+
+        assertEquals(InstallOutcome.Succeeded, result.await().last())
         assertEquals(emptyList<Int>(), sessions.abandoned)
     }
 }

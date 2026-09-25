@@ -2,17 +2,25 @@ package app.yuki.core.installer
 
 import android.content.Context
 import android.content.Intent
+import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.transformWhile
+
+internal val CONFIRMATION_TIMEOUT: Duration = 10.minutes
 
 internal fun interface UserActionLauncher {
     fun launch(intent: Intent)
@@ -36,16 +44,25 @@ internal class SystemInstallStrategy(
 
         try {
             emitAll(outcomesOf(session))
+        } catch (error: TimeoutCancellationException) {
+            sessions.abandon(session.id)
+            throw InstallException(
+                InstallFailure.ConfirmationTimedOut,
+                "Install session ${session.id} was not confirmed within $CONFIRMATION_TIMEOUT",
+                error,
+            )
         } catch (error: CancellationException) {
             if (!session.isSettled) sessions.abandon(session.id)
             throw error
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun outcomesOf(session: PendingSession): Flow<InstallOutcome> =
         InstallStatusBus.updates
             .onSubscription { sessions.commit(session.id) }
             .filter { status -> status.sessionId == session.id }
+            .timeout(CONFIRMATION_TIMEOUT)
             .map { status -> outcomeOf(session, status) }
             .transformWhile { outcome ->
                 emit(outcome)

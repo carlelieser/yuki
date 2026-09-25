@@ -48,6 +48,7 @@ class InstallFailureMessageTest {
             InstallFailure.PackageMismatch,
             InstallFailure.SignatureConflict,
             InstallFailure.TimedOut,
+            InstallFailure.ConfirmationTimedOut,
             InstallFailure.Rejected("blocked"),
         )
 

@@ -80,6 +80,7 @@ class InstallProgressMappingTest {
             InstallFailure.PackageMismatch,
             InstallFailure.SignatureConflict,
             InstallFailure.TimedOut,
+            InstallFailure.ConfirmationTimedOut,
         )
 
         reasons.forEach { reason ->

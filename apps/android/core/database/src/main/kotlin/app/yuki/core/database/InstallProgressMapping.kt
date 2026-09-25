@@ -28,6 +28,7 @@ private object FailureName {
     const val PACKAGE_MISMATCH = "package_mismatch"
     const val SIGNATURE_CONFLICT = "signature_conflict"
     const val TIMED_OUT = "timed_out"
+    const val CONFIRMATION_TIMED_OUT = "confirmation_timed_out"
     const val REJECTED = "rejected"
 }
 
@@ -85,6 +86,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
     FailureName.PACKAGE_MISMATCH -> InstallFailure.PackageMismatch
     FailureName.SIGNATURE_CONFLICT -> InstallFailure.SignatureConflict
     FailureName.TIMED_OUT -> InstallFailure.TimedOut
+    FailureName.CONFIRMATION_TIMED_OUT -> InstallFailure.ConfirmationTimedOut
     FailureName.REJECTED -> InstallFailure.Rejected(failureMessage.orEmpty())
     else -> throw IllegalStateException(
         "Unknown install_progress failure '$failureReason' for githubRepoId=$githubRepoId",
@@ -130,5 +132,6 @@ private fun InstallFailure.name(): String = when (this) {
     InstallFailure.PackageMismatch -> FailureName.PACKAGE_MISMATCH
     InstallFailure.SignatureConflict -> FailureName.SIGNATURE_CONFLICT
     InstallFailure.TimedOut -> FailureName.TIMED_OUT
+    InstallFailure.ConfirmationTimedOut -> FailureName.CONFIRMATION_TIMED_OUT
     is InstallFailure.Rejected -> FailureName.REJECTED
 }

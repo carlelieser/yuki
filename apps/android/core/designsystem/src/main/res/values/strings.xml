@@ -44,6 +44,7 @@
     <string name="designsystem_install_error_package_mismatch">The download for %1$s is a different app.</string>
     <string name="designsystem_install_error_signature_conflict">%1$s is signed differently from the installed version.</string>
     <string name="designsystem_install_error_timed_out">Installing %1$s timed out.</string>
+    <string name="designsystem_install_error_confirmation_timed_out">Installing %1$s was stopped because it wasn\'t confirmed in time.</string>
     <string name="designsystem_install_error_rejected">Android couldn\'t install %1$s: %2$s</string>
 
     <string name="designsystem_installed">Installed</string>
