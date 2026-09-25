@@ -8,9 +8,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.work.ForegroundInfo
 
 internal const val INSTALL_CHANNEL_ID = "installs"
+internal const val CONFIRMATION_CHANNEL_ID = "install_confirmations"
 
 internal fun installForegroundInfo(context: Context, target: InstallTarget): ForegroundInfo {
-    ensureInstallChannel(context)
+    ensureChannel(context, InstallChannel.Installs)
 
     val notification = NotificationCompat.Builder(context, INSTALL_CHANNEL_ID)
         .setSmallIcon(R.drawable.installer_ic_notification)
@@ -29,13 +30,23 @@ internal fun installForegroundInfo(context: Context, target: InstallTarget): For
     )
 }
 
-private fun ensureInstallChannel(context: Context) {
-    val channel = NotificationChannelCompat.Builder(
+internal enum class InstallChannel(val id: String, val nameRes: Int, val importance: Int) {
+    Installs(
         INSTALL_CHANNEL_ID,
+        R.string.installer_channel_installs,
         NotificationManagerCompat.IMPORTANCE_LOW,
-    )
-        .setName(context.getString(R.string.installer_channel_installs))
+    ),
+    Confirmations(
+        CONFIRMATION_CHANNEL_ID,
+        R.string.installer_channel_confirmations,
+        NotificationManagerCompat.IMPORTANCE_HIGH,
+    ),
+}
+
+internal fun ensureChannel(context: Context, channel: InstallChannel) {
+    val compat = NotificationChannelCompat.Builder(channel.id, channel.importance)
+        .setName(context.getString(channel.nameRes))
         .build()
 
-    NotificationManagerCompat.from(context).createNotificationChannel(channel)
+    NotificationManagerCompat.from(context).createNotificationChannel(compat)
 }

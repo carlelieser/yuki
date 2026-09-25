@@ -1,5 +1,6 @@
 package app.yuki.core.installer
 
+import android.content.Intent
 import android.content.pm.PackageInstaller
 import app.yuki.core.model.InstallFailure
 import java.io.File
@@ -18,7 +19,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `cancelling while waiting for the user abandons the session`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_001)
-        val strategy = SystemInstallStrategy(sessions) {}
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -33,7 +34,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a finished install leaves its session alone`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_002)
-        val strategy = SystemInstallStrategy(sessions) {}
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -47,7 +48,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `cancelling after the install finished leaves its session alone`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_003)
-        val strategy = SystemInstallStrategy(sessions) {}
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
 
         val install = launch {
             strategy.install(APK, IDENTITY).collect { outcome ->
@@ -65,7 +66,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `an unanswered prompt times out and abandons the session`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_004)
-        val strategy = SystemInstallStrategy(sessions) {}
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
 
         val result = async { runCatching { strategy.install(APK, IDENTITY).toList() } }
         runCurrent()
@@ -80,7 +81,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a prompt answered in time does not time out`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_005)
-        val strategy = SystemInstallStrategy(sessions) {}
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
 
         val result = async { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -91,6 +92,36 @@ class SystemInstallStrategyTest {
         assertEquals(InstallOutcome.Succeeded, result.await().last())
         assertEquals(emptyList<Int>(), sessions.abandoned)
     }
+
+    @Test
+    fun `a finished install withdraws its confirmation prompt`() = runTest {
+        val prompt = RecordingPrompt()
+        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_006), prompt)
+
+        val install = launch { strategy.install(APK, IDENTITY).toList() }
+        runCurrent()
+        InstallStatusBus.publish(statusOf(9_006, PackageInstaller.STATUS_PENDING_USER_ACTION))
+        InstallStatusBus.publish(statusOf(9_006, PackageInstaller.STATUS_SUCCESS))
+        runCurrent()
+        install.join()
+
+        assertEquals(listOf(9_006), prompt.dismissed)
+    }
+
+    @Test
+    fun `a cancelled install withdraws its confirmation prompt`() = runTest {
+        val prompt = RecordingPrompt()
+        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_007), prompt)
+
+        val install = launch { strategy.install(APK, IDENTITY).toList() }
+        runCurrent()
+        InstallStatusBus.publish(statusOf(9_007, PackageInstaller.STATUS_PENDING_USER_ACTION))
+        runCurrent()
+        install.cancel()
+        runCurrent()
+
+        assertEquals(listOf(9_007), prompt.dismissed)
+    }
 }
 
 private val APK = File("/downloads/app.apk")
@@ -98,6 +129,16 @@ private val IDENTITY = ApkIdentity("com.termux", versionCode = 1L)
 
 private fun statusOf(sessionId: Int, code: Int) =
     SessionStatus(sessionId = sessionId, code = code, message = null, userAction = null)
+
+private class RecordingPrompt : UserActionLauncher {
+    val dismissed: MutableList<Int> = mutableListOf()
+
+    override fun launch(sessionId: Int, intent: Intent) = Unit
+
+    override fun dismiss(sessionId: Int) {
+        dismissed += sessionId
+    }
+}
 
 private class RecordingSessions(private val sessionId: Int) : InstallSessions {
     val abandoned: MutableList<Int> = mutableListOf()

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="installer_channel_installs">Installs</string>
+    <string name="installer_channel_confirmations">Install confirmations</string>
+    <string name="installer_notification_confirm_title">Ready to install</string>
+    <string name="installer_notification_confirm_text">Tap to confirm the install.</string>
     <string name="installer_notification_installing">Installing %1$s</string>
 </resources>

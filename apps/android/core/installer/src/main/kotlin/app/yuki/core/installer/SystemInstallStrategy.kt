@@ -1,7 +1,6 @@
 package app.yuki.core.installer
 
 import android.content.Context
-import android.content.Intent
 import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -22,10 +21,6 @@ import kotlinx.coroutines.flow.transformWhile
 
 internal val CONFIRMATION_TIMEOUT: Duration = 10.minutes
 
-internal fun interface UserActionLauncher {
-    fun launch(intent: Intent)
-}
-
 internal class SystemInstallStrategy(
     private val sessions: InstallSessions,
     private val launcher: UserActionLauncher,
@@ -33,9 +28,7 @@ internal class SystemInstallStrategy(
     @Inject
     constructor(@ApplicationContext context: Context) : this(
         sessions = InstallSessionWriter(context),
-        launcher = UserActionLauncher { intent ->
-            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        },
+        launcher = UserActionPrompt(context),
     )
 
     override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
@@ -54,6 +47,8 @@ internal class SystemInstallStrategy(
         } catch (error: CancellationException) {
             if (!session.isSettled) sessions.abandon(session.id)
             throw error
+        } finally {
+            launcher.dismiss(session.id)
         }
     }
 
@@ -73,7 +68,7 @@ internal class SystemInstallStrategy(
         val outcome = status.toOutcome()
 
         if (outcome is InstallOutcome.AwaitingUserAction) {
-            status.userAction?.let(launcher::launch)
+            status.userAction?.let { intent -> launcher.launch(session.id, intent) }
         } else {
             session.isSettled = true
         }
