@@ -71,4 +71,6 @@
     <string name="designsystem_category_customization">Customization</string>
     <string name="designsystem_category_connectivity">Connectivity</string>
     <string name="designsystem_category_utilities">Utilities</string>
+    <string name="designsystem_download_size">%1$s / %2$s</string>
+    <string name="designsystem_download_size_unknown">?</string>
 </resources>

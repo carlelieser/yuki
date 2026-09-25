@@ -1,5 +1,6 @@
 package app.yuki.core.designsystem
 
+import android.text.format.Formatter
 import androidx.activity.ComponentActivity
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertIsDisplayed
@@ -33,6 +34,14 @@ class InstallButtonTest {
 
     private fun text(@StringRes id: Int, vararg args: Any): String =
         composeRule.activity.getString(id, *args)
+
+    private fun bytes(count: Long): String = Formatter.formatShortFileSize(composeRule.activity, count)
+
+    private fun partlyDownloadedLabel(): String = text(
+        R.string.designsystem_download_size,
+        bytes(PARTLY_DOWNLOADED.bytesDownloaded),
+        bytes(checkNotNull(PARTLY_DOWNLOADED.bytesTotal)),
+    )
 
     private fun render(state: InstallState, onAction: InstallActionHandler = InstallActionHandler { }) {
         composeRule.setContent {
@@ -74,7 +83,7 @@ class InstallButtonTest {
         )
 
         composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).assertIsEnabled()
-        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
+        composeRule.onNodeWithText(partlyDownloadedLabel()).assertDoesNotExist()
         composeRule.onNodeWithTag(INSTALL_PROGRESS_TAG).assertDoesNotExist()
     }
 
@@ -104,7 +113,7 @@ class InstallButtonTest {
             position = InstallProgressPosition.Leading,
         )
 
-        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertDoesNotExist()
+        composeRule.onNodeWithText(partlyDownloadedLabel()).assertDoesNotExist()
         composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).assertIsEnabled()
     }
 
@@ -116,7 +125,7 @@ class InstallButtonTest {
         )
 
         composeRule
-            .onNodeWithContentDescription(text(R.string.designsystem_install_downloading_progress, 33, "4.1 MB / 12.1 MB"))
+            .onNodeWithContentDescription(text(R.string.designsystem_install_downloading_progress, 33, partlyDownloadedLabel()))
             .assertExists()
     }
 
@@ -138,14 +147,14 @@ class InstallButtonTest {
     fun downloadingShowsTheTransferredBytes() {
         render(InstallState.Downloading(PARTLY_DOWNLOADED))
 
-        composeRule.onNodeWithText("4.1 MB / 12.1 MB").assertExists()
+        composeRule.onNodeWithText(partlyDownloadedLabel()).assertExists()
     }
 
     @Test
     fun aDownloadWithAnUnknownTotalShowsNoByteCountsAtAll() {
         render(InstallState.Downloading(UNKNOWN_TOTAL))
 
-        composeRule.onNodeWithText("4.1 MB", substring = true).assertDoesNotExist()
+        composeRule.onNodeWithText(bytes(PARTLY_DOWNLOADED.bytesDownloaded), substring = true).assertDoesNotExist()
     }
 
     @Test

@@ -101,7 +101,7 @@ private fun describeDownload(size: DownloadSize): String {
     val fraction = size.fraction ?: return stringResource(R.string.designsystem_install_downloading)
     val percent = (fraction * PERCENT).toInt()
 
-    return stringResource(R.string.designsystem_install_downloading_progress, percent, size.label)
+    return stringResource(R.string.designsystem_install_downloading_progress, percent, size.label())
 }
 
 private const val PERCENT = 100

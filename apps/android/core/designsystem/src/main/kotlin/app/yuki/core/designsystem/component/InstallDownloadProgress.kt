@@ -49,10 +49,11 @@ private fun LinearDownloadBar(fraction: Float?) {
 @Composable
 private fun DownloadSizeLabel(size: DownloadSize) {
     val hasSize = size.fraction != null
-    val lastKnown = remember { mutableStateOf(size.label) }
+    val label = size.label()
+    val lastKnown = remember { mutableStateOf(label) }
     val labelState = remember { MutableTransitionState(hasSize) }
 
-    if (hasSize) lastKnown.value = size.label
+    if (hasSize) lastKnown.value = label
 
     labelState.targetState = hasSize
 

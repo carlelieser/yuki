@@ -35,8 +35,6 @@ data class DownloadSize(
         get() = bytesTotal?.let { total ->
             (bytesDownloaded.toFloat() / total).coerceIn(0f, 1f)
         }
-
-    val label: String get() = formatByteProgress(bytesDownloaded, bytesTotal)
 }
 
 fun downloadSizeOf(bytesDownloaded: Long, bytesTotal: Long): DownloadSize = DownloadSize(

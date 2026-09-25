@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.ProductListItemContent
 import app.yuki.core.designsystem.component.installFailureLabel
+import app.yuki.core.designsystem.component.label
 
 private val fixedSupporting: Map<LibrarySupporting, Int> = mapOf(
     LibrarySupporting.UnknownVersion to R.string.library_supporting_unknown_version,
@@ -15,7 +16,7 @@ private val fixedSupporting: Map<LibrarySupporting, Int> = mapOf(
 @Composable
 private fun LibrarySupporting.text(): String = when (this) {
     is LibrarySupporting.Version -> tag
-    is LibrarySupporting.Download -> size.label
+    is LibrarySupporting.Download -> size.label()
     is LibrarySupporting.Failure -> stringResource(installFailureLabel(reason))
     LibrarySupporting.None -> ""
     else -> stringResource(fixedSupporting.getValue(this))
