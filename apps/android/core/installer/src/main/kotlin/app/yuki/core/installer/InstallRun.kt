@@ -31,7 +31,17 @@ internal fun isRetryable(terminal: InstallState, runAttemptCount: Int): Boolean 
     val failure = (terminal as? InstallState.Failed)?.reason ?: return false
     val hasAttemptsLeft = runAttemptCount + 1 < INSTALL_MAX_ATTEMPTS
 
-    return failure is InstallFailure.DownloadFailed && hasAttemptsLeft
+    return failure.isTransient() && hasAttemptsLeft
+}
+
+private const val FIRST_SERVER_ERROR = 500
+private val TRANSIENT_CLIENT_ERRORS = setOf(408, 429)
+
+private fun InstallFailure.isTransient(): Boolean {
+    val download = this as? InstallFailure.DownloadFailed ?: return false
+    val status = download.httpStatus ?: return true
+
+    return status >= FIRST_SERVER_ERROR || status in TRANSIENT_CLIENT_ERRORS
 }
 
 private val QUEUED = InstallState.Downloading(downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L))

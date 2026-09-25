@@ -93,6 +93,23 @@ class InstallRetryPolicyTest {
     }
 
     @Test
+    fun `a server error is retried`() {
+        assertEquals(true, isRetryable(downloadFailedWith(503), runAttemptCount = 0))
+    }
+
+    @Test
+    fun `a missing release is not retried`() {
+        assertEquals(false, isRetryable(downloadFailedWith(404), runAttemptCount = 0))
+        assertEquals(false, isRetryable(downloadFailedWith(410), runAttemptCount = 0))
+    }
+
+    @Test
+    fun `a timed out or throttled request is retried`() {
+        assertEquals(true, isRetryable(downloadFailedWith(408), runAttemptCount = 0))
+        assertEquals(true, isRetryable(downloadFailedWith(429), runAttemptCount = 0))
+    }
+
+    @Test
     fun `retrying stops once the attempt budget is spent`() {
         assertEquals(false, isRetryable(downloadFailed(), runAttemptCount = INSTALL_MAX_ATTEMPTS))
     }
@@ -113,6 +130,9 @@ class InstallRetryPolicyTest {
         }
     }
 }
+
+private fun downloadFailedWith(httpStatus: Int): InstallState =
+    InstallState.Failed(InstallFailure.DownloadFailed(httpStatus))
 
 private fun downloadFailed(): InstallState =
     InstallState.Failed(InstallFailure.DownloadFailed(httpStatus = null))
