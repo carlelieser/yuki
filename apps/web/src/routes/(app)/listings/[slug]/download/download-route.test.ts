@@ -146,4 +146,11 @@ describe('GET /listings/[slug]/download/[tag]', () => {
 
 		expect(await outcomeOf('arm64-v8a')).toEqual({ status: 302, target: STORED_URL });
 	});
+
+	it('rejects an architecture it does not know', async () => {
+		getListingBySlug.mockResolvedValue(detail('app.apk'));
+
+		expect(await outcomeOf('mips')).toEqual({ status: 400, target: 'Unknown architecture' });
+		expect(fetchReleaseAssets).not.toHaveBeenCalled();
+	});
 });

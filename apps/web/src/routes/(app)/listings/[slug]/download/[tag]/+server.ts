@@ -1,7 +1,12 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { Database } from '@yuki/db';
-import { architectureOfName, parseArchitecture, pickApkAsset } from '@yuki/github';
+import {
+	architectureOfName,
+	parseArchitecture,
+	pickApkAsset,
+	type Architecture
+} from '@yuki/github';
 import { getListingBySlug, type ListingDetail } from '$lib/server/listings.ts';
 import { fetchReleaseAssets, ReleaseLookupFailed } from '$lib/server/release-assets.ts';
 import { recordDownload } from '$lib/server/reviews.ts';
@@ -25,16 +30,26 @@ function fallbackFor(stored: StoredDownload): string {
 	error(502, 'GitHub unavailable');
 }
 
+function requestedArchitecture(url: URL): Architecture | null {
+	const requested = url.searchParams.get('arch');
+	if (requested === null) return null;
+
+	const architecture = parseArchitecture(requested);
+	if (architecture === null) error(400, 'Unknown architecture');
+
+	return architecture;
+}
+
 async function resolveForArchitecture(
 	listing: ListingDetail,
 	stored: StoredDownload,
-	architecture: string
+	architecture: Architecture
 ): Promise<string> {
 	try {
 		const release = await fetchReleaseAssets(listing, stored.tag);
 		if (release.kind === 'missing') error(404, 'Release not found');
 
-		const asset = pickApkAsset(release.assets, parseArchitecture(architecture));
+		const asset = pickApkAsset(release.assets, architecture);
 		if (asset === null) error(404, 'No build for this architecture');
 
 		return asset.browser_download_url;
@@ -56,7 +71,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		downloadUrl: version.downloadUrl,
 		assetName: version.assetName
 	};
-	const architecture = url.searchParams.get('arch');
+	const architecture = requestedArchitecture(url);
 	const resolved = architecture
 		? await resolveForArchitecture(listing, stored, architecture)
 		: stored.downloadUrl;
