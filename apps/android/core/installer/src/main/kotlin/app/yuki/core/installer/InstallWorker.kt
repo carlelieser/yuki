@@ -14,7 +14,7 @@ internal class InstallWorker @AssistedInject constructor(
     private val run: InstallRun,
 ) : CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        val terminal = run.execute(inputData.toInstallRequest())
+        val terminal = run.execute(inputData.toInstallRequest(), runAttemptCount)
 
         return if (isRetryable(terminal, runAttemptCount)) Result.retry() else Result.success()
     }

@@ -16,7 +16,7 @@ class InstallRunTest {
             downloader = FakeApkDownloader(sizes = listOf(testSize(250L), testSize(750L))),
         )
 
-        run.execute(testRequest())
+        run.execute(testRequest(), runAttemptCount = 0)
 
         assertEquals(
             listOf(
@@ -34,7 +34,7 @@ class InstallRunTest {
     fun `progress is written against the repo id so any screen can observe it`() = runTest {
         val progress = FakeInstallProgressStore()
 
-        runOf(progress = progress).execute(testRequest(githubRepoId = 77L))
+        runOf(progress = progress).execute(testRequest(githubRepoId = 77L), runAttemptCount = 0)
 
         assertTrue(progress.written.all { written -> written.githubRepoId == 77L })
         assertEquals(InstallState.Installed("v1.2.0"), progress.find(77L)?.state)
@@ -44,7 +44,7 @@ class InstallRunTest {
     fun `a queued install is observable before any bytes arrive`() = runTest {
         val progress = FakeInstallProgressStore()
 
-        runOf(progress = progress).execute(testRequest())
+        runOf(progress = progress).execute(testRequest(), runAttemptCount = 0)
 
         val queued = progress.written.first().state as InstallState.Downloading
         assertEquals(0L, queued.size.bytesDownloaded)
@@ -56,7 +56,7 @@ class InstallRunTest {
         runTest {
             val progress = FakeInstallProgressStore()
 
-            runOf(progress = progress).execute(testRequest(githubRepoId = 77L))
+            runOf(progress = progress).execute(testRequest(githubRepoId = 77L), runAttemptCount = 0)
 
             val target = progress.find(77L)?.target
             assertEquals("acme-app", target?.slug)
@@ -73,10 +73,31 @@ class InstallRunTest {
             ),
         )
 
-        val terminal = run.execute(testRequest())
+        val terminal = run.execute(testRequest(), runAttemptCount = 0)
 
         assertEquals(InstallState.Failed(InstallFailure.DownloadUnreadable), terminal)
         assertEquals(terminal, progress.find(42L)?.state)
+    }
+
+    @Test
+    fun `a failure that will be retried leaves the install queued`() = runTest {
+        val progress = FakeInstallProgressStore()
+        val run = runOf(progress = progress, downloader = failingDownloader(httpStatus = 503))
+
+        val terminal = run.execute(testRequest(), runAttemptCount = 0)
+
+        assertEquals(downloadFailedWith(503), terminal)
+        assertEquals(QUEUED_STATE, progress.find(42L)?.state)
+    }
+
+    @Test
+    fun `a failure on the last attempt is persisted`() = runTest {
+        val progress = FakeInstallProgressStore()
+        val run = runOf(progress = progress, downloader = failingDownloader(httpStatus = 503))
+
+        run.execute(testRequest(), runAttemptCount = INSTALL_MAX_ATTEMPTS - 1)
+
+        assertEquals(downloadFailedWith(503), progress.find(42L)?.state)
     }
 }
 
@@ -130,6 +151,12 @@ class InstallRetryPolicyTest {
         }
     }
 }
+
+private val QUEUED_STATE = InstallState.Downloading(testSize(0L, bytesTotal = 0L))
+
+private fun failingDownloader(httpStatus: Int): FakeApkDownloader = FakeApkDownloader(
+    failure = InstallException(InstallFailure.DownloadFailed(httpStatus), "server error"),
+)
 
 private fun downloadFailedWith(httpStatus: Int): InstallState =
     InstallState.Failed(InstallFailure.DownloadFailed(httpStatus))

@@ -11,7 +11,7 @@ internal class InstallRun @Inject constructor(
     private val coordinator: InstallCoordinator,
     private val progress: InstallProgressStore,
 ) {
-    suspend fun execute(request: InstallRequest): InstallState {
+    suspend fun execute(request: InstallRequest, runAttemptCount: Int): InstallState {
         val target = request.target
         val versionTag = request.source.versionTag
         var latest: InstallState = QUEUED
@@ -20,7 +20,8 @@ internal class InstallRun @Inject constructor(
 
         coordinator.install(request).collect { state ->
             latest = state
-            progress.write(InstallProgress(target, versionTag, state))
+            val shown = if (isRetryable(state, runAttemptCount)) QUEUED else state
+            progress.write(InstallProgress(target, versionTag, shown))
         }
 
         return latest
