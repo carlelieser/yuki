@@ -5,11 +5,12 @@ import android.content.Intent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
@@ -30,30 +31,40 @@ internal class SystemInstallStrategy(
     )
 
     override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
-        val sessionId = sessions.createSession(identity)
-        sessions.writeApk(sessionId, apk)
+        val session = PendingSession(sessions.createSession(identity))
+        sessions.writeApk(session.id, apk)
 
-        val outcomes = InstallStatusBus.updates
-            .onSubscription { sessions.commit(sessionId) }
-            .filter { status -> status.sessionId == sessionId }
-            .transformWhile { status -> emitUntilTerminal(status) }
-
-        emitAll(outcomes)
+        try {
+            emitAll(outcomesOf(session))
+        } catch (error: CancellationException) {
+            if (!session.isSettled) sessions.abandon(session.id)
+            throw error
+        }
     }
 
-    private suspend fun FlowCollector<InstallOutcome>.emitUntilTerminal(
-        status: SessionStatus,
-    ): Boolean {
+    private fun outcomesOf(session: PendingSession): Flow<InstallOutcome> =
+        InstallStatusBus.updates
+            .onSubscription { sessions.commit(session.id) }
+            .filter { status -> status.sessionId == session.id }
+            .map { status -> outcomeOf(session, status) }
+            .transformWhile { outcome ->
+                emit(outcome)
+                outcome is InstallOutcome.AwaitingUserAction
+            }
+
+    private fun outcomeOf(session: PendingSession, status: SessionStatus): InstallOutcome {
         val outcome = status.toOutcome()
-        if (outcome is InstallOutcome.AwaitingUserAction) launchUserAction(status)
 
-        emit(outcome)
+        if (outcome is InstallOutcome.AwaitingUserAction) {
+            status.userAction?.let(launcher::launch)
+        } else {
+            session.isSettled = true
+        }
 
-        return outcome is InstallOutcome.AwaitingUserAction
+        return outcome
     }
+}
 
-    private fun launchUserAction(status: SessionStatus) {
-        val intent = status.userAction ?: return
-        launcher.launch(intent)
-    }
+private class PendingSession(val id: Int) {
+    var isSettled: Boolean = false
 }
