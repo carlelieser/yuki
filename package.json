@@ -19,6 +19,7 @@
 		"scrape": "bun run --filter '@yuki/scraper' start",
 		"listings": "bun run --filter '@yuki/scraper' review",
 		"backfill": "bun run --filter '@yuki/scraper' backfill",
+		"prune-icons": "bun run --filter '@yuki/scraper' prune-icons",
 		"reverify": "bun run --filter '@yuki/scraper' reverify"
 	},
 	"devDependencies": {
