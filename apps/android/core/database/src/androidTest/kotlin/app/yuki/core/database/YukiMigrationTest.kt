@@ -330,4 +330,57 @@ class YukiMigrationTest {
             assertEquals("Obtainium", cursor.getString(1))
         }
     }
+
+    @Test
+    fun migratingToVersionSixKeepsInFlightProgress() {
+        seedVersionFive(
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, createdAt, updatedAt)
+            VALUES (5, 'aurora', 'Aurora', NULL, 'failed', 'v4', 0, 0,
+             'download_failed', NULL, 1000, 2000)
+            """.trimIndent(),
+        )
+
+        val migrated = runToVersionSix()
+
+        migrated.query(
+            "SELECT status, failureReason, failureCode FROM install_progress",
+        ).use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals("failed", cursor.getString(0))
+            assertEquals("download_failed", cursor.getString(1))
+            assertTrue(cursor.isNull(2))
+        }
+    }
+
+    @Test
+    fun theVersionSixProgressTableAcceptsAFailureCode() {
+        helper.createDatabase(TEST_DATABASE, 5).close()
+
+        val migrated = runToVersionSix()
+        migrated.execSQL(
+            """
+            INSERT INTO install_progress
+            (githubRepoId, slug, title, iconUrl, status, versionTag, bytesDownloaded,
+             bytesTotal, failureReason, failureMessage, failureCode, createdAt, updatedAt)
+            VALUES (5, 'aurora', 'Aurora', NULL, 'failed', 'v4', 0, 0,
+             'download_failed', NULL, 404, 1000, 2000)
+            """.trimIndent(),
+        )
+
+        migrated.query("SELECT failureCode FROM install_progress").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(404, cursor.getInt(0))
+        }
+    }
+
+    private fun seedVersionFive(vararg statements: String) {
+        helper.createDatabase(TEST_DATABASE, 5).use { database ->
+            statements.forEach(database::execSQL)
+        }
+    }
+
+    private fun runToVersionSix() = helper.runMigrationsAndValidate(TEST_DATABASE, 6, true)
 }

@@ -114,7 +114,8 @@ class InstallRetryPolicyTest {
     }
 }
 
-private fun downloadFailed(): InstallState = InstallState.Failed(InstallFailure.DownloadFailed)
+private fun downloadFailed(): InstallState =
+    InstallState.Failed(InstallFailure.DownloadFailed(httpStatus = null))
 
 private fun runOf(
     progress: InstallProgressStore,

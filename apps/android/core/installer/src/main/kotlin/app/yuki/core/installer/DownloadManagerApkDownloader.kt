@@ -52,7 +52,7 @@ internal class DownloadManagerApkDownloader @Inject constructor(
         while (true) {
             val snapshot = DownloadCursorReader(manager).read(downloadId)
                 ?: throw InstallException(
-                    InstallFailure.DownloadFailed,
+                    InstallFailure.DownloadFailed(httpStatus = null),
                     "Download $downloadId for ${source.downloadUrl} vanished from DownloadManager",
                 )
 

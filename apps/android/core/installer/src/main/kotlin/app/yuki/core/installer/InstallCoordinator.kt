@@ -43,7 +43,7 @@ class InstallCoordinator @Inject constructor(
         }
 
         return downloaded ?: throw InstallException(
-            InstallFailure.DownloadFailed,
+            InstallFailure.DownloadFailed(httpStatus = null),
             "Download completed without an APK for url=${source.downloadUrl}",
         )
     }

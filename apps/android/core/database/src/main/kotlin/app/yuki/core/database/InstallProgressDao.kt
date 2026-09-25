@@ -27,12 +27,12 @@ interface InstallProgressDao {
         """
         INSERT INTO install_progress (
             githubRepoId, slug, title, iconUrl, status, versionTag,
-            bytesDownloaded, bytesTotal, failureReason, failureMessage,
+            bytesDownloaded, bytesTotal, failureReason, failureMessage, failureCode,
             createdAt, updatedAt
         )
         VALUES (
             :githubRepoId, :slug, :title, :iconUrl, :status, :versionTag,
-            :bytesDownloaded, :bytesTotal, :failureReason, :failureMessage,
+            :bytesDownloaded, :bytesTotal, :failureReason, :failureMessage, :failureCode,
             :now, :now
         )
         ON CONFLICT(githubRepoId) DO UPDATE SET
@@ -45,6 +45,7 @@ interface InstallProgressDao {
             bytesTotal = excluded.bytesTotal,
             failureReason = excluded.failureReason,
             failureMessage = excluded.failureMessage,
+            failureCode = excluded.failureCode,
             updatedAt = excluded.updatedAt
         """,
     )
@@ -59,6 +60,7 @@ interface InstallProgressDao {
         bytesTotal: Long,
         failureReason: String?,
         failureMessage: String?,
+        failureCode: Int?,
         now: Long,
     )
 

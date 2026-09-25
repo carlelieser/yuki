@@ -68,7 +68,7 @@ class InstallProgressMappingTest {
     @Test
     fun `every failure reason round trips distinctly`() {
         val reasons = listOf(
-            InstallFailure.DownloadFailed,
+            InstallFailure.DownloadFailed(httpStatus = null),
             InstallFailure.DownloadUnreadable,
             InstallFailure.Aborted,
             InstallFailure.InsufficientStorage,
@@ -80,6 +80,13 @@ class InstallProgressMappingTest {
         reasons.forEach { reason ->
             assertEquals(InstallState.Failed(reason), roundTrip(InstallState.Failed(reason)))
         }
+    }
+
+    @Test
+    fun `a download failure keeps its http status`() {
+        val notFound = InstallState.Failed(InstallFailure.DownloadFailed(httpStatus = 404))
+
+        assertEquals(notFound, roundTrip(notFound))
     }
 
     @Test

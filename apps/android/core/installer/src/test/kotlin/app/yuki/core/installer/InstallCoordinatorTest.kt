@@ -116,7 +116,7 @@ class InstallCoordinatorTest {
     fun `a download failure never reports an install in progress`() = runTest {
         val coordinator = coordinatorOf(
             downloader = FakeApkDownloader(
-                failure = InstallException(InstallFailure.DownloadFailed, "boom"),
+                failure = InstallException(DOWNLOAD_FAILED, "boom"),
             ),
             strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
         )
@@ -131,14 +131,14 @@ class InstallCoordinatorTest {
         val strategy = FakeInstallStrategy(listOf(InstallOutcome.Succeeded))
         val coordinator = coordinatorOf(
             downloader = FakeApkDownloader(
-                failure = InstallException(InstallFailure.DownloadFailed, "boom"),
+                failure = InstallException(DOWNLOAD_FAILED, "boom"),
             ),
             strategy = strategy,
         )
 
         val states = coordinator.install(testRequest()).toList()
 
-        assertEquals(listOf(InstallState.Failed(InstallFailure.DownloadFailed)), states)
+        assertEquals(listOf(InstallState.Failed(DOWNLOAD_FAILED)), states)
         assertEquals(0, strategy.installCount)
     }
 
@@ -181,3 +181,5 @@ private fun coordinatorOf(
         privileged = null,
     ),
 )
+
+private val DOWNLOAD_FAILED = InstallFailure.DownloadFailed(httpStatus = null)

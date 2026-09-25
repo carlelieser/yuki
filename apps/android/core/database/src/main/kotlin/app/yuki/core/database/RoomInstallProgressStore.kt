@@ -40,6 +40,7 @@ internal class RoomInstallProgressStore @Inject constructor(
             bytesTotal = entity.bytesTotal,
             failureReason = entity.failureReason,
             failureMessage = entity.failureMessage,
+            failureCode = entity.failureCode,
             now = now,
         )
     }

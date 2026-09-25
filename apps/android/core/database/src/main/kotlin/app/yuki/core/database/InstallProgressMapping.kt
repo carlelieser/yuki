@@ -38,6 +38,7 @@ internal fun InstallProgress.toEntity(now: Long): InstallProgressEntity =
         bytesTotal = state.bytesTotal(),
         failureReason = state.failureName(),
         failureMessage = state.rejectionMessage(),
+        failureCode = state.httpStatus(),
         createdAt = now,
         updatedAt = now,
     )
@@ -67,7 +68,7 @@ private fun InstallProgressEntity.toState(): InstallState = when (status) {
 }
 
 private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureReason) {
-    FailureName.DOWNLOAD_FAILED -> InstallFailure.DownloadFailed
+    FailureName.DOWNLOAD_FAILED -> InstallFailure.DownloadFailed(failureCode)
     FailureName.DOWNLOAD_UNREADABLE -> InstallFailure.DownloadUnreadable
     FailureName.ABORTED -> InstallFailure.Aborted
     FailureName.INSUFFICIENT_STORAGE -> InstallFailure.InsufficientStorage
@@ -103,8 +104,11 @@ private fun InstallState.failureName(): String? = when (this) {
 private fun InstallState.rejectionMessage(): String? =
     ((this as? InstallState.Failed)?.reason as? InstallFailure.Rejected)?.message
 
+private fun InstallState.httpStatus(): Int? =
+    ((this as? InstallState.Failed)?.reason as? InstallFailure.DownloadFailed)?.httpStatus
+
 private fun InstallFailure.name(): String = when (this) {
-    InstallFailure.DownloadFailed -> FailureName.DOWNLOAD_FAILED
+    is InstallFailure.DownloadFailed -> FailureName.DOWNLOAD_FAILED
     InstallFailure.DownloadUnreadable -> FailureName.DOWNLOAD_UNREADABLE
     InstallFailure.Aborted -> FailureName.ABORTED
     InstallFailure.InsufficientStorage -> FailureName.INSUFFICIENT_STORAGE

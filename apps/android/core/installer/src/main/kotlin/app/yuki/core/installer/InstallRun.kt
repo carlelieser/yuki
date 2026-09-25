@@ -31,7 +31,7 @@ internal fun isRetryable(terminal: InstallState, runAttemptCount: Int): Boolean 
     val failure = (terminal as? InstallState.Failed)?.reason ?: return false
     val hasAttemptsLeft = runAttemptCount + 1 < INSTALL_MAX_ATTEMPTS
 
-    return failure == InstallFailure.DownloadFailed && hasAttemptsLeft
+    return failure is InstallFailure.DownloadFailed && hasAttemptsLeft
 }
 
 private val QUEUED = InstallState.Downloading(downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L))

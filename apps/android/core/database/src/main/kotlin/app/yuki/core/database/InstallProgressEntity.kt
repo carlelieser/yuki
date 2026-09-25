@@ -16,6 +16,7 @@ data class InstallProgressEntity(
     val bytesTotal: Long,
     val failureReason: String?,
     val failureMessage: String?,
+    val failureCode: Int?,
     @ColumnInfo(defaultValue = "0") val createdAt: Long,
     val updatedAt: Long,
 )

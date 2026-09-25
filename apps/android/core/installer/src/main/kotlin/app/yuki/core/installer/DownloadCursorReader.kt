@@ -17,13 +17,17 @@ internal data class DownloadSnapshot(
     val isFailed: Boolean get() = status == DownloadManager.STATUS_FAILED
 
     fun toFailure(downloadUrl: String): InstallException = InstallException(
-        failure = if (reason == DownloadManager.ERROR_INSUFFICIENT_SPACE) {
-            InstallFailure.InsufficientStorage
-        } else {
-            InstallFailure.DownloadFailed
-        },
+        failure = failureFor(reason),
         message = "DownloadManager failed for $downloadUrl with reason $reason",
     )
+}
+
+private val HTTP_ERROR_STATUSES = 400..599
+
+private fun failureFor(reason: Int): InstallFailure = when (reason) {
+    DownloadManager.ERROR_INSUFFICIENT_SPACE -> InstallFailure.InsufficientStorage
+    in HTTP_ERROR_STATUSES -> InstallFailure.DownloadFailed(httpStatus = reason)
+    else -> InstallFailure.DownloadFailed(httpStatus = null)
 }
 
 internal class DownloadCursorReader(private val manager: DownloadManager) {
