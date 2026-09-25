@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">Library</string>
+    <string name="library_empty_action">Browse apps</string>
+    <string name="library_clear_filter">Clear filter</string>
+    <string name="library_missing">We couldn\'t load your library.</string>
+    <string name="library_dismiss">Dismiss</string>
+    <string name="library_filter_description">Filter by %1$s</string>
+
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_all_empty_title">Your library is empty</string>
+    <string name="library_filter_all_empty_description">Apps you install show up here.</string>
+    <string name="library_filter_installed">Installed</string>
+    <string name="library_filter_installed_empty_title">No installed apps</string>
+    <string name="library_filter_installed_empty_description">Install an app to see it here.</string>
+    <string name="library_filter_not_installed">Not installed</string>
+    <string name="library_filter_not_installed_empty_title">Nothing left to install</string>
+    <string name="library_filter_not_installed_empty_description">All apps are already installed.</string>
+
+    <string name="library_supporting_installing">Installing</string>
+    <string name="library_supporting_pending">Waiting for confirmation</string>
+    <string name="library_supporting_unknown_version">Version unknown</string>
+    <string name="library_supporting_not_installed">Not installed</string>
+
+    <string name="library_settings_section">Library</string>
+    <string name="library_settings_open">Open library</string>
+    <string name="library_settings_sync">Sync</string>
+
+    <string name="library_sync_failed">Could not sync your library. Try again.</string>
+    <string name="library_sync_up_to_date">Your library is up to date.</string>
+    <plurals name="library_sync_added">
+        <item quantity="one">Added %1$d app to your library.</item>
+        <item quantity="other">Added %1$d apps to your library.</item>
+    </plurals>
+    <plurals name="library_sync_partial">
+        <item quantity="one">Added %1$d, but %2$d could not be synced.</item>
+        <item quantity="other">Added %1$d, but %2$d could not be synced.</item>
+    </plurals>
+</resources>

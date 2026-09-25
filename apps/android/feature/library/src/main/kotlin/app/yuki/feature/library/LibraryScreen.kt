@@ -35,14 +35,12 @@ import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
 import app.yuki.core.designsystem.component.installFailureBadge
-import app.yuki.core.designsystem.component.installFailureLabel
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.UiState
 
 const val LIBRARY_LIST_TAG = "libraryList"
 const val LIBRARY_DISMISS_TAG = "libraryDismiss"
-const val LIBRARY_DISMISS_DESCRIPTION = "Dismiss"
 
 @Composable
 fun LibraryScreen(
@@ -95,7 +93,7 @@ internal fun LibraryContentScreen(
     modifier: Modifier = Modifier,
 ) {
     YukiScreen(
-        title = LIBRARY_TITLE,
+        title = stringResource(R.string.library_title),
         trailing = { LibraryFilterHeader(state = state, actions = actions) },
         modifier = modifier,
     ) {
@@ -133,7 +131,7 @@ private fun LibraryBody(
             is UiState.Loading -> YukiScreenCenter(contentPadding) { YukiLoadingIndicator() }
 
             is UiState.Failure -> YukiScreenCenter(contentPadding) {
-                FailureState(reason = settled.reason, missingMessage = LIBRARY_MISSING_MESSAGE)
+                FailureState(reason = settled.reason, missingMessage = stringResource(R.string.library_missing))
             }
 
             is UiState.Success -> LibraryList(
@@ -208,7 +206,7 @@ private fun LibraryDismissButton(onDismiss: () -> Unit) {
         ) {
             Icon(
                 imageVector = YukiIcons.Close,
-                contentDescription = LIBRARY_DISMISS_DESCRIPTION,
+                contentDescription = stringResource(R.string.library_dismiss),
             )
         }
     }
@@ -224,8 +222,7 @@ private fun LibraryRow(
 
     if (install is InstallState.Failed) {
         return ProductListItem(
-            content = item.listItem.copy(
-                supporting = stringResource(installFailureLabel(install.reason)),
+            content = item.toListItem().copy(
                 badges = ListingBadges(listOf(installFailureBadge(install.reason))),
             ),
             modifier = modifier.clickable(onClick = rowActions.onClick),
@@ -234,7 +231,7 @@ private fun LibraryRow(
     }
 
     ClickableProductListItem(
-        content = item.listItem,
+        content = item.toListItem(),
         onClick = rowActions.onClick,
         modifier = modifier,
     )
@@ -249,10 +246,10 @@ private data class LibraryRowActions(
 private fun LibraryEmpty(onExploreClick: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
-            title = LibraryFilter.All.emptyTitle,
-            description = LibraryFilter.All.emptyDescription,
+            title = stringResource(LibraryFilter.All.copy.emptyTitle),
+            description = stringResource(LibraryFilter.All.copy.emptyDescription),
             icon = YukiIcons.GridView,
-            actionLabel = LIBRARY_EMPTY_ACTION,
+            actionLabel = stringResource(R.string.library_empty_action),
             onAction = onExploreClick,
         ),
     )
@@ -262,16 +259,11 @@ private fun LibraryEmpty(onExploreClick: () -> Unit) {
 private fun LibraryNoMatches(filter: LibraryFilter, onClearFilter: () -> Unit) {
     CollectionEmpty(
         content = EmptyContent(
-            title = filter.emptyTitle,
-            description = filter.emptyDescription,
+            title = stringResource(filter.copy.emptyTitle),
+            description = stringResource(filter.copy.emptyDescription),
             icon = YukiIcons.GridView,
-            actionLabel = LIBRARY_CLEAR_FILTER_ACTION,
+            actionLabel = stringResource(R.string.library_clear_filter),
             onAction = onClearFilter,
         ),
     )
 }
-
-internal const val LIBRARY_TITLE = "Library"
-internal const val LIBRARY_EMPTY_ACTION = "Browse apps"
-internal const val LIBRARY_CLEAR_FILTER_ACTION = "Clear filter"
-internal const val LIBRARY_MISSING_MESSAGE = "We couldn't load your library."

@@ -60,8 +60,8 @@ class LibraryFilterTest {
 
     @Test
     fun `each filter names its own empty state`() {
-        val titles = LibraryFilter.entries.map(LibraryFilter::emptyTitle)
-        val descriptions = LibraryFilter.entries.map(LibraryFilter::emptyDescription)
+        val titles = LibraryFilter.entries.map { filter -> filter.copy.emptyTitle }
+        val descriptions = LibraryFilter.entries.map { filter -> filter.copy.emptyDescription }
 
         assertEquals(titles.size, titles.toSet().size)
         assertEquals(descriptions.size, descriptions.toSet().size)

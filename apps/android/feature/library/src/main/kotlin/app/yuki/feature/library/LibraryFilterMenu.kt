@@ -14,10 +14,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.YukiIcons
 
 const val LIBRARY_FILTER_TAG = "libraryFilter"
-const val LIBRARY_FILTER_DESCRIPTION = "Filter by"
 
 @Composable
 internal fun LibraryFilterSelector(
@@ -34,7 +34,10 @@ internal fun LibraryFilterSelector(
         ) {
             Icon(
                 imageVector = YukiIcons.Sort,
-                contentDescription = "$LIBRARY_FILTER_DESCRIPTION ${selected.label}",
+                contentDescription = stringResource(
+                    R.string.library_filter_description,
+                    stringResource(selected.copy.label),
+                ),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -59,7 +62,7 @@ private fun LibraryFilterMenu(
     DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
         LibraryFilter.entries.forEach { filter ->
             DropdownMenuItem(
-                text = { Text(text = filter.label) },
+                text = { Text(text = stringResource(filter.copy.label)) },
                 onClick = { onFilterSelected(filter) },
             )
         }

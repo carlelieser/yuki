@@ -19,11 +19,11 @@ class LibrarySyncViewModel @Inject internal constructor(
     store: SessionStore,
 ) : ViewModel() {
     private val syncing = MutableStateFlow(false)
-    private val messages = MutableStateFlow<String?>(null)
+    private val messages = MutableStateFlow<SyncMessage?>(null)
 
     val isSyncing: StateFlow<Boolean> = syncing.asStateFlow()
 
-    val message: StateFlow<String?> = messages.asStateFlow()
+    val message: StateFlow<SyncMessage?> = messages.asStateFlow()
 
     val isSignedIn: StateFlow<Boolean> = store.session
         .map { session -> session != null }
@@ -44,7 +44,7 @@ class LibrarySyncViewModel @Inject internal constructor(
             syncing.value = false
             messages.value = outcome.fold(
                 onSuccess = ::syncMessage,
-                onFailure = { SYNC_FAILED },
+                onFailure = { SyncMessage.Failed },
             )
         }
     }
@@ -54,13 +54,10 @@ class LibrarySyncViewModel @Inject internal constructor(
     }
 }
 
-internal const val SYNC_FAILED = "Could not sync your library. Try again."
-internal const val SYNC_UP_TO_DATE = "Your library is up to date."
-
-internal fun syncMessage(result: LibrarySyncResult): String = when {
-    result.failed > 0 -> "Added ${result.uploaded}, but ${result.failed} could not be synced."
-    result.uploaded > 0 -> "Added ${result.uploaded} to your library."
-    else -> SYNC_UP_TO_DATE
+internal fun syncMessage(result: LibrarySyncResult): SyncMessage = when {
+    result.failed > 0 -> SyncMessage.Partial(uploaded = result.uploaded, failed = result.failed)
+    result.uploaded > 0 -> SyncMessage.Added(uploaded = result.uploaded)
+    else -> SyncMessage.UpToDate
 }
 
 private const val SUBSCRIPTION_TIMEOUT = 5_000L

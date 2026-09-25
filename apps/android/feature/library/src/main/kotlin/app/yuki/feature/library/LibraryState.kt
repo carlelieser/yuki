@@ -1,6 +1,6 @@
 package app.yuki.feature.library
 
-import app.yuki.core.designsystem.component.ProductListItemContent
+import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.LibraryEntry
@@ -33,24 +33,40 @@ data class LibraryItem(
 
     val failure: InstallFailure? get() = (install as? InstallState.Failed)?.reason
 
-    val listItem: ProductListItemContent get() = ProductListItemContent(
-        title = entry.title,
-        supporting = supportingText(),
-        iconUrl = entry.iconUrl,
-        installState = install,
-    )
-
-    private fun supportingText(): String = when (install) {
-        is InstallState.Downloading -> if (install.size.isTotalKnown) install.size.label else ""
-        InstallState.Installing -> LIBRARY_INSTALLING_SUPPORTING
-        InstallState.PendingUserAction -> LIBRARY_PENDING_SUPPORTING
-        else -> settledSupportingText()
+    val supporting: LibrarySupporting get() = when (install) {
+        is InstallState.Downloading -> downloadSupporting(install)
+        InstallState.Installing -> LibrarySupporting.Installing
+        InstallState.PendingUserAction -> LibrarySupporting.Pending
+        is InstallState.Failed -> LibrarySupporting.Failure(install.reason)
+        else -> settledSupporting()
     }
 
-    private fun settledSupportingText(): String = when {
-        !isInstalled -> LIBRARY_NOT_INSTALLED_SUPPORTING
-        else -> entry.versionTag.ifEmpty { LIBRARY_UNKNOWN_VERSION_SUPPORTING }
+    private fun downloadSupporting(install: InstallState.Downloading): LibrarySupporting =
+        if (install.size.isTotalKnown) LibrarySupporting.Download(install.size) else LibrarySupporting.None
+
+    private fun settledSupporting(): LibrarySupporting = when {
+        !isInstalled -> LibrarySupporting.NotInstalled
+        entry.versionTag.isEmpty() -> LibrarySupporting.UnknownVersion
+        else -> LibrarySupporting.Version(entry.versionTag)
     }
+}
+
+sealed interface LibrarySupporting {
+    data class Version(val tag: String) : LibrarySupporting
+
+    data object UnknownVersion : LibrarySupporting
+
+    data object NotInstalled : LibrarySupporting
+
+    data object Installing : LibrarySupporting
+
+    data object Pending : LibrarySupporting
+
+    data class Download(val size: DownloadSize) : LibrarySupporting
+
+    data class Failure(val reason: InstallFailure) : LibrarySupporting
+
+    data object None : LibrarySupporting
 }
 
 data class LibraryContent(
@@ -71,8 +87,3 @@ private const val RANK_PENDING = 1
 private const val RANK_FAILED = 2
 private const val RANK_INSTALLED = 3
 private const val RANK_NOT_INSTALLED = 4
-
-internal const val LIBRARY_INSTALLING_SUPPORTING = "Installing"
-internal const val LIBRARY_PENDING_SUPPORTING = "Waiting for confirmation"
-internal const val LIBRARY_UNKNOWN_VERSION_SUPPORTING = "Version unknown"
-internal const val LIBRARY_NOT_INSTALLED_SUPPORTING = "Not installed"

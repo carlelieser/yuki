@@ -169,7 +169,10 @@ class LibraryViewModelTest {
 
         viewModel.state.test {
             assertEquals(UiState.Loading, awaitItem())
-            assertEquals(TERMUX.versionTag, singleItem(awaitItem()).listItem.supporting)
+            assertEquals(
+                LibrarySupporting.Version(TERMUX.versionTag),
+                singleItem(awaitItem()).supporting,
+            )
 
             progress.write(
                 InstallProgress(
@@ -179,7 +182,10 @@ class LibraryViewModelTest {
                 ),
             )
 
-            assertEquals("500 B / 1 KB", singleItem(awaitItem()).listItem.supporting)
+            assertEquals(
+                LibrarySupporting.Download(HALF_DOWNLOADED),
+                singleItem(awaitItem()).supporting,
+            )
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -226,8 +232,8 @@ class LibraryViewModelTest {
             )
 
             val item = singleItem(awaitItem())
-            assertEquals("Obsidian", item.listItem.title)
-            assertEquals("500 B / 1 KB", item.listItem.supporting)
+            assertEquals("Obsidian", item.entry.title)
+            assertEquals(LibrarySupporting.Download(HALF_DOWNLOADED), item.supporting)
             assertTrue(item.isDownloading)
             cancelAndIgnoreRemainingEvents()
         }

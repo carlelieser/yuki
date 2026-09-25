@@ -1,25 +1,27 @@
 package app.yuki.feature.library
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.designsystem.component.APP_ICON_PROGRESS_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallFailure
-import app.yuki.core.model.LibraryEntry
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.LibraryEntry
 import app.yuki.core.model.UiState
 import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
@@ -31,6 +33,9 @@ import org.junit.runner.RunWith
 class LibraryScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id, *args)
 
     @Test
     fun anEmptyLibraryRendersTheEmptyStateAndNotAFailure() {
@@ -45,7 +50,7 @@ class LibraryScreenTest {
         var exploreClicks = 0
         setContent(UiState.Success(LibraryContent(emptyList())), onExploreClick = { exploreClicks++ })
 
-        composeRule.onNodeWithText(LIBRARY_EMPTY_ACTION).performClick()
+        composeRule.onNodeWithText(text(R.string.library_empty_action)).performClick()
 
         assertEquals(1, exploreClicks)
     }
@@ -80,7 +85,7 @@ class LibraryScreenTest {
     fun anInstallingRowSaysInstallingRatherThanTheVersion() {
         setContent(UiState.Success(LibraryContent(listOf(item(InstallState.Installing)))))
 
-        composeRule.onNodeWithText(LIBRARY_INSTALLING_SUPPORTING).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.library_supporting_installing)).assertIsDisplayed()
         composeRule.onNodeWithText(TERMUX.versionTag).assertDoesNotExist()
     }
 
@@ -156,7 +161,12 @@ class LibraryScreenTest {
         )
 
         composeRule
-            .onNodeWithContentDescription("$LIBRARY_FILTER_DESCRIPTION Not installed")
+            .onNodeWithContentDescription(
+                text(
+                    R.string.library_filter_description,
+                    text(R.string.library_filter_not_installed),
+                ),
+            )
             .assertIsDisplayed()
     }
 
@@ -175,8 +185,8 @@ class LibraryScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(LibraryFilter.NotInstalled.emptyTitle).assertIsDisplayed()
-        composeRule.onNodeWithText(LibraryFilter.All.emptyTitle).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.library_filter_not_installed_empty_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.library_filter_all_empty_title)).assertDoesNotExist()
     }
 
     @Test
@@ -189,7 +199,7 @@ class LibraryScreenTest {
             onFilterSelected = selected::add,
         )
 
-        composeRule.onNodeWithText(LIBRARY_CLEAR_FILTER_ACTION).performClick()
+        composeRule.onNodeWithText(text(R.string.library_clear_filter)).performClick()
 
         assertEquals(listOf(LibraryFilter.All), selected)
     }
