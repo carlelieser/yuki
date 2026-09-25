@@ -18,6 +18,7 @@ internal object ProgressStatus {
 private object FailureName {
     const val DOWNLOAD_FAILED = "download_failed"
     const val DOWNLOAD_UNREADABLE = "download_unreadable"
+    const val NOT_AN_APK = "not_an_apk"
     const val ABORTED = "aborted"
     const val INSUFFICIENT_STORAGE = "insufficient_storage"
     const val INCOMPATIBLE = "incompatible"
@@ -70,6 +71,7 @@ private fun InstallProgressEntity.toState(): InstallState = when (status) {
 private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureReason) {
     FailureName.DOWNLOAD_FAILED -> InstallFailure.DownloadFailed(failureCode)
     FailureName.DOWNLOAD_UNREADABLE -> InstallFailure.DownloadUnreadable
+    FailureName.NOT_AN_APK -> InstallFailure.NotAnApk
     FailureName.ABORTED -> InstallFailure.Aborted
     FailureName.INSUFFICIENT_STORAGE -> InstallFailure.InsufficientStorage
     FailureName.INCOMPATIBLE -> InstallFailure.Incompatible
@@ -110,6 +112,7 @@ private fun InstallState.httpStatus(): Int? =
 private fun InstallFailure.name(): String = when (this) {
     is InstallFailure.DownloadFailed -> FailureName.DOWNLOAD_FAILED
     InstallFailure.DownloadUnreadable -> FailureName.DOWNLOAD_UNREADABLE
+    InstallFailure.NotAnApk -> FailureName.NOT_AN_APK
     InstallFailure.Aborted -> FailureName.ABORTED
     InstallFailure.InsufficientStorage -> FailureName.INSUFFICIENT_STORAGE
     InstallFailure.Incompatible -> FailureName.INCOMPATIBLE

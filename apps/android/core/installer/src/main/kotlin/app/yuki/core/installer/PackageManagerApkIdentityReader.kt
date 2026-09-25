@@ -15,19 +15,8 @@ internal class PackageManagerApkIdentityReader @Inject constructor(
         requireReadableFile(apk)
 
         val info = context.packageManager.getPackageArchiveInfo(apk.absolutePath, 0)
-            ?: throw InstallException(
-                InstallFailure.DownloadUnreadable,
-                "Could not parse an APK from the file downloaded to ${apk.absolutePath}",
-            )
 
-        if (info.packageName.isEmpty()) {
-            throw InstallException(
-                InstallFailure.DownloadUnreadable,
-                "The file downloaded to ${apk.absolutePath} declares no package name",
-            )
-        }
-
-        return ApkIdentity(info.packageName, info.longVersionCode())
+        return archiveIdentity(apk, info?.toIdentity())
     }
 
     private fun requireReadableFile(apk: File) {
@@ -39,6 +28,25 @@ internal class PackageManagerApkIdentityReader @Inject constructor(
         )
     }
 }
+
+internal fun archiveIdentity(apk: File, parsed: ApkIdentity?): ApkIdentity {
+    val identity = parsed ?: throw InstallException(
+        InstallFailure.NotAnApk,
+        "Could not parse an APK from the file downloaded to ${apk.absolutePath}",
+    )
+
+    if (identity.packageName.isEmpty()) {
+        throw InstallException(
+            InstallFailure.NotAnApk,
+            "The file downloaded to ${apk.absolutePath} declares no package name",
+        )
+    }
+
+    return identity
+}
+
+private fun PackageInfo.toIdentity(): ApkIdentity =
+    ApkIdentity(packageName = packageName.orEmpty(), versionCode = longVersionCode())
 
 private fun PackageInfo.longVersionCode(): Long =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

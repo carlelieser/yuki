@@ -14,6 +14,7 @@ const val INSTALL_FAILURE_BADGE_TAG = "installFailureBadge"
 private val failureLabels: Map<KClass<out InstallFailure>, Int> = mapOf(
     InstallFailure.DownloadFailed::class to R.string.designsystem_install_failure_download_failed,
     InstallFailure.DownloadUnreadable::class to R.string.designsystem_install_failure_download_unreadable,
+    InstallFailure.NotAnApk::class to R.string.designsystem_install_failure_not_an_apk,
     InstallFailure.Aborted::class to R.string.designsystem_install_failure_aborted,
     InstallFailure.InsufficientStorage::class to R.string.designsystem_install_failure_insufficient_storage,
     InstallFailure.Incompatible::class to R.string.designsystem_install_failure_incompatible,

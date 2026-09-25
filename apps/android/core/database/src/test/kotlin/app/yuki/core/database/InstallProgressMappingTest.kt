@@ -70,6 +70,7 @@ class InstallProgressMappingTest {
         val reasons = listOf(
             InstallFailure.DownloadFailed(httpStatus = null),
             InstallFailure.DownloadUnreadable,
+            InstallFailure.NotAnApk,
             InstallFailure.Aborted,
             InstallFailure.InsufficientStorage,
             InstallFailure.Incompatible,

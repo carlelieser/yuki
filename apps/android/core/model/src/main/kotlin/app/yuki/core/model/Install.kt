@@ -5,6 +5,8 @@ sealed interface InstallFailure {
 
     data object DownloadUnreadable : InstallFailure
 
+    data object NotAnApk : InstallFailure
+
     data object Aborted : InstallFailure
 
     data object InsufficientStorage : InstallFailure
