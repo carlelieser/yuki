@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="updates_title">Updates</string>
+    <string name="updates_empty_title">Everything is up to date</string>
+    <string name="updates_empty_description">Any available updates will show up here.</string>
+    <string name="updates_missing">We couldn\'t check for updates.</string>
+    <string name="updates_version_range">%1$s → %2$s</string>
+    <string name="updates_unchecked_title">Could not check</string>
+    <string name="updates_unchecked_label">Check failed</string>
+    <string name="updates_unchecked_offline">No connection</string>
+    <string name="updates_unchecked_not_found">Not in the catalog</string>
+    <string name="updates_unchecked_sign_in">Sign in again</string>
+    <string name="updates_unchecked_unexpected">Unexpected error</string>
+    <string name="updates_unchecked_server">Server error %1$d</string>
+</resources>

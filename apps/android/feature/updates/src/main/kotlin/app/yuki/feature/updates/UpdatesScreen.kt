@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.CollectionEmpty
@@ -61,7 +62,7 @@ internal fun UpdatesContentScreen(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
-    YukiScreen(title = UPDATES_TITLE, modifier = modifier) {
+    YukiScreen(title = stringResource(R.string.updates_title), modifier = modifier) {
         YukiPullToRefresh(
             isRefreshing = refresh.isRefreshing,
             onRefresh = refresh.onPullToRefresh,
@@ -84,7 +85,7 @@ private fun UpdatesBody(
             is UiState.Failure -> YukiScreenCenter(contentPadding) {
                 FailureState(
                     reason = settled.reason,
-                    missingMessage = UPDATES_MISSING_MESSAGE,
+                    missingMessage = stringResource(R.string.updates_missing),
                     onRetry = actions.onRetry,
                 )
             }
@@ -124,15 +125,9 @@ private fun UpdatesList(
 private fun UpToDate() {
     CollectionEmpty(
         content = EmptyContent(
-            title = UPDATES_EMPTY_TITLE,
-            description = UPDATES_EMPTY_DESCRIPTION,
+            title = stringResource(R.string.updates_empty_title),
+            description = stringResource(R.string.updates_empty_description),
             icon = YukiIcons.Update,
         ),
     )
 }
-
-internal const val UPDATES_TITLE = "Updates"
-internal const val UPDATES_EMPTY_TITLE = "Everything is up to date"
-internal const val UPDATES_EMPTY_DESCRIPTION =
-    "Any available updates will show up here."
-internal const val UPDATES_MISSING_MESSAGE = "We couldn't check for updates."

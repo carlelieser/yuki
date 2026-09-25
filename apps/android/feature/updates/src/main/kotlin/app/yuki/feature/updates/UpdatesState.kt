@@ -1,5 +1,7 @@
 package app.yuki.feature.updates
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.ProductListItemContent
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.FailureReason
@@ -14,9 +16,14 @@ data class UpdateRow(
 
     val slug: String get() = update.installed.slug
 
-    val listItem: ProductListItemContent get() = ProductListItemContent(
+    @Composable
+    fun toListItem(): ProductListItemContent = ProductListItemContent(
         title = update.installed.title,
-        supporting = "${update.installed.versionTag} $VERSION_ARROW ${update.version.tag}",
+        supporting = stringResource(
+            R.string.updates_version_range,
+            update.installed.versionTag,
+            update.version.tag,
+        ),
         iconUrl = update.installed.iconUrl,
         installState = install,
     )
@@ -45,5 +52,3 @@ data class UpdatesContent(
 
     val hasNoUpdates: Boolean get() = updates.isEmpty()
 }
-
-internal const val VERSION_ARROW = "→"

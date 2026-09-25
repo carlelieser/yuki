@@ -1,6 +1,7 @@
 package app.yuki.feature.updates
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -10,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.designsystem.component.APP_ICON_PROGRESS_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
@@ -31,12 +33,15 @@ class UpdatesScreenTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        InstrumentationRegistry.getInstrumentation().targetContext.getString(id, *args)
+
     @Test
     fun noUpdatesRendersTheEmptyStateAndNotAFailure() {
         setContent(UiState.Success(UpdatesContent(emptyList(), emptyList())))
 
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText(UPDATES_EMPTY_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_empty_title)).assertIsDisplayed()
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
     }
 
@@ -45,7 +50,7 @@ class UpdatesScreenTest {
         setContent(UiState.Success(UpdatesContent(listOf(termuxRow()), emptyList())))
 
         composeRule.onNodeWithText("Termux").assertIsDisplayed()
-        composeRule.onNodeWithText("v0.118.0 $VERSION_ARROW v0.119.0").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_version_range, "v0.118.0", "v0.119.0")).assertIsDisplayed()
         composeRule.onNodeWithTag(COLLECTION_EMPTY_TAG).assertDoesNotExist()
     }
 
@@ -62,7 +67,7 @@ class UpdatesScreenTest {
 
         composeRule.onNodeWithText("Termux").assertIsDisplayed()
         composeRule.onNodeWithTag(UNCHECKED_ROW_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText(UNCHECKED_LABEL).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_unchecked_label)).assertIsDisplayed()
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
     }
 
@@ -78,8 +83,8 @@ class UpdatesScreenTest {
         )
 
         composeRule.onNodeWithTag(UNCHECKED_ROW_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText(UNCHECKED_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(UPDATES_EMPTY_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(text(R.string.updates_unchecked_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_empty_title)).assertDoesNotExist()
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertDoesNotExist()
     }
 
@@ -87,8 +92,8 @@ class UpdatesScreenTest {
     fun theUpToDateScreenAppearsOnlyWhenThereIsNothingToShow() {
         setContent(UiState.Success(UpdatesContent(updates = emptyList(), unchecked = emptyList())))
 
-        composeRule.onNodeWithText(UPDATES_EMPTY_TITLE).assertIsDisplayed()
-        composeRule.onNodeWithText(UPDATES_EMPTY_DESCRIPTION).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_empty_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.updates_empty_description)).assertIsDisplayed()
     }
 
     @Test
