@@ -71,7 +71,10 @@ export async function iconFrom(
 	const declared = await declaredIconFrom(tree, read);
 	if (declared !== null) {
 		if (declared.xml !== null) {
-			const vector = await buildVectorIcon(tree, read, declared.xml);
+			const vector = await buildVectorIcon(tree, read, {
+				declaredPath: declared.xml,
+				download: (path) => downloadBlob(owner, name, branch, path)
+			});
 			if (vector !== null && !vector.fidelity.unresolved) return vector.svg;
 
 			if (vector !== null) {
@@ -103,7 +106,9 @@ export async function iconFrom(
 		}
 	}
 
-	const vector = await buildVectorIcon(tree, read);
+	const vector = await buildVectorIcon(tree, read, {
+		download: (path) => downloadBlob(owner, name, branch, path)
+	});
 	if (vector !== null && !vector.fidelity.unresolved) return vector.svg;
 
 	const discovered = await discoveredRasterFrom(tree, read, owner, name, branch);

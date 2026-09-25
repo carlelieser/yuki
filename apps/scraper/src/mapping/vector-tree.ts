@@ -1,4 +1,4 @@
-const ELEMENT = /<(\/?)(vector|group|path|clip-path)\b([^>]*?)(\/?)>/g;
+const ELEMENT = /<(\/?)(vector|group|path|clip-path|image)\b([^>]*?)(\/?)>/g;
 
 const MAX_NODES = 256;
 const MAX_DEPTH = 32;
@@ -11,7 +11,10 @@ export type VectorGroup = {
 	children: VectorNode[];
 };
 
-export type VectorNode = { kind: 'group'; group: VectorGroup } | { kind: 'path'; path: VectorPath };
+export type VectorNode =
+	| { kind: 'group'; group: VectorGroup }
+	| { kind: 'path'; path: VectorPath }
+	| { kind: 'image'; tag: string };
 
 function bodyOf(source: string, from: number, name: string): { body: string; end: number } {
 	const close = `</${name}>`;
@@ -41,6 +44,15 @@ export function parseVectorTree(source: string): VectorGroup | null {
 		if (name === 'clip-path') {
 			const data = attributes.match(/android:pathData="([^"]*)"/)?.[1];
 			if (data !== undefined) current.clips.push(data);
+			continue;
+		}
+
+		if (name === 'image') {
+			if (isClosing) continue;
+			if (nodes >= MAX_NODES) break;
+			nodes += 1;
+
+			current.children.push({ kind: 'image', tag: match[0] });
 			continue;
 		}
 

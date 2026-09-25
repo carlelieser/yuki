@@ -129,11 +129,31 @@ function clipAttribute(clips: string[], context: RenderContext): string {
 	return ` clip-path="url(#${id})"`;
 }
 
+function renderImage(tag: string): string | null {
+	const href = attribute(tag, 'href');
+	if (href === null || !href.startsWith('data:image/')) return null;
+
+	const width = numeric(tag, 'width', 0);
+	const height = numeric(tag, 'height', 0);
+	if (width <= 0 || height <= 0) return null;
+
+	return `<image x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="none" xlink:href="${escapeXml(href)}"/>`;
+}
+
 function renderGroup(group: VectorGroup, context: RenderContext): string {
 	const rendered: string[] = [];
 
 	for (const child of group.children) {
 		if (context.budget.paths <= 0) break;
+
+		if (child.kind === 'image') {
+			const image = renderImage(child.tag);
+			if (image === null) continue;
+
+			context.budget.paths -= 1;
+			rendered.push(image);
+			continue;
+		}
 
 		if (child.kind === 'path') {
 			const path = renderPath(child.path, context);

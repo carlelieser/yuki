@@ -1,12 +1,31 @@
 import type { GithubTree } from '@yuki/github';
-import { blobs, findAdaptiveIconPath, splitPath } from './icon.ts';
+import { blobs, findAdaptiveIconPath, findRasterForReference, splitPath } from './icon.ts';
 import { parseAdaptiveIcon, parseColors, vectorToSvg } from './vector-icon.ts';
 import { readShapeFill } from './solid-layer.ts';
 import { composeAdaptiveSvg, toDataUri } from './adaptive-svg.ts';
-import { drawableKindOf, readLayerItems } from './drawable-kind.ts';
+import { drawableKindOf } from './drawable-kind.ts';
 import { createFidelity, markUnresolved, type Fidelity } from './fidelity.ts';
+import {
+	flattenDrawable,
+	flattenReference,
+	rasterLayer,
+	type DrawableReference,
+	type DrawableSources
+} from './drawable-layers.ts';
 
 export type VectorIconResult = { svg: string; fidelity: Fidelity };
+
+export type VectorIconOptions = {
+	declaredPath?: string | null;
+	download?: (path: string) => Promise<Buffer | null>;
+};
+
+const RASTER_TYPES: Record<string, string> = {
+	png: 'image/png',
+	webp: 'image/webp',
+	jpg: 'image/jpeg',
+	jpeg: 'image/jpeg'
+};
 
 function qualifierRank(loweredPath: string, loweredResourceDir: string): number | null {
 	const rest = loweredPath.slice(`${loweredResourceDir}/`.length);
@@ -22,53 +41,6 @@ function qualifierRank(loweredPath: string, loweredResourceDir: string): number 
 }
 
 const SOURCE_SET_BONUS = 10;
-
-const MAX_LAYER_DEPTH = 4;
-
-const VECTOR_OPEN = /<vector\b[^>]*>/;
-
-function viewportOf(vector: string): { width: number; height: number } | null {
-	const header = vector.match(VECTOR_OPEN)?.[0];
-	if (header === undefined) return null;
-
-	const width = Number.parseFloat(header.match(/android:viewportWidth="([\d.]+)"/)?.[1] ?? '');
-	const height = Number.parseFloat(header.match(/android:viewportHeight="([\d.]+)"/)?.[1] ?? '');
-	if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
-
-	return { width, height };
-}
-
-function mergeVectors(layers: string[]): string | null {
-	const base = layers[0];
-	if (base === undefined) return null;
-
-	const target = viewportOf(base);
-	if (target === null) return null;
-
-	const bodies: string[] = [];
-	for (const layer of layers) {
-		const header = layer.match(VECTOR_OPEN)?.[0];
-		if (header === undefined) continue;
-
-		const inner = layer.slice(layer.indexOf(header) + header.length).replace(/<\/vector>\s*$/, '');
-		if (inner.trim() === '') continue;
-
-		const viewport = viewportOf(layer);
-		if (viewport === null) continue;
-
-		const scaleX = target.width / viewport.width;
-		const scaleY = target.height / viewport.height;
-		bodies.push(
-			scaleX === 1 && scaleY === 1
-				? inner
-				: `<group android:scaleX="${scaleX}" android:scaleY="${scaleY}">${inner}</group>`
-		);
-	}
-
-	if (bodies.length === 0) return null;
-
-	return `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:viewportWidth="${target.width}" android:viewportHeight="${target.height}">${bodies.join('')}</vector>`;
-}
 
 const COLOR_VALUES_FILE =
 	/\/[^/]*colou?rs?[^/]*\.xml$|\/[^/]*ic_launcher[^/]*background[^/]*\.xml$/;
@@ -134,29 +106,95 @@ export function resourceDirFor(adaptivePath: string): string {
 	return resourceDirOf(adaptivePath);
 }
 
+type Background = { kind: 'color' | 'vector'; value: string } | null;
+
 export async function buildVectorIcon(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>,
-	declaredPath: string | null = null
+	options: VectorIconOptions = {}
 ): Promise<VectorIconResult | null> {
 	const fidelity = createFidelity();
 
-	const adaptivePath = declaredPath ?? findAdaptiveIconPath(tree);
+	const adaptivePath = options.declaredPath ?? findAdaptiveIconPath(tree);
 	if (adaptivePath === null) return null;
 
 	const adaptiveXml = await read(adaptivePath);
 	if (adaptiveXml === null) return null;
 
 	const refs = parseAdaptiveIcon(adaptiveXml);
-	const rootKind = drawableKindOf(adaptiveXml);
-	const isPlainVector = refs.foreground === null && rootKind === 'vector';
+	const isPlainVector = refs.foreground === null && drawableKindOf(adaptiveXml) === 'vector';
 	if (refs.foreground === null && !isPlainVector) return null;
 
 	const resourceDir = resourceDirOf(adaptivePath);
-	const available = new Set(blobs(tree));
-
 	const colors = await readColorResources(tree, read, resourceDir);
+	const gradients = await readColorGradients(tree, read, resourceDir);
 
+	if (refs.foreground === null) {
+		const svg = vectorToSvg(adaptiveXml, colors, { gradients, fidelity });
+		return svg === null ? null : { svg: toDataUri(svg), fidelity };
+	}
+
+	const sources: DrawableSources = {
+		readDrawable: drawableReaderFor(tree, read, resourceDir),
+		readRaster: options.download === undefined ? null : rasterReaderFor(tree, options.download),
+		fidelity
+	};
+
+	const foreground = await foregroundLayer(refs.foreground, sources);
+	if (foreground === null) return null;
+
+	const background = await backgroundLayer(refs.background, sources);
+	const svg = composeAdaptiveSvg({ background, foreground, colors, gradients, fidelity });
+	return svg === null ? null : { svg: toDataUri(svg), fidelity };
+}
+
+async function foregroundLayer(
+	reference: DrawableReference,
+	sources: DrawableSources
+): Promise<string | null> {
+	if (reference.kind === 'color') {
+		markUnresolved(sources.fidelity, `foreground-reference:${reference.kind}`);
+		return null;
+	}
+	if (reference.kind === 'mipmap') {
+		return rasterLayer(reference, sources, 'foreground-reference:mipmap');
+	}
+
+	return flattenReference(reference, sources);
+}
+
+async function backgroundLayer(
+	reference: DrawableReference | null,
+	sources: DrawableSources
+): Promise<Background> {
+	if (reference === null) return null;
+
+	if (reference.kind === 'color') {
+		const value = reference.name.startsWith('android:')
+			? `@android:color/${reference.name.slice('android:'.length)}`
+			: `@color/${reference.name}`;
+		return { kind: 'color', value };
+	}
+
+	if (reference.kind === 'mipmap') {
+		const raster = await rasterLayer(reference, sources, 'background-reference:mipmap');
+		return raster === null ? null : { kind: 'vector', value: raster };
+	}
+
+	const xml = await sources.readDrawable(reference.name);
+	const shapeFill = xml === null ? null : readShapeFill(xml);
+	if (shapeFill !== null) return { kind: 'color', value: shapeFill };
+
+	const flat =
+		xml === null ? await flattenReference(reference, sources) : await flattenDrawable(xml, sources);
+	return flat === null ? null : { kind: 'vector', value: flat };
+}
+
+async function readColorGradients(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	resourceDir: string
+): Promise<Map<string, string>> {
 	const colorResources: { rank: number; path: string }[] = [];
 	for (const path of blobs(tree)) {
 		const lowered = path.toLowerCase();
@@ -182,9 +220,18 @@ export async function buildVectorIcon(
 		gradients.set(splitPath(path).stem, xml);
 	}
 
-	const readDrawable = async (drawable: string): Promise<string | null> => {
-		const prefix = `${resourceDir}/drawable`;
-		const candidates = [...available].filter((path) => {
+	return gradients;
+}
+
+function drawableReaderFor(
+	tree: GithubTree,
+	read: (path: string) => Promise<string | null>,
+	resourceDir: string
+): (drawable: string) => Promise<string | null> {
+	const prefix = `${resourceDir}/drawable`;
+
+	return async (drawable) => {
+		const candidates = blobs(tree).filter((path) => {
 			if (!path.startsWith(prefix)) return false;
 
 			const { dir, filename, stem } = splitPath(path);
@@ -202,101 +249,20 @@ export async function buildVectorIcon(
 
 		return null;
 	};
+}
 
-	const flatten = async (xml: string, depth: number): Promise<string | null> => {
-		const kind = drawableKindOf(xml);
-		if (kind === 'vector') return xml;
+function rasterReaderFor(
+	tree: GithubTree,
+	download: (path: string) => Promise<Buffer | null>
+): (reference: DrawableReference) => Promise<string | null> {
+	return async (reference) => {
+		const path = findRasterForReference(tree, reference);
+		if (path === null) return null;
 
-		if (kind !== 'layer-list') {
-			markUnresolved(fidelity, `unsupported-drawable:${kind}`);
-			return null;
-		}
+		const type = RASTER_TYPES[path.slice(path.lastIndexOf('.') + 1).toLowerCase()];
+		if (type === undefined) return null;
 
-		if (depth >= MAX_LAYER_DEPTH) {
-			markUnresolved(fidelity, 'layer-list-too-deep');
-			return null;
-		}
-
-		const items = readLayerItems(xml);
-		if (items.length === 0) {
-			markUnresolved(fidelity, 'layer-list-empty');
-			return null;
-		}
-
-		const rendered: string[] = [];
-		for (const item of items) {
-			if (item.kind === 'reference') {
-				if (item.reference.kind !== 'drawable') {
-					markUnresolved(fidelity, `layer-reference:${item.reference.kind}`);
-					continue;
-				}
-
-				const nested = await readDrawable(item.reference.name);
-				if (nested === null) {
-					markUnresolved(fidelity, `missing-drawable:${item.reference.name}`);
-					continue;
-				}
-
-				const flat = await flatten(nested, depth + 1);
-				if (flat !== null) rendered.push(flat);
-				continue;
-			}
-
-			const flat = await flatten(item.xml, depth + 1);
-			if (flat !== null) rendered.push(flat);
-		}
-
-		if (rendered.length === 0) return null;
-
-		return rendered.length === 1 ? (rendered[0] ?? null) : mergeVectors(rendered);
+		const bytes = await download(path);
+		return bytes === null ? null : `data:${type};base64,${bytes.toString('base64')}`;
 	};
-
-	if (refs.foreground === null) {
-		const svg = vectorToSvg(adaptiveXml, colors, { gradients, fidelity });
-		return svg === null ? null : { svg: toDataUri(svg), fidelity };
-	}
-
-	if (refs.foreground.kind !== 'drawable') {
-		markUnresolved(fidelity, `foreground-reference:${refs.foreground.kind}`);
-		return null;
-	}
-
-	const declaredForeground = await readDrawable(refs.foreground.name);
-	if (declaredForeground === null) {
-		markUnresolved(fidelity, `missing-drawable:${refs.foreground.name}`);
-		return null;
-	}
-
-	const foregroundXml = await flatten(declaredForeground, 0);
-	if (foregroundXml === null) return null;
-
-	let background: { kind: 'color' | 'vector'; value: string } | null = null;
-	if (refs.background !== null) {
-		if (refs.background.kind === 'color') {
-			const reference = refs.background.name.startsWith('android:')
-				? `@android:color/${refs.background.name.slice('android:'.length)}`
-				: `@color/${refs.background.name}`;
-			background = { kind: 'color', value: reference };
-		} else if (refs.background.kind === 'mipmap') {
-			markUnresolved(fidelity, 'background-reference:mipmap');
-		} else {
-			const backgroundXml = await readDrawable(refs.background.name);
-			const shapeFill = backgroundXml === null ? null : readShapeFill(backgroundXml);
-
-			if (shapeFill !== null) background = { kind: 'color', value: shapeFill };
-			else if (backgroundXml !== null) {
-				const flat = await flatten(backgroundXml, 0);
-				if (flat !== null) background = { kind: 'vector', value: flat };
-			} else markUnresolved(fidelity, `missing-drawable:${refs.background.name}`);
-		}
-	}
-
-	const svg = composeAdaptiveSvg({
-		background,
-		foreground: foregroundXml,
-		colors,
-		gradients,
-		fidelity
-	});
-	return svg === null ? null : { svg: toDataUri(svg), fidelity };
 }

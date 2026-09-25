@@ -11,6 +11,7 @@ const VECTOR_TAG = /<vector\b[^>]*>/;
 const COLOR_ENTRY = /<color\s+name="([^"]+)"\s*>\s*([^<\s]+)\s*<\/color>/g;
 
 const MAX_SOURCE_BYTES = 64 * 1024;
+const EMBEDDED_IMAGE = /android:href="data:[^"]*"/g;
 export const CANVAS = 108;
 export const VIEWPORT_INSET = 18;
 export const CORNER_RADIUS = 0.2;
@@ -81,7 +82,7 @@ export function vectorToSvg(
 	const gradients = options.gradients ?? new Map<string, string>();
 	const fidelity = options.fidelity ?? createFidelity();
 
-	if (vector.length > MAX_SOURCE_BYTES) {
+	if (vector.replace(EMBEDDED_IMAGE, '').length > MAX_SOURCE_BYTES) {
 		markUnresolved(fidelity, 'source-too-large');
 		return null;
 	}
@@ -104,5 +105,5 @@ export function vectorToSvg(
 	const body = convertPaths(vector, colors, fallbackFill, idPrefix, gradients);
 	if (body === '') return null;
 
-	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${body}</svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 ${width} ${height}">${body}</svg>`;
 }
