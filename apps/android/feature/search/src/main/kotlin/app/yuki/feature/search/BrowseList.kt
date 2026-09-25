@@ -1,5 +1,10 @@
 package app.yuki.feature.search
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -7,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import app.yuki.core.designsystem.component.ClickableProductListItem
@@ -14,22 +20,12 @@ import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.ListingInstalls
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
-import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.component.toProductListItemContent
+import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.failureReason
-
-private val NothingToBrowse = EmptyContent(
-    title = "No apps yet",
-    description = "There is nothing to browse right now. Pull down to refresh.",
-)
 
 internal fun LazyListScope.browseList(
     listings: LazyPagingItems<ListingSummary>,
@@ -71,7 +67,10 @@ internal fun LazyListScope.browseRefreshState(
     if (isSettled && isEmpty) {
         item {
             CollectionEmpty(
-                content = NothingToBrowse,
+                content = EmptyContent(
+                    title = stringResource(R.string.search_browse_empty_title),
+                    description = stringResource(R.string.search_browse_empty_description),
+                ),
                 modifier = Modifier.padding(YukiSpacing.Large),
             )
         }

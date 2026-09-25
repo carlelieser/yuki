@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
@@ -16,7 +17,6 @@ import app.yuki.core.model.UiState
 
 const val SEARCH_SCREEN_TAG = "searchScreen"
 
-internal const val SEARCH_TITLE = "Search"
 
 @Composable
 fun SearchRoute(
@@ -65,7 +65,7 @@ internal fun SearchScreen(
     val content = (state as? UiState.Success)?.data
 
     YukiScreen(
-        title = SEARCH_TITLE,
+        title = stringResource(R.string.search_title),
         modifier = modifier.testTag(SEARCH_SCREEN_TAG),
         trailing = content?.let { active ->
             {

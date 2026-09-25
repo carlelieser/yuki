@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.ClickableProductListItem
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
@@ -24,9 +25,10 @@ import app.yuki.core.model.UiState
 
 const val SEARCH_RESULTS_TAG = "searchResults"
 
+@Composable
 private fun noMatches(query: String) = EmptyContent(
-    title = "No matches",
-    description = "Nothing matched \"$query\". Try a different search.",
+    title = stringResource(R.string.search_no_matches_title),
+    description = stringResource(R.string.search_no_matches_description, query),
 )
 
 @Composable

@@ -5,25 +5,6 @@ import org.junit.Test
 
 class BrowseSortOptionTest {
     @Test
-    fun `the eight web sort options are ported with their labels`() {
-        val labels = BrowseSortOption.entries.map(BrowseSortOption::label)
-
-        assertEquals(
-            listOf(
-                "Most stars",
-                "Fewest stars",
-                "Newest first",
-                "Oldest first",
-                "Recently updated",
-                "Least recently updated",
-                "Name A-Z",
-                "Name Z-A",
-            ),
-            labels,
-        )
-    }
-
-    @Test
     fun `every option round-trips through its wire value`() {
         BrowseSortOption.entries.forEach { option ->
             assertEquals(option, readBrowseSortOption(option.wireValue))

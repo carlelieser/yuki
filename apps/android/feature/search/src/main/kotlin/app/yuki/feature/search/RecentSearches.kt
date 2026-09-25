@@ -12,15 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.SectionHeaderVariant
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val RECENT_SEARCHES_TAG = "recentSearches"
-const val RECENT_REMOVE_DESCRIPTION = "Remove recent search"
-
-internal const val RECENT_SEARCHES_TITLE = "Recent searches"
 
 data class RecentSearchActions(
     val onSelect: (String) -> Unit,
@@ -42,7 +40,7 @@ internal fun RecentSearches(
             .testTag(RECENT_SEARCHES_TAG),
     ) {
         SectionHeader(
-            title = RECENT_SEARCHES_TITLE,
+            title = stringResource(R.string.search_recent_title),
             variant = SectionHeaderVariant.Overline,
         )
 
@@ -66,7 +64,7 @@ private fun RecentSearchRow(entry: String, actions: RecentSearchActions) {
             IconButton(onClick = { actions.onRemove(entry) }) {
                 Icon(
                     imageVector = YukiIcons.Close,
-                    contentDescription = RECENT_REMOVE_DESCRIPTION,
+                    contentDescription = stringResource(R.string.search_recent_remove),
                 )
             }
         },

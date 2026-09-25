@@ -1,6 +1,7 @@
 package app.yuki.feature.search
 
 import androidx.activity.ComponentActivity
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
@@ -19,6 +20,7 @@ import app.yuki.core.designsystem.component.BACK_ACTION_TAG
 import app.yuki.core.designsystem.component.COLLECTION_EMPTY_TAG
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
+import app.yuki.core.designsystem.component.labelRes
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
@@ -26,11 +28,13 @@ import app.yuki.core.model.UiState
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
 import org.junit.Test
-import app.yuki.core.designsystem.component.labelRes
 
 class SearchScreenTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    private fun text(@StringRes id: Int, vararg args: Any): String =
+        composeRule.activity.getString(id, *args)
 
     private val noCallbacks = SearchCallbacks(
         onQueryChange = {},
@@ -112,7 +116,12 @@ class SearchScreenTest {
     fun theSortControlSitsInTheScreenHeaderAndNamesTheActiveSort() {
         render(browsing(sort = BrowseSortOption.NameAscending))
 
-        composeRule.onNodeWithContentDescription("$SORT_DESCRIPTION Name A-Z")
+        composeRule.onNodeWithContentDescription(
+            text(
+                R.string.search_sort_description,
+                text(R.string.search_sort_name_ascending),
+            ),
+        )
             .assertIsDisplayed()
     }
 
@@ -140,7 +149,7 @@ class SearchScreenTest {
         ).performClick()
 
         composeRule.onNodeWithTag(RECENT_SEARCHES_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText(RECENT_SEARCHES_TITLE.uppercase()).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.search_recent_title).uppercase()).assertIsDisplayed()
         composeRule.onNodeWithTag(CATEGORY_FILTER_TAG).assertDoesNotExist()
     }
 
@@ -159,7 +168,7 @@ class SearchScreenTest {
         composeRule.onNodeWithTag(SORT_SELECTOR_TAG).performClick()
 
         BrowseSortOption.entries.forEach { option ->
-            composeRule.onNodeWithText(option.label).assertIsDisplayed()
+            composeRule.onNodeWithText(text(option.label)).assertIsDisplayed()
         }
     }
 

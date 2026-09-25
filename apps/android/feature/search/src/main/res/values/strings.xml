@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_title">Search</string>
+    <string name="search_sort_description">Sort by %1$s</string>
+    <string name="search_sort_most_stars">Most stars</string>
+    <string name="search_sort_fewest_stars">Fewest stars</string>
+    <string name="search_sort_newest_first">Newest first</string>
+    <string name="search_sort_oldest_first">Oldest first</string>
+    <string name="search_sort_recently_updated">Recently updated</string>
+    <string name="search_sort_least_recently_updated">Least recently updated</string>
+    <string name="search_sort_name_ascending">Name A-Z</string>
+    <string name="search_sort_name_descending">Name Z-A</string>
+    <string name="search_browse_empty_title">No apps yet</string>
+    <string name="search_browse_empty_description">There is nothing to browse right now. Pull down to refresh.</string>
+    <string name="search_no_matches_title">No matches</string>
+    <string name="search_no_matches_description">Nothing matched \"%1$s\". Try a different search.</string>
+    <string name="search_recent_title">Recent searches</string>
+    <string name="search_recent_remove">Remove recent search</string>
+</resources>

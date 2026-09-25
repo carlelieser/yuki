@@ -3,8 +3,8 @@ package app.yuki.feature.search
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,15 +21,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.icon
+import app.yuki.core.designsystem.component.label
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingCategory
-import app.yuki.core.designsystem.component.label
 
 const val CATEGORY_FILTER_TAG = "categoryFilter"
 const val SORT_SELECTOR_TAG = "sortSelector"
-const val SORT_DESCRIPTION = "Sort by"
 
 @Composable
 internal fun CategoryFilter(
@@ -98,7 +98,10 @@ internal fun SortSelector(
         ) {
             Icon(
                 imageVector = YukiIcons.Sort,
-                contentDescription = "$SORT_DESCRIPTION ${selected.label}",
+                contentDescription = stringResource(
+                    R.string.search_sort_description,
+                    stringResource(selected.label),
+                ),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -123,7 +126,7 @@ private fun SortMenu(
     DropdownMenu(expanded = isExpanded, onDismissRequest = onDismiss) {
         BrowseSortOption.entries.forEach { option ->
             DropdownMenuItem(
-                text = { Text(text = option.label) },
+                text = { Text(text = stringResource(option.label)) },
                 onClick = { onSortSelected(option) },
             )
         }
