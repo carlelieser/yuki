@@ -169,6 +169,24 @@ class InstallCoordinatorTest {
     }
 
     @Test
+    fun `an install that could not be saved is reported as not recorded`() = runTest {
+        val coordinator = InstallCoordinator(
+            downloader = FakeApkDownloader(),
+            recorder = RefusingInstallRecorder(),
+            strategies = InstallStrategySelector(
+                identityReader = FakeApkIdentityReader(ApkIdentity("com.termux", 1L)),
+                fallback = FakeInstallStrategy(listOf(InstallOutcome.Succeeded)),
+                privileged = null,
+            ),
+        )
+
+        val states = coordinator.install(testRequest()).toList()
+
+        assertEquals(InstallState.Failed(InstallFailure.NotRecorded), states.last())
+        assertTrue(states.none { state -> state is InstallState.Installed })
+    }
+
+    @Test
     fun `strategy failure is surfaced and nothing is recorded`() = runTest {
         val recorder = FakeInstallRecorder(mutableMapOf())
         val coordinator = coordinatorOf(
@@ -200,3 +218,10 @@ private fun coordinatorOf(
 )
 
 private val DOWNLOAD_FAILED = InstallFailure.DownloadFailed(httpStatus = null)
+
+private class RefusingInstallRecorder : InstallRecorder {
+    override suspend fun recordedPackageName(githubRepoId: Long): String? = null
+
+    override suspend fun record(record: InstallRecord) =
+        throw InstallException(InstallFailure.NotRecorded, "database unavailable")
+}

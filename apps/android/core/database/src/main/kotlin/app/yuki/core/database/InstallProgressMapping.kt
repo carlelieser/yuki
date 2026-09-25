@@ -30,6 +30,7 @@ private object FailureName {
     const val TIMED_OUT = "timed_out"
     const val CONFIRMATION_TIMED_OUT = "confirmation_timed_out"
     const val SCHEDULE_FAILED = "schedule_failed"
+    const val NOT_RECORDED = "not_recorded"
     const val REJECTED = "rejected"
 }
 
@@ -89,6 +90,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
     FailureName.TIMED_OUT -> InstallFailure.TimedOut
     FailureName.CONFIRMATION_TIMED_OUT -> InstallFailure.ConfirmationTimedOut
     FailureName.SCHEDULE_FAILED -> InstallFailure.ScheduleFailed
+    FailureName.NOT_RECORDED -> InstallFailure.NotRecorded
     FailureName.REJECTED -> InstallFailure.Rejected(failureMessage.orEmpty())
     else -> throw IllegalStateException(
         "Unknown install_progress failure '$failureReason' for githubRepoId=$githubRepoId",
@@ -136,5 +138,6 @@ private fun InstallFailure.name(): String = when (this) {
     InstallFailure.TimedOut -> FailureName.TIMED_OUT
     InstallFailure.ConfirmationTimedOut -> FailureName.CONFIRMATION_TIMED_OUT
     InstallFailure.ScheduleFailed -> FailureName.SCHEDULE_FAILED
+    InstallFailure.NotRecorded -> FailureName.NOT_RECORDED
     is InstallFailure.Rejected -> FailureName.REJECTED
 }
