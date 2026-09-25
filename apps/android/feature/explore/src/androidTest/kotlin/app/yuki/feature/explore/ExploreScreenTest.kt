@@ -23,6 +23,7 @@ import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
 import app.yuki.core.designsystem.component.INSTALLED_BADGE_TAG
 import app.yuki.core.designsystem.component.PAGE_INDICATOR_TAG
 import app.yuki.core.designsystem.component.PULL_TO_REFRESH_TAG
+import app.yuki.core.designsystem.component.labelRes
 import app.yuki.core.designsystem.theme.LocalReduceMotion
 import app.yuki.core.designsystem.theme.LocalTouchExploration
 import app.yuki.core.model.CategorySection
@@ -33,7 +34,6 @@ import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import app.yuki.core.designsystem.component.labelRes
 
 class ExploreScreenTest {
     @get:Rule
@@ -223,7 +223,7 @@ class ExploreScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(FEATURED_TITLE).assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.explore_featured_title)).assertIsDisplayed()
         composeRule.onNodeWithTag(FEATURED_ROW_PLACEHOLDER_TAG).assertIsDisplayed()
     }
 
@@ -238,7 +238,7 @@ class ExploreScreenTest {
             ),
         )
 
-        composeRule.onNodeWithText(FEATURED_TITLE).assertDoesNotExist()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.explore_featured_title)).assertDoesNotExist()
         composeRule.onNodeWithTag(FEATURED_ROW_PLACEHOLDER_TAG).assertDoesNotExist()
     }
 
@@ -298,7 +298,9 @@ class ExploreScreenTest {
         )
 
         composeRule
-            .onNodeWithContentDescription(describeFeaturedListing("Alpha", 0, 3))
+            .onNodeWithContentDescription(
+                composeRule.activity.getString(R.string.explore_featured_description, "Alpha", 1, 3),
+            )
             .assertIsDisplayed()
     }
 
@@ -318,7 +320,13 @@ class ExploreScreenTest {
             .config[SemanticsActions.CustomActions]
             .map { action -> action.label }
 
-        assertEquals(listOf(NEXT_PAGE_LABEL, PREVIOUS_PAGE_LABEL), actions)
+        assertEquals(
+            listOf(
+                composeRule.activity.getString(R.string.explore_featured_next),
+                composeRule.activity.getString(R.string.explore_featured_previous),
+            ),
+            actions,
+        )
     }
 
     @Test

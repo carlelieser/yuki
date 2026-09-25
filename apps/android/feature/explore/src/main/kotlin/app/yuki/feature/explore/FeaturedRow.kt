@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -43,17 +44,15 @@ import kotlinx.coroutines.launch
 
 const val FEATURED_ROW_TAG = "featuredRow"
 
-internal const val NEXT_PAGE_LABEL = "Next featured app"
-internal const val PREVIOUS_PAGE_LABEL = "Previous featured app"
-
 private const val LOOP_MULTIPLE = 1_000
 
 internal fun pageCountFor(size: Int): Int = if (size < 2) size else size * LOOP_MULTIPLE
 
 internal fun startPageFor(size: Int): Int = if (size < 2) 0 else pageCountFor(size) / 2
 
+@Composable
 internal fun describeFeaturedListing(title: String, index: Int, total: Int): String =
-    "$title, featured ${index + 1} of $total"
+    stringResource(R.string.explore_featured_description, title, index + 1, total)
 
 private fun Modifier.trackTouch(onTouchChanged: (Boolean) -> Unit): Modifier =
     pointerInput(onTouchChanged) {
@@ -97,6 +96,7 @@ private fun AutoAdvance(
     }
 }
 
+@Composable
 private fun Modifier.carouselPageActions(
     pagerState: PagerState,
     count: Int,
@@ -104,13 +104,16 @@ private fun Modifier.carouselPageActions(
 ): Modifier {
     if (count < 2) return this
 
+    val next = stringResource(R.string.explore_featured_next)
+    val previous = stringResource(R.string.explore_featured_previous)
+
     return semantics {
         customActions = listOf(
-            CustomAccessibilityAction(NEXT_PAGE_LABEL) {
+            CustomAccessibilityAction(next) {
                 scope.launch { pagerState.animateScrollToPage(pagerState.settledPage + 1) }
                 true
             },
-            CustomAccessibilityAction(PREVIOUS_PAGE_LABEL) {
+            CustomAccessibilityAction(previous) {
                 scope.launch { pagerState.animateScrollToPage(pagerState.settledPage - 1) }
                 true
             },

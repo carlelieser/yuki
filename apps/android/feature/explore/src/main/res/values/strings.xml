@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="explore_title">Explore</string>
+    <string name="explore_missing">There are no apps to show right now.</string>
+    <string name="explore_featured_title">Featured</string>
+    <string name="explore_empty_title">No apps yet</string>
+    <string name="explore_empty_description">There is nothing to explore right now. Pull to refresh shortly.</string>
+    <string name="explore_featured_next">Next featured app</string>
+    <string name="explore_featured_previous">Previous featured app</string>
+    <string name="explore_featured_description">%1$s, featured %2$d of %3$d</string>
+</resources>

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
@@ -20,11 +21,6 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
 const val CATEGORY_SECTIONS_TAG = "categorySections"
-
-private val NothingToExplore = EmptyContent(
-    title = "No apps yet",
-    description = "There is nothing to explore right now. Pull to refresh shortly.",
-)
 
 internal data class CategorySectionActions(
     val onListingSelected: (ListingSummary) -> Unit,
@@ -118,7 +114,10 @@ private fun SectionsFailure(sections: UiState.Failure, modifier: Modifier = Modi
 @Composable
 private fun SectionsEmpty(modifier: Modifier = Modifier) {
     CollectionEmpty(
-        content = NothingToExplore,
+        content = EmptyContent(
+            title = stringResource(R.string.explore_empty_title),
+            description = stringResource(R.string.explore_empty_description),
+        ),
         modifier = modifier.padding(YukiSpacing.Large),
     )
 }

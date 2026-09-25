@@ -9,26 +9,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiAnimatedState
-import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiPullToRefresh
 import app.yuki.core.designsystem.component.YukiScreen
 import app.yuki.core.designsystem.component.YukiScreenCenter
+import app.yuki.core.designsystem.component.categoryLabels
 import app.yuki.core.model.ListingCategory
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
-import app.yuki.core.designsystem.component.categoryLabels
 
 const val EXPLORE_SCREEN_TAG = "exploreScreen"
 
-internal const val EXPLORE_TITLE = "Explore"
-internal const val EXPLORE_MISSING_MESSAGE = "There are no apps to show right now."
-internal const val FEATURED_TITLE = "Featured"
 private const val FEATURED_HEADER_KEY = "featuredHeader"
 private const val FEATURED_ROW_KEY = "featuredRow"
 
@@ -85,7 +82,7 @@ internal fun ExploreScreen(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     YukiScreen(
-        title = EXPLORE_TITLE,
+        title = stringResource(R.string.explore_title),
         trailing = trailing,
         modifier = modifier.testTag(EXPLORE_SCREEN_TAG),
     ) {
@@ -115,7 +112,7 @@ private fun ExploreBody(
             is UiState.Failure -> YukiScreenCenter(contentPadding) {
                 FailureState(
                     reason = settled.reason,
-                    missingMessage = EXPLORE_MISSING_MESSAGE,
+                    missingMessage = stringResource(R.string.explore_missing),
                     onRetry = callbacks.onRetry,
                 )
             }
@@ -168,7 +165,7 @@ private fun LazyListScope.featuredSection(
     if (featured is UiState.Failure) return
     if (featured is UiState.Success && featured.data.isEmpty()) return
 
-    item(key = FEATURED_HEADER_KEY) { SectionHeader(title = FEATURED_TITLE) }
+    item(key = FEATURED_HEADER_KEY) { SectionHeader(title = stringResource(R.string.explore_featured_title)) }
     item(key = FEATURED_ROW_KEY) {
         when (featured) {
             is UiState.Success -> FeaturedRow(
