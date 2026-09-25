@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="installer_channel_installs">Installs</string>
+    <string name="installer_notification_installing">Installing %1$s</string>
+</resources>

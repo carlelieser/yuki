@@ -3,6 +3,7 @@ package app.yuki.core.installer
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -18,4 +19,7 @@ internal class InstallWorker @AssistedInject constructor(
 
         return if (isRetryable(terminal, runAttemptCount)) Result.retry() else Result.success()
     }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo =
+        installForegroundInfo(applicationContext, inputData.toInstallRequest().target)
 }
