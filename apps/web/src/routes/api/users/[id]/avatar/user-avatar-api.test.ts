@@ -3,60 +3,45 @@ import { isHttpError } from '@sveltejs/kit';
 import type { RequestEvent } from './$types';
 import type { Database } from '@yuki/db';
 
-const { getAvatar } = vi.hoisted(() => ({ getAvatar: vi.fn() }));
+const { findAvatarUrl } = vi.hoisted(() => ({ findAvatarUrl: vi.fn() }));
 
-vi.mock('$lib/server/avatars.ts', () => ({ getAvatar }));
+vi.mock('$lib/server/avatars.ts', () => ({ findAvatarUrl }));
 
 const { GET: readAvatar } = await import('./+server.ts');
 
 const db = {} as Database;
-const UPDATED_AT = new Date('2026-01-01T00:00:00.000Z');
-const ETAG = `"${UPDATED_AT.getTime()}"`;
+const AVATAR_URL = 'https://assets.yuki.test/avatars/user-1/a.webp';
 
-function request(ifNoneMatch?: string) {
-	const headers = ifNoneMatch === undefined ? undefined : { 'if-none-match': ifNoneMatch };
-
+function request() {
 	return {
 		locals: { db },
 		params: { id: 'user-1' },
-		request: new Request('http://localhost/api/users/user-1/avatar', { headers })
+		request: new Request('http://localhost/api/users/user-1/avatar')
 	} as unknown as RequestEvent;
 }
 
 beforeEach(() => {
-	getAvatar.mockReset();
-	getAvatar.mockResolvedValue({
-		contentType: 'image/png',
-		bytes: Buffer.from([1, 2, 3, 4]),
-		updatedAt: UPDATED_AT
-	});
+	findAvatarUrl.mockReset();
+	findAvatarUrl.mockResolvedValue(AVATAR_URL);
 });
 
 describe('GET /api/users/[id]/avatar', () => {
-	it('serves the stored image with its own content type', async () => {
+	it('redirects to the avatar in object storage', async () => {
 		const response = await readAvatar(request());
 
-		expect(response.status).toBe(200);
-		expect(response.headers.get('content-type')).toBe('image/png');
-		expect(response.headers.get('etag')).toBe(ETAG);
-		await expect(response.arrayBuffer()).resolves.toHaveProperty('byteLength', 4);
+		expect(findAvatarUrl).toHaveBeenCalledWith(db, 'user-1');
+		expect(response.status).toBe(302);
+		expect(response.headers.get('location')).toBe(AVATAR_URL);
 	});
 
-	it('answers a matching etag without resending the bytes', async () => {
-		const response = await readAvatar(request(ETAG));
+	it('keeps clients from caching the redirect so a new picture shows up', async () => {
+		const response = await readAvatar(request());
 
-		expect(response.status).toBe(304);
-		expect(response.headers.get('etag')).toBe(ETAG);
-	});
-
-	it('resends the image when the caller holds a stale etag', async () => {
-		const response = await readAvatar(request('"0"'));
-
-		expect(response.status).toBe(200);
+		expect(response.headers.get('cache-control')).toBe('private, max-age=0, must-revalidate');
 	});
 
 	it('reports a missing picture so clients can fall back to initials', async () => {
-		getAvatar.mockResolvedValue(null);
+		findAvatarUrl.mockResolvedValue(null);
 
 		try {
 			await readAvatar(request());

@@ -21,12 +21,6 @@ export type AvatarUpload = {
 	bytes: Buffer;
 };
 
-export type StoredAvatar = {
-	contentType: string;
-	bytes: Buffer;
-	updatedAt: Date;
-};
-
 export function isSupportedAvatarType(contentType: string): contentType is AvatarContentType {
 	return (AVATAR_CONTENT_TYPES as readonly string[]).includes(contentType);
 }
@@ -47,16 +41,15 @@ export async function removeAvatar(image: string | null | undefined): Promise<vo
 	if (key?.startsWith(AVATAR_KEY_PREFIX)) await deleteObject(key);
 }
 
-export async function getAvatar(db: Database, userId: string): Promise<StoredAvatar | null> {
+export async function findAvatarUrl(db: Database, userId: string): Promise<string | null> {
 	const [row] = await db
-		.select({
-			contentType: schema.userAvatar.contentType,
-			bytes: schema.userAvatar.bytes,
-			updatedAt: schema.userAvatar.updatedAt
-		})
-		.from(schema.userAvatar)
-		.where(eq(schema.userAvatar.userId, userId))
+		.select({ image: schema.user.image })
+		.from(schema.user)
+		.where(eq(schema.user.id, userId))
 		.limit(1);
 
-	return row ?? null;
+	const image = row?.image ?? null;
+	if (image === null) return null;
+
+	return keyFromPublicUrl(image)?.startsWith(AVATAR_KEY_PREFIX) ? image : null;
 }
