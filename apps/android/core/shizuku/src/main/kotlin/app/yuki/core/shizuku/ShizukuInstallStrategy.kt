@@ -2,6 +2,7 @@ package app.yuki.core.shizuku
 
 import android.os.ParcelFileDescriptor
 import app.yuki.core.installer.ApkIdentity
+import app.yuki.core.installer.InstallException
 import app.yuki.core.installer.InstallOutcome
 import app.yuki.core.installer.InstallStrategy
 import app.yuki.core.model.InstallFailure
@@ -47,7 +48,11 @@ internal class ShizukuInstallStrategy @Inject constructor(
     private fun openDescriptor(apk: File): ParcelFileDescriptor = try {
         ParcelFileDescriptor.open(apk, ParcelFileDescriptor.MODE_READ_ONLY)
     } catch (error: FileNotFoundException) {
-        throw PrivilegedInstallException("Could not open ${apk.absolutePath} for Shizuku", error)
+        throw InstallException(
+            InstallFailure.DownloadUnreadable,
+            "Could not open ${apk.absolutePath} for Shizuku",
+            error,
+        )
     }
 }
 

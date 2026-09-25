@@ -4,6 +4,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
+import app.yuki.core.installer.InstallException
+import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -58,7 +60,7 @@ internal class ShizukuUserServiceBinder @Inject constructor(
     }
 }
 
-private class ServiceConnectionAdapter(
+internal class ServiceConnectionAdapter(
     private val continuation: CancellableContinuation<IYukiInstaller>,
     private val onLost: () -> Unit,
 ) : ServiceConnection {
@@ -69,7 +71,7 @@ private class ServiceConnectionAdapter(
 
         if (installer == null) {
             continuation.resumeIfActive(
-                PrivilegedInstallException("Shizuku bound a dead installer binder for $name"),
+                lostService("Shizuku bound a dead installer binder for $name"),
             )
             return
         }
@@ -80,10 +82,13 @@ private class ServiceConnectionAdapter(
     override fun onServiceDisconnected(name: ComponentName?) {
         onLost()
         continuation.resumeIfActive(
-            PrivilegedInstallException("The Shizuku installer service disconnected for $name"),
+            lostService("The Shizuku installer service disconnected for $name"),
         )
     }
 }
+
+private fun lostService(message: String): InstallException =
+    InstallException(InstallFailure.SessionFailed, message)
 
 private fun CancellableContinuation<IYukiInstaller>.resumeIfActive(error: Exception) {
     if (isActive) resumeWith(Result.failure(error))
