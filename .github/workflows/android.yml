@@ -45,7 +45,10 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+        run: ./gradlew testDebugUnitTest :lint-rules:test --no-daemon
+
+      - name: Lint
+        run: ./gradlew lintDebug --no-daemon
 
       - name: Instrumented tests
         run: >-

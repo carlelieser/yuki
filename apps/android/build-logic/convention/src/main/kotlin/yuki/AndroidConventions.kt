@@ -15,6 +15,8 @@ internal const val JVM_TOOLCHAIN_VERSION = 17
 
 const val MANAGED_DEVICE_NAME = "ci"
 private const val MANAGED_DEVICE_API_LEVEL = 30
+private const val HARDCODED_TEXT_ISSUE = "HardcodedComposeText"
+private const val LINT_RULES_PROJECT = ":lint-rules"
 
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -29,11 +31,19 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
     extension.defaultConfig.minSdk = libs.version("minSdk").toInt()
 
     configureManagedDevices(extension)
+    configureLint(extension)
 
     extension.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
     extension.compileOptions.targetCompatibility = JavaVersion.VERSION_17
 
     configureJvmToolchain()
+}
+
+private fun Project.configureLint(extension: CommonExtension) {
+    extension.lint.checkOnly += HARDCODED_TEXT_ISSUE
+    extension.lint.error += HARDCODED_TEXT_ISSUE
+
+    dependencies.add("lintChecks", project(LINT_RULES_PROJECT))
 }
 
 private fun configureManagedDevices(extension: CommonExtension) {

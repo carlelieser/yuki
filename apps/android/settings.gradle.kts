@@ -21,6 +21,8 @@ rootProject.name = "yuki-android"
 
 include(":app")
 
+include(":lint-rules")
+
 include(":core:auth")
 include(":core:database")
 include(":core:datastore")
