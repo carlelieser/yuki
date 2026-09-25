@@ -16,4 +16,7 @@ internal object InstallWorkModule {
     @Singleton
     fun workManager(@ApplicationContext context: Context): WorkManager =
         WorkManager.getInstance(context)
+
+    @Provides
+    fun workQueue(queue: WorkManagerInstallWorkQueue): InstallWorkQueue = queue
 }
