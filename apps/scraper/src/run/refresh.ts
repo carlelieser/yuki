@@ -19,7 +19,8 @@ export type EtagStore = {
 };
 
 export type RefreshOutcome =
-	{ kind: 'updated'; input: PersistInput } | { kind: 'skipped'; reason: string };
+	| { kind: 'updated'; input: PersistInput; warnings: string[] }
+	| { kind: 'skipped'; reason: string };
 
 export type RefreshTarget = {
 	owner: string;
@@ -32,13 +33,22 @@ export type RefreshTarget = {
 
 export type ApkPackageReader = (downloadUrl: string) => Promise<string | null>;
 
+export type IconPublisher = (source: string) => Promise<string>;
+
+export type RefreshServices = {
+	readApkPackage?: ApkPackageReader;
+	publishIcon?: IconPublisher;
+};
+
+type IconOutcome = { iconUrl: string | null; warnings: string[] };
+
 type Resource<Body> = { state: 'fresh'; body: Body } | { state: 'unchanged' } | { state: 'absent' };
 
 export async function refreshListing(
 	client: GithubClient,
 	etags: EtagStore,
 	target: RefreshTarget,
-	readApkPackage?: ApkPackageReader
+	services: RefreshServices = {}
 ): Promise<RefreshOutcome> {
 	const { owner, name } = target;
 	const repoResource = `repos/${owner}/${name}`;
@@ -90,6 +100,11 @@ export async function refreshListing(
 			readmeBody === null ? null : findBannerUrl(readmeBody, owner, name, branch, lfsPaths);
 		const isAndroidApp = androidVerdict(tree);
 
+		const icon = await publishedIcon(
+			tree.state === 'fresh' ? await iconFrom(client, tree.body, owner, name, branch) : null,
+			services.publishIcon
+		);
+
 		return {
 			kind: 'updated',
 			input: {
@@ -100,10 +115,9 @@ export async function refreshListing(
 					repo.state === 'fresh'
 						? mapRepository(repo.body, scoreConfidence(evidence), readmeBody)
 						: null,
-				iconUrl:
-					tree.state === 'fresh' ? await iconFrom(client, tree.body, owner, name, branch) : null,
+				iconUrl: icon.iconUrl,
 				bannerUrl: readme.state === 'unchanged' ? null : bannerUrl,
-				packageName: await packageNameFrom(target, versions, readApkPackage),
+				packageName: await packageNameFrom(target, versions, services.readApkPackage),
 				screenshots:
 					readme.state === 'unchanged'
 						? null
@@ -114,13 +128,29 @@ export async function refreshListing(
 				hasApk: versions === null ? null : hasDistributableApk(versions),
 				isAndroidApp,
 				evidence
-			}
+			},
+			warnings: icon.warnings
 		};
 	} catch (cause) {
 		if (cause instanceof GithubSkip) {
 			return { kind: 'skipped', reason: cause.message };
 		}
 		throw cause;
+	}
+}
+
+async function publishedIcon(
+	source: string | null,
+	publish: IconPublisher | undefined
+): Promise<IconOutcome> {
+	if (source === null) return { iconUrl: null, warnings: [] };
+	if (publish === undefined) return { iconUrl: source, warnings: [] };
+
+	try {
+		return { iconUrl: await publish(source), warnings: [] };
+	} catch (cause) {
+		const reason = cause instanceof Error ? cause.message : String(cause);
+		return { iconUrl: null, warnings: [`publishing the icon failed: ${reason}`] };
 	}
 }
 

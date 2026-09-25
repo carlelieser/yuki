@@ -33,11 +33,11 @@ export function createR2Bucket(config: R2Config): IconBucket {
 
 			return true;
 		},
-		put: async (key, png) => {
+		put: async (key, asset) => {
 			const response = await client.fetch(`${endpoint}/${key}`, {
 				method: 'PUT',
-				body: png,
-				headers: { 'content-type': 'image/png', 'cache-control': CACHE_CONTROL },
+				body: asset.bytes,
+				headers: { 'content-type': asset.contentType, 'cache-control': CACHE_CONTROL },
 				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLIS)
 			});
 			if (!response.ok) {

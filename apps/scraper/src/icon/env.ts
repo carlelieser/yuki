@@ -1,16 +1,12 @@
 import type { R2Config } from './r2-bucket.ts';
 
-const DEFAULT_EXTRACTOR_BINARY = 'extract-icons';
-
 export type IconConfig = {
-	extractorBinary: string;
 	assetsBaseUrl: string;
 	r2: R2Config;
 };
 
 export function requireIconConfig(): IconConfig {
 	return {
-		extractorBinary: process.env.ICON_EXTRACTOR_BIN || DEFAULT_EXTRACTOR_BINARY,
 		assetsBaseUrl: requireVariable('ASSETS_BASE_URL'),
 		r2: {
 			endpoint: process.env.R2_ENDPOINT || r2Endpoint(requireVariable('R2_ACCOUNT_ID')),

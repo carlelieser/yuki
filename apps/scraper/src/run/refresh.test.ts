@@ -330,12 +330,9 @@ describe('android structure', () => {
 			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
 		});
 
-		const outcome = await refreshListing(
-			client,
-			storedEtags(repoEtag),
-			target,
-			async () => 'com.acme.app'
-		);
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
+			readApkPackage: async () => 'com.acme.app'
+		});
 
 		expect(outcome.kind).toBe('updated');
 		if (outcome.kind !== 'updated') return;
@@ -352,9 +349,11 @@ describe('android structure', () => {
 			client,
 			storedEtags(repoEtag),
 			{ ...target, packageName: 'com.acme.app' },
-			async (url) => {
-				reads.push(url);
-				return 'com.acme.other';
+			{
+				readApkPackage: async (url) => {
+					reads.push(url);
+					return 'com.acme.other';
+				}
 			}
 		);
 
@@ -370,9 +369,11 @@ describe('android structure', () => {
 		});
 		const reads: string[] = [];
 
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
-			reads.push(url);
-			return 'com.acme.app';
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
+			readApkPackage: async (url) => {
+				reads.push(url);
+				return 'com.acme.app';
+			}
 		});
 
 		expect(reads).toEqual([]);
@@ -386,8 +387,10 @@ describe('android structure', () => {
 			getReleases: async () => ({ isModified: true, body: [release('v2')], etag: 'W/"r2"' })
 		});
 
-		const outcome = await refreshListing(client, storedEtags(repoEtag), target, async () => {
-			throw new Error('range request rejected');
+		const outcome = await refreshListing(client, storedEtags(repoEtag), target, {
+			readApkPackage: async () => {
+				throw new Error('range request rejected');
+			}
 		});
 
 		expect(outcome.kind).toBe('updated');
@@ -406,11 +409,54 @@ describe('android structure', () => {
 		});
 		const reads: string[] = [];
 
-		await refreshListing(client, storedEtags(repoEtag), target, async (url) => {
-			reads.push(url);
-			return 'com.acme.app';
+		await refreshListing(client, storedEtags(repoEtag), target, {
+			readApkPackage: async (url) => {
+				reads.push(url);
+				return 'com.acme.app';
+			}
 		});
 
 		expect(reads).toEqual([]);
+	});
+
+	it('publishes the mapped icon and stores its bucket url', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => treeOf(['fastlane/metadata/android/en-US/images/icon.png'])
+		});
+		const published: string[] = [];
+
+		const outcome = await refreshListing(client, storedEtags(), target, {
+			publishIcon: async (source) => {
+				published.push(source);
+				return 'https://assets.example.com/icons/abc.png';
+			}
+		});
+
+		expect(published).toEqual([
+			'https://raw.githubusercontent.com/acme/app/main/fastlane/metadata/android/en-US/images/icon.png'
+		]);
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.iconUrl).toBe('https://assets.example.com/icons/abc.png');
+		expect(outcome.warnings).toEqual([]);
+	});
+
+	it('reports a warning and keeps the stored icon when publishing fails', async () => {
+		const client = fakeClient({
+			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo"' }),
+			getTree: async () => treeOf(['fastlane/metadata/android/en-US/images/icon.png'])
+		});
+
+		const outcome = await refreshListing(client, storedEtags(), target, {
+			publishIcon: async () => {
+				throw new Error('upload rejected');
+			}
+		});
+
+		expect(outcome.kind).toBe('updated');
+		if (outcome.kind !== 'updated') return;
+		expect(outcome.input.iconUrl).toBeNull();
+		expect(outcome.warnings).toEqual(['publishing the icon failed: upload rejected']);
 	});
 });

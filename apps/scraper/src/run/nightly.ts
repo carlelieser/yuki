@@ -3,7 +3,7 @@ import { isSelfDeclaredOnly } from '../detection/evidence.ts';
 import { GITHUB_EPOCH, type DateRange } from '../detection/queries.ts';
 import {
 	refreshListing,
-	type ApkPackageReader,
+	type RefreshServices,
 	type EtagStore,
 	type RefreshTarget
 } from './refresh.ts';
@@ -19,7 +19,7 @@ export type RunPorts = {
 	partitions?: PartitionStore;
 	persist: (input: PersistInput) => Promise<string>;
 	touch: (listingId: string) => Promise<void>;
-	readApkPackage?: ApkPackageReader;
+	services?: RefreshServices;
 	log?: (message: string) => void;
 };
 
@@ -82,7 +82,7 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		const label = `${target.owner}/${target.name}`;
 
 		try {
-			const outcome = await refreshListing(ports.client, ports.etags, target, ports.readApkPackage);
+			const outcome = await refreshListing(ports.client, ports.etags, target, ports.services);
 
 			if (outcome.kind === 'skipped') {
 				skippedCount += 1;
@@ -105,6 +105,7 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 			}
 
 			updatedCount += 1;
+			warnings.push(...outcome.warnings.map((warning) => `${label}: ${warning}`));
 			log(`Updated ${label}`);
 		} catch (cause) {
 			skippedCount += 1;
