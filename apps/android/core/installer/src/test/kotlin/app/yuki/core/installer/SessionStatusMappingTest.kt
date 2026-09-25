@@ -40,8 +40,8 @@ class SessionStatusMappingTest {
     }
 
     @Test
-    fun `conflict maps to package mismatch`() {
-        assertEquals(failed(InstallFailure.PackageMismatch), outcomeOf(FAILURE_CONFLICT))
+    fun `conflict maps to signature conflict`() {
+        assertEquals(failed(InstallFailure.SignatureConflict), outcomeOf(FAILURE_CONFLICT))
     }
 
     @Test

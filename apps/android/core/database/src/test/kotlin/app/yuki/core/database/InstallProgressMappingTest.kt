@@ -76,6 +76,7 @@ class InstallProgressMappingTest {
             InstallFailure.Incompatible,
             InstallFailure.InvalidApk,
             InstallFailure.PackageMismatch,
+            InstallFailure.SignatureConflict,
             InstallFailure.TimedOut,
         )
 

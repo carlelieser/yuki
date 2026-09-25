@@ -20,6 +20,7 @@ private val failureLabels: Map<KClass<out InstallFailure>, Int> = mapOf(
     InstallFailure.Incompatible::class to R.string.designsystem_install_failure_incompatible,
     InstallFailure.InvalidApk::class to R.string.designsystem_install_failure_invalid_apk,
     InstallFailure.PackageMismatch::class to R.string.designsystem_install_failure_package_mismatch,
+    InstallFailure.SignatureConflict::class to R.string.designsystem_install_failure_signature_conflict,
     InstallFailure.TimedOut::class to R.string.designsystem_install_failure_timed_out,
     InstallFailure.Rejected::class to R.string.designsystem_install_failure_rejected,
 )

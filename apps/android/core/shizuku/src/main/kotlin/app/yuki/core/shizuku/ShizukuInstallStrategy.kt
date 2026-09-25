@@ -80,8 +80,8 @@ private fun toFailure(message: String?): InstallFailure {
 
     return when {
         detail.contains("INSUFFICIENT_STORAGE") -> InstallFailure.InsufficientStorage
-        detail.contains("SIGNATURES") || detail.contains("ALREADY_EXISTS") ->
-            InstallFailure.PackageMismatch
+        detail.contains("SIGNATURES") -> InstallFailure.SignatureConflict
+        detail.contains("ALREADY_EXISTS") -> InstallFailure.PackageMismatch
         detail.contains("INVALID_APK") -> InstallFailure.InvalidApk
         detail.contains("INCOMPATIBLE") -> InstallFailure.Incompatible
         else -> InstallFailure.Rejected(detail)

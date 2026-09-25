@@ -31,10 +31,18 @@ class InstallOutcomeMappingTest {
     }
 
     @Test
-    fun `maps a signature clash to a package mismatch`() {
+    fun `maps a signature clash to a signature conflict`() {
+        assertEquals(
+            InstallOutcome.Failed(InstallFailure.SignatureConflict),
+            toOutcome(STATUS_FAILURE, "INSTALL_FAILED_UPDATE_INCOMPATIBLE: SIGNATURES do not match"),
+        )
+    }
+
+    @Test
+    fun `maps an existing package to a package mismatch`() {
         assertEquals(
             InstallOutcome.Failed(InstallFailure.PackageMismatch),
-            toOutcome(STATUS_FAILURE, "INSTALL_FAILED_UPDATE_INCOMPATIBLE: SIGNATURES do not match"),
+            toOutcome(STATUS_FAILURE, "INSTALL_FAILED_ALREADY_EXISTS"),
         )
     }
 

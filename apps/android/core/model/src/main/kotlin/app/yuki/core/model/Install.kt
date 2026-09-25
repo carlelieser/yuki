@@ -17,6 +17,8 @@ sealed interface InstallFailure {
 
     data object PackageMismatch : InstallFailure
 
+    data object SignatureConflict : InstallFailure
+
     data object TimedOut : InstallFailure
 
     data class Rejected(val message: String) : InstallFailure
