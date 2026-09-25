@@ -1,12 +1,15 @@
 package app.yuki.core.database
 
+import android.database.sqlite.SQLiteFullException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.yuki.core.installer.ApkIdentity
+import app.yuki.core.installer.InstallException
 import app.yuki.core.installer.InstallRecord
 import app.yuki.core.installer.InstallRecorder
 import app.yuki.core.installer.InstallTarget
+import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstalledApp
 import java.time.Clock
 import java.time.Instant
@@ -36,6 +39,18 @@ class RoomInstallRecorderTest {
     @After
     fun closeDatabase() {
         database.close()
+    }
+
+    @Test
+    fun aRecordTheDatabaseCannotStoreIsReportedAsNotRecorded() = runTest {
+        val clock = Clock.fixed(RECORDED_AT, ZoneOffset.UTC)
+        val full = RoomInstallRecorder(FullInstallStore(store), clock)
+
+        val error = runCatching {
+            full.record(recordOf(packageName = "com.termux", versionTag = "v0.118.0"))
+        }.exceptionOrNull()
+
+        assertEquals(InstallFailure.NotRecorded, (error as InstallException).failure)
     }
 
     @Test
@@ -91,3 +106,8 @@ private fun recordOf(packageName: String, versionTag: String): InstallRecord = I
     identity = ApkIdentity(packageName = packageName, versionCode = 118L),
     versionTag = versionTag,
 )
+
+private class FullInstallStore(private val delegate: InstallStore) : InstallStore by delegate {
+    override suspend fun record(recording: InstallRecording) =
+        throw SQLiteFullException("disk full")
+}
