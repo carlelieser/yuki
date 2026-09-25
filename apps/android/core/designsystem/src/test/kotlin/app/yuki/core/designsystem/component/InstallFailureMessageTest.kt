@@ -51,6 +51,7 @@ class InstallFailureMessageTest {
             InstallFailure.ConfirmationTimedOut,
             InstallFailure.ScheduleFailed,
             InstallFailure.NotRecorded,
+            InstallFailure.InstallPermissionMissing,
             InstallFailure.Rejected("blocked"),
         )
 

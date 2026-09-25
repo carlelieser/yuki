@@ -47,6 +47,7 @@
     <string name="designsystem_install_error_confirmation_timed_out">Installing %1$s was stopped because it wasn\'t confirmed in time.</string>
     <string name="designsystem_install_error_schedule_failed">Couldn\'t queue %1$s to install.</string>
     <string name="designsystem_install_error_not_recorded">%1$s installed, but couldn\'t be added to your library.</string>
+    <string name="designsystem_install_error_permission_missing">Allow Yuki to install apps, then try installing %1$s again.</string>
     <string name="designsystem_install_error_rejected">Android couldn\'t install %1$s: %2$s</string>
 
     <string name="designsystem_installed">Installed</string>

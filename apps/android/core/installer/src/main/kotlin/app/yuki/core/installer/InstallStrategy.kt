@@ -4,6 +4,8 @@ import java.io.File
 import kotlinx.coroutines.flow.Flow
 
 interface InstallStrategy {
+    fun requireCanInstall() = Unit
+
     fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome>
 }
 

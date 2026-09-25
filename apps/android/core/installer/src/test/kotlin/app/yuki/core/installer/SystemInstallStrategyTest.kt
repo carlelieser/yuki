@@ -19,7 +19,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `cancelling while waiting for the user abandons the session`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_001)
-        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { true }
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -34,7 +34,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a finished install leaves its session alone`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_002)
-        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { true }
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -48,7 +48,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `cancelling after the install finished leaves its session alone`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_003)
-        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { true }
 
         val install = launch {
             strategy.install(APK, IDENTITY).collect { outcome ->
@@ -66,7 +66,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `an unanswered prompt times out and abandons the session`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_004)
-        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { true }
 
         val result = async { runCatching { strategy.install(APK, IDENTITY).toList() } }
         runCurrent()
@@ -81,7 +81,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a prompt answered in time does not time out`() = runTest {
         val sessions = RecordingSessions(sessionId = 9_005)
-        val strategy = SystemInstallStrategy(sessions, RecordingPrompt())
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { true }
 
         val result = async { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -96,7 +96,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a finished install withdraws its confirmation prompt`() = runTest {
         val prompt = RecordingPrompt()
-        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_006), prompt)
+        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_006), prompt) { true }
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -111,7 +111,7 @@ class SystemInstallStrategyTest {
     @Test
     fun `a cancelled install withdraws its confirmation prompt`() = runTest {
         val prompt = RecordingPrompt()
-        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_007), prompt)
+        val strategy = SystemInstallStrategy(RecordingSessions(sessionId = 9_007), prompt) { true }
 
         val install = launch { strategy.install(APK, IDENTITY).toList() }
         runCurrent()
@@ -121,6 +121,16 @@ class SystemInstallStrategyTest {
         runCurrent()
 
         assertEquals(listOf(9_007), prompt.dismissed)
+    }
+
+    @Test
+    fun `an app that may not install packages is refused before anything starts`() {
+        val sessions = RecordingSessions(sessionId = 9_008)
+        val strategy = SystemInstallStrategy(sessions, RecordingPrompt()) { false }
+
+        val error = runCatching { strategy.requireCanInstall() }.exceptionOrNull()
+
+        assertEquals(InstallFailure.InstallPermissionMissing, (error as InstallException).failure)
     }
 }
 

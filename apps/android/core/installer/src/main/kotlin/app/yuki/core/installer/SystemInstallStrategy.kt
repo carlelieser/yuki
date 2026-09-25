@@ -21,15 +21,30 @@ import kotlinx.coroutines.flow.transformWhile
 
 internal val CONFIRMATION_TIMEOUT: Duration = 10.minutes
 
+internal fun interface InstallPermission {
+    fun isGranted(): Boolean
+}
+
 internal class SystemInstallStrategy(
     private val sessions: InstallSessions,
     private val launcher: UserActionLauncher,
+    private val permission: InstallPermission,
 ) : InstallStrategy {
     @Inject
     constructor(@ApplicationContext context: Context) : this(
         sessions = InstallSessionWriter(context),
         launcher = UserActionPrompt(context),
+        permission = InstallPermission { context.packageManager.canRequestPackageInstalls() },
     )
+
+    override fun requireCanInstall() {
+        if (permission.isGranted()) return
+
+        throw InstallException(
+            InstallFailure.InstallPermissionMissing,
+            "Yuki is not allowed to request package installs",
+        )
+    }
 
     override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = flow {
         val session = PendingSession(sessions.createSession(identity))

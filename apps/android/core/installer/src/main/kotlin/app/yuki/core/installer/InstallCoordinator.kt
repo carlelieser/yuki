@@ -17,12 +17,14 @@ class InstallCoordinator @Inject constructor(
     private val strategies: InstallStrategySelector,
 ) {
     fun install(request: InstallRequest): Flow<InstallState> = flow {
+        val strategy = strategies.select()
+        strategy.requireCanInstall()
         val apk = downloadApk(request.source)
 
         try {
             val staged = StagedApk(apk, strategies.identityReader.read(apk))
             guardPackageIdentity(request.target.githubRepoId, staged.identity)
-            runStrategy(request, staged)
+            runStrategy(request, staged, strategy)
         } finally {
             downloader.discard(apk)
         }
@@ -61,9 +63,8 @@ class InstallCoordinator @Inject constructor(
     private suspend fun FlowCollector<InstallState>.runStrategy(
         request: InstallRequest,
         staged: StagedApk,
+        strategy: InstallStrategy,
     ) {
-        val strategy = strategies.select()
-
         emit(InstallState.Installing)
 
         strategy.install(staged.file, staged.identity).collect { outcome ->

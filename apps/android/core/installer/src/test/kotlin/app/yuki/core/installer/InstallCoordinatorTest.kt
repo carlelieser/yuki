@@ -2,7 +2,10 @@ package app.yuki.core.installer
 
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
+import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -187,6 +190,25 @@ class InstallCoordinatorTest {
     }
 
     @Test
+    fun `an install the app may not perform fails before downloading`() = runTest {
+        val downloader = FakeApkDownloader()
+        val coordinator = InstallCoordinator(
+            downloader = downloader,
+            recorder = FakeInstallRecorder(mutableMapOf()),
+            strategies = InstallStrategySelector(
+                identityReader = FakeApkIdentityReader(ApkIdentity("com.termux", 1L)),
+                fallback = UnpermittedStrategy(),
+                privileged = null,
+            ),
+        )
+
+        val states = coordinator.install(testRequest()).toList()
+
+        assertEquals(listOf(InstallState.Failed(InstallFailure.InstallPermissionMissing)), states)
+        assertEquals(0, downloader.downloads)
+    }
+
+    @Test
     fun `strategy failure is surfaced and nothing is recorded`() = runTest {
         val recorder = FakeInstallRecorder(mutableMapOf())
         val coordinator = coordinatorOf(
@@ -224,4 +246,11 @@ private class RefusingInstallRecorder : InstallRecorder {
 
     override suspend fun record(record: InstallRecord) =
         throw InstallException(InstallFailure.NotRecorded, "database unavailable")
+}
+
+private class UnpermittedStrategy : InstallStrategy {
+    override fun requireCanInstall() =
+        throw InstallException(InstallFailure.InstallPermissionMissing, "not allowed")
+
+    override fun install(apk: File, identity: ApkIdentity): Flow<InstallOutcome> = emptyFlow()
 }

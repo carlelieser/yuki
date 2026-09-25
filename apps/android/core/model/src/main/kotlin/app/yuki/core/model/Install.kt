@@ -31,6 +31,8 @@ sealed interface InstallFailure {
 
     data object NotRecorded : InstallFailure
 
+    data object InstallPermissionMissing : InstallFailure
+
     data class Rejected(val message: String) : InstallFailure
 }
 

@@ -29,7 +29,11 @@ internal class FakeApkDownloader(
 ) : ApkDownloader {
     val discarded: MutableList<File> = mutableListOf()
 
+    var downloads: Int = 0
+        private set
+
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
+        downloads += 1
         failure?.let { error -> throw error }
         if (cancelMidway) throw CancellationException("cancelled while downloading")
         sizes.forEach { size -> emit(DownloadProgress.Running(size)) }

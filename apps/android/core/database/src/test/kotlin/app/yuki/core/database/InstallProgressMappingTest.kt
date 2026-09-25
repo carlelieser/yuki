@@ -83,6 +83,7 @@ class InstallProgressMappingTest {
             InstallFailure.ConfirmationTimedOut,
             InstallFailure.ScheduleFailed,
             InstallFailure.NotRecorded,
+            InstallFailure.InstallPermissionMissing,
         )
 
         reasons.forEach { reason ->

@@ -26,6 +26,8 @@ private val failureMessages: Map<KClass<out InstallFailure>, Int> = mapOf(
         R.string.designsystem_install_error_confirmation_timed_out,
     InstallFailure.ScheduleFailed::class to R.string.designsystem_install_error_schedule_failed,
     InstallFailure.NotRecorded::class to R.string.designsystem_install_error_not_recorded,
+    InstallFailure.InstallPermissionMissing::class to
+        R.string.designsystem_install_error_permission_missing,
     InstallFailure.Rejected::class to R.string.designsystem_install_error_rejected,
 )
 
