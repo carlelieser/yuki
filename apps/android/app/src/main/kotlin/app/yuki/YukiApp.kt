@@ -1,5 +1,6 @@
 package app.yuki
 
+import android.Manifest
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,6 +29,7 @@ import app.yuki.core.designsystem.component.YukiNavBarItem
 import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.feature.settings.AppearanceMode
+import app.yuki.feature.settings.rememberSystemDestinations
 import app.yuki.install.InstallFailureActions
 import app.yuki.install.InstallFailureSnackbar
 import app.yuki.navigation.YukiNavHost
@@ -120,12 +122,17 @@ private fun YukiScaffold(navController: NavHostController, viewModel: YukiAppVie
 @Composable
 private fun InstallFailures(viewModel: YukiAppViewModel) {
     val failed by viewModel.installFailure.collectAsStateWithLifecycle()
+    val destinations = rememberSystemDestinations()
 
     InstallFailureSnackbar(
         failed = failed,
         actions = InstallFailureActions(
             onRetry = viewModel::onInstallRetry,
             onDismiss = viewModel::onInstallFailureDismissed,
+            onAllowInstalls = { shown ->
+                destinations.openPermissionSettings(Manifest.permission.REQUEST_INSTALL_PACKAGES)
+                viewModel.onInstallFailureDismissed(shown)
+            },
         ),
     )
 }

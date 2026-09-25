@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Yuki</string>
+    <string name="app_install_permission_allow">Allow</string>
     <string name="app_tab_explore">Explore</string>
     <string name="app_tab_search">Search</string>
     <string name="app_tab_library">Library</string>

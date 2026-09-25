@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
+import app.yuki.R
 import app.yuki.core.designsystem.R as DesignR
 import app.yuki.core.designsystem.component.LocalYukiSnackbarHostState
 import app.yuki.core.designsystem.component.YukiSnackbarHost
@@ -26,6 +27,7 @@ class InstallFailureSnackbarTest {
 
     private val retried = mutableListOf<InstallProgress>()
     private val dismissed = mutableListOf<InstallProgress>()
+    private val allowed = mutableListOf<InstallProgress>()
 
     @Test
     fun aFailedInstallShowsItsMessage() {
@@ -58,6 +60,17 @@ class InstallFailureSnackbarTest {
         assertEquals(emptyList<InstallProgress>(), retried)
     }
 
+    @Test
+    fun aMissingInstallPermissionOffersToAllowInstalls() {
+        render(UNPERMITTED)
+
+        composeRule.onNodeWithText(text(R.string.app_install_permission_allow)).performClick()
+        composeRule.waitForIdle()
+
+        assertEquals(listOf(UNPERMITTED), allowed)
+        assertEquals(emptyList<InstallProgress>(), retried)
+    }
+
     private fun render(failed: InstallProgress?) {
         val hostState = SnackbarHostState()
 
@@ -69,6 +82,7 @@ class InstallFailureSnackbarTest {
                         actions = InstallFailureActions(
                             onRetry = retried::add,
                             onDismiss = dismissed::add,
+                            onAllowInstalls = allowed::add,
                         ),
                     )
                     YukiSnackbarHost(hostState = hostState)
@@ -85,6 +99,10 @@ private val FAILED = InstallProgress(
     target = InstallTarget(githubRepoId = 7L, slug = "termux", title = TITLE, iconUrl = null),
     versionTag = "v1",
     state = InstallState.Failed(InstallFailure.DownloadFailed(httpStatus = 404)),
+)
+
+private val UNPERMITTED = FAILED.copy(
+    state = InstallState.Failed(InstallFailure.InstallPermissionMissing),
 )
 
 private fun text(id: Int, vararg args: Any): String =
