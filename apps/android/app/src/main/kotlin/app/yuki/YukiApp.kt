@@ -28,8 +28,9 @@ import app.yuki.core.designsystem.component.YukiNavBarItem
 import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.feature.settings.AppearanceMode
+import app.yuki.install.InstallFailureActions
+import app.yuki.install.InstallFailureSnackbar
 import app.yuki.navigation.YukiNavHost
-import app.yuki.settings.SettingsNavigationHolder
 import app.yuki.navigation.YukiTab
 import app.yuki.navigation.rememberYukiNavigator
 import app.yuki.navigation.selectedTab
@@ -53,7 +54,7 @@ fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
         ProvideKeyboardInsets {
             YukiScaffold(
                 navController = rememberNavController(),
-                navigationHolder = viewModel.settingsNavigation,
+                viewModel = viewModel,
             )
         }
     }
@@ -81,10 +82,7 @@ private fun AppearanceMode.resolveIsDarkTheme(): Boolean = when (this) {
 }
 
 @Composable
-private fun YukiScaffold(
-    navController: NavHostController,
-    navigationHolder: SettingsNavigationHolder,
-) {
+private fun YukiScaffold(navController: NavHostController, viewModel: YukiAppViewModel) {
     val consent = rememberNotificationConsent()
     val navigator = rememberYukiNavigator(
         navController = navController,
@@ -108,13 +106,28 @@ private fun YukiScaffold(
             YukiNavHost(
                 navController = navController,
                 navigator = navigator,
-                navigationHolder = navigationHolder,
+                navigationHolder = viewModel.settingsNavigation,
                 bottomBarPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
             )
         }
+
+        InstallFailures(viewModel)
     }
 
     NotificationRationaleDialog(state = consent)
+}
+
+@Composable
+private fun InstallFailures(viewModel: YukiAppViewModel) {
+    val failed by viewModel.installFailure.collectAsStateWithLifecycle()
+
+    InstallFailureSnackbar(
+        failed = failed,
+        actions = InstallFailureActions(
+            onRetry = viewModel::onInstallRetry,
+            onDismiss = viewModel::onInstallFailureDismissed,
+        ),
+    )
 }
 
 @Composable

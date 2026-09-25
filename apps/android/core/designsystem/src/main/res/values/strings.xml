@@ -31,6 +31,20 @@
     <string name="designsystem_install_downloading">Downloading</string>
     <string name="designsystem_install_downloading_progress">Downloading, %1$d percent, %2$s</string>
 
+    <string name="designsystem_install_error_download_offline">%1$s didn\'t download. Check your connection and try again.</string>
+    <string name="designsystem_install_error_download_gone">%1$s couldn\'t download because this release is no longer available.</string>
+    <string name="designsystem_install_error_download_server">%1$s couldn\'t download because the server couldn\'t provide it.</string>
+    <string name="designsystem_install_error_download_unreadable">%1$s didn\'t download completely.</string>
+    <string name="designsystem_install_error_not_an_apk">The download for %1$s isn\'t an Android app.</string>
+    <string name="designsystem_install_error_aborted">Installing %1$s was cancelled.</string>
+    <string name="designsystem_install_error_session_failed">Couldn\'t start installing %1$s.</string>
+    <string name="designsystem_install_error_insufficient_storage">Not enough space to install %1$s.</string>
+    <string name="designsystem_install_error_incompatible">%1$s isn\'t compatible with this device.</string>
+    <string name="designsystem_install_error_invalid_apk">The app file for %1$s is damaged or unsigned.</string>
+    <string name="designsystem_install_error_package_mismatch">The download for %1$s is a different app.</string>
+    <string name="designsystem_install_error_signature_conflict">%1$s is signed differently from the installed version.</string>
+    <string name="designsystem_install_error_timed_out">Installing %1$s timed out.</string>
+    <string name="designsystem_install_error_rejected">Android couldn\'t install %1$s: %2$s</string>
     <string name="designsystem_install_failure_download_failed">Download failed</string>
     <string name="designsystem_install_failure_download_unreadable">Download incomplete</string>
     <string name="designsystem_install_failure_not_an_apk">Not an app</string>
