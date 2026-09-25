@@ -156,10 +156,6 @@ async function foregroundLayer(
 		markUnresolved(sources.fidelity, `foreground-reference:${reference.kind}`);
 		return null;
 	}
-	if (reference.kind === 'mipmap') {
-		return rasterLayer(reference, sources, 'foreground-reference:mipmap');
-	}
-
 	return flattenReference(reference, sources);
 }
 
@@ -176,12 +172,12 @@ async function backgroundLayer(
 		return { kind: 'color', value };
 	}
 
-	if (reference.kind === 'mipmap') {
+	const xml = await sources.readDrawable(reference);
+	if (xml === null && reference.kind === 'mipmap') {
 		const raster = await rasterLayer(reference, sources, 'background-reference:mipmap');
 		return raster === null ? null : { kind: 'vector', value: raster };
 	}
 
-	const xml = await sources.readDrawable(reference.name);
 	const shapeFill = xml === null ? null : readShapeFill(xml);
 	if (shapeFill !== null) return { kind: 'color', value: shapeFill };
 
@@ -227,17 +223,17 @@ function drawableReaderFor(
 	tree: GithubTree,
 	read: (path: string) => Promise<string | null>,
 	resourceDir: string
-): (drawable: string) => Promise<string | null> {
-	const prefix = `${resourceDir}/drawable`;
-
-	return async (drawable) => {
+): (reference: DrawableReference) => Promise<string | null> {
+	return async (reference) => {
+		const prefix = `${resourceDir}/${reference.kind}`;
+		const directory = new RegExp(`^${reference.kind}(-|$)`);
 		const candidates = blobs(tree).filter((path) => {
 			if (!path.startsWith(prefix)) return false;
 
 			const { dir, filename, stem } = splitPath(path);
-			if (stem !== drawable || !filename.endsWith('.xml')) return false;
+			if (stem !== reference.name || !filename.endsWith('.xml')) return false;
 
-			return /^drawable(-|$)/.test(dir.split('/').pop() ?? '');
+			return directory.test(dir.split('/').pop() ?? '');
 		});
 
 		candidates.sort((left, right) => left.length - right.length || left.localeCompare(right));

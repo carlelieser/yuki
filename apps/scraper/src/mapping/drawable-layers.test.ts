@@ -131,3 +131,33 @@ describe('raster layers', () => {
 		expect(decode(result?.svg ?? '').match(/<image /g)).toHaveLength(2);
 	});
 });
+
+describe('mipmap xml layers', () => {
+	const files = new Map([
+		[
+			'app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+			`<adaptive-icon><background android:drawable="@mipmap/ic_launcher_background" /><foreground android:drawable="@mipmap/ic_launcher_foreground" /></adaptive-icon>`
+		],
+		[
+			'app/src/main/res/mipmap-anydpi-v26/ic_launcher_foreground.xml',
+			`<vector android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#E94560" android:pathData="M13,7h-2v4H7v2h4v4h2v-4h4v-2h-4z" /></vector>`
+		],
+		[
+			'app/src/main/res/mipmap-anydpi-v26/ic_launcher_background.xml',
+			`<shape android:shape="rectangle"><solid android:color="#1A1A2E" /></shape>`
+		]
+	]);
+
+	it('reads vector foregrounds and shape backgrounds declared as mipmaps', async () => {
+		const result = await buildVectorIcon(tree([...files.keys()]), readerFor(files), {
+			declaredPath: 'app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+			download: downloaderFor(new Map())
+		});
+
+		expect(result?.fidelity.unresolved).toBe(false);
+		const svg = decode(result?.svg ?? '');
+		expect(svg).toContain('#E94560');
+		expect(svg).toContain('#1A1A2E');
+		expect(svg).not.toContain('<image ');
+	});
+});

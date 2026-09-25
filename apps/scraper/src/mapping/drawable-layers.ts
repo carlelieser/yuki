@@ -11,7 +11,7 @@ const DIMENSION = /^(-?[\d.]+)(%|dp|dip|px)?$/;
 export type DrawableReference = { kind: string; name: string };
 
 export type DrawableSources = {
-	readDrawable: (name: string) => Promise<string | null>;
+	readDrawable: (reference: DrawableReference) => Promise<string | null>;
 	readRaster: ((reference: DrawableReference) => Promise<string | null>) | null;
 	fidelity: Fidelity;
 };
@@ -25,17 +25,15 @@ export async function flattenReference(
 	sources: DrawableSources,
 	depth = 0
 ): Promise<string | null> {
-	if (reference.kind === 'drawable') {
-		const xml = await sources.readDrawable(reference.name);
-		if (xml !== null) return flattenDrawable(xml, sources, depth);
-		if (sources.readRaster === null) {
-			markUnresolved(sources.fidelity, `missing-drawable:${reference.name}`);
-			return null;
-		}
-	}
-
 	if (reference.kind !== 'drawable' && reference.kind !== 'mipmap') {
 		markUnresolved(sources.fidelity, `layer-reference:${reference.kind}`);
+		return null;
+	}
+
+	const xml = await sources.readDrawable(reference);
+	if (xml !== null) return flattenDrawable(xml, sources, depth);
+	if (reference.kind === 'drawable' && sources.readRaster === null) {
+		markUnresolved(sources.fidelity, `missing-drawable:${reference.name}`);
 		return null;
 	}
 
