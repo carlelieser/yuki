@@ -81,6 +81,7 @@ class InstallProgressMappingTest {
             InstallFailure.SignatureConflict,
             InstallFailure.TimedOut,
             InstallFailure.ConfirmationTimedOut,
+            InstallFailure.ScheduleFailed,
         )
 
         reasons.forEach { reason ->

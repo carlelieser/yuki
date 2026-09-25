@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 internal fun interface InstallRestarter {
-    fun restart(request: InstallRequest)
+    suspend fun restart(request: InstallRequest)
 }
 
 @Singleton

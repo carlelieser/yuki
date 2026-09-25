@@ -1,5 +1,6 @@
 package app.yuki.core.installer
 
+import android.database.sqlite.SQLiteException
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -7,11 +8,13 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import androidx.work.await
+import app.yuki.core.model.InstallFailure
 import java.time.Duration
 import javax.inject.Inject
 
 internal interface InstallWorkQueue {
-    fun enqueue(request: InstallRequest)
+    suspend fun enqueue(request: InstallRequest)
 
     fun cancel(githubRepoId: Long)
 }
@@ -19,12 +22,23 @@ internal interface InstallWorkQueue {
 internal class WorkManagerInstallWorkQueue @Inject constructor(
     private val workManager: WorkManager,
 ) : InstallWorkQueue {
-    override fun enqueue(request: InstallRequest) {
-        workManager.enqueueUniqueWork(
-            installWorkName(request.target.githubRepoId),
+    override suspend fun enqueue(request: InstallRequest) {
+        val githubRepoId = request.target.githubRepoId
+        val operation = workManager.enqueueUniqueWork(
+            installWorkName(githubRepoId),
             ExistingWorkPolicy.REPLACE,
             request.toWorkRequest(),
         )
+
+        try {
+            operation.await()
+        } catch (error: SQLiteException) {
+            throw InstallException(
+                InstallFailure.ScheduleFailed,
+                "WorkManager could not store the install for githubRepoId=$githubRepoId",
+                error,
+            )
+        }
     }
 
     override fun cancel(githubRepoId: Long) {

@@ -64,11 +64,14 @@ class UpdatesViewModel @Inject internal constructor(
         val update = updateFor(githubRepoId) ?: return
 
         when (action) {
-            InstallAction.Update, InstallAction.Retry, InstallAction.Install ->
-                dependencies.installer.install(update)
+            InstallAction.Update, InstallAction.Retry, InstallAction.Install -> install(update)
             InstallAction.Cancel -> cancel(githubRepoId)
             InstallAction.Open, InstallAction.Uninstall -> Unit
         }
+    }
+
+    private fun install(update: AvailableUpdate) {
+        viewModelScope.launch { dependencies.installer.install(update) }
     }
 
     private fun cancel(githubRepoId: Long) {

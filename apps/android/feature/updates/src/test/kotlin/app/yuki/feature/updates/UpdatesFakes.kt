@@ -84,7 +84,7 @@ internal class RecordingUpdateInstaller : UpdateInstaller {
         active.value = active.value + (githubRepoId to state)
     }
 
-    override fun install(update: AvailableUpdate) {
+    override suspend fun install(update: AvailableUpdate) {
         requested += update
     }
 

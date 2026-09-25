@@ -1,5 +1,6 @@
 package app.yuki.core.installer
 
+import app.yuki.core.model.InstallState
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,14 @@ class InstallScheduler @Inject internal constructor(
 
     fun observeActive(): Flow<List<InstallProgress>> = progress.observeActive()
 
-    fun start(request: InstallRequest) = queue.enqueue(request)
+    suspend fun start(request: InstallRequest) {
+        try {
+            queue.enqueue(request)
+        } catch (error: InstallException) {
+            val failed = InstallState.Failed(error.failure)
+            progress.write(InstallProgress(request.target, request.source.versionTag, failed))
+        }
+    }
 
     suspend fun cancel(githubRepoId: Long) {
         queue.cancel(githubRepoId)

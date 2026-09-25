@@ -20,7 +20,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
 interface UpdateInstaller {
-    fun install(update: AvailableUpdate)
+    suspend fun install(update: AvailableUpdate)
 
     fun observeActiveStates(): Flow<Map<Long, InstallState>>
 
@@ -55,7 +55,8 @@ internal class SchedulerUpdateInstaller @Inject constructor(
     private val progress: InstallProgressStore,
     @param:YukiBaseUrl private val baseUrl: String,
 ) : UpdateInstaller {
-    override fun install(update: AvailableUpdate) = scheduler.start(update.toRequest(baseUrl))
+    override suspend fun install(update: AvailableUpdate) =
+        scheduler.start(update.toRequest(baseUrl))
 
     override fun observeActiveStates(): Flow<Map<Long, InstallState>> =
         progress.observeActiveStates()

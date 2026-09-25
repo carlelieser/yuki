@@ -27,6 +27,8 @@ sealed interface InstallFailure {
 
     data object ConfirmationTimedOut : InstallFailure
 
+    data object ScheduleFailed : InstallFailure
+
     data class Rejected(val message: String) : InstallFailure
 }
 
