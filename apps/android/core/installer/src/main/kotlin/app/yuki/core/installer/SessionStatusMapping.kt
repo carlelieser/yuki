@@ -13,7 +13,7 @@ private fun SessionStatus.toFailure(): InstallFailure = when (code) {
     PackageInstaller.STATUS_FAILURE_ABORTED -> InstallFailure.Aborted
     PackageInstaller.STATUS_FAILURE_STORAGE -> InstallFailure.InsufficientStorage
     PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> InstallFailure.Incompatible
-    PackageInstaller.STATUS_FAILURE_INVALID -> InstallFailure.Incompatible
+    PackageInstaller.STATUS_FAILURE_INVALID -> InstallFailure.InvalidApk
     PackageInstaller.STATUS_FAILURE_CONFLICT -> InstallFailure.PackageMismatch
     PackageInstaller.STATUS_FAILURE_BLOCKED -> InstallFailure.Rejected(describe())
     else -> InstallFailure.Rejected(describe())

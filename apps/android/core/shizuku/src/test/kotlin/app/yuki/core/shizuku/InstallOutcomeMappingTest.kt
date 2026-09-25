@@ -23,9 +23,9 @@ class InstallOutcomeMappingTest {
     }
 
     @Test
-    fun `maps an invalid apk to incompatible`() {
+    fun `maps an invalid apk to invalid apk`() {
         assertEquals(
-            InstallOutcome.Failed(InstallFailure.Incompatible),
+            InstallOutcome.Failed(InstallFailure.InvalidApk),
             toOutcome(STATUS_FAILURE, "INSTALL_FAILED_INVALID_APK"),
         )
     }

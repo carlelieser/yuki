@@ -13,6 +13,8 @@ sealed interface InstallFailure {
 
     data object Incompatible : InstallFailure
 
+    data object InvalidApk : InstallFailure
+
     data object PackageMismatch : InstallFailure
 
     data object TimedOut : InstallFailure

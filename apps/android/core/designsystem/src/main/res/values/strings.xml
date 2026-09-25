@@ -37,6 +37,7 @@
     <string name="designsystem_install_failure_aborted">Install cancelled</string>
     <string name="designsystem_install_failure_insufficient_storage">Not enough space</string>
     <string name="designsystem_install_failure_incompatible">Not compatible</string>
+    <string name="designsystem_install_failure_invalid_apk">Damaged app file</string>
     <string name="designsystem_install_failure_package_mismatch">Different app</string>
     <string name="designsystem_install_failure_timed_out">Install timed out</string>
     <string name="designsystem_install_failure_rejected">Install failed</string>

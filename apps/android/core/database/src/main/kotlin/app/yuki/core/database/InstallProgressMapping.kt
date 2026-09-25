@@ -22,6 +22,7 @@ private object FailureName {
     const val ABORTED = "aborted"
     const val INSUFFICIENT_STORAGE = "insufficient_storage"
     const val INCOMPATIBLE = "incompatible"
+    const val INVALID_APK = "invalid_apk"
     const val PACKAGE_MISMATCH = "package_mismatch"
     const val TIMED_OUT = "timed_out"
     const val REJECTED = "rejected"
@@ -75,6 +76,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
     FailureName.ABORTED -> InstallFailure.Aborted
     FailureName.INSUFFICIENT_STORAGE -> InstallFailure.InsufficientStorage
     FailureName.INCOMPATIBLE -> InstallFailure.Incompatible
+    FailureName.INVALID_APK -> InstallFailure.InvalidApk
     FailureName.PACKAGE_MISMATCH -> InstallFailure.PackageMismatch
     FailureName.TIMED_OUT -> InstallFailure.TimedOut
     FailureName.REJECTED -> InstallFailure.Rejected(failureMessage.orEmpty())
@@ -116,6 +118,7 @@ private fun InstallFailure.name(): String = when (this) {
     InstallFailure.Aborted -> FailureName.ABORTED
     InstallFailure.InsufficientStorage -> FailureName.INSUFFICIENT_STORAGE
     InstallFailure.Incompatible -> FailureName.INCOMPATIBLE
+    InstallFailure.InvalidApk -> FailureName.INVALID_APK
     InstallFailure.PackageMismatch -> FailureName.PACKAGE_MISMATCH
     InstallFailure.TimedOut -> FailureName.TIMED_OUT
     is InstallFailure.Rejected -> FailureName.REJECTED

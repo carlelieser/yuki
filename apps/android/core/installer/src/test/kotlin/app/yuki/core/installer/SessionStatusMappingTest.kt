@@ -30,9 +30,13 @@ class SessionStatusMappingTest {
     }
 
     @Test
-    fun `incompatible and invalid both map to incompatible`() {
+    fun `incompatible maps to incompatible`() {
         assertEquals(failed(InstallFailure.Incompatible), outcomeOf(FAILURE_INCOMPATIBLE))
-        assertEquals(failed(InstallFailure.Incompatible), outcomeOf(FAILURE_INVALID))
+    }
+
+    @Test
+    fun `invalid maps to invalid apk`() {
+        assertEquals(failed(InstallFailure.InvalidApk), outcomeOf(FAILURE_INVALID))
     }
 
     @Test
