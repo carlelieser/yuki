@@ -209,7 +209,7 @@ class UpdatesViewModelTest {
     }
 
     @Test
-    fun aFailureStoredByTheSchedulerShowsOnTheRow() = runTest {
+    fun aFailedUpdateOffersTheUpdateAgain() = runTest {
         val viewModel = viewModelFor(
             installs = listOf(TERMUX),
             details = mapOf(TERMUX.slug to Result.success(termuxWith(version("v0.119.0")))),
@@ -219,7 +219,10 @@ class UpdatesViewModelTest {
         installer.publish(TERMUX.githubRepoId, failed)
         advanceUntilIdle()
 
-        assertEquals(failed, successOf(viewModel.state.value).updates.single().install)
+        assertEquals(
+            InstallState.UpdateAvailable(from = "v0.118.0", to = "v0.119.0"),
+            successOf(viewModel.state.value).updates.single().install,
+        )
     }
 
     @Test

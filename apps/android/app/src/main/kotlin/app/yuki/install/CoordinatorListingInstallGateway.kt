@@ -51,8 +51,9 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
         githubRepoId: Long,
         progress: InstallProgress?,
     ): ListingInstallStatus {
-        if (progress != null && !progress.isStaleInstalled()) {
-            return ListingInstallStatus(progress.state, progress.versionTag)
+        val shown = progress.shownOnButton()
+        if (shown != null && !shown.isStaleInstalled()) {
+            return ListingInstallStatus(shown.state, shown.versionTag)
         }
 
         return ListingInstallStatus(installedStateOf(githubRepoId), versionTag = null)
@@ -111,6 +112,9 @@ internal class CoordinatorListingInstallGateway @Inject constructor(
         }
     }
 }
+
+internal fun InstallProgress?.shownOnButton(): InstallProgress? =
+    this?.takeUnless { progress -> progress.state is InstallState.Failed }
 
 internal class UninstallException(packageName: String, reason: InstallFailure) :
     Exception("Failed to uninstall $packageName: $reason")

@@ -105,6 +105,7 @@ private fun UpdatesContent.withInstallStates(
 
 private fun InstallState?.forUpdate(update: AvailableUpdate): InstallState {
     val isEarlierInstall = this is InstallState.Installed && versionTag != update.version.tag
+    val isHidden = this == null || this is InstallState.Failed
 
-    return if (this == null || isEarlierInstall) update.toInstallState() else this
+    return if (isHidden || isEarlierInstall) update.toInstallState() else this
 }
