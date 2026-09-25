@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,6 +75,7 @@ private fun decode(resolver: ContentResolver, uri: Uri): Bitmap? =
         resolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
     }
 
+@RequiresApi(Build.VERSION_CODES.P)
 private fun decodeWithImageDecoder(resolver: ContentResolver, uri: Uri): Bitmap =
     ImageDecoder.decodeBitmap(
         ImageDecoder.createSource(resolver, uri),
