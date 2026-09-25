@@ -1,13 +1,12 @@
 package app.yuki.feature.listing
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.OverflowAction
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.model.UiState
 
 typealias ListingAction = OverflowAction
-
-const val SHARE_LABEL = "Share"
 
 @Composable
 internal fun listingActions(
@@ -22,7 +21,7 @@ internal fun listingActions(
         if (listing is UiState.Success) {
             add(
                 ListingAction(
-                    label = SHARE_LABEL,
+                    label = stringResource(R.string.listing_share),
                     icon = YukiIcons.Share,
                     onClick = { sharer.share(viewModel.shareUrl) },
                 ),
@@ -32,7 +31,7 @@ internal fun listingActions(
             val repositoryUrl = listing.data.detail.links.repositoryUrl
             add(
                 ListingAction(
-                    label = OBTAINIUM_LABEL,
+                    label = stringResource(R.string.listing_open_in_obtainium),
                     icon = YukiIcons.Obtainium,
                     onClick = { obtainium.open(repositoryUrl) },
                 ),

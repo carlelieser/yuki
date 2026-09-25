@@ -8,16 +8,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.yuki.core.designsystem.component.LinkOpener
-import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.OverflowMenu
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.UiState
@@ -155,7 +155,7 @@ internal fun ListingScreen(
                 ) {
                     FailureState(
                         reason = listing.reason,
-                        missingMessage = LISTING_MISSING_MESSAGE,
+                        missingMessage = stringResource(R.string.listing_missing),
                         onRetry = callbacks.onRetry,
                         modifier = Modifier.padding(YukiSpacing.Large),
                     )
@@ -165,4 +165,3 @@ internal fun ListingScreen(
     }
 }
 
-internal const val LISTING_MISSING_MESSAGE = "This app is no longer available."

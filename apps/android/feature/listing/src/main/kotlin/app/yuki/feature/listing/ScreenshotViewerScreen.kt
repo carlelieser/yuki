@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
@@ -79,7 +80,7 @@ internal fun ScreenshotViewerScreen(
                 ) {
                     FailureState(
                         reason = screenshots.reason,
-                        missingMessage = LISTING_MISSING_MESSAGE,
+                        missingMessage = stringResource(R.string.listing_missing),
                         onRetry = onRetry,
                         modifier = Modifier.padding(YukiSpacing.Large),
                     )

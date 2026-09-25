@@ -5,6 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.YukiTextButton
 
 const val LISTING_UNINSTALL_DIALOG_TAG = "listingUninstallDialog"
@@ -20,20 +21,19 @@ internal fun ListingUninstallDialog(prompt: ListingUninstallPrompt) {
     AlertDialog(
         modifier = Modifier.testTag(LISTING_UNINSTALL_DIALOG_TAG),
         onDismissRequest = prompt.onDismiss,
-        title = { Text(text = UNINSTALL_TITLE) },
-        text = { Text(text = uninstallMessage(prompt.title)) },
+        title = { Text(text = stringResource(R.string.listing_uninstall_title)) },
+        text = { Text(text = stringResource(R.string.listing_uninstall_message, prompt.title)) },
         confirmButton = {
-            YukiTextButton(label = UNINSTALL_CONFIRM, onClick = prompt.onConfirm)
+            YukiTextButton(
+                label = stringResource(R.string.listing_uninstall_confirm),
+                onClick = prompt.onConfirm,
+            )
         },
         dismissButton = {
-            YukiTextButton(label = UNINSTALL_CANCEL, onClick = prompt.onDismiss)
+            YukiTextButton(
+                label = stringResource(R.string.listing_uninstall_cancel),
+                onClick = prompt.onDismiss,
+            )
         },
     )
 }
-
-private fun uninstallMessage(title: String): String =
-    "$title will be removed from this device."
-
-internal const val UNINSTALL_TITLE = "Uninstall this app?"
-internal const val UNINSTALL_CONFIRM = "Uninstall"
-internal const val UNINSTALL_CANCEL = "Cancel"

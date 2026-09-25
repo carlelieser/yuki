@@ -15,14 +15,10 @@ class ListingLinkRowsTest {
             ),
         )
 
-        assertEquals(listOf("Repository", "Author"), linkRows(listing).map(ListingLinkRow::label))
-    }
-
-    @Test
-    fun `adds homepage and license rows when both are present`() {
-        val labels = linkRows(detail()).map(ListingLinkRow::label)
-
-        assertEquals(listOf("Repository", "Author", "Homepage", "License"), labels)
+        assertEquals(
+            listOf(ListingLinkKind.Repository, ListingLinkKind.Author),
+            linkRows(listing).map(ListingLinkRow::kind),
+        )
     }
 
     @Test
@@ -37,10 +33,5 @@ class ListingLinkRowsTest {
         val kinds = linkRows(detail()).map(ListingLinkRow::kind)
 
         assertEquals(ListingLinkKind.entries, kinds)
-    }
-
-    @Test
-    fun `renders an unreleased version without a published date`() {
-        assertEquals("Unreleased", formatPublished(null))
     }
 }

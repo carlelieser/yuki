@@ -1,25 +1,28 @@
 package app.yuki.feature.listing
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.test.platform.app.InstrumentationRegistry
+import app.yuki.core.designsystem.R as DesignR
 import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
-import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.InstallActionHandler
+import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.OVERFLOW_MENU_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.InstallState
@@ -27,8 +30,8 @@ import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
 import app.yuki.core.model.ScreenshotSelection
-import app.yuki.core.model.downloadSizeOf
 import app.yuki.core.model.UiState
+import app.yuki.core.model.downloadSizeOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +39,10 @@ import org.junit.Test
 class ListingScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    private fun resources() = InstrumentationRegistry.getInstrumentation().targetContext.resources
+
+    private fun text(@StringRes id: Int, vararg args: Any): String = resources().getString(id, *args)
 
     private fun setScreen(
         listing: UiState<ListingUiModel>,
@@ -81,7 +88,7 @@ class ListingScreenTest {
         )
 
         composeRule.onNodeWithTag(FAILURE_STATE_TAG).assertIsDisplayed()
-        composeRule.onNodeWithText("Try again").performClick()
+        composeRule.onNodeWithText(text(DesignR.string.designsystem_failure_retry)).performClick()
 
         assertEquals(1, retryCount)
     }
@@ -91,8 +98,8 @@ class ListingScreenTest {
         setScreen(UiState.Success(detail().toUiModel()))
 
         composeRule.onNodeWithTag(LISTING_DETAIL_TAG).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("By nightsky").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("128 stars").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(text(DesignR.string.designsystem_badge_author, "nightsky")).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(resources().getQuantityString(DesignR.plurals.designsystem_badge_stars, 128, 128)).assertIsDisplayed()
     }
 
     @Test
@@ -113,7 +120,7 @@ class ListingScreenTest {
     fun showsArchivedWarningForAnArchivedListing() {
         setScreen(UiState.Success(detail(isArchived = true).toUiModel()))
 
-        composeRule.scrollToText(ARCHIVED_TITLE)
+        composeRule.scrollToText(text(R.string.listing_archived_title))
         composeRule.onNode(hasTestTag(ARCHIVED_WARNING_TAG)).assertIsDisplayed()
     }
 
@@ -121,23 +128,23 @@ class ListingScreenTest {
     fun hidesArchivedWarningForAnActiveListing() {
         setScreen(UiState.Success(detail(isArchived = false).toUiModel()))
 
-        composeRule.onAllNodesWithText(ARCHIVED_TITLE).assertCountEquals(0)
+        composeRule.onAllNodesWithText(text(R.string.listing_archived_title)).assertCountEquals(0)
     }
 
     @Test
     fun showsInstallButtonWhenAVersionIsInstallable() {
         setScreen(UiState.Success(detail().toUiModel()))
 
-        composeRule.onAllNodesWithText("Install").onFirst().assertIsDisplayed()
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).onFirst().assertIsDisplayed()
     }
 
     @Test
     fun replacesInstallButtonWithANoticeWhenNothingIsInstallable() {
         setScreen(UiState.Success(detail(versions = emptyList()).toUiModel()))
 
-        composeRule.scrollToText(NO_INSTALLABLE_VERSION_TITLE)
+        composeRule.scrollToText(text(R.string.listing_no_installable_title))
         composeRule.onNode(hasTestTag(NO_INSTALLABLE_VERSION_TAG)).assertIsDisplayed()
-        composeRule.onAllNodesWithText("Install").assertCountEquals(0)
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).assertCountEquals(0)
     }
 
     @Test
@@ -159,7 +166,7 @@ class ListingScreenTest {
             callbacks = withScreenshotHandler(selected::add),
         )
 
-        composeRule.scrollToText("Screenshots")
+        composeRule.scrollToText(text(R.string.listing_section_screenshots))
         composeRule.onNodeWithContentDescription("Settings").performClick()
 
         assertEquals(listOf(1), selected.map(ScreenshotSelection::index))
@@ -177,7 +184,7 @@ class ListingScreenTest {
             callbacks = withScreenshotHandler(selected::add),
         )
 
-        composeRule.scrollToText("Screenshots")
+        composeRule.scrollToText(text(R.string.listing_section_screenshots))
         composeRule.onNodeWithContentDescription("Settings").performClick()
 
         assertEquals(
@@ -196,7 +203,7 @@ class ListingScreenTest {
         )
 
         composeRule.scrollToText("Aurora v1.0.0")
-        composeRule.onAllNodesWithText("Install").onLast().performClick()
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).onLast().performClick()
 
         assertEquals(listOf("v1.0.0"), requested)
     }
@@ -206,9 +213,9 @@ class ListingScreenTest {
         val versions = listOf(version("v2.0.0"), version("v1.0.0", downloadUrl = null))
         setScreen(UiState.Success(detail(versions = versions).toUiModel()))
 
-        composeRule.scrollToText(NO_ASSET_LABEL)
-        composeRule.onNodeWithContentDescription(NO_ASSET_LABEL).assertIsDisplayed()
-        composeRule.onAllNodesWithText("Install").assertCountEquals(1)
+        composeRule.scrollToText(text(R.string.listing_version_no_asset))
+        composeRule.onNodeWithContentDescription(text(R.string.listing_version_no_asset)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).assertCountEquals(1)
     }
 
     @Test
@@ -221,7 +228,7 @@ class ListingScreenTest {
         )
 
         composeRule.scrollToText("Aurora v1.5.0-rc")
-        composeRule.onAllNodesWithText("Install").onLast().performClick()
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).onLast().performClick()
 
         assertEquals(listOf("v1.5.0-rc"), requested)
     }
@@ -230,15 +237,15 @@ class ListingScreenTest {
     fun withholdsTheInstallControlsUntilTheInstallStatusIsKnown() {
         setScreen(listing = UiState.Success(detail().toUiModel()), status = null)
 
-        composeRule.onNodeWithText("Install").assertDoesNotExist()
-        composeRule.onNodeWithText("Uninstall").assertDoesNotExist()
+        composeRule.onNodeWithText(text(DesignR.string.designsystem_install)).assertDoesNotExist()
+        composeRule.onNodeWithText(text(DesignR.string.designsystem_install_uninstall)).assertDoesNotExist()
     }
 
     @Test
     fun showsTheInstallControlOnceTheStatusArrives() {
         setScreen(listing = UiState.Success(detail().toUiModel()), status = idleStatus())
 
-        composeRule.onNodeWithText("Install").assertIsDisplayed()
+        composeRule.onNodeWithText(text(DesignR.string.designsystem_install)).assertIsDisplayed()
     }
 
     @Test
@@ -253,7 +260,7 @@ class ListingScreenTest {
         )
 
         composeRule.scrollToText("Aurora v1.0.0")
-        composeRule.onAllNodesWithText("Install").onLast().assertIsNotEnabled()
+        composeRule.onAllNodesWithText(text(DesignR.string.designsystem_install)).onLast().assertIsNotEnabled()
     }
 
     @Test
@@ -264,8 +271,8 @@ class ListingScreenTest {
             callbacks = withInstallHandler { action -> actions.add(action.name) },
         )
 
-        composeRule.scrollToText("Install")
-        composeRule.onNodeWithText("Install").performClick()
+        composeRule.scrollToText(text(DesignR.string.designsystem_install))
+        composeRule.onNodeWithText(text(DesignR.string.designsystem_install)).performClick()
 
         assertEquals(listOf("Install"), actions)
     }
@@ -278,8 +285,8 @@ class ListingScreenTest {
             callbacks = withLinkOpener { url -> opened.add(url) },
         )
 
-        composeRule.scrollToText("Repository")
-        composeRule.onNodeWithText("Repository").performClick()
+        composeRule.scrollToText(text(R.string.listing_link_repository))
+        composeRule.onNodeWithText(text(R.string.listing_link_repository)).performClick()
 
         assertEquals(listOf("https://github.com/nightsky/aurora"), opened)
     }
@@ -288,8 +295,8 @@ class ListingScreenTest {
     fun marksEveryLinkRowAsOpeningExternally() {
         setScreen(UiState.Success(detail().toUiModel()))
 
-        composeRule.scrollToText("License")
-        composeRule.onAllNodesWithContentDescription(EXTERNAL_LINK_DESCRIPTION)
+        composeRule.scrollToText(text(R.string.listing_link_license))
+        composeRule.onAllNodesWithContentDescription(text(R.string.listing_external_link))
             .assertCountEquals(linkRows(detail()).size)
     }
 
@@ -303,7 +310,7 @@ class ListingScreenTest {
 
         composeRule.scrollToText("Aurora v1.0.0-rc")
         composeRule.onNodeWithText("Aurora v1.0.0-rc").assertIsDisplayed()
-        composeRule.onNodeWithText("Prerelease").assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.listing_version_prerelease)).assertIsDisplayed()
     }
 
     @Test
@@ -370,8 +377,8 @@ class ListingScreenTest {
         setAuthorSection(composeRule, listOf(otherApp()))
 
         composeRule.onNodeWithTag(LISTING_DETAIL_TAG)
-            .performScrollToNode(hasText("More from nightsky"))
-        composeRule.onNodeWithText("More from nightsky").assertIsDisplayed()
+            .performScrollToNode(hasText(text(R.string.listing_section_more_from, "nightsky")))
+        composeRule.onNodeWithText(text(R.string.listing_section_more_from, "nightsky")).assertIsDisplayed()
         composeRule.onNodeWithText("Borealis").assertIsDisplayed()
     }
 
@@ -379,7 +386,7 @@ class ListingScreenTest {
     fun hidesTheAuthorSectionWhenTheAuthorHasNoOtherApps() {
         setAuthorSection(composeRule, emptyList())
 
-        composeRule.onAllNodesWithText("More from nightsky").assertCountEquals(0)
+        composeRule.onAllNodesWithText(text(R.string.listing_section_more_from, "nightsky")).assertCountEquals(0)
     }
 
     @Test
@@ -395,8 +402,8 @@ class ListingScreenTest {
         )
 
         composeRule.onNodeWithTag(LISTING_DETAIL_TAG)
-            .performScrollToNode(hasText("More from nightsky"))
-        composeRule.onNodeWithContentDescription("See all nightsky").performClick()
+            .performScrollToNode(hasText(text(R.string.listing_section_more_from, "nightsky")))
+        composeRule.onNodeWithContentDescription(text(DesignR.string.designsystem_section_see_all, "nightsky")).performClick()
 
         assertEquals(listOf("nightsky"), chosen)
     }

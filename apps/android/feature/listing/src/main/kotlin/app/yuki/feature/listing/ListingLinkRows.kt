@@ -1,24 +1,23 @@
 package app.yuki.feature.listing
 
+import androidx.annotation.StringRes
 import app.yuki.core.model.ListingDetail
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-enum class ListingLinkKind(val label: String) {
-    Repository("Repository"),
-    Author("Author"),
-    Homepage("Homepage"),
-    License("License"),
+enum class ListingLinkKind(@StringRes val label: Int) {
+    Repository(R.string.listing_link_repository),
+    Author(R.string.listing_link_author),
+    Homepage(R.string.listing_link_homepage),
+    License(R.string.listing_link_license),
 }
 
 data class ListingLinkRow(
     val kind: ListingLinkKind,
     val supporting: String,
     val url: String,
-) {
-    val label: String get() = kind.label
-}
+)
 
 private const val LICENSE_BASE_URL = "https://choosealicense.com/licenses/"
 
@@ -67,5 +66,4 @@ fun linkRows(detail: ListingDetail): List<ListingLinkRow> = buildList {
 private val publishedFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("d MMM yyyy").withZone(ZoneId.systemDefault())
 
-fun formatPublished(publishedAt: Instant?): String =
-    publishedAt?.let(publishedFormatter::format) ?: "Unreleased"
+fun formatPublished(publishedAt: Instant): String = publishedFormatter.format(publishedAt)

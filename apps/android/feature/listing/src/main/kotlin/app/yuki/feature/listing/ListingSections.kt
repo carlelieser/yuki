@@ -1,5 +1,6 @@
 package app.yuki.feature.listing
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,56 +17,54 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.component.StatusCard
 import app.yuki.core.designsystem.component.StatusContent
 import app.yuki.core.designsystem.component.StatusTone
-import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val ARCHIVED_WARNING_TAG = "listingArchivedWarning"
 const val NO_INSTALLABLE_VERSION_TAG = "listingNoInstallableVersion"
 const val UNINSTALL_FAILED_TAG = "listingUninstallFailed"
-const val ARCHIVED_TITLE = "This project is archived"
-const val NO_INSTALLABLE_VERSION_TITLE = "No installable release"
-const val UNINSTALL_FAILED_TITLE = "Couldn't uninstall"
-
-private val archivedContent = StatusContent(
-    title = ARCHIVED_TITLE,
-    description = "The author has stopped maintaining it. It may not receive fixes or updates.",
-    tone = StatusTone.Attention,
-)
-
-private val noInstallableContent = StatusContent(
-    title = NO_INSTALLABLE_VERSION_TITLE,
-    description = "This listing has no stable release with a downloadable asset.",
-    tone = StatusTone.Attention,
-)
-
-private val uninstallFailedContent = StatusContent(
-    title = UNINSTALL_FAILED_TITLE,
-    description = "The app is still installed. Try again, or remove it from Android settings.",
-    tone = StatusTone.Attention,
-)
+@Composable
+private fun attentionContent(@StringRes title: Int, @StringRes description: Int): StatusContent =
+    StatusContent(
+        title = stringResource(title),
+        description = stringResource(description),
+        tone = StatusTone.Attention,
+    )
 
 @Composable
 internal fun UninstallFailedNotice(modifier: Modifier = Modifier) {
     StatusCard(
-        content = uninstallFailedContent,
+        content = attentionContent(
+            title = R.string.listing_uninstall_failed_title,
+            description = R.string.listing_uninstall_failed_description,
+        ),
         modifier = modifier.testTag(UNINSTALL_FAILED_TAG),
     )
 }
 
 @Composable
 internal fun ArchivedWarning(modifier: Modifier = Modifier) {
-    StatusCard(content = archivedContent, modifier = modifier.testTag(ARCHIVED_WARNING_TAG))
+    StatusCard(
+        content = attentionContent(
+            title = R.string.listing_archived_title,
+            description = R.string.listing_archived_description,
+        ),
+        modifier = modifier.testTag(ARCHIVED_WARNING_TAG),
+    )
 }
 
 @Composable
 internal fun NoInstallableVersionNotice(modifier: Modifier = Modifier) {
     StatusCard(
-        content = noInstallableContent,
+        content = attentionContent(
+            title = R.string.listing_no_installable_title,
+            description = R.string.listing_no_installable_description,
+        ),
         modifier = modifier.testTag(NO_INSTALLABLE_VERSION_TAG),
     )
 }
@@ -87,7 +86,7 @@ private fun LinkRowText(row: ListingLinkRow, modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(YukiSpacing.ExtraSmall),
     ) {
-        Text(text = row.label, style = MaterialTheme.typography.titleSmall)
+        Text(text = stringResource(row.kind.label), style = MaterialTheme.typography.titleSmall)
         Text(
             text = row.supporting,
             style = MaterialTheme.typography.bodySmall,
@@ -113,7 +112,7 @@ internal fun ListingLinkItem(
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowLeadingIcon(icon = row.kind.icon, description = row.label)
+        RowLeadingIcon(icon = row.kind.icon, description = stringResource(row.kind.label))
         LinkRowText(row = row, modifier = Modifier.weight(1f))
         ExternalLinkIcon(modifier = Modifier.size(YukiSize.IconSmall))
     }

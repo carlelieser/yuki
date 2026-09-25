@@ -11,10 +11,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import app.yuki.core.designsystem.component.LinkOpener
+import androidx.compose.ui.res.stringResource
 import app.yuki.core.designsystem.component.InstallAction
 import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
+import app.yuki.core.designsystem.component.LinkOpener
 import app.yuki.core.designsystem.component.ListingInstalls
 import app.yuki.core.designsystem.component.ListingSectionActions
 import app.yuki.core.designsystem.component.ListingSectionContent
@@ -118,23 +119,25 @@ private fun LazyListScope.screenshotSection(
     val screenshots = model.detail.screenshots
     if (screenshots.isEmpty()) return
 
-    item { SectionHeader(title = "Screenshots") }
+    item { SectionHeader(title = stringResource(R.string.listing_section_screenshots)) }
     item { ScreenshotCarousel(screenshots = screenshots, onSelect = onScreenshotSelected) }
 }
 
+internal data class AuthorSection(val author: String, val title: String)
+
 private fun LazyListScope.moreFromAuthorSection(
-    model: ListingUiModel,
+    section: AuthorSection,
     authored: AuthoredListings,
     callbacks: ListingCallbacks,
 ) {
     if (authored.listings.isEmpty()) return
 
-    val author = model.detail.summary.author
+    val author = section.author
     val onAuthorSelected = callbacks.onAuthorSelected
 
     listingSection(
         content = ListingSectionContent(
-            title = "More from $author",
+            title = section.title,
             keyPrefix = MORE_FROM_AUTHOR_KEY,
             listings = authored.listings,
             installs = authored.installs,
@@ -150,8 +153,8 @@ private fun LazyListScope.moreFromAuthorSection(
 private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpener) {
     val rows = linkRows(model.detail)
 
-    item { SectionHeader(title = "Links") }
-    items(items = rows, key = ListingLinkRow::label) { row ->
+    item { SectionHeader(title = stringResource(R.string.listing_section_links)) }
+    items(items = rows, key = ListingLinkRow::kind) { row ->
         ListingLinkItem(
             row = row,
             onOpen = { onOpenLink.open(row.url) },
@@ -168,7 +171,7 @@ private fun LazyListScope.versionSection(
     val versions = model.detail.versions
     if (versions.isEmpty() || status == null) return
 
-    item { SectionHeader(title = "Versions") }
+    item { SectionHeader(title = stringResource(R.string.listing_section_versions)) }
     items(items = versions, key = { it.tag }) { version ->
         ListingVersionItem(
             version = version,
@@ -190,6 +193,12 @@ internal fun ListingDetailBody(
     callbacks: ListingCallbacks,
     authored: AuthoredListings = AuthoredListings(),
 ) {
+    val author = model.detail.summary.author
+    val authorSection = AuthorSection(
+        author = author,
+        title = stringResource(R.string.listing_section_more_from, author),
+    )
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -203,7 +212,7 @@ internal fun ListingDetailBody(
         warningSection(model)
         descriptionSection(model)
         screenshotSection(model, callbacks.onScreenshotSelected)
-        moreFromAuthorSection(model, authored, callbacks)
+        moreFromAuthorSection(authorSection, authored, callbacks)
         linkSection(model, callbacks.onOpenLink)
         versionSection(model, status.install, callbacks.onVersionInstallAction)
     }

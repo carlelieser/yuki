@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.component.BadgeContent
 import app.yuki.core.designsystem.component.InstallActionHandler
@@ -24,28 +25,28 @@ import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.model.ListingVersion
 import java.time.Instant
 
-internal const val PRERELEASE_LABEL = "Prerelease"
-internal const val NO_ASSET_LABEL = "No asset"
-internal const val VERSION_ICON_DESCRIPTION = "Release"
-
 @Composable
 private fun PrereleaseBadge() {
+    val label = stringResource(R.string.listing_version_prerelease)
+
     YukiBadge(
         content = BadgeContent(
-            label = PRERELEASE_LABEL,
+            label = label,
             icon = YukiIcons.History,
-            description = PRERELEASE_LABEL,
+            description = label,
         ),
     )
 }
 
 @Composable
 private fun NoAssetBadge() {
+    val label = stringResource(R.string.listing_version_no_asset)
+
     YukiBadge(
         content = BadgeContent(
-            label = NO_ASSET_LABEL,
+            label = label,
             icon = YukiIcons.Error,
-            description = NO_ASSET_LABEL,
+            description = label,
         ),
     )
 }
@@ -64,7 +65,8 @@ private fun TagBadge(tag: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun PublishedBadge(publishedAt: Instant?) {
-    val label = formatPublished(publishedAt)
+    val label = publishedAt?.let(::formatPublished)
+        ?: stringResource(R.string.listing_version_unreleased)
 
     YukiBadge(
         content = BadgeContent(
@@ -141,7 +143,10 @@ internal fun ListingVersionItem(
         horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowLeadingIcon(icon = YukiIcons.DeployedCode, description = VERSION_ICON_DESCRIPTION)
+        RowLeadingIcon(
+            icon = YukiIcons.DeployedCode,
+            description = stringResource(R.string.listing_version_icon),
+        )
         VersionText(version = version, modifier = Modifier.weight(1f))
         VersionInstallControl(
             version = version,

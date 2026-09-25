@@ -19,7 +19,7 @@ internal fun startShareChooser(context: Context, url: String) {
         .setType("text/plain")
         .putExtra(Intent.EXTRA_TEXT, url)
 
-    val chooser = Intent.createChooser(intent, SHARE_LABEL)
+    val chooser = Intent.createChooser(intent, context.getString(R.string.listing_share))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
     try {

@@ -13,7 +13,6 @@ fun interface ObtainiumOpener {
     fun open(repositoryUrl: String)
 }
 
-const val OBTAINIUM_LABEL = "Open in Obtainium"
 
 private val OBTAINIUM_PACKAGES = listOf(
     "dev.imranr.obtainium",

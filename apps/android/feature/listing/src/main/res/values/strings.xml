@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="listing_missing">This app is no longer available.</string>
+    <string name="listing_share">Share</string>
+    <string name="listing_open_in_obtainium">Open in Obtainium</string>
+    <string name="listing_external_link">Opens in your browser</string>
+
+    <string name="listing_section_screenshots">Screenshots</string>
+    <string name="listing_section_more_from">More from %1$s</string>
+    <string name="listing_section_links">Links</string>
+    <string name="listing_section_versions">Versions</string>
+
+    <string name="listing_link_repository">Repository</string>
+    <string name="listing_link_author">Author</string>
+    <string name="listing_link_homepage">Homepage</string>
+    <string name="listing_link_license">License</string>
+
+    <string name="listing_archived_title">This project is archived</string>
+    <string name="listing_archived_description">The author has stopped maintaining it. It may not receive fixes or updates.</string>
+    <string name="listing_no_installable_title">No installable release</string>
+    <string name="listing_no_installable_description">This listing has no stable release with a downloadable asset.</string>
+    <string name="listing_uninstall_failed_title">Couldn\'t uninstall</string>
+    <string name="listing_uninstall_failed_description">The app is still installed. Try again, or remove it from Android settings.</string>
+
+    <string name="listing_uninstall_title">Uninstall this app?</string>
+    <string name="listing_uninstall_message">%1$s will be removed from this device.</string>
+    <string name="listing_uninstall_confirm">Uninstall</string>
+    <string name="listing_uninstall_cancel">Cancel</string>
+
+    <string name="listing_version_prerelease">Prerelease</string>
+    <string name="listing_version_no_asset">No asset</string>
+    <string name="listing_version_icon">Release</string>
+    <string name="listing_version_unreleased">Unreleased</string>
+</resources>
