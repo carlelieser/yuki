@@ -4,6 +4,7 @@ import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 internal const val INSTALL_MAX_ATTEMPTS = 3
 
@@ -18,10 +19,17 @@ internal class InstallRun @Inject constructor(
 
         progress.write(InstallProgress(target, versionTag, latest))
 
-        coordinator.install(request).collect { state ->
-            latest = state
-            val shown = if (isRetryable(state, runAttemptCount)) QUEUED else state
-            progress.write(InstallProgress(target, versionTag, shown))
+        try {
+            coordinator.install(request).collect { state ->
+                latest = state
+                val shown = if (isRetryable(state, runAttemptCount)) QUEUED else state
+                progress.write(InstallProgress(target, versionTag, shown))
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            progress.write(InstallProgress(target, versionTag, UNEXPECTED))
+            throw error
         }
 
         return latest
@@ -44,5 +52,7 @@ private fun InstallFailure.isTransient(): Boolean {
 
     return status >= FIRST_SERVER_ERROR || status in TRANSIENT_CLIENT_ERRORS
 }
+
+private val UNEXPECTED = InstallState.Failed(InstallFailure.Unexpected)
 
 private val QUEUED = InstallState.Downloading(downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L))

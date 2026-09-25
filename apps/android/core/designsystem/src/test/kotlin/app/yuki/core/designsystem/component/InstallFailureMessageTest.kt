@@ -37,6 +37,7 @@ class InstallFailureMessageTest {
     @Test
     fun `every failure has its own message`() {
         val failures = listOf(
+            InstallFailure.Unexpected,
             InstallFailure.DownloadUnreadable,
             InstallFailure.NotAnApk,
             InstallFailure.Aborted,

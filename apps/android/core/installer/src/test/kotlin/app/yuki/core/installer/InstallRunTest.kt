@@ -99,6 +99,34 @@ class InstallRunTest {
 
         assertEquals(downloadFailedWith(503), progress.find(42L)?.state)
     }
+
+    @Test
+    fun `an unexpected error fails the install and still reaches the worker`() = runTest {
+        val progress = FakeInstallProgressStore()
+        val run = runOf(
+            progress = progress,
+            downloader = FakeApkDownloader(failure = IllegalStateException("bug")),
+        )
+
+        val error = runCatching { run.execute(testRequest(), runAttemptCount = 0) }
+            .exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertEquals(
+            InstallState.Failed(InstallFailure.Unexpected),
+            progress.find(42L)?.state,
+        )
+    }
+
+    @Test
+    fun `a cancelled install is not recorded as failed`() = runTest {
+        val progress = FakeInstallProgressStore()
+        val run = runOf(progress = progress, downloader = FakeApkDownloader(cancelMidway = true))
+
+        runCatching { run.execute(testRequest(), runAttemptCount = 0) }
+
+        assertTrue(progress.find(42L)?.state !is InstallState.Failed)
+    }
 }
 
 class InstallRetryPolicyTest {

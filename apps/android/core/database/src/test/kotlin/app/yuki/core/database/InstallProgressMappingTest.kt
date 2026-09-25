@@ -69,6 +69,7 @@ class InstallProgressMappingTest {
     fun `every failure reason round trips distinctly`() {
         val reasons = listOf(
             InstallFailure.DownloadFailed(httpStatus = null),
+            InstallFailure.Unexpected,
             InstallFailure.DownloadUnreadable,
             InstallFailure.NotAnApk,
             InstallFailure.Aborted,

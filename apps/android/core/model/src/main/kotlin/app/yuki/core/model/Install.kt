@@ -3,6 +3,8 @@ package app.yuki.core.model
 sealed interface InstallFailure {
     data class DownloadFailed(val httpStatus: Int?) : InstallFailure
 
+    data object Unexpected : InstallFailure
+
     data object DownloadUnreadable : InstallFailure
 
     data object NotAnApk : InstallFailure
