@@ -61,10 +61,10 @@ function asset(name: string, url: string): GithubReleaseAsset {
 	return { name, browser_download_url: url, size: 100 } as GithubReleaseAsset;
 }
 
-function event(arch: string | null) {
+function event(arch: string | null, user: { id: string } | null = null) {
 	const query = arch === null ? '' : `?arch=${arch}`;
 	return {
-		locals: { db, user: null },
+		locals: { db, user },
 		params: { slug: 'acme-tools', tag: 'v1.2.0' },
 		url: new URL(`http://localhost/listings/acme-tools/download/v1.2.0${query}`)
 	} as unknown as RequestEvent;
@@ -159,5 +159,25 @@ describe('GET /listings/[slug]/download/[tag]', () => {
 
 		expect(await outcomeOf('arm64-v8a')).toEqual({ status: 302, target: STORED_URL });
 		expect(fetchReleaseAssets).not.toHaveBeenCalled();
+	});
+
+	it('records the download for a signed in user', async () => {
+		getListingBySlug.mockResolvedValue(detail('app.apk'));
+		recordDownload.mockResolvedValue(undefined);
+
+		await expect(download(event(null, { id: 'user-1' }))).rejects.toSatisfy(isRedirect);
+
+		expect(recordDownload).toHaveBeenCalledWith(db, {
+			listingId: '3f1b5c4e-0000-4000-8000-000000000001',
+			userId: 'user-1',
+			versionTag: 'v1.2.0'
+		});
+	});
+
+	it('surfaces a download that could not be recorded instead of hiding it', async () => {
+		getListingBySlug.mockResolvedValue(detail('app.apk'));
+		recordDownload.mockRejectedValue(new Error('database unavailable'));
+
+		await expect(download(event(null, { id: 'user-1' }))).rejects.toThrow('database unavailable');
 	});
 });

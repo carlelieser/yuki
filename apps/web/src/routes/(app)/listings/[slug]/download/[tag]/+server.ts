@@ -1,6 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import type { Database } from '@yuki/db';
 import {
 	architectureOfName,
 	parseArchitecture,
@@ -12,13 +11,6 @@ import { fetchReleaseAssets, ReleaseLookupFailed } from '$lib/server/release-ass
 import { recordDownload } from '$lib/server/reviews.ts';
 
 type StoredDownload = { tag: string; downloadUrl: string; assetName: string | null };
-
-async function recordQuietly(
-	db: Database,
-	input: { listingId: string; userId: string; versionTag: string | null }
-): Promise<void> {
-	await recordDownload(db, input).catch(() => undefined);
-}
 
 function storedArchitecture(stored: StoredDownload): Architecture | null | undefined {
 	return stored.assetName === null ? undefined : architectureOfName(stored.assetName);
@@ -83,7 +75,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		: stored.downloadUrl;
 
 	if (locals.user) {
-		await recordQuietly(locals.db, {
+		await recordDownload(locals.db, {
 			listingId: listing.id,
 			userId: locals.user.id,
 			versionTag: version.tag
