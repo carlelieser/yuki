@@ -10,6 +10,7 @@ export type { RateLimitPolicy } from './backoff.ts';
 export { requireGithubToken } from './env.ts';
 export { parseTimestamp } from './timestamp.ts';
 export {
+	architectureOfName,
 	availableArchitectures,
 	hasDistributableApk,
 	mapReleases,

@@ -55,7 +55,11 @@ function isTokenCharacter(character: string | undefined): boolean {
 }
 
 function architectureOf(asset: GithubReleaseAsset): Architecture | null {
-	const lowered = asset.name.toLowerCase();
+	return architectureOfName(asset.name);
+}
+
+export function architectureOfName(name: string): Architecture | null {
+	const lowered = name.toLowerCase();
 	const matches = ARCHITECTURES.filter((architecture) =>
 		ARCHITECTURE_ALIASES[architecture].some((alias) => hasToken(lowered, alias))
 	);

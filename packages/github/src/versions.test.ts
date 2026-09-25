@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	architectureOfName,
 	availableArchitectures,
 	hasDistributableApk,
 	mapReleases,
@@ -251,6 +252,18 @@ describe('architecture naming', () => {
 		]);
 
 		expect(found).toEqual(['arm64-v8a']);
+	});
+});
+
+describe('architectureOfName', () => {
+	it('reads the architecture a split apk was built for', () => {
+		expect(architectureOfName('app-arm64-v8a-release.apk')).toBe('arm64-v8a');
+		expect(architectureOfName('app-x86_64-release.apk')).toBe('x86_64');
+	});
+
+	it('reads no architecture from a universal apk', () => {
+		expect(architectureOfName('app-universal-release.apk')).toBeNull();
+		expect(architectureOfName('DPI-Zoom-v1.1.0.apk')).toBeNull();
 	});
 });
 
