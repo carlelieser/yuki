@@ -8,6 +8,7 @@ import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import java.time.Clock
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -19,6 +20,7 @@ internal const val DOWNLOAD_POLL_INTERVAL_MILLIS = 400L
 
 internal class DownloadManagerApkDownloader @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val clock: Clock,
 ) : ApkDownloader {
     private val manager: DownloadManager
         get() = context.getSystemService(DownloadManager::class.java)
@@ -48,6 +50,7 @@ internal class DownloadManagerApkDownloader @Inject constructor(
         source: InstallSource,
     ): DownloadSnapshot {
         var lastEmitted: DownloadSize? = null
+        val stall = DownloadStall(clock)
 
         while (true) {
             val snapshot = DownloadCursorReader(manager).read(downloadId)
@@ -64,6 +67,7 @@ internal class DownloadManagerApkDownloader @Inject constructor(
             }
 
             if (snapshot.isComplete) return snapshot
+            if (stall.hasStalled(snapshot)) throw stalled(downloadId, source)
 
             delay(DOWNLOAD_POLL_INTERVAL_MILLIS)
         }
@@ -81,6 +85,11 @@ internal class DownloadManagerApkDownloader @Inject constructor(
                 fileName(),
             )
 }
+
+private fun stalled(downloadId: Long, source: InstallSource): InstallException = InstallException(
+    InstallFailure.DownloadFailed(httpStatus = null),
+    "Download $downloadId for ${source.downloadUrl} made no progress for $DOWNLOAD_STALL_TIMEOUT",
+)
 
 internal fun DownloadSnapshot.shouldEmit(lastEmitted: DownloadSize?): Boolean =
     size != lastEmitted
