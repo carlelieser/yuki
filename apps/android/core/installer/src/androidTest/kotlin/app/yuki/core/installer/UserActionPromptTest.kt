@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
+import android.service.notification.StatusBarNotification
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
@@ -26,7 +27,7 @@ class UserActionPromptTest {
     fun anInstallAwaitingTheUserPostsATapToConfirmNotification() {
         prompt.post(SESSION_ID, confirmIntent())
 
-        val posted = activeConfirmations()
+        val posted = awaitPosted()
         assertEquals(1, posted.size)
         assertEquals(CONFIRMATION_CHANNEL_ID, posted.single().notification.channelId)
         assertTrue(posted.single().notification.contentIntent != null)
@@ -45,19 +46,26 @@ class UserActionPromptTest {
         .activeNotifications
         .filter { posted -> posted.tag == CONFIRMATION_NOTIFICATION_TAG && posted.id == SESSION_ID }
 
-    private fun awaitWithdrawn(): Boolean {
-        val deadline = SystemClock.uptimeMillis() + WITHDRAW_TIMEOUT_MILLIS
-        while (activeConfirmations().isNotEmpty() && SystemClock.uptimeMillis() < deadline) {
+    private fun awaitPosted() = awaitConfirmations { posted -> posted.isNotEmpty() }
+
+    private fun awaitConfirmations(
+        isSettled: (List<StatusBarNotification>) -> Boolean,
+    ): List<StatusBarNotification> {
+        val deadline = SystemClock.uptimeMillis() + NOTIFICATION_TIMEOUT_MILLIS
+        while (!isSettled(activeConfirmations()) && SystemClock.uptimeMillis() < deadline) {
             SystemClock.sleep(POLL_MILLIS)
         }
 
-        return activeConfirmations().isEmpty()
+        return activeConfirmations()
     }
+
+    private fun awaitWithdrawn(): Boolean =
+        awaitConfirmations { posted -> posted.isEmpty() }.isEmpty()
 
     private fun confirmIntent(): Intent =
         Intent(Intent.ACTION_VIEW).setClassName(context, "app.yuki.core.installer.Missing")
 }
 
 private const val SESSION_ID = 4_242
-private const val WITHDRAW_TIMEOUT_MILLIS = 2_000L
+private const val NOTIFICATION_TIMEOUT_MILLIS = 2_000L
 private const val POLL_MILLIS = 50L
