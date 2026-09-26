@@ -95,12 +95,11 @@ private fun isBlocking(state: InstallState): Boolean = state is InstallState.Ins
 @Composable
 private fun describeDownload(size: DownloadSize): String {
     val fraction = size.fraction ?: return stringResource(R.string.designsystem_install_downloading)
-    val percent = (fraction * PERCENT).toInt()
+    val percent = formatPercent(fraction, currentLocale())
 
     return stringResource(R.string.designsystem_install_downloading_progress, percent, size.label())
 }
 
-private const val PERCENT = 100
 
 @Composable
 private fun SideAccessory(isVisible: Boolean, content: @Composable () -> Unit) {

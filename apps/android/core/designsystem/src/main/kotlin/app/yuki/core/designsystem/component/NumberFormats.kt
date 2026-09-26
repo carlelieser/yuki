@@ -4,6 +4,7 @@ import android.icu.text.CompactDecimalFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -28,6 +29,15 @@ internal fun formatStarCount(stars: Int, locale: Locale): String {
     }
 
     return format.format(stars.toLong())
+}
+
+internal fun formatPercent(fraction: Float, locale: Locale): String {
+    val format = NumberFormat.getPercentInstance(locale).apply {
+        maximumFractionDigits = 0
+        roundingMode = RoundingMode.DOWN
+    }
+
+    return format.format(fraction.toDouble())
 }
 
 @Composable

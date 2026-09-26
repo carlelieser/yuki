@@ -28,7 +28,7 @@
     <string name="designsystem_install_installed_version">Installed, version %1$s</string>
     <string name="designsystem_install_update_range">Update from %1$s to %2$s</string>
     <string name="designsystem_install_downloading">Downloading</string>
-    <string name="designsystem_install_downloading_progress">Downloading, %1$d percent, %2$s</string>
+    <string name="designsystem_install_downloading_progress">Downloading, %1$s, %2$s</string>
 
     <string name="designsystem_install_error_download_offline">%1$s didn\'t download. Check your connection and try again.</string>
     <string name="designsystem_install_error_unexpected">Something went wrong installing %1$s.</string>

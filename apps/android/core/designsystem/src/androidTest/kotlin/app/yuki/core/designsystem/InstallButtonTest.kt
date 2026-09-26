@@ -18,10 +18,12 @@ import app.yuki.core.designsystem.component.InstallActionHandler
 import app.yuki.core.designsystem.component.InstallButton
 import app.yuki.core.designsystem.component.InstallProgressPosition
 import app.yuki.core.designsystem.component.InstallProgressShape
+import app.yuki.core.designsystem.component.formatPercent
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
 import app.yuki.core.model.downloadSizeOf
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +36,9 @@ class InstallButtonTest {
 
     private fun text(@StringRes id: Int, vararg args: Any): String =
         composeRule.activity.getString(id, *args)
+
+    private fun partlyDownloadedPercent(): String =
+        formatPercent(requireNotNull(PARTLY_DOWNLOADED.fraction), Locale.getDefault())
 
     private fun bytes(count: Long): String = Formatter.formatShortFileSize(composeRule.activity, count)
 
@@ -106,7 +111,7 @@ class InstallButtonTest {
         )
 
         composeRule
-            .onNodeWithContentDescription(text(R.string.designsystem_install_downloading_progress, 33, partlyDownloadedLabel()))
+            .onNodeWithContentDescription(text(R.string.designsystem_install_downloading_progress, partlyDownloadedPercent(), partlyDownloadedLabel()))
             .assertExists()
     }
 
