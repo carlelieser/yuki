@@ -91,12 +91,5 @@ internal class InstallSessionWriter(private val context: Context) : InstallSessi
     }
 }
 
-private const val OUT_OF_SPACE_ERRNO = "ENOSPC"
-
 internal fun sessionFailure(error: IOException): InstallFailure =
     if (error.isOutOfSpace()) InstallFailure.InsufficientStorage else InstallFailure.SessionFailed
-
-private fun Throwable.isOutOfSpace(): Boolean =
-    generateSequence(this, Throwable::cause).any { cause ->
-        cause.message.orEmpty().contains(OUT_OF_SPACE_ERRNO)
-    }
