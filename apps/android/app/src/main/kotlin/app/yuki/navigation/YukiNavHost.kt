@@ -81,6 +81,8 @@ private fun YukiRoutedContent(
         exitTransition = { forwardExit() },
         popEnterTransition = { backEnter() },
         popExitTransition = { backExit() },
+        predictivePopEnterTransition = { _ -> tabPopEnter() },
+        predictivePopExitTransition = { _ -> tabPopExit() },
     ) {
         exploreDestination(navigator, bottomBarPadding)
         libraryDestination(navigator, bottomBarPadding)
