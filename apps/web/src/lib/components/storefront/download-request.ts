@@ -1,4 +1,12 @@
-export type DownloadResult = { ok: true; url: string } | { ok: false; message: string };
+import type { Architecture } from '@yuki/github';
+
+type Failure = { ok: false; message: string };
+
+type JsonResult<Body> = { ok: true; body: Body } | Failure;
+
+export type DownloadResult = { ok: true; url: string } | Failure;
+
+export type ArchitecturesResult = { ok: true; architectures: Architecture[] } | Failure;
 
 const OFFLINE_MESSAGE = 'Check your connection and try again.';
 const FALLBACK_MESSAGE = 'Something went wrong. Try again.';
@@ -10,10 +18,10 @@ async function failureMessage(response: Response): Promise<string> {
 	return typeof message === 'string' ? message : FALLBACK_MESSAGE;
 }
 
-export async function requestDownload(
+async function fetchJson<Body>(
 	endpoint: string,
 	fetchImpl: typeof fetch
-): Promise<DownloadResult> {
+): Promise<JsonResult<Body>> {
 	let response: Response;
 	try {
 		response = await fetchImpl(endpoint, { headers: { accept: 'application/json' } });
@@ -24,8 +32,25 @@ export async function requestDownload(
 
 	if (!response.ok) return { ok: false, message: await failureMessage(response) };
 
-	const body: { url: string } = await response.json();
-	return { ok: true, url: body.url };
+	return { ok: true, body: (await response.json()) as Body };
+}
+
+export async function requestDownload(
+	endpoint: string,
+	fetchImpl: typeof fetch
+): Promise<DownloadResult> {
+	const result = await fetchJson<{ url: string }>(endpoint, fetchImpl);
+
+	return result.ok ? { ok: true, url: result.body.url } : result;
+}
+
+export async function requestArchitectures(
+	endpoint: string,
+	fetchImpl: typeof fetch
+): Promise<ArchitecturesResult> {
+	const result = await fetchJson<{ architectures: Architecture[] }>(endpoint, fetchImpl);
+
+	return result.ok ? { ok: true, architectures: result.body.architectures } : result;
 }
 
 export type ClickModifiers = Pick<MouseEvent, 'button' | 'metaKey' | 'ctrlKey' | 'shiftKey'>;

@@ -20,7 +20,7 @@
 	import DownloadIcon from '@lucide/svelte/icons/download';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
-	import { isPlainClick, requestDownload } from './download-request.ts';
+	import { isPlainClick, requestArchitectures, requestDownload } from './download-request.ts';
 
 	const DEFAULT_VALUE = 'default';
 
@@ -85,18 +85,16 @@
 		hasRequested = true;
 		isLoading = true;
 
-		try {
-			const endpoint = resolve('/api/listings/[slug]/architectures/[tag]', { slug, tag });
-			const response = await fetch(endpoint);
-			if (!response.ok) return;
+		const endpoint = resolve('/api/listings/[slug]/architectures/[tag]', { slug, tag });
+		const result = await requestArchitectures(endpoint, fetch);
+		isLoading = false;
 
-			const body: { architectures: Architecture[] } = await response.json();
-			architectures = body.architectures;
-		} catch {
-			architectures = null;
-		} finally {
-			isLoading = false;
+		if (result.ok) {
+			architectures = result.architectures;
+			return;
 		}
+
+		toast.error('Could not load architectures', { description: result.message });
 	}
 
 	$effect(() => {

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isPlainClick, requestDownload, type ClickModifiers } from './download-request.ts';
+import {
+	isPlainClick,
+	requestArchitectures,
+	requestDownload,
+	type ClickModifiers
+} from './download-request.ts';
 
 const ENDPOINT = '/api/listings/acme-tools/download/v1.2.0?arch=arm64-v8a';
 
@@ -51,6 +56,28 @@ describe('requestDownload', () => {
 function click(overrides: Partial<ClickModifiers>): ClickModifiers {
 	return { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, ...overrides };
 }
+
+describe('requestArchitectures', () => {
+	const endpoint = '/api/listings/acme-tools/architectures/v1.2.0';
+
+	it('returns the architectures the release ships', async () => {
+		const fetchImpl = respond({ architectures: ['arm64-v8a'] });
+
+		expect(await requestArchitectures(endpoint, fetchImpl)).toEqual({
+			ok: true,
+			architectures: ['arm64-v8a']
+		});
+	});
+
+	it('reports a failed lookup instead of an empty list', async () => {
+		const fetchImpl = respond({ message: 'GitHub unavailable' }, 502);
+
+		expect(await requestArchitectures(endpoint, fetchImpl)).toEqual({
+			ok: false,
+			message: 'GitHub unavailable'
+		});
+	});
+});
 
 describe('isPlainClick', () => {
 	it('takes over a plain left click', () => {
