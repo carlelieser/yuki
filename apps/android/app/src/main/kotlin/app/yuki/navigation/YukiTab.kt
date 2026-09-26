@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -32,15 +33,24 @@ private fun YukiTab.icon(): ImageVector = when (this) {
 }
 
 @Composable
-internal fun YukiTab.toNavDestination(): YukiNavDestination {
+internal fun YukiTab.toNavDestination(badgeCount: Int = 0): YukiNavDestination {
     val icon = icon()
     val label = stringResource(label)
+    val description = if (badgeCount > 0) {
+        pluralStringResource(R.plurals.app_tab_updates_pending, badgeCount, label, badgeCount)
+    } else {
+        label
+    }
 
     return YukiNavDestination(
         label = label,
-        icon = { Icon(imageVector = icon, contentDescription = label) },
+        icon = { Icon(imageVector = icon, contentDescription = description) },
+        badgeCount = badgeCount,
     )
 }
+
+internal fun YukiTab.badgeCountFrom(pendingUpdates: Int): Int =
+    if (this == YukiTab.Updates) pendingUpdates else 0
 
 internal fun YukiTab.startRoute(): Any = when (this) {
     YukiTab.Explore -> ExploreRoute

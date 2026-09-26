@@ -30,12 +30,14 @@ import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.designsystem.theme.YukiTheme
 import app.yuki.feature.settings.AppearanceMode
 import app.yuki.feature.settings.rememberSystemDestinations
+import app.yuki.feature.updates.PendingUpdatesViewModel
 import app.yuki.install.InstallFailureActions
 import app.yuki.install.InstallFailureSnackbar
 import app.yuki.navigation.LaunchRequests
 import app.yuki.navigation.YukiNavHost
 import app.yuki.navigation.YukiNavigator
 import app.yuki.navigation.YukiTab
+import app.yuki.navigation.badgeCountFrom
 import app.yuki.navigation.rememberYukiNavigator
 import app.yuki.navigation.selectedTab
 import app.yuki.navigation.toNavDestination
@@ -168,11 +170,17 @@ private fun LaunchRequestsEffect(requests: LaunchRequests, navigator: YukiNaviga
 }
 
 @Composable
-private fun YukiTabBar(selectedTab: YukiTab, onSelect: (YukiTab) -> Unit) {
+private fun YukiTabBar(
+    selectedTab: YukiTab,
+    onSelect: (YukiTab) -> Unit,
+    pendingUpdates: PendingUpdatesViewModel = hiltViewModel(),
+) {
+    val pendingCount by pendingUpdates.count.collectAsStateWithLifecycle()
+
     YukiNavBar {
         YukiTab.entries.forEach { tab ->
             YukiNavBarItem(
-                destination = tab.toNavDestination(),
+                destination = tab.toNavDestination(badgeCount = tab.badgeCountFrom(pendingCount)),
                 isSelected = tab == selectedTab,
                 onSelect = { onSelect(tab) },
             )

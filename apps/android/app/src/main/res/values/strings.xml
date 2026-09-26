@@ -6,6 +6,10 @@
     <string name="app_tab_search">Search</string>
     <string name="app_tab_library">Library</string>
     <string name="app_tab_updates">Updates</string>
+    <plurals name="app_tab_updates_pending">
+        <item quantity="one">%1$s, %2$d update available</item>
+        <item quantity="other">%1$s, %2$d updates available</item>
+    </plurals>
     <string name="app_settings_title">Settings</string>
     <string name="app_settings_description">Settings</string>
     <string name="app_account_description">Account and settings</string>
