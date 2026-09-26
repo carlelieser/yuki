@@ -15,10 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import app.yuki.core.designsystem.component.ShimmerBox
 import app.yuki.core.designsystem.theme.YukiRatio
 import app.yuki.core.designsystem.theme.YukiShape
@@ -29,12 +26,6 @@ const val FEATURED_ROW_PLACEHOLDER_TAG = "featuredRowPlaceholder"
 
 private const val PLACEHOLDER_CARD_COUNT = 2
 private const val PLACEHOLDER_TITLE_WIDTH_FRACTION = 0.6f
-
-@Composable
-private fun placeholderCardWidth(): Dp {
-    val configuration = LocalConfiguration.current
-    return configuration.screenWidthDp.dp - YukiSpacing.Large * 2
-}
 
 @Composable
 internal fun FeaturedRowPlaceholder(modifier: Modifier = Modifier) {
@@ -48,7 +39,7 @@ internal fun FeaturedRowPlaceholder(modifier: Modifier = Modifier) {
     ) {
         items(PLACEHOLDER_CARD_COUNT) {
             FeaturedCardPlaceholder(
-                modifier = Modifier.width(placeholderCardWidth()),
+                modifier = Modifier.fillParentMaxWidth(),
             )
         }
     }
