@@ -10,7 +10,7 @@ minSdk = "26"
 targetSdk = "37"
 
 activityCompose = "1.13.0"
-coilCompose = "3.3.0"
+coilCompose = "3.6.3"
 composeBom = "2026.09.00"
 coreKtx = "1.19.1"
 coreSplashscreen = "1.2.0"
