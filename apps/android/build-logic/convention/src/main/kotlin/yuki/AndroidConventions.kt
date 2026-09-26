@@ -40,7 +40,6 @@ internal fun Project.configureAndroid(extension: CommonExtension) {
 }
 
 private fun Project.configureLint(extension: CommonExtension) {
-    extension.lint.checkOnly += HARDCODED_TEXT_ISSUE
     extension.lint.error += HARDCODED_TEXT_ISSUE
 
     dependencies.add("lintChecks", project(LINT_RULES_PROJECT))
