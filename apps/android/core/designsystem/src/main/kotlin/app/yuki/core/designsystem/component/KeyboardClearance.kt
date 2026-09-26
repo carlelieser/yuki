@@ -1,44 +1,70 @@
 package app.yuki.core.designsystem.component
 
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusEventModifierNode
+import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.LayoutAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.relocation.bringIntoView
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 private val KEYBOARD_CLEARANCE = 48.dp
 
-@Composable
-internal fun keyboardClearance(): Modifier {
-    val requester = remember { BringIntoViewRequester() }
-    var isFocused by remember { mutableStateOf(false) }
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    val keyboard = keyboardInsets()
-    val density = LocalDensity.current
+internal fun Modifier.keyboardClearance(keyboard: WindowInsets): Modifier =
+    this then KeyboardClearanceElement(keyboard)
 
-    LaunchedEffect(isFocused) {
-        if (!isFocused) return@LaunchedEffect
+private data class KeyboardClearanceElement(
+    val keyboard: WindowInsets,
+) : ModifierNodeElement<KeyboardClearanceNode>() {
+    override fun create(): KeyboardClearanceNode = KeyboardClearanceNode(keyboard)
 
-        val clearance = with(density) { KEYBOARD_CLEARANCE.toPx() }
-        snapshotFlow { keyboard.getBottom(density) }.collectLatest {
-            requester.bringIntoView(Rect(0f, 0f, size.width.toFloat(), size.height + clearance))
-        }
+    override fun update(node: KeyboardClearanceNode) {
+        node.keyboard = keyboard
     }
 
-    return Modifier
-        .bringIntoViewRequester(requester)
-        .onSizeChanged { measured -> size = measured }
-        .onFocusChanged { state -> isFocused = state.hasFocus }
+    override fun InspectorInfo.inspectableProperties() {
+        name = "keyboardClearance"
+    }
+}
+
+private class KeyboardClearanceNode(var keyboard: WindowInsets) :
+    Modifier.Node(),
+    FocusEventModifierNode,
+    LayoutAwareModifierNode,
+    CompositionLocalConsumerModifierNode {
+    private var size = IntSize.Zero
+    private var isFocused = false
+    private var following: Job? = null
+
+    override fun onRemeasured(size: IntSize) {
+        this.size = size
+    }
+
+    override fun onFocusEvent(focusState: FocusState) {
+        if (focusState.hasFocus == isFocused) return
+
+        isFocused = focusState.hasFocus
+        following?.cancel()
+        following = if (isFocused) coroutineScope.launch { followKeyboard() } else null
+    }
+
+    private suspend fun followKeyboard() {
+        val density = currentValueOf(LocalDensity)
+        val clearance = with(density) { KEYBOARD_CLEARANCE.toPx() }
+
+        snapshotFlow { keyboard.getBottom(density) }.collectLatest {
+            bringIntoView { Rect(0f, 0f, size.width.toFloat(), size.height + clearance) }
+        }
+    }
 }
