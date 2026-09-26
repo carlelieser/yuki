@@ -5,7 +5,9 @@ import app.yuki.core.installer.PreferredInstaller
 import app.yuki.core.shizuku.InstallerPackagePreference
 import app.yuki.feature.settings.InstallMode
 import app.yuki.feature.settings.YukiPreferenceReader
+import app.yuki.feature.updates.AutoUpdateCheckPreference
 import app.yuki.feature.updates.PrereleasePreference
+import app.yuki.feature.updates.UpdateNotificationPreference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,6 +22,16 @@ internal object PreferencesModule {
     @Singleton
     fun prereleasePreference(reader: YukiPreferenceReader): PrereleasePreference =
         PrereleasePreference { reader.includePrereleases() }
+
+    @Provides
+    @Singleton
+    fun autoUpdateCheckPreference(reader: YukiPreferenceReader): AutoUpdateCheckPreference =
+        AutoUpdateCheckPreference { reader.isAutoUpdateCheckEnabled() }
+
+    @Provides
+    @Singleton
+    fun updateNotificationPreference(reader: YukiPreferenceReader): UpdateNotificationPreference =
+        UpdateNotificationPreference { reader.isUpdateNotificationEnabled() }
 
     @Provides
     @Singleton

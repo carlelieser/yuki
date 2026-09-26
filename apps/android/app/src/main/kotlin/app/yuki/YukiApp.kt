@@ -32,7 +32,9 @@ import app.yuki.feature.settings.AppearanceMode
 import app.yuki.feature.settings.rememberSystemDestinations
 import app.yuki.install.InstallFailureActions
 import app.yuki.install.InstallFailureSnackbar
+import app.yuki.navigation.LaunchRequests
 import app.yuki.navigation.YukiNavHost
+import app.yuki.navigation.YukiNavigator
 import app.yuki.navigation.YukiTab
 import app.yuki.navigation.rememberYukiNavigator
 import app.yuki.navigation.selectedTab
@@ -41,7 +43,10 @@ import app.yuki.notifications.NotificationRationaleDialog
 import app.yuki.notifications.rememberNotificationConsent
 
 @Composable
-fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
+fun YukiApp(
+    viewModel: YukiAppViewModel = hiltViewModel(),
+    launchRequests: LaunchRequests = remember { LaunchRequests() },
+) {
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val settings = theme ?: return
 
@@ -57,6 +62,7 @@ fun YukiApp(viewModel: YukiAppViewModel = hiltViewModel()) {
             YukiScaffold(
                 navController = rememberNavController(),
                 viewModel = viewModel,
+                launchRequests = launchRequests,
             )
         }
     }
@@ -84,7 +90,11 @@ private fun AppearanceMode.resolveIsDarkTheme(): Boolean = when (this) {
 }
 
 @Composable
-private fun YukiScaffold(navController: NavHostController, viewModel: YukiAppViewModel) {
+private fun YukiScaffold(
+    navController: NavHostController,
+    viewModel: YukiAppViewModel,
+    launchRequests: LaunchRequests,
+) {
     val consent = rememberNotificationConsent()
     val navigator = rememberYukiNavigator(
         navController = navController,
@@ -116,6 +126,8 @@ private fun YukiScaffold(navController: NavHostController, viewModel: YukiAppVie
         InstallFailures(viewModel)
     }
 
+    LaunchRequestsEffect(requests = launchRequests, navigator = navigator)
+
     NotificationRationaleDialog(state = consent)
 }
 
@@ -142,6 +154,17 @@ private fun AppSnackbarHost(hostState: SnackbarHostState, isTabBarShown: Boolean
     val insets = if (isTabBarShown) Modifier else Modifier.navigationBarsPadding()
 
     YukiSnackbarHost(hostState = hostState, modifier = insets)
+}
+
+@Composable
+private fun LaunchRequestsEffect(requests: LaunchRequests, navigator: YukiNavigator) {
+    val requested by requests.requestedTab.collectAsStateWithLifecycle()
+
+    LaunchedEffect(requested) {
+        val tab = requested ?: return@LaunchedEffect
+        navigator.selectTab(tab)
+        requests.consume()
+    }
 }
 
 @Composable

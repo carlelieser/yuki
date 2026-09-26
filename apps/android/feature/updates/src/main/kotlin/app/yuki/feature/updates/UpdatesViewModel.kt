@@ -12,7 +12,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -55,8 +54,8 @@ class UpdatesViewModel @Inject internal constructor(
     }
 
     private suspend fun load() {
-        val includePrereleases = dependencies.preference.includePrereleases().first()
-        val checked = dependencies.check.run(store.installs(), includePrereleases)
+        dependencies.notifier.dismiss()
+        val checked = dependencies.check.run(store.installs(), isSeen = true)
         mutableState.value = UiState.Success(checked.withInstallStates(installs.value))
     }
 

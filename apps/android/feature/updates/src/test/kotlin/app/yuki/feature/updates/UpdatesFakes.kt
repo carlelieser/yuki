@@ -1,7 +1,10 @@
 package app.yuki.feature.updates
 
 import app.yuki.core.database.InstallRecording
+import app.yuki.core.database.CheckedUpdates
 import app.yuki.core.database.InstallStore
+import app.yuki.core.database.PendingUpdate
+import app.yuki.core.database.PendingUpdateStore
 import app.yuki.core.model.AvailableUpdate
 import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.CategorySection
@@ -41,6 +44,54 @@ internal class FakeInstallStore(private val initial: List<InstalledApp>) : Insta
 
     override suspend fun forgetPackages(packageNames: List<String>) {
         rows.value = rows.value.filterNot { app -> app.packageName in packageNames }
+    }
+}
+
+internal class FakePendingUpdateStore(initial: List<PendingUpdate> = emptyList()) :
+    PendingUpdateStore {
+    private val stored = MutableStateFlow(initial)
+
+    val rows: List<PendingUpdate> get() = stored.value
+
+    override fun observe(): Flow<List<PendingUpdate>> = stored
+
+    override suspend fun replace(checked: CheckedUpdates, isSeen: Boolean) {
+        val previous = stored.value.associateBy(PendingUpdate::githubRepoId)
+        val kept = stored.value.filterNot { row -> row.githubRepoId in checked.githubRepoIds }
+        val found = checked.updates.map { update ->
+            val id = update.installed.githubRepoId
+            val earlier = previous[id]
+            val wasNotified = earlier?.versionTag == update.version.tag && earlier.isNotified
+            PendingUpdate(id, update.version.tag, isNotified = isSeen || wasNotified)
+        }
+        stored.value = kept + found
+    }
+
+    override suspend fun unnotified(): List<PendingUpdate> =
+        stored.value.filterNot(PendingUpdate::isNotified)
+
+    override suspend fun markNotified(githubRepoIds: List<Long>) {
+        stored.value = stored.value.map { row ->
+            if (row.githubRepoId in githubRepoIds) row.copy(isNotified = true) else row
+        }
+    }
+}
+
+internal class RecordingUpdateNotifier : UpdateNotifier {
+    val shown: MutableList<List<InstalledApp>> = mutableListOf()
+
+    var dismissals: Int = 0
+        private set
+
+    var canPost: Boolean = true
+
+    override fun show(apps: List<InstalledApp>): Boolean {
+        if (canPost) shown += apps
+        return canPost
+    }
+
+    override fun dismiss() {
+        dismissals += 1
     }
 }
 

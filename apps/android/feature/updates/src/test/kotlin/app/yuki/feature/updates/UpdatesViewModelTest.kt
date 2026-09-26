@@ -32,6 +32,8 @@ import org.junit.Test
 class UpdatesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val installer = RecordingUpdateInstaller()
+    private val pending = FakePendingUpdateStore()
+    private val notifier = RecordingUpdateNotifier()
 
     @Before
     fun installDispatcher() {
@@ -277,9 +279,9 @@ class UpdatesViewModelTest {
     ): UpdatesViewModel = UpdatesViewModel(
         store = FakeInstallStore(installs),
         dependencies = UpdatesDependencies(
-            check = UpdateCheck(repository),
+            check = UpdateCheck(repository, pending) { flowOf(includePrereleases) },
             installer = installer,
-            preference = { flowOf(includePrereleases) },
+            notifier = notifier,
         ),
     )
 

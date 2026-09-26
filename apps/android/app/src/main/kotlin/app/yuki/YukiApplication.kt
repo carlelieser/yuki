@@ -8,6 +8,8 @@ import app.yuki.core.designsystem.image.yukiImageLoader
 import app.yuki.core.installer.StuckInstallReclaimer
 import app.yuki.feature.updates.SelfInstallReconciler
 import app.yuki.feature.updates.SelfUpdateSettler
+import app.yuki.feature.updates.UpdateCheckScheduler
+import app.yuki.feature.updates.UpdateNotificationSwitch
 import app.yuki.install.LibraryRefreshObserver
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -36,6 +38,12 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
     lateinit var stuckInstalls: StuckInstallReclaimer
 
     @Inject
+    lateinit var updateChecks: UpdateCheckScheduler
+
+    @Inject
+    lateinit var updateNotifications: UpdateNotificationSwitch
+
+    @Inject
     internal lateinit var libraryRefresh: LibraryRefreshObserver
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -58,6 +66,14 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
                 Log.w(TAG, "Could not reclaim installs stranded by an earlier run", error)
             }
         }
+
+        scope.launch {
+            runCatching { updateChecks.follow() }.onFailure { error ->
+                Log.w(TAG, "Could not schedule background update checks", error)
+            }
+        }
+
+        scope.launch { updateNotifications.follow() }
 
         scope.launch {
             runCatching { selfInstalls.reconcile() }.onFailure { error ->

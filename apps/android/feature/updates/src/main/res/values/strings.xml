@@ -12,4 +12,9 @@
     <string name="updates_unchecked_sign_in">Sign in again</string>
     <string name="updates_unchecked_unexpected">Unexpected error</string>
     <string name="updates_unchecked_server">Server error %1$d</string>
+    <string name="updates_channel_name">Available updates</string>
+    <plurals name="updates_notification_title">
+        <item quantity="one">%1$d update available</item>
+        <item quantity="other">%1$d updates available</item>
+    </plurals>
 </resources>

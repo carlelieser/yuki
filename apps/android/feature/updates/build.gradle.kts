@@ -10,6 +10,9 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.installer)
     implementation(projects.core.network)
+    implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.work.runtime.ktx)
+    ksp(libs.androidx.hilt.compiler)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
