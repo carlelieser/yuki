@@ -7,6 +7,7 @@ import androidx.work.Configuration
 import app.yuki.core.designsystem.image.yukiImageLoader
 import app.yuki.core.installer.StuckInstallReclaimer
 import app.yuki.feature.updates.SelfInstallReconciler
+import app.yuki.feature.updates.SelfUpdateSettler
 import app.yuki.install.LibraryRefreshObserver
 import coil3.ImageLoader
 import coil3.PlatformContext
@@ -29,6 +30,9 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
     lateinit var selfInstalls: SelfInstallReconciler
 
     @Inject
+    lateinit var selfUpdate: SelfUpdateSettler
+
+    @Inject
     lateinit var stuckInstalls: StuckInstallReclaimer
 
     @Inject
@@ -47,6 +51,9 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
         libraryRefresh.start()
 
         scope.launch {
+            runCatching { selfUpdate.settle() }.onFailure { error ->
+                Log.w(TAG, "Could not settle Yuki's own completed update", error)
+            }
             stuckInstalls.reclaim().onFailure { error ->
                 Log.w(TAG, "Could not reclaim installs stranded by an earlier run", error)
             }
