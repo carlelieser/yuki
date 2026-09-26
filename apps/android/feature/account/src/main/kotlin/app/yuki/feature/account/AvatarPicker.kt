@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.scale
 import app.yuki.core.network.AvatarUpload
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -108,11 +109,9 @@ private fun Bitmap.downscaled(): Bitmap {
 
     val scale = MAX_DIMENSION.toFloat() / longestSide
 
-    return Bitmap.createScaledBitmap(
-        this,
+    return scale(
         (width * scale).toInt().coerceAtLeast(1),
         (height * scale).toInt().coerceAtLeast(1),
-        true,
     )
 }
 
