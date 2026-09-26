@@ -88,15 +88,12 @@
 		try {
 			const endpoint = resolve('/api/listings/[slug]/architectures/[tag]', { slug, tag });
 			const response = await fetch(endpoint);
-			if (!response.ok) {
-				hasRequested = false;
-				return;
-			}
+			if (!response.ok) return;
 
 			const body: { architectures: Architecture[] } = await response.json();
 			architectures = body.architectures;
 		} catch {
-			hasRequested = false;
+			architectures = null;
 		} finally {
 			isLoading = false;
 		}
@@ -104,6 +101,10 @@
 
 	$effect(() => {
 		if (open && !hasRequested) void loadArchitectures();
+	});
+
+	$effect(() => {
+		if (!open && architectures === null && !isLoading) hasRequested = false;
 	});
 </script>
 
