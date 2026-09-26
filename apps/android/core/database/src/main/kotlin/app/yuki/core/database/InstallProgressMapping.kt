@@ -64,7 +64,7 @@ internal fun InstallProgressEntity.toProgress(): InstallProgress = InstallProgre
 )
 
 private fun InstallProgressEntity.toState(): InstallState = when (status) {
-    ProgressStatus.QUEUED -> InstallState.Downloading(downloadSizeOf(0L, 0L))
+    ProgressStatus.QUEUED -> InstallState.Queued
     ProgressStatus.DOWNLOADING ->
         InstallState.Downloading(downloadSizeOf(bytesDownloaded, bytesTotal))
     ProgressStatus.INSTALLING -> InstallState.Installing
@@ -100,6 +100,7 @@ private fun InstallProgressEntity.toFailure(): InstallFailure = when (failureRea
 }
 
 private fun InstallState.statusName(): String = when (this) {
+    InstallState.Queued -> ProgressStatus.QUEUED
     is InstallState.Downloading -> ProgressStatus.DOWNLOADING
     InstallState.Installing -> ProgressStatus.INSTALLING
     InstallState.PendingUserAction -> ProgressStatus.PENDING_USER_ACTION

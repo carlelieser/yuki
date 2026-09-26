@@ -158,6 +158,14 @@ class InstallProgressMappingTest {
         assertEquals(UPDATED_AT, entity.createdAt)
         assertEquals(UPDATED_AT, entity.updatedAt)
     }
+
+    @Test
+    fun `a queued install round trips as queued`() {
+        val entity = InstallProgress(TARGET, VERSION_TAG, InstallState.Queued).toEntity(UPDATED_AT)
+
+        assertEquals("queued", entity.status)
+        assertEquals(InstallState.Queued, entity.toProgress().state)
+    }
 }
 
 private fun roundTrip(state: InstallState): InstallState =

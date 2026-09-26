@@ -51,6 +51,7 @@ enum class InstallProgressPosition {
 
 private val labels: Map<KClass<out InstallState>, Int> = mapOf(
     InstallState.NotInstalled::class to R.string.designsystem_install,
+    InstallState.Queued::class to R.string.designsystem_install_cancel,
     InstallState.Downloading::class to R.string.designsystem_install_cancel,
     InstallState.Installing::class to R.string.designsystem_install_installing,
     InstallState.PendingUserAction::class to R.string.designsystem_install_pending,
@@ -61,6 +62,7 @@ private val labels: Map<KClass<out InstallState>, Int> = mapOf(
 
 private fun actionFor(state: InstallState): InstallAction = when (state) {
     InstallState.NotInstalled -> InstallAction.Install
+    InstallState.Queued -> InstallAction.Cancel
     is InstallState.Downloading -> InstallAction.Cancel
     InstallState.Installing -> InstallAction.Install
     InstallState.PendingUserAction -> InstallAction.Cancel
@@ -72,6 +74,7 @@ private fun actionFor(state: InstallState): InstallAction = when (state) {
 @Composable
 private fun describe(state: InstallState): String = when (state) {
     InstallState.NotInstalled -> stringResource(R.string.designsystem_install)
+    InstallState.Queued -> stringResource(R.string.designsystem_install_queued_description)
     is InstallState.Downloading -> describeDownload(state.size)
     InstallState.Installing -> stringResource(R.string.designsystem_install_installing)
     InstallState.PendingUserAction -> stringResource(R.string.designsystem_install_pending)

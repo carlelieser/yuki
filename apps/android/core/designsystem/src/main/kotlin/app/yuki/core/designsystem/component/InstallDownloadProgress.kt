@@ -23,13 +23,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiMotion
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 import app.yuki.core.designsystem.theme.YukiWave
 import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallState
+
+const val INSTALL_QUEUED_TAG = "installQueued"
 
 @Composable
 private fun LinearDownloadBar(fraction: Float?) {
@@ -123,13 +127,26 @@ private fun DownloadProgress(size: DownloadSize, shape: InstallProgressShape) {
     }
 }
 
+@Composable
+private fun QueuedLabel() {
+    Text(
+        text = stringResource(R.string.designsystem_install_queued),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        modifier = Modifier.testTag(INSTALL_QUEUED_TAG),
+    )
+}
+
 private enum class ProgressAccessoryKind {
     None,
+    Queued,
     Download,
     Waiting,
 }
 
 private fun accessoryKindOf(state: InstallState): ProgressAccessoryKind = when (state) {
+    InstallState.Queued -> ProgressAccessoryKind.Queued
     is InstallState.Downloading -> ProgressAccessoryKind.Download
     InstallState.Installing -> ProgressAccessoryKind.Waiting
     InstallState.PendingUserAction -> ProgressAccessoryKind.Waiting
@@ -149,6 +166,7 @@ internal fun ProgressAccessory(state: InstallState, shape: InstallProgressShape)
         label = "installAccessory",
     ) { settled ->
         when (settled) {
+            InstallState.Queued -> QueuedLabel()
             is InstallState.Downloading -> DownloadProgress(size = settled.size, shape = shape)
             InstallState.Installing -> YukiLoadingIndicator()
             InstallState.PendingUserAction -> YukiLoadingIndicator()

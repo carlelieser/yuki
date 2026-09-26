@@ -10,6 +10,7 @@ private val fixedSupporting: Map<LibrarySupporting, Int> = mapOf(
     LibrarySupporting.NotInstalled to R.string.library_supporting_not_installed,
     LibrarySupporting.Installing to R.string.library_supporting_installing,
     LibrarySupporting.Pending to R.string.library_supporting_pending,
+    LibrarySupporting.Queued to R.string.library_supporting_queued,
 )
 
 @Composable

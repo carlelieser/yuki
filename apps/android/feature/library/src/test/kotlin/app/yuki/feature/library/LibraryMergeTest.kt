@@ -102,6 +102,20 @@ class LibraryMergeTest {
 
         assertEquals("obsidian", items.first().slug)
     }
+
+    @Test
+    fun `a queued install waits at the top with the downloads`() {
+        val queued = InstallProgress(
+            target = InstallTarget(99L, "obsidian", "Obsidian", iconUrl = null),
+            versionTag = "v1.5.0",
+            state = InstallState.Queued,
+        )
+
+        val rows = merge(installed = listOf(AURORA_ON_DEVICE), active = listOf(queued))
+
+        assertEquals(listOf(99L, AURORA_REPO_ID), rows.map(LibraryItem::githubRepoId))
+        assertEquals(LibrarySupporting.Queued, rows.first().supporting)
+    }
 }
 
 private fun downloading(githubRepoId: Long, slug: String) = InstallProgress(

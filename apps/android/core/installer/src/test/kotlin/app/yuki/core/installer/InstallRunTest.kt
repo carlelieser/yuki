@@ -20,7 +20,7 @@ class InstallRunTest {
 
         assertEquals(
             listOf(
-                InstallState.Downloading(testSize(0L, bytesTotal = 0L)),
+                InstallState.Queued,
                 InstallState.Downloading(testSize(250L)),
                 InstallState.Downloading(testSize(750L)),
                 InstallState.Installing,
@@ -46,9 +46,7 @@ class InstallRunTest {
 
         runOf(progress = progress).execute(testRequest(), runAttemptCount = 0)
 
-        val queued = progress.written.first().state as InstallState.Downloading
-        assertEquals(0L, queued.size.bytesDownloaded)
-        assertEquals(null, queued.size.bytesTotal)
+        assertEquals(InstallState.Queued, progress.written.first().state)
     }
 
     @Test
@@ -180,7 +178,7 @@ class InstallRetryPolicyTest {
     }
 }
 
-private val QUEUED_STATE = InstallState.Downloading(testSize(0L, bytesTotal = 0L))
+private val QUEUED_STATE = InstallState.Queued
 
 private fun failingDownloader(httpStatus: Int): FakeApkDownloader = FakeApkDownloader(
     failure = InstallException(InstallFailure.DownloadFailed(httpStatus), "server error"),

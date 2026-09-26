@@ -2,7 +2,6 @@ package app.yuki.core.installer
 
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
-import app.yuki.core.model.downloadSizeOf
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -55,4 +54,4 @@ private fun InstallFailure.isTransient(): Boolean {
 
 private val UNEXPECTED = InstallState.Failed(InstallFailure.Unexpected)
 
-private val QUEUED = InstallState.Downloading(downloadSizeOf(bytesDownloaded = 0L, bytesTotal = 0L))
+private val QUEUED = InstallState.Queued

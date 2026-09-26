@@ -15,7 +15,8 @@ data class LibraryItem(
 
     val slug: String get() = entry.slug
 
-    val isDownloading: Boolean get() = install is InstallState.Downloading
+    val isDownloading: Boolean
+        get() = install is InstallState.Downloading || install == InstallState.Queued
 
     val isInstalled: Boolean get() = presence == LibraryPresence.Installed
 
@@ -28,6 +29,7 @@ data class LibraryItem(
     }
 
     val supporting: LibrarySupporting get() = when (install) {
+        InstallState.Queued -> LibrarySupporting.Queued
         is InstallState.Downloading -> downloadSupporting(install)
         InstallState.Installing -> LibrarySupporting.Installing
         InstallState.PendingUserAction -> LibrarySupporting.Pending
@@ -54,6 +56,8 @@ sealed interface LibrarySupporting {
     data object Installing : LibrarySupporting
 
     data object Pending : LibrarySupporting
+
+    data object Queued : LibrarySupporting
 
     data class Download(val size: DownloadSize) : LibrarySupporting
 

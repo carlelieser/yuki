@@ -91,6 +91,15 @@ class VersionInstallStateTest {
     fun `treats a prerelease with an asset as installable from its row`() {
         assertTrue(version("v2.0.0-rc", isPrerelease = true).toInstallable() != null)
     }
+
+    @Test
+    fun `disables other versions while one waits to start`() {
+        val status = ListingInstallStatus(state = InstallState.Queued, versionTag = "v2.0.0")
+
+        val row = versionInstallState(version = version("v1.0.0"), status = status)
+
+        assertFalse(row.isEnabled)
+    }
 }
 
 private val HALF_DOWNLOADED = downloadSizeOf(bytesDownloaded = 500L, bytesTotal = 1_000L)

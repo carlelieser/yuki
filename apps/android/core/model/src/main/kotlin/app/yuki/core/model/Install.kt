@@ -63,6 +63,8 @@ fun downloadSizeOf(bytesDownloaded: Long, bytesTotal: Long): DownloadSize = Down
 sealed interface InstallState {
     data object NotInstalled : InstallState
 
+    data object Queued : InstallState
+
     data class Downloading(val size: DownloadSize) : InstallState
 
     data object Installing : InstallState

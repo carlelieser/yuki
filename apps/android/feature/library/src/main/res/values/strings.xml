@@ -18,6 +18,7 @@
 
     <string name="library_supporting_installing">Installing</string>
     <string name="library_supporting_pending">Waiting for confirmation</string>
+    <string name="library_supporting_queued">Waiting to download</string>
     <string name="library_supporting_unknown_version">Version unknown</string>
     <string name="library_supporting_not_installed">Not installed</string>
 

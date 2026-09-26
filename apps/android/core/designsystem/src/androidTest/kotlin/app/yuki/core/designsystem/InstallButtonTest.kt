@@ -130,6 +130,17 @@ class InstallButtonTest {
     }
 
     @Test
+    fun aQueuedInstallSaysItIsWaitingAndCanBeCancelled() {
+        val actions = mutableListOf<InstallAction>()
+        render(InstallState.Queued, InstallActionHandler { action -> actions += action })
+
+        composeRule.onNodeWithText(text(R.string.designsystem_install_queued)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_install_cancel)).performClick()
+
+        assertEquals(listOf(InstallAction.Cancel), actions)
+    }
+
+    @Test
     fun downloadingShowsTheTransferredBytes() {
         render(InstallState.Downloading(PARTLY_DOWNLOADED))
 

@@ -20,6 +20,7 @@ fun installProgressFraction(state: InstallState): Float? = when (state) {
 }
 
 fun isInstallInProgress(state: InstallState): Boolean = when (state) {
+    InstallState.Queued -> true
     is InstallState.Downloading -> true
     InstallState.Installing -> true
     else -> false
