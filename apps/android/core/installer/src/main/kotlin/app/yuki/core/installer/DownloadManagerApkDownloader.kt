@@ -2,8 +2,8 @@ package app.yuki.core.installer
 
 import android.app.DownloadManager
 import android.content.Context
-import android.net.Uri
 import android.os.Environment
+import androidx.core.net.toUri
 import app.yuki.core.model.DownloadSize
 import app.yuki.core.model.InstallFailure
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -74,7 +74,7 @@ internal class DownloadManagerApkDownloader @Inject constructor(
     }
 
     private fun InstallSource.toRequest(): DownloadManager.Request =
-        DownloadManager.Request(Uri.parse(downloadUrl))
+        DownloadManager.Request(downloadUrl.toUri())
             .setTitle(fileName())
             .setNotificationVisibility(
                 DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED,
@@ -97,7 +97,7 @@ internal fun DownloadSnapshot.shouldEmit(lastEmitted: DownloadSize?): Boolean =
 internal fun resolveApk(snapshot: DownloadSnapshot, source: InstallSource): File =
     verifyDownloadedApk(snapshot.localUri?.toLocalPath(), source)
 
-private fun String.toLocalPath(): String? = Uri.parse(this).path
+private fun String.toLocalPath(): String? = toUri().path
 
 internal fun InstallSource.fileName(): String {
     val candidate = assetName ?: "$versionTag.apk"
