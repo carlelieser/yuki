@@ -37,7 +37,7 @@ internal fun rememberNotificationConsent(): NotificationConsentState {
         onDecision = { isAllowed ->
             isRationaleVisible = false
             isAsked = true
-            if (isAllowed) launcher.launch(NotificationConsent.PERMISSION)
+            if (isAllowed) NotificationConsent.request(launcher)
         },
     )
 
