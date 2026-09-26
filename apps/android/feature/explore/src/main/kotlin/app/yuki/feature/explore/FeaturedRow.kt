@@ -174,8 +174,9 @@ internal fun FeaturedRow(
                 listing = listing,
                 onClick = { onSelect(listing) },
                 modifier = Modifier.pagerPageTransition(
-                    offsetFromCurrent = (page - pagerState.currentPage) +
-                        pagerState.currentPageOffsetFraction,
+                    offsetFromCurrent = {
+                        (page - pagerState.currentPage) + pagerState.currentPageOffsetFraction
+                    },
                     isAnimated = isAnimated,
                 ),
                 isInstalled = listing.githubRepoId in installs.installedIds,

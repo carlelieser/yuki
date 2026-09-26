@@ -10,13 +10,13 @@ internal fun pageTransitionFraction(offsetFromCurrent: Float): Float =
     offsetFromCurrent.absoluteValue.coerceIn(0f, 1f)
 
 fun Modifier.pagerPageTransition(
-    offsetFromCurrent: Float,
+    offsetFromCurrent: () -> Float,
     isAnimated: Boolean = true,
 ): Modifier {
     if (!isAnimated) return this
 
     return graphicsLayer {
-        val fraction = pageTransitionFraction(offsetFromCurrent)
+        val fraction = pageTransitionFraction(offsetFromCurrent())
         val scale = lerp(1f, YukiMotion.CarouselPageScaleMinimum, fraction)
 
         scaleX = scale
