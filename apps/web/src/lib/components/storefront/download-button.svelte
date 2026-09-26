@@ -19,6 +19,8 @@
 	import { selectedArchitecture } from '$lib/architecture-preference.ts';
 	import DownloadIcon from '@lucide/svelte/icons/download';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+	import { toast } from 'svelte-sonner';
+	import { isPlainClick, requestDownload } from './download-request.ts';
 
 	const DEFAULT_VALUE = 'default';
 
@@ -40,14 +42,37 @@
 	let hasRequested = $state(false);
 	let isLoading = $state(false);
 	let architectures = $state<Architecture[] | null>(null);
+	let isResolving = $state(false);
 
 	const selected = $derived(selectedArchitecture(store.preference, architectures) ?? DEFAULT_VALUE);
 
 	const downloadPath = $derived(resolve('/(app)/listings/[slug]/download/[tag]', { slug, tag }));
+	const downloadApiPath = $derived(resolve('/api/listings/[slug]/download/[tag]', { slug, tag }));
+
+	function withArchitecture(path: string, architecture: string): string {
+		if (architecture === DEFAULT_VALUE) return path;
+		return `${path}?arch=${encodeURIComponent(architecture)}`;
+	}
 
 	function urlFor(architecture: string): string {
-		if (architecture === DEFAULT_VALUE) return downloadPath;
-		return `${downloadPath}?arch=${encodeURIComponent(architecture)}`;
+		return withArchitecture(downloadPath, architecture);
+	}
+
+	async function download(event: MouseEvent): Promise<void> {
+		if (!isPlainClick(event)) return;
+		event.preventDefault();
+		if (isResolving) return;
+
+		isResolving = true;
+		const result = await requestDownload(withArchitecture(downloadApiPath, selected), fetch);
+		isResolving = false;
+
+		if (result.ok) {
+			window.location.assign(result.url);
+			return;
+		}
+
+		toast.error('Download failed', { description: result.message });
 	}
 
 	function choose(value: string): void {
@@ -83,8 +108,19 @@
 </script>
 
 <ButtonGroup>
-	<Button {href} {size} data-sveltekit-preload-data="off" rel="nofollow">
-		<DownloadIcon />
+	<Button
+		{href}
+		{size}
+		onclick={download}
+		aria-busy={isResolving}
+		data-sveltekit-preload-data="off"
+		rel="nofollow"
+	>
+		{#if isResolving}
+			<Spinner class="size-4" />
+		{:else}
+			<DownloadIcon />
+		{/if}
 		{label}
 	</Button>
 	<ButtonGroupSeparator />
