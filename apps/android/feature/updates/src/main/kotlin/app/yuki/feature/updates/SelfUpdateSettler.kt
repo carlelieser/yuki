@@ -12,10 +12,8 @@ class SelfUpdateSettler @Inject internal constructor(
     private val installer: UpdateInstaller,
 ) {
     suspend fun settle(): Boolean {
-        if (!self.isRelease) return false
-
         val pending = progress.find(self.githubRepoId) ?: return false
-        if (pending.versionTag != self.releaseTag) return false
+        if (!self.hasLanded(pending.versionTag)) return false
 
         installer.cancel(self.githubRepoId)
         return true

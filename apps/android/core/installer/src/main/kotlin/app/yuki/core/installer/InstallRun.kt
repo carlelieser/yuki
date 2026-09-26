@@ -14,7 +14,7 @@ internal class InstallRun @Inject constructor(
     private val self: SelfListing,
 ) {
     suspend fun execute(request: InstallRequest, runAttemptCount: Int): InstallState {
-        if (self.isRunning(request)) return settleLanded(request)
+        if (self.hasLanded(request)) return settleLanded(request)
 
         val target = request.target
         val versionTag = request.source.versionTag
@@ -39,16 +39,13 @@ internal class InstallRun @Inject constructor(
     }
 
     private suspend fun settleLanded(request: InstallRequest): InstallState {
-        val landed = InstallState.Installed(request.source.versionTag)
-        progress.write(InstallProgress(request.target, request.source.versionTag, landed))
-        return landed
+        progress.clear(request.target.githubRepoId)
+        return InstallState.Installed(self.releaseTag)
     }
 }
 
-internal fun SelfListing.isRunning(request: InstallRequest): Boolean =
-    isRelease &&
-        request.target.githubRepoId == githubRepoId &&
-        request.source.versionTag == releaseTag
+internal fun SelfListing.hasLanded(request: InstallRequest): Boolean =
+    request.target.githubRepoId == githubRepoId && hasLanded(request.source.versionTag)
 
 internal fun isRetryable(terminal: InstallState, runAttemptCount: Int): Boolean {
     val failure = (terminal as? InstallState.Failed)?.reason ?: return false

@@ -10,4 +10,7 @@ data class SelfListing(
     val versionCode: Long,
 ) {
     val isRelease: Boolean get() = releaseTag.isNotBlank()
+
+    fun hasLanded(versionTag: String): Boolean =
+        isRelease && !isNewerTag(candidate = versionTag, installed = releaseTag)
 }

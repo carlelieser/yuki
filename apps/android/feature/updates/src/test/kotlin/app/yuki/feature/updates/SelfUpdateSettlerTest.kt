@@ -50,6 +50,17 @@ class SelfUpdateSettlerTest {
     }
 
     @Test
+    fun `an update to an older build is cancelled because the running build replaced it`() =
+        runTest {
+            val progress = MapInstallProgressStore(pending(SELF_REPO_ID, "android-v1.7.0"))
+
+            val settled = settler(progress).settle()
+
+            assertTrue(settled)
+            assertEquals(listOf(SELF_REPO_ID), installer.cancelled)
+        }
+
+    @Test
     fun `an update to a newer build is left to finish`() = runTest {
         val progress = MapInstallProgressStore(pending(SELF_REPO_ID, "android-v1.8.0"))
 

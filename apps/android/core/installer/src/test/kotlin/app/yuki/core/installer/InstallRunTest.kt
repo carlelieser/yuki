@@ -140,7 +140,22 @@ class LandedSelfUpdateTest {
 
             assertEquals(InstallState.Installed("v1.2.0"), terminal)
             assertEquals(0, downloader.downloads)
-            assertEquals(listOf(terminal), progress.written.map(InstallProgress::state))
+            assertEquals(null, progress.find(42L))
+        }
+
+    @Test
+    fun `an update to an older build than the running one settles without installing`() =
+        runTest {
+            val progress = FakeInstallProgressStore()
+            progress.write(InstallProgress(testRequest().target, "v1.1.0", InstallState.Installing))
+            val downloader = FakeApkDownloader()
+            val run = runOf(progress, downloader, self = testSelfListing(releaseTag = "v1.2.0"))
+
+            val terminal = run.execute(testRequest(versionTag = "v1.1.0"), runAttemptCount = 0)
+
+            assertEquals(InstallState.Installed("v1.2.0"), terminal)
+            assertEquals(0, downloader.downloads)
+            assertEquals(null, progress.find(42L))
         }
 
     @Test
