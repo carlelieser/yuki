@@ -73,7 +73,7 @@ private fun ProductListItemIcon(content: ProductListItemContent) {
     }
 }
 
-internal fun badgeSpacing(): Modifier = Modifier.padding(top = YukiSpacing.ExtraSmall)
+internal fun Modifier.badgeSpacing(): Modifier = padding(top = YukiSpacing.ExtraSmall)
 
 @Composable
 internal fun ProductDescription(
@@ -93,7 +93,7 @@ internal fun ProductDescription(
 
 @Composable
 private fun ProductListItemSupporting(content: ProductListItemContent) {
-    val spacing = badgeSpacing()
+    val spacing = Modifier.badgeSpacing()
 
     if (content.badges.items.isNotEmpty()) {
         ListingBadgeRow(badges = content.badges, modifier = spacing)

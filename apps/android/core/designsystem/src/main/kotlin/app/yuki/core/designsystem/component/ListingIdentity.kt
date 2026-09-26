@@ -101,7 +101,7 @@ fun ListingIdentity(
             )
             ListingBadgeRow(
                 badges = listing.toBadges(onAuthorClick = onAuthorClick),
-                modifier = badgeSpacing(),
+                modifier = Modifier.badgeSpacing(),
             )
         }
     }
