@@ -1,5 +1,7 @@
 package app.yuki.core.model
 
+import java.time.Instant
+
 enum class InstallSource {
     YUKI,
     DETECTED,
@@ -43,12 +45,24 @@ private fun newestUpdate(
     detail: ListingDetail,
     includePrereleases: Boolean,
 ): AvailableUpdate? {
+    val installedAt = publishedAtOf(installed.versionTag, detail.versions)
     val best = detail.versions
         .filter { version -> isEligible(version, includePrereleases) }
         .filter { version -> isNewerTag(version.tag, installed.versionTag) }
+        .filter { version -> isPublishedAfter(version, installedAt) }
         .maxWithOrNull(::compareByTag)
 
     return best?.let { version -> AvailableUpdate(installed, version) }
+}
+
+private fun publishedAtOf(tag: String, versions: List<ListingVersion>): Instant? =
+    versions.firstOrNull { version -> version.tag == tag }?.publishedAt
+
+private fun isPublishedAfter(version: ListingVersion, installedAt: Instant?): Boolean {
+    val publishedAt = version.publishedAt
+    if (installedAt == null || publishedAt == null) return true
+
+    return publishedAt.isAfter(installedAt)
 }
 
 private fun compareByTag(left: ListingVersion, right: ListingVersion): Int {

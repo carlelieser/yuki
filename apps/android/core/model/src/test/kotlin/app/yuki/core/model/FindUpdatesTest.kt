@@ -1,5 +1,6 @@
 package app.yuki.core.model
 
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -29,13 +30,14 @@ private fun version(
     tag: String,
     downloadUrl: String? = "https://example.test/$tag.apk",
     isPrerelease: Boolean = false,
+    publishedAt: Instant? = null,
 ) = ListingVersion(
     tag = tag,
     name = tag,
     downloadUrl = downloadUrl,
     assetName = "app.apk",
     isPrerelease = isPrerelease,
-    publishedAt = null,
+    publishedAt = publishedAt,
 )
 
 private fun detail(versions: List<ListingVersion>) = ListingDetail(
@@ -59,6 +61,33 @@ private fun detail(versions: List<ListingVersion>) = ListingDetail(
 )
 
 class FindUpdatesTest {
+    @Test
+    fun `an older release from a previous tag scheme is not offered as an update`() {
+        val versions = listOf(
+            version("v1.96.1", publishedAt = Instant.parse("2026-09-15T21:37:46Z")),
+            version("Thor_v1709", publishedAt = Instant.parse("2025-12-29T16:32:17Z")),
+        )
+        val listings = mapOf(REPO_ID to detail(versions))
+
+        val updates = findUpdates(listOf(installedApp("v1.96.1")), listings, includePrereleases = false)
+
+        assertEquals(emptyList<AvailableUpdate>(), updates)
+    }
+
+    @Test
+    fun `a newer release is still offered when an older tag scheme sorts higher`() {
+        val versions = listOf(
+            version("v1.97.0", publishedAt = Instant.parse("2026-10-01T00:00:00Z")),
+            version("v1.96.1", publishedAt = Instant.parse("2026-09-15T21:37:46Z")),
+            version("Thor_v1709", publishedAt = Instant.parse("2025-12-29T16:32:17Z")),
+        )
+        val listings = mapOf(REPO_ID to detail(versions))
+
+        val updates = findUpdates(listOf(installedApp("v1.96.1")), listings, includePrereleases = false)
+
+        assertEquals(listOf("v1.97.0"), updates.map { update -> update.version.tag })
+    }
+
     @Test
     fun `picks the newest eligible version`() {
         val listings = mapOf(REPO_ID to detail(listOf(version("1.3.0"), version("1.5.0"), version("1.4.0"))))
