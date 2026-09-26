@@ -2,6 +2,7 @@ package app.yuki.core.installer
 
 import android.content.Context
 import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -23,11 +24,10 @@ internal fun installForegroundInfo(context: Context, target: InstallTarget): For
         .setSilent(true)
         .build()
 
-    return ForegroundInfo(
-        target.githubRepoId.hashCode(),
-        notification,
-        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-    )
+    val id = target.githubRepoId.hashCode()
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return ForegroundInfo(id, notification)
+
+    return ForegroundInfo(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
 }
 
 internal enum class InstallChannel(val id: String, val nameRes: Int, val importance: Int) {
