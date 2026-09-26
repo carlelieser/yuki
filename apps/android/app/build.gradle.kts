@@ -38,6 +38,10 @@ android {
 }
 
 dependencies {
+    constraints {
+        implementation(libs.androidx.concurrent.futures.ktx)
+    }
+
     implementation(projects.core.auth)
     implementation(projects.core.database)
     implementation(projects.core.designsystem)
