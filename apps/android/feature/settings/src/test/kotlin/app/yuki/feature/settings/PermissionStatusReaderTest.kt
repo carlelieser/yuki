@@ -64,18 +64,8 @@ class PermissionStatusReaderTest {
     }
 
     @Test
-    fun notificationsCountAsGrantedBelowTheSdkThatIntroducedThem() {
-        val platform = FakePlatformPermissions(sdkInt = Build.VERSION_CODES.S)
-
-        val status = readerFor(platform).statusOf(notifications())
-
-        assertEquals(PermissionStatus.Granted, status)
-        assertTrue(platform.runtimeChecks.isEmpty())
-    }
-
-    @Test
-    fun notificationsReadTheRuntimeGrantOnceTheSdkSupportsThem() {
-        val platform = FakePlatformPermissions(sdkInt = Build.VERSION_CODES.TIRAMISU)
+    fun notificationsReadTheRuntimeGrant() {
+        val platform = FakePlatformPermissions()
 
         val status = readerFor(platform).statusOf(notifications())
 
@@ -87,7 +77,7 @@ class PermissionStatusReaderTest {
     fun everyDeclaredPermissionIsReadableWithoutTouchingTheWrongPlatformCall() {
         val platform = FakePlatformPermissions()
 
-        YUKI_PERMISSIONS.forEach { permission -> readerFor(platform).statusOf(permission) }
+        PERMISSIONS.forEach { permission -> readerFor(platform).statusOf(permission) }
 
         assertFalse(platform.runtimeChecks.contains(Manifest.permission.REQUEST_INSTALL_PACKAGES))
         assertEquals(1, platform.packageInstallChecks)
@@ -97,7 +87,6 @@ class PermissionStatusReaderTest {
 private class FakePlatformPermissions(
     private val grantedRuntimePermissions: Set<String> = emptySet(),
     private val canRequestPackageInstalls: Boolean = false,
-    override val sdkInt: Int = Build.VERSION_CODES.TIRAMISU,
 ) : PlatformPermissions {
     val runtimeChecks: MutableList<String> = mutableListOf()
 
@@ -124,4 +113,6 @@ private fun installUnknownApps(): AppPermission =
 private fun notifications(): AppPermission = permissionFor(Manifest.permission.POST_NOTIFICATIONS)
 
 private fun permissionFor(permission: String): AppPermission =
-    YUKI_PERMISSIONS.first { entry -> entry.permission == permission }
+    PERMISSIONS.first { entry -> entry.permission == permission }
+
+private val PERMISSIONS = yukiPermissions(Build.VERSION_CODES.TIRAMISU)

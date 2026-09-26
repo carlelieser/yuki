@@ -1,6 +1,7 @@
 package app.yuki.feature.settings
 
 import android.Manifest
+import android.os.Build
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -26,9 +27,9 @@ class PermissionRowTest {
 
     @Test
     fun everyPlannedPermissionIsPresentWithItsReason() {
-        val permissions = YUKI_PERMISSIONS.associateBy(AppPermission::permission)
+        val permissions = PERMISSIONS.associateBy(AppPermission::permission)
 
-        assertEquals(4, YUKI_PERMISSIONS.size)
+        assertEquals(4, PERMISSIONS.size)
         assertEquals(
             R.string.settings_permission_network_reason,
             permissions.getValue(Manifest.permission.INTERNET).reason,
@@ -45,8 +46,22 @@ class PermissionRowTest {
     }
 
     @Test
+    fun theNotificationsRowIsOnlyListedWhereThePermissionExists() {
+        val beforeNotifications = yukiPermissions(Build.VERSION_CODES.S)
+
+        assertEquals(
+            listOf(
+                Manifest.permission.INTERNET,
+                Manifest.permission.REQUEST_INSTALL_PACKAGES,
+                SHIZUKU_PERMISSION,
+            ),
+            beforeNotifications.map(AppPermission::permission),
+        )
+    }
+
+    @Test
     fun onlyInternetAndInstallPackagesAreRequired() {
-        val required = YUKI_PERMISSIONS.filter(AppPermission::isRequired).map(AppPermission::permission)
+        val required = PERMISSIONS.filter(AppPermission::isRequired).map(AppPermission::permission)
 
         assertEquals(
             listOf(
@@ -59,7 +74,7 @@ class PermissionRowTest {
 
     @Test
     fun installUnknownAppsIsDeclaredAsAnAppOpNotARuntimePermission() {
-        val permissions = YUKI_PERMISSIONS.associateBy(AppPermission::permission)
+        val permissions = PERMISSIONS.associateBy(AppPermission::permission)
 
         assertEquals(
             PermissionKind.InstallPackagesAppOp,
@@ -117,10 +132,12 @@ private fun rowFor(permission: AppPermission, status: PermissionStatus): Permiss
     PermissionRow(permission = permission, status = status)
 
 private fun requiredPermission(): AppPermission =
-    YUKI_PERMISSIONS.first { entry -> entry.permission == Manifest.permission.INTERNET }
+    PERMISSIONS.first { entry -> entry.permission == Manifest.permission.INTERNET }
 
 private fun optionalPermission(): AppPermission =
-    YUKI_PERMISSIONS.first { entry -> entry.permission == Manifest.permission.POST_NOTIFICATIONS }
+    PERMISSIONS.first { entry -> entry.permission == Manifest.permission.POST_NOTIFICATIONS }
 
 private fun shizukuPermission(): AppPermission =
-    YUKI_PERMISSIONS.first { entry -> entry.permission == SHIZUKU_PERMISSION }
+    PERMISSIONS.first { entry -> entry.permission == SHIZUKU_PERMISSION }
+
+private val PERMISSIONS = yukiPermissions(Build.VERSION_CODES.TIRAMISU)

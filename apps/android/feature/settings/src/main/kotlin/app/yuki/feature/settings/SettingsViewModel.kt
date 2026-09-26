@@ -106,7 +106,7 @@ internal class SettingsDependencies @Inject constructor(
 ) {
     val apps: InstalledAppsReader get() = readers.apps
 
-    fun readPermissions(): List<PermissionRow> = YUKI_PERMISSIONS.map { permission ->
+    fun readPermissions(): List<PermissionRow> = devicePermissions().map { permission ->
         PermissionRow(permission = permission, status = readers.permissions.statusOf(permission))
     }
 

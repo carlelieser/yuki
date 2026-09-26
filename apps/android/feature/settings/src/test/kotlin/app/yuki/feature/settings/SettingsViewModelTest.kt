@@ -45,7 +45,7 @@ class SettingsViewModelTest {
             val content = successOf(awaitItem())
 
             assertEquals(
-                YUKI_PERMISSIONS.map(AppPermission::permission),
+                devicePermissions().map(AppPermission::permission),
                 content.permissions.map { row -> row.permission.permission },
             )
             cancelAndIgnoreRemainingEvents()

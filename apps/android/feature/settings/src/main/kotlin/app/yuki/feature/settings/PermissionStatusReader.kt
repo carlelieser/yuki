@@ -1,9 +1,7 @@
 package app.yuki.feature.settings
 
-import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -25,11 +23,7 @@ internal interface PlatformPermissions {
     fun isRuntimeGranted(permission: String): Boolean
 
     fun canRequestPackageInstalls(): Boolean
-
-    val sdkInt: Int
 }
-
-internal fun isNotificationsSupported(sdkInt: Int): Boolean = sdkInt >= Build.VERSION_CODES.TIRAMISU
 
 internal class ContextPlatformPermissions(private val context: Context) : PlatformPermissions {
     override fun isRuntimeGranted(permission: String): Boolean =
@@ -37,8 +31,6 @@ internal class ContextPlatformPermissions(private val context: Context) : Platfo
 
     override fun canRequestPackageInstalls(): Boolean =
         context.packageManager.canRequestPackageInstalls()
-
-    override val sdkInt: Int get() = Build.VERSION.SDK_INT
 }
 
 @Singleton
@@ -48,15 +40,8 @@ internal class ContextPermissionStatusReader(
     @Inject
     constructor(@ApplicationContext context: Context) : this(ContextPlatformPermissions(context))
 
-    override fun statusOf(permission: AppPermission): PermissionStatus {
-        if (isUnsupportedNotifications(permission)) return PermissionStatus.Granted
-
-        return if (isGranted(permission)) PermissionStatus.Granted else PermissionStatus.Denied
-    }
-
-    private fun isUnsupportedNotifications(permission: AppPermission): Boolean =
-        permission.permission == Manifest.permission.POST_NOTIFICATIONS &&
-            !isNotificationsSupported(platform.sdkInt)
+    override fun statusOf(permission: AppPermission): PermissionStatus =
+        if (isGranted(permission)) PermissionStatus.Granted else PermissionStatus.Denied
 
     private fun isGranted(permission: AppPermission): Boolean = when (permission.kind) {
         PermissionKind.Runtime -> platform.isRuntimeGranted(permission.permission)

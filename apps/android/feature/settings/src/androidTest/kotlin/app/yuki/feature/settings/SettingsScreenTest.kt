@@ -218,7 +218,7 @@ class SettingsScreenTest {
     private fun setContent(
         state: ShizukuState,
         permissionStatus: PermissionStatus = PermissionStatus.Denied,
-        permissions: List<AppPermission> = YUKI_PERMISSIONS,
+        permissions: List<AppPermission> = devicePermissions(),
         onShizukuAction: (ShizukuActionKind) -> Unit = {},
         onInstallModeChange: (InstallMode) -> Unit = {},
         onAppearanceChange: (AppearanceMode) -> Unit = {},
@@ -302,7 +302,7 @@ private fun detailFor(state: ShizukuState): ShizukuDetail = when (state) {
 }
 
 private fun requiredPermission(): AppPermission =
-    YUKI_PERMISSIONS.first { permission -> permission.isRequired }
+    devicePermissions().first { permission -> permission.isRequired }
 
 private fun optionalPermission(): AppPermission =
-    YUKI_PERMISSIONS.first { permission -> !permission.isRequired }
+    devicePermissions().first { permission -> !permission.isRequired }

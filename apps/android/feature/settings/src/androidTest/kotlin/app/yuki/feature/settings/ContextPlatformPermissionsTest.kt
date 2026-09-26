@@ -22,7 +22,7 @@ class ContextPlatformPermissionsTest {
     @Test
     fun theAppOpLookupIsNotTheRuntimeCheckInDisguise() {
         val reader = ContextPermissionStatusReader(platform)
-        val installUnknownApps = YUKI_PERMISSIONS
+        val installUnknownApps = devicePermissions()
             .first { entry -> entry.permission == Manifest.permission.REQUEST_INSTALL_PACKAGES }
 
         val expected = if (context.packageManager.canRequestPackageInstalls()) {
@@ -38,11 +38,5 @@ class ContextPlatformPermissionsTest {
     fun aDeclaredManifestPermissionReadsAsGrantedThroughTheRuntimeLookup() {
         assertTrue(platform.isRuntimeGranted(Manifest.permission.INTERNET))
     }
-
-    @Test
-    fun theSdkLevelComesFromTheRunningDevice() {
-        assertTrue(platform.sdkInt >= MIN_SDK)
-    }
 }
 
-private const val MIN_SDK = 26
