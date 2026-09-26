@@ -1,6 +1,7 @@
 package app.yuki.core.installer
 
 import app.yuki.core.model.DownloadSize
+import app.yuki.core.model.SelfListing
 import app.yuki.core.model.downloadSizeOf
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
@@ -16,6 +17,19 @@ internal fun testRequest(
     target = InstallTarget(githubRepoId, "acme-app", "Acme App", iconUrl = null),
     source = InstallSource("https://example.test/acme.apk", versionTag, "acme.apk"),
 )
+
+internal fun testSelfListing(githubRepoId: Long = 42L, releaseTag: String = "v1.2.0") =
+    SelfListing(
+        githubRepoId = githubRepoId,
+        slug = "acme-app",
+        packageName = "com.acme.app",
+        title = "Acme App",
+        iconUrl = "https://example.test/icon.png",
+        releaseTag = releaseTag,
+        versionCode = 12L,
+    )
+
+internal val NO_SELF_RELEASE = testSelfListing(releaseTag = "")
 
 internal val TEST_TOTAL_BYTES = 1_000L
 

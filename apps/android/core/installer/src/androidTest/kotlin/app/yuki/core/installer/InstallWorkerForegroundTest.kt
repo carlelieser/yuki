@@ -9,6 +9,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
+import app.yuki.core.model.SelfListing
 import java.io.File
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -72,6 +73,17 @@ private fun idleRun(): InstallRun = InstallRun(
         ),
     ),
     progress = IdleProgressStore,
+    self = NO_SELF_RELEASE,
+)
+
+private val NO_SELF_RELEASE = SelfListing(
+    githubRepoId = 0L,
+    slug = "",
+    packageName = "",
+    title = "",
+    iconUrl = "",
+    releaseTag = "",
+    versionCode = 0L,
 )
 
 private object IdleDownloader : ApkDownloader {

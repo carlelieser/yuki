@@ -2,6 +2,7 @@ package app.yuki.core.installer
 
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.SelfListing
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -10,8 +11,11 @@ internal const val INSTALL_MAX_ATTEMPTS = 3
 internal class InstallRun @Inject constructor(
     private val coordinator: InstallCoordinator,
     private val progress: InstallProgressStore,
+    private val self: SelfListing,
 ) {
     suspend fun execute(request: InstallRequest, runAttemptCount: Int): InstallState {
+        if (self.isRunning(request)) return settleLanded(request)
+
         val target = request.target
         val versionTag = request.source.versionTag
         var latest: InstallState = QUEUED
@@ -33,7 +37,18 @@ internal class InstallRun @Inject constructor(
 
         return latest
     }
+
+    private suspend fun settleLanded(request: InstallRequest): InstallState {
+        val landed = InstallState.Installed(request.source.versionTag)
+        progress.write(InstallProgress(request.target, request.source.versionTag, landed))
+        return landed
+    }
 }
+
+internal fun SelfListing.isRunning(request: InstallRequest): Boolean =
+    isRelease &&
+        request.target.githubRepoId == githubRepoId &&
+        request.source.versionTag == releaseTag
 
 internal fun isRetryable(terminal: InstallState, runAttemptCount: Int): Boolean {
     val failure = (terminal as? InstallState.Failed)?.reason ?: return false

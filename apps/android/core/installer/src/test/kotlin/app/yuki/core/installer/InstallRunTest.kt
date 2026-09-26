@@ -2,6 +2,7 @@ package app.yuki.core.installer
 
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.InstallState
+import app.yuki.core.model.SelfListing
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -127,6 +128,46 @@ class InstallRunTest {
     }
 }
 
+class LandedSelfUpdateTest {
+    @Test
+    fun `an update to the build that is already running settles without reinstalling`() =
+        runTest {
+            val progress = FakeInstallProgressStore()
+            val downloader = FakeApkDownloader()
+            val run = runOf(progress, downloader, self = testSelfListing(releaseTag = "v1.2.0"))
+
+            val terminal = run.execute(testRequest(versionTag = "v1.2.0"), runAttemptCount = 0)
+
+            assertEquals(InstallState.Installed("v1.2.0"), terminal)
+            assertEquals(0, downloader.downloads)
+            assertEquals(listOf(terminal), progress.written.map(InstallProgress::state))
+        }
+
+    @Test
+    fun `an update to a newer build of the app itself still installs`() = runTest {
+        val downloader = FakeApkDownloader()
+        val run = runOf(
+            FakeInstallProgressStore(),
+            downloader,
+            self = testSelfListing(releaseTag = "v1.1.0"),
+        )
+
+        run.execute(testRequest(versionTag = "v1.2.0"), runAttemptCount = 0)
+
+        assertEquals(1, downloader.downloads)
+    }
+
+    @Test
+    fun `another app at the running build's tag still installs`() = runTest {
+        val downloader = FakeApkDownloader()
+        val self = testSelfListing(githubRepoId = 7L, releaseTag = "v1.2.0")
+
+        runOf(FakeInstallProgressStore(), downloader, self).execute(testRequest(), 0)
+
+        assertEquals(1, downloader.downloads)
+    }
+}
+
 class InstallRetryPolicyTest {
     @Test
     fun `a successful install is never retried`() {
@@ -193,6 +234,7 @@ private fun downloadFailed(): InstallState =
 private fun runOf(
     progress: InstallProgressStore,
     downloader: ApkDownloader = FakeApkDownloader(),
+    self: SelfListing = NO_SELF_RELEASE,
 ): InstallRun = InstallRun(
     coordinator = InstallCoordinator(
         downloader = downloader,
@@ -204,4 +246,5 @@ private fun runOf(
         ),
     ),
     progress = progress,
+    self = self,
 )
