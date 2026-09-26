@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -28,13 +29,15 @@ internal class UserActionPrompt(private val context: Context) : UserActionLaunch
     }
 
     fun post(sessionId: Int, intent: Intent) {
-        val permission = Manifest.permission.POST_NOTIFICATIONS
-        val isAllowed = ContextCompat.checkSelfPermission(context, permission) ==
-            PackageManager.PERMISSION_GRANTED
-        if (!isAllowed) return
+        val notifications = NotificationManagerCompat.from(context)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = Manifest.permission.POST_NOTIFICATIONS
+            val status = ContextCompat.checkSelfPermission(context, permission)
+            if (status != PackageManager.PERMISSION_GRANTED) return
+        }
 
         ensureChannel(context, InstallChannel.Confirmations)
-        NotificationManagerCompat.from(context).notify(
+        notifications.notify(
             CONFIRMATION_NOTIFICATION_TAG,
             sessionId,
             confirmation(sessionId, intent),
