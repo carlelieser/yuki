@@ -66,13 +66,7 @@ internal class SystemUpdateNotifier @Inject constructor(
     private fun summary(apps: List<InstalledApp>) =
         NotificationCompat.Builder(context, UPDATES_CHANNEL_ID)
             .setSmallIcon(DesignR.drawable.ic_update)
-            .setContentTitle(
-                context.resources.getQuantityString(
-                    R.plurals.updates_notification_title,
-                    apps.size,
-                    apps.size,
-                ),
-            )
+            .setContentTitle(context.getString(R.string.updates_notification_title))
             .setContentText(apps.joinToString(separator = ", ", transform = InstalledApp::title))
             .setNumber(apps.size)
             .setContentIntent(openUpdates())
