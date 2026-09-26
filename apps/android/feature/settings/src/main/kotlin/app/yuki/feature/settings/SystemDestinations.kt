@@ -9,6 +9,7 @@ import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 
 const val SHIZUKU_WEBSITE = "https://shizuku.rikka.app"
 const val SHIZUKU_PACKAGE = "moe.shizuku.privileged.api"
@@ -38,7 +39,7 @@ internal fun settingsIntentFor(permission: String, packageName: String): Intent 
 
 internal class IntentSystemDestinations(private val context: Context) : SystemDestinations {
     override fun openShizukuWebsite() {
-        start(Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_WEBSITE)), "open $SHIZUKU_WEBSITE")
+        start(Intent(Intent.ACTION_VIEW, SHIZUKU_WEBSITE.toUri()), "open $SHIZUKU_WEBSITE")
     }
 
     override fun launchShizuku() {
