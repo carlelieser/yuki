@@ -14,6 +14,11 @@
 
     <string name="settings_appearance_title">Appearance</string>
     <string name="settings_preferences_title">Preferences</string>
+    <string name="settings_auto_update_check_title">Check for updates automatically</string>
+    <string name="settings_auto_update_check_supporting">Look for updates in the background</string>
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_update_notifications_title">Updates available</string>
+    <string name="settings_update_notifications_supporting">Notify when updates are available for apps</string>
     <string name="settings_prereleases_title">Include prereleases</string>
     <string name="settings_prereleases_supporting">Offer beta and release-candidate versions as updates</string>
     <string name="settings_install_mode_title">Install mode</string>

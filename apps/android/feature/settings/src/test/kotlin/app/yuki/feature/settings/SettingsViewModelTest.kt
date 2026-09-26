@@ -105,6 +105,36 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun autoUpdateCheckRoundTripsThroughTheStore() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(successOf(awaitItem()).preferences.isAutoUpdateCheckEnabled)
+
+            viewModel.onAutoUpdateCheckChange(false)
+
+            assertFalse(successOf(awaitItem()).preferences.isAutoUpdateCheckEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updateNotificationsRoundTripThroughTheStore() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.state.test {
+            assertEquals(UiState.Loading, awaitItem())
+            assertTrue(successOf(awaitItem()).preferences.isUpdateNotificationEnabled)
+
+            viewModel.onUpdateNotificationChange(false)
+
+            assertFalse(successOf(awaitItem()).preferences.isUpdateNotificationEnabled)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun includePrereleasesRoundTripsThroughTheStore() = runTest {
         val viewModel = viewModel()
 

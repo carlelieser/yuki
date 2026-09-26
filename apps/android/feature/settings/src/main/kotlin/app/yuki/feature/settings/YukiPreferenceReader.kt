@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 interface YukiPreferenceReader {
+    fun isAutoUpdateCheckEnabled(): Flow<Boolean>
+
+    fun isUpdateNotificationEnabled(): Flow<Boolean>
+
     fun includePrereleases(): Flow<Boolean>
 
     fun installMode(): Flow<InstallMode>
@@ -26,6 +30,12 @@ interface YukiPreferenceReader {
 internal class StoreBackedPreferenceReader @Inject constructor(
     private val store: PreferenceStore,
 ) : YukiPreferenceReader {
+    override fun isAutoUpdateCheckEnabled(): Flow<Boolean> =
+        read(YukiPreferences::isAutoUpdateCheckEnabled)
+
+    override fun isUpdateNotificationEnabled(): Flow<Boolean> =
+        read(YukiPreferences::isUpdateNotificationEnabled)
+
     override fun includePrereleases(): Flow<Boolean> = read(YukiPreferences::includePrereleases)
 
     override fun installMode(): Flow<InstallMode> = read(YukiPreferences::installMode)

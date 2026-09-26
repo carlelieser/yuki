@@ -24,6 +24,8 @@ enum class AppearanceMode(@StringRes val label: Int) {
 }
 
 data class YukiPreferences(
+    val isAutoUpdateCheckEnabled: Boolean,
+    val isUpdateNotificationEnabled: Boolean,
     val includePrereleases: Boolean,
     val installMode: InstallMode,
     val appearance: AppearanceMode,
@@ -32,6 +34,8 @@ data class YukiPreferences(
 ) {
     companion object {
         val Defaults: YukiPreferences = YukiPreferences(
+            isAutoUpdateCheckEnabled = true,
+            isUpdateNotificationEnabled = true,
             includePrereleases = false,
             installMode = InstallMode.Shizuku,
             appearance = AppearanceMode.System,
@@ -44,6 +48,10 @@ data class YukiPreferences(
 interface PreferenceStore {
     val preferences: Flow<YukiPreferences>
 
+    suspend fun setAutoUpdateCheckEnabled(isEnabled: Boolean)
+
+    suspend fun setUpdateNotificationEnabled(isEnabled: Boolean)
+
     suspend fun setIncludePrereleases(isEnabled: Boolean)
 
     suspend fun setInstallMode(mode: InstallMode)
@@ -55,6 +63,8 @@ interface PreferenceStore {
     suspend fun setInstallerPackage(packageName: String)
 }
 
+private val AutoUpdateCheckKey = booleanPreferencesKey("auto_update_check")
+private val UpdateNotificationKey = booleanPreferencesKey("update_notifications")
 private val IncludePrereleasesKey = booleanPreferencesKey("include_prereleases")
 private val InstallModeKey = stringPreferencesKey("install_mode")
 private val AppearanceKey = stringPreferencesKey("appearance")
@@ -62,6 +72,10 @@ private val DynamicColorKey = booleanPreferencesKey("dynamic_color")
 private val InstallerPackageKey = stringPreferencesKey("installer_package")
 
 internal fun decode(stored: Preferences): YukiPreferences = YukiPreferences(
+    isAutoUpdateCheckEnabled = stored[AutoUpdateCheckKey]
+        ?: YukiPreferences.Defaults.isAutoUpdateCheckEnabled,
+    isUpdateNotificationEnabled = stored[UpdateNotificationKey]
+        ?: YukiPreferences.Defaults.isUpdateNotificationEnabled,
     includePrereleases = stored[IncludePrereleasesKey]
         ?: YukiPreferences.Defaults.includePrereleases,
     installMode = decodeInstallMode(stored[InstallModeKey]),
@@ -93,6 +107,14 @@ internal class DataStorePreferenceStore @Inject constructor(
     @param:SettingsPreferences private val store: DataStore<Preferences>,
 ) : PreferenceStore {
     override val preferences: Flow<YukiPreferences> = store.data.map(::decode)
+
+    override suspend fun setAutoUpdateCheckEnabled(isEnabled: Boolean) {
+        store.edit { stored -> stored[AutoUpdateCheckKey] = isEnabled }
+    }
+
+    override suspend fun setUpdateNotificationEnabled(isEnabled: Boolean) {
+        store.edit { stored -> stored[UpdateNotificationKey] = isEnabled }
+    }
 
     override suspend fun setIncludePrereleases(isEnabled: Boolean) {
         store.edit { stored -> stored[IncludePrereleasesKey] = isEnabled }

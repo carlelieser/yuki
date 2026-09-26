@@ -52,6 +52,14 @@ internal class FakePreferenceStore(initial: YukiPreferences = YukiPreferences.De
 
     override val preferences: Flow<YukiPreferences> = stored.asStateFlow()
 
+    override suspend fun setAutoUpdateCheckEnabled(isEnabled: Boolean) {
+        stored.value = stored.value.copy(isAutoUpdateCheckEnabled = isEnabled)
+    }
+
+    override suspend fun setUpdateNotificationEnabled(isEnabled: Boolean) {
+        stored.value = stored.value.copy(isUpdateNotificationEnabled = isEnabled)
+    }
+
     override suspend fun setIncludePrereleases(isEnabled: Boolean) {
         stored.value = stored.value.copy(includePrereleases = isEnabled)
     }

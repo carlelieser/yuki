@@ -63,6 +63,14 @@ class SettingsViewModel @Inject internal constructor(
         dependencies.shizuku.requestPermission()
     }
 
+    fun onAutoUpdateCheckChange(isEnabled: Boolean) {
+        viewModelScope.launch { dependencies.store.setAutoUpdateCheckEnabled(isEnabled) }
+    }
+
+    fun onUpdateNotificationChange(isEnabled: Boolean) {
+        viewModelScope.launch { dependencies.store.setUpdateNotificationEnabled(isEnabled) }
+    }
+
     fun onIncludePrereleasesChange(isEnabled: Boolean) {
         viewModelScope.launch { dependencies.store.setIncludePrereleases(isEnabled) }
     }

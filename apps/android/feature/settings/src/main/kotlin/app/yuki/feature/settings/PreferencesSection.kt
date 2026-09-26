@@ -22,7 +22,7 @@ import app.yuki.core.designsystem.component.SettingsRowPosition
 import app.yuki.core.designsystem.component.YukiIcons
 
 private const val APPEARANCE_ROW_COUNT = 2
-private const val PREFERENCE_ROW_COUNT = 3
+private const val PREFERENCE_ROW_COUNT = 4
 
 @Composable
 internal fun AppearanceSection(
@@ -61,24 +61,16 @@ internal fun PreferencesSection(
         modifier = modifier,
         label = stringResource(R.string.settings_preferences_title),
     ) {
-        ToggleRow(
-            position = SettingsRowPosition(index = 0, count = PREFERENCE_ROW_COUNT),
-            content = ToggleContent(
-                title = stringResource(R.string.settings_prereleases_title),
-                supporting = stringResource(R.string.settings_prereleases_supporting),
-                isChecked = preferences.includePrereleases,
-            ),
-            onCheckedChange = actions.onIncludePrereleasesChange,
-        )
+        UpdateToggleRows(preferences = preferences, actions = actions)
 
         InstallModeRow(
-            position = SettingsRowPosition(index = 1, count = PREFERENCE_ROW_COUNT),
+            position = SettingsRowPosition(index = 2, count = PREFERENCE_ROW_COUNT),
             mode = preferences.installMode,
             onChange = actions.onInstallModeChange,
         )
 
         InstallSourceRow(
-            position = SettingsRowPosition(index = 2, count = PREFERENCE_ROW_COUNT),
+            position = SettingsRowPosition(index = 3, count = PREFERENCE_ROW_COUNT),
             source = content.installSource,
             actions = InstallSourceActions(
                 onSelect = actions.onInstallerPackageChange,
@@ -88,6 +80,29 @@ internal fun PreferencesSection(
     }
 }
 
+@Composable
+private fun UpdateToggleRows(preferences: YukiPreferences, actions: PreferenceActions) {
+    ToggleRow(
+        position = SettingsRowPosition(index = 0, count = PREFERENCE_ROW_COUNT),
+        content = ToggleContent(
+            title = stringResource(R.string.settings_auto_update_check_title),
+            supporting = stringResource(R.string.settings_auto_update_check_supporting),
+            isChecked = preferences.isAutoUpdateCheckEnabled,
+        ),
+        onCheckedChange = actions.onAutoUpdateCheckChange,
+    )
+
+    ToggleRow(
+        position = SettingsRowPosition(index = 1, count = PREFERENCE_ROW_COUNT),
+        content = ToggleContent(
+            title = stringResource(R.string.settings_prereleases_title),
+            supporting = stringResource(R.string.settings_prereleases_supporting),
+            isChecked = preferences.includePrereleases,
+        ),
+        onCheckedChange = actions.onIncludePrereleasesChange,
+    )
+}
+
 internal data class ToggleContent(
     val title: String,
     val supporting: String,
@@ -95,7 +110,7 @@ internal data class ToggleContent(
 )
 
 @Composable
-private fun ToggleRow(
+internal fun ToggleRow(
     position: SettingsRowPosition,
     content: ToggleContent,
     onCheckedChange: (Boolean) -> Unit,

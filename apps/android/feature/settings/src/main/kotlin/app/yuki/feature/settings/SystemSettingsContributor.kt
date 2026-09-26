@@ -63,6 +63,8 @@ internal fun settingsActions(
         onShizukuAction = shizukuActionHandler(destinations, onRequestPermission),
         onPermissionClick = permissionClickHandler(destinations, onRequestPermission),
         preferences = PreferenceActions(
+            onAutoUpdateCheckChange = viewModel::onAutoUpdateCheckChange,
+            onUpdateNotificationChange = viewModel::onUpdateNotificationChange,
             onIncludePrereleasesChange = viewModel::onIncludePrereleasesChange,
             onInstallModeChange = viewModel::onInstallModeChange,
             onAppearanceChange = viewModel::onAppearanceChange,
@@ -115,5 +117,7 @@ private fun SettingsSections(
         AppearanceSection(preferences = content.preferences, actions = actions.preferences)
 
         PreferencesSection(content = content, actions = actions.preferences)
+
+        NotificationsSection(preferences = content.preferences, actions = actions.preferences)
     }
 }

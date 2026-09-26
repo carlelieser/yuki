@@ -287,6 +287,8 @@ private fun actionsWith(
         onShizukuAction = onShizukuAction,
         onPermissionClick = {},
         preferences = PreferenceActions(
+            onAutoUpdateCheckChange = {},
+            onUpdateNotificationChange = {},
             onIncludePrereleasesChange = {},
             onInstallModeChange = onInstallModeChange,
             onAppearanceChange = onAppearanceChange,

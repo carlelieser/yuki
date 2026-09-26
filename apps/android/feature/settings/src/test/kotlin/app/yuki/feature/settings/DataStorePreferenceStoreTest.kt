@@ -34,6 +34,42 @@ class DataStorePreferenceStoreTest {
     }
 
     @Test
+    fun checkingForUpdatesAutomaticallyIsOnByDefault() = runTest {
+        withStore { store ->
+            assertTrue(store.preferences.first().isAutoUpdateCheckEnabled)
+        }
+    }
+
+    @Test
+    fun autoUpdateCheckSurvivesAWriteAndReadBack() = runTest {
+        withStore { store ->
+            store.setAutoUpdateCheckEnabled(false)
+            assertFalse(store.preferences.first().isAutoUpdateCheckEnabled)
+
+            store.setAutoUpdateCheckEnabled(true)
+            assertTrue(store.preferences.first().isAutoUpdateCheckEnabled)
+        }
+    }
+
+    @Test
+    fun updateNotificationsAreOnByDefault() = runTest {
+        withStore { store ->
+            assertTrue(store.preferences.first().isUpdateNotificationEnabled)
+        }
+    }
+
+    @Test
+    fun updateNotificationsSurviveAWriteAndReadBack() = runTest {
+        withStore { store ->
+            store.setUpdateNotificationEnabled(false)
+            assertFalse(store.preferences.first().isUpdateNotificationEnabled)
+
+            store.setUpdateNotificationEnabled(true)
+            assertTrue(store.preferences.first().isUpdateNotificationEnabled)
+        }
+    }
+
+    @Test
     fun includePrereleasesSurvivesAWriteAndReadBack() = runTest {
         withStore { store ->
             store.setIncludePrereleases(true)
@@ -108,6 +144,8 @@ class DataStorePreferenceStoreTest {
     @Test
     fun eachPreferenceIsStoredUnderItsOwnKey() = runTest {
         withStore { store ->
+            store.setAutoUpdateCheckEnabled(false)
+            store.setUpdateNotificationEnabled(false)
             store.setIncludePrereleases(true)
             store.setInstallMode(InstallMode.System)
             store.setAppearance(AppearanceMode.Dark)
@@ -116,6 +154,8 @@ class DataStorePreferenceStoreTest {
 
             assertEquals(
                 YukiPreferences(
+                    isAutoUpdateCheckEnabled = false,
+                    isUpdateNotificationEnabled = false,
                     includePrereleases = true,
                     installMode = InstallMode.System,
                     appearance = AppearanceMode.Dark,
