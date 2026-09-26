@@ -39,6 +39,10 @@ internal object DatabaseProviders {
 
     @Provides
     @Singleton
+    fun pendingUpdateDao(database: YukiDatabase): PendingUpdateDao = database.pendingUpdateDao()
+
+    @Provides
+    @Singleton
     fun clock(): Clock = Clock.systemUTC()
 }
 
@@ -61,4 +65,8 @@ internal interface DatabaseBindings {
     @Binds
     @Singleton
     fun packageIndexStore(implementation: RoomPackageIndexStore): PackageIndexStore
+
+    @Binds
+    @Singleton
+    fun pendingUpdateStore(implementation: RoomPendingUpdateStore): PendingUpdateStore
 }
