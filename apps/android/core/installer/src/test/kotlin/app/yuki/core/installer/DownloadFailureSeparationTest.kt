@@ -51,48 +51,18 @@ class DownloadFailureSeparationTest {
 
 class DownloadedApkTest {
     @Test
-    fun `a download with no reported local file is an unreadable download`() {
-        assertEquals(InstallFailure.DownloadUnreadable, failureOf(localPath = null).failure)
-    }
-
-    @Test
-    fun `a reported path with no file behind it is an unreadable download`() {
+    fun `a missing download is an unreadable download`() {
         val missing = "/tmp/yuki-does-not-exist-${System.nanoTime()}.apk"
 
-        assertEquals(InstallFailure.DownloadUnreadable, failureOf(missing).failure)
+        assertEquals(InstallFailure.DownloadUnreadable, failureOf(File(missing)).failure)
     }
 
     @Test
     fun `an empty downloaded file is an unreadable download`() {
         val empty = File.createTempFile("yuki-empty", ".apk").apply { deleteOnExit() }
 
-        assertEquals(InstallFailure.DownloadUnreadable, failureOf(empty.absolutePath).failure)
+        assertEquals(InstallFailure.DownloadUnreadable, failureOf(empty).failure)
     }
-
-    @Test
-    fun `the file DownloadManager reports is the file that gets staged`() {
-        val written = writtenApk()
-
-        assertEquals(
-            written.absolutePath,
-            verifyDownloadedApk(written.absolutePath, TEST_SOURCE).absolutePath,
-        )
-    }
-
-    @Test
-    fun `the staged path is the reported one and not one rebuilt from the asset name`() {
-        val written = writtenApk()
-
-        val resolved = verifyDownloadedApk(written.absolutePath, TEST_SOURCE)
-
-        assertNotEquals(TEST_SOURCE.fileName(), resolved.name)
-        assertEquals(true, resolved.isFile)
-    }
-}
-
-private fun writtenApk(): File = File.createTempFile("yuki-written", ".apk").apply {
-    writeBytes(ByteArray(16) { 1 })
-    deleteOnExit()
 }
 
 private val TEST_SOURCE = InstallSource(
@@ -101,8 +71,8 @@ private val TEST_SOURCE = InstallSource(
     assetName = "app-release-universal.apk",
 )
 
-private fun failureOf(localPath: String?): InstallException = runCatching {
-    verifyDownloadedApk(localPath, TEST_SOURCE)
+private fun failureOf(apk: File): InstallException = runCatching {
+    verifyDownloadedApk(apk, TEST_SOURCE)
 }.exceptionOrNull() as InstallException
 
 private class ThrowingApkIdentityReader(private val failure: InstallFailure) : ApkIdentityReader {

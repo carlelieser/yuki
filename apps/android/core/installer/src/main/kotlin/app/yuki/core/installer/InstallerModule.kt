@@ -6,15 +6,17 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.time.Duration
 import java.util.Optional
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import okhttp3.OkHttpClient
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal abstract class InstallerModule {
     @Binds
-    abstract fun bindDownloader(downloader: DownloadManagerApkDownloader): ApkDownloader
+    abstract fun bindDownloader(downloader: HttpApkDownloader): ApkDownloader
 
     @Binds
     abstract fun bindIdentityReader(reader: PackageManagerApkIdentityReader): ApkIdentityReader
@@ -61,3 +63,22 @@ internal object InstallStrategySelectorModule {
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 internal annotation class Gated
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object ApkDownloadClientModule {
+    @Provides
+    @Singleton
+    @ApkDownloadClient
+    fun provideClient(): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(CONNECT_TIMEOUT)
+        .readTimeout(READ_TIMEOUT)
+        .build()
+}
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class ApkDownloadClient
+
+private val CONNECT_TIMEOUT: Duration = Duration.ofSeconds(30)
+private val READ_TIMEOUT: Duration = Duration.ofSeconds(60)

@@ -1,11 +1,14 @@
 package app.yuki.core.installer
 
+import android.content.Context
 import app.yuki.core.model.InstallFailure
 import app.yuki.core.model.downloadSizeOf
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
@@ -24,11 +27,18 @@ import okhttp3.Response
 private const val BUFFER_BYTES = 64 * 1024
 private const val PROGRESS_STEP_BYTES = 256L * 1024
 private const val PARTIAL_SUFFIX = ".part"
+private const val APK_DIRECTORY = "apks"
 
 internal class HttpApkDownloader(
     private val client: OkHttpClient,
     private val directory: File,
 ) : ApkDownloader {
+    @Inject
+    constructor(
+        @ApkDownloadClient client: OkHttpClient,
+        @ApplicationContext context: Context,
+    ) : this(client, File(context.noBackupFilesDir, APK_DIRECTORY))
+
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
         val target = File(directory, source.fileName())
         val partial = File(directory, target.name + PARTIAL_SUFFIX)
@@ -40,7 +50,7 @@ internal class HttpApkDownloader(
             partial.delete()
         }
 
-        emit(DownloadProgress.Completed(verifyDownloadedApk(target.absolutePath, source)))
+        emit(DownloadProgress.Completed(verifyDownloadedApk(target, source)))
     }.flowOn(Dispatchers.IO)
 
     override fun discard(apk: File) {
@@ -136,4 +146,9 @@ private fun downloadFailure(error: IOException, source: InstallSource): InstallE
     }
 
     return InstallException(failure, "Download of ${source.downloadUrl} failed", error)
+}
+
+internal fun InstallSource.fileName(): String {
+    val candidate = assetName ?: "$versionTag.apk"
+    return candidate.replace(Regex("""[^A-Za-z0-9._-]"""), "_")
 }

@@ -3,14 +3,7 @@ package app.yuki.core.installer
 import app.yuki.core.model.InstallFailure
 import java.io.File
 
-internal fun verifyDownloadedApk(localPath: String?, source: InstallSource): File {
-    val path = localPath ?: throw InstallException(
-        InstallFailure.DownloadUnreadable,
-        "DownloadManager reported no local file for ${source.downloadUrl}",
-    )
-
-    val apk = File(path)
-
+internal fun verifyDownloadedApk(apk: File, source: InstallSource): File {
     if (!apk.isFile) {
         throw InstallException(
             InstallFailure.DownloadUnreadable,
