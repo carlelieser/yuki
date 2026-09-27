@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { collectRepositoryEvidence } from './reverify.ts';
 import { scoreConfidence } from './evidence.ts';
-import { isCatalogueExcluded, shouldPublish } from '../persistence/listings.ts';
+import { isCatalogueExcluded, shouldPublish } from '../persistence/publication.ts';
 import type { GithubClient } from '@yuki/github';
 
 function fakeClient(matches: (query: string) => string[], seen: string[] = []): GithubClient {
