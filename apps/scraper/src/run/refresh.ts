@@ -88,6 +88,10 @@ export async function refreshListing(
 					? []
 					: mapReleases(releases.body);
 		const readmeBody = readme.state === 'fresh' ? readme.body : null;
+		const readmeText =
+			readme.state === 'unchanged' && repo.state === 'fresh'
+				? await readCurrentReadme(client, owner, name)
+				: readmeBody;
 		const lfsPaths =
 			tree.state === 'fresh' && !tree.body.truncated
 				? await collectLfsPaths(tree.body, (sha) =>
@@ -113,7 +117,7 @@ export async function refreshListing(
 				githubRepoId: target.githubRepoId,
 				listing:
 					repo.state === 'fresh'
-						? mapRepository(repo.body, scoreConfidence(evidence), readmeBody)
+						? mapRepository(repo.body, scoreConfidence(evidence), readmeText)
 						: null,
 				iconUrl: icon.iconUrl,
 				bannerUrl: readme.state === 'unchanged' ? null : bannerUrl,
@@ -135,6 +139,20 @@ export async function refreshListing(
 		if (cause instanceof GithubSkip) {
 			return { kind: 'skipped', reason: cause.message };
 		}
+		throw cause;
+	}
+}
+
+async function readCurrentReadme(
+	client: GithubClient,
+	owner: string,
+	name: string
+): Promise<string | null> {
+	try {
+		const response = await client.getReadme(owner, name, null);
+		return response.isModified ? response.body : null;
+	} catch (cause) {
+		if (cause instanceof GithubSkip) return null;
 		throw cause;
 	}
 }
