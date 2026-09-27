@@ -64,3 +64,44 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           ASSETS_BASE_URL: ${{ vars.ASSETS_BASE_URL }}
         run: bun run scrape --discover
+
+  categorize:
+    needs: scrape
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+
+    env:
+      CATEGORY_MODEL: qwen3.5:9b
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4'
+
+      - run: bun install --frozen-lockfile
+
+      - name: Install Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          sudo systemctl stop ollama
+
+      - name: Restore the model
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama/models
+          key: ollama-${{ env.CATEGORY_MODEL }}
+
+      - name: Start Ollama and pull the model
+        run: |
+          OLLAMA_MODELS="$HOME/.ollama/models" ollama serve > /tmp/ollama.log 2>&1 &
+          until curl -sf http://localhost:11434/api/version > /dev/null; do sleep 1; done
+          OLLAMA_MODELS="$HOME/.ollama/models" ollama pull "$CATEGORY_MODEL"
+
+      - name: Categorize changed listings
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.SCRAPER_GITHUB_TOKEN }}
+        run: bun run categorize --budget-minutes=300

@@ -5,7 +5,7 @@ type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
 import type { MappedListing } from '../mapping/listing.ts';
 import type { MappedVersion } from '@yuki/github';
-import type { ListingConfidence } from '@yuki/db/schema';
+import type { ListingCategory, ListingConfidence } from '@yuki/db/schema';
 import type { ReadmeImage } from '../mapping/readme-images.ts';
 
 export type ListingRecord = {
@@ -156,7 +156,6 @@ async function insertOrUpdate(
 				homepageUrl: listing.homepageUrl,
 				license: listing.license,
 				stars: listing.stars,
-				...(listing.category === null ? {} : { category: listing.category }),
 				isFork: listing.isFork,
 				isArchived: listing.isArchived,
 				repoPushedAt: listing.repoPushedAt,
@@ -248,6 +247,38 @@ export async function listListingsForReverify(
 	return (publishedOnly ? query.where(eq(schema.listings.isPublished, true)) : query)
 		.orderBy(desc(schema.listings.stars), asc(schema.listings.id))
 		.limit(limit);
+}
+
+export type CategorizeTarget = {
+	id: string;
+	owner: string;
+	name: string;
+	categoryFingerprint: string | null;
+};
+
+export async function listListingsForCategorize(db: Database): Promise<CategorizeTarget[]> {
+	return db
+		.select({
+			id: schema.listings.id,
+			owner: schema.listings.owner,
+			name: schema.listings.name,
+			categoryFingerprint: schema.listings.categoryFingerprint
+		})
+		.from(schema.listings)
+		.where(eq(schema.listings.isPublished, true))
+		.orderBy(sql`${schema.listings.categoryFingerprint} is not null`, asc(schema.listings.id));
+}
+
+export async function setListingCategory(
+	db: Database,
+	listingId: string,
+	category: ListingCategory | null,
+	fingerprint: string
+): Promise<void> {
+	await db
+		.update(schema.listings)
+		.set({ category, categoryFingerprint: fingerprint, updatedAt: new Date() })
+		.where(eq(schema.listings.id, listingId));
 }
 
 const NEVER_PUBLISHED = new Set(['RikkaApps/Shizuku', 'RikkaApps/Sui']);

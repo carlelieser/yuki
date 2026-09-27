@@ -7,17 +7,21 @@
 		"start": "bun run src/main.ts",
 		"review": "bun run src/review.ts",
 		"backfill": "bun run src/backfill.ts",
+		"categorize": "bun run src/categorize.ts",
 		"reverify": "bun run src/reverify.ts",
 		"prune-icons": "bun run src/prune-icons.ts",
 		"check": "tsc --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
+		"@ai-sdk/openai-compatible": "3.0.57",
 		"@jsquash/webp": "^1.5.0",
 		"@yuki/db": "workspace:*",
 		"@yuki/github": "workspace:*",
+		"ai": "7.0.118",
 		"aws4fetch": "^1.0.20",
-		"drizzle-orm": "0.45.2"
+		"drizzle-orm": "0.45.2",
+		"zod": "4.5.4"
 	},
 	"devDependencies": {
 		"vitest": "5.0.0"

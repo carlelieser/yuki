@@ -148,6 +148,13 @@
       "when": 1790297529416,
       "tag": "0020_drop_user_avatar",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790494908359,
+      "tag": "0021_listing_category_fingerprint",
+      "breakpoints": true
     }
   ]
 }

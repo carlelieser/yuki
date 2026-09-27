@@ -194,18 +194,14 @@ describe('refreshListing', () => {
 		expect(outcome.input.listing?.stars).toBe(100);
 	});
 
-	it('categorizes and titles from the readme even when the readme is unchanged', async () => {
+	it('titles from the readme even when the readme is unchanged', async () => {
 		const seen: (string | null)[] = [];
 		const client = fakeClient({
 			getRepository: async () => ({ isModified: true, body: repository(), etag: 'W/"repo2"' }),
 			getReadme: async (_owner, _name, etag) => {
 				seen.push(etag ?? null);
 				if (etag !== null && etag !== undefined) return { isModified: false };
-				return {
-					isModified: true,
-					body: '# App Pro\n\nA file manager with dual pane browsing.',
-					etag: 'W/"read"'
-				};
+				return { isModified: true, body: '# App Pro\n\nA file manager.', etag: 'W/"read"' };
 			}
 		});
 
@@ -218,7 +214,6 @@ describe('refreshListing', () => {
 		expect(seen).toEqual(['W/"read"', null]);
 		expect(outcome.kind).toBe('updated');
 		if (outcome.kind !== 'updated') return;
-		expect(outcome.input.listing?.category).toBe('file_management');
 		expect(outcome.input.listing?.title).toBe('App Pro');
 		expect(outcome.input.screenshots).toBeNull();
 	});

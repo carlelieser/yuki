@@ -17,6 +17,7 @@
 		"db:migrate": "bun run --filter '@yuki/db' migrate",
 		"db:studio": "bun run --filter '@yuki/db' studio",
 		"scrape": "bun run --filter '@yuki/scraper' start",
+		"categorize": "bun run --filter '@yuki/scraper' categorize",
 		"listings": "bun run --filter '@yuki/scraper' review",
 		"backfill": "bun run --filter '@yuki/scraper' backfill",
 		"prune-icons": "bun run --filter '@yuki/scraper' prune-icons",

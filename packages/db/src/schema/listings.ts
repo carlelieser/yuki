@@ -67,6 +67,7 @@ export const listings = pgTable(
 		stars: integer('stars').notNull().default(0),
 		confidence: listingConfidence('confidence').notNull(),
 		category: listingCategory('category'),
+		categoryFingerprint: text('category_fingerprint'),
 		isFork: boolean('is_fork').notNull().default(false),
 		isArchived: boolean('is_archived').notNull().default(false),
 		isPublished: boolean('is_published').notNull().default(false),
