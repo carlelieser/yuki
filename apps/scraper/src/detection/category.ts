@@ -35,7 +35,7 @@ Categories:
 - networking: Controls how the phone connects to and uses networks: mobile network and carrier settings, Wi-Fi, VPNs, proxies, DNS and data usage.
 - privacy_security: Protects the user's privacy or the phone's security, for example by blocking trackers and ads, isolating apps or restricting permissions.
 - developer_tools: Serves people who build, debug or inspect software.
-- device_specific: Only works on particular phone brands, models or manufacturer versions of Android, such as One UI or HyperOS. Choose this over every other category when it applies.
+- device_specific: Only works on particular phone brands, models or manufacturer versions of Android, such as One UI or HyperOS.
 - customization: Changes how the phone looks.
 - connectivity: Connects the phone to other devices, such as Bluetooth accessories, watches, cars, TVs and computers.
 - utilities: A standalone everyday tool that none of the other categories describe.`;
