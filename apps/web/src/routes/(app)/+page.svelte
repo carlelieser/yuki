@@ -82,7 +82,11 @@
 	</Section>
 
 	<Section title="New">
-		<ProductCarousel items={data.recent} item={card} />
+		<ProductCarousel items={data.newest} item={card} />
+	</Section>
+
+	<Section title="Recently updated">
+		<ProductCarousel items={data.updated} item={card} />
 	</Section>
 
 	<Section title="Apps" isHeaderSticky>

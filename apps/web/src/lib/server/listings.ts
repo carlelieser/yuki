@@ -83,15 +83,6 @@ export async function getFeaturedListings(db: Database, limit: number): Promise<
 		.limit(limit);
 }
 
-export async function getRecentListings(db: Database, limit: number): Promise<ListingSummary[]> {
-	return db
-		.select(summaryColumns)
-		.from(schema.listings)
-		.where(eq(schema.listings.isPublished, true))
-		.orderBy(desc(schema.listings.createdAt))
-		.limit(limit);
-}
-
 export async function getListingBySlug(db: Database, slug: string): Promise<ListingDetail | null> {
 	const listing = await db.query.listings.findFirst({
 		where: and(eq(schema.listings.slug, slug), eq(schema.listings.isPublished, true)),
