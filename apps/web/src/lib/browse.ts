@@ -40,6 +40,12 @@ export function readBrowseOffset(raw: string | null): number {
 	return Math.min(Math.floor(parsed), MAX_BROWSE_OFFSET);
 }
 
+export function readBrowseLimit(raw: string | null): number {
+	const parsed = Number(raw);
+	if (!Number.isFinite(parsed) || parsed <= 0) return BROWSE_PAGE_SIZE;
+	return Math.min(Math.floor(parsed), BROWSE_PAGE_SIZE);
+}
+
 export function readSectionLimit(raw: string | null): number {
 	const parsed = Number(raw);
 	if (!Number.isFinite(parsed) || parsed <= 0) return SECTION_PAGE_SIZE;

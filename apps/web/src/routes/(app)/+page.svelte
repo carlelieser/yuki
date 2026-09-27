@@ -11,7 +11,11 @@
 		ProductCarousel,
 		Section
 	} from '$lib/components/storefront/index.ts';
-	import { toBrowseQueryString } from '$lib/browse.ts';
+	import {
+		defaultOrderFor,
+		toBrowseQueryString,
+		type BrowseSort as BrowseSortKey
+	} from '$lib/browse.ts';
 	import type { ListingCategory } from '$lib/categories.ts';
 	import type { PageData } from './$types';
 	import type { ListingSummary } from '$lib/server/listings.ts';
@@ -33,6 +37,10 @@
 		resolve(`/(app)/browse?${toBrowseQueryString({ sort: data.sort, order: data.order })}`)
 	);
 
+	function rowHref(sort: BrowseSortKey): string {
+		return resolve(`/(app)/browse?${toBrowseQueryString({ sort, order: defaultOrderFor(sort) })}`);
+	}
+
 	function selectCategory(category: ListingCategory | null): void {
 		const query = toBrowseQueryString({ sort: data.sort, order: data.order }, 0, category);
 
@@ -52,6 +60,26 @@
 
 {#snippet sortMenu()}
 	<BrowseSort sort={data.sort} order={data.order} />
+{/snippet}
+
+{#snippet seeAll(sort: BrowseSortKey, label: string)}
+	<Button
+		href={rowHref(sort)}
+		variant="ghost"
+		class="w-9 px-0 sm:w-auto sm:px-2.5"
+		aria-label={label}
+	>
+		<span class="hidden sm:inline">See all</span>
+		<ArrowRightIcon aria-hidden="true" />
+	</Button>
+{/snippet}
+
+{#snippet seeAllNewest()}
+	{@render seeAll('newest', 'See all new apps')}
+{/snippet}
+
+{#snippet seeAllUpdated()}
+	{@render seeAll('updated', 'See all recently updated apps')}
 {/snippet}
 
 {#snippet browseAll()}
@@ -81,8 +109,12 @@
 		/>
 	</Section>
 
-	<Section title="New">
-		<ProductCarousel items={data.recent} item={card} />
+	<Section title="New" action={seeAllNewest}>
+		<ProductCarousel items={data.newest} item={card} />
+	</Section>
+
+	<Section title="Recently updated" action={seeAllUpdated}>
+		<ProductCarousel items={data.updated} item={card} />
 	</Section>
 
 	<Section title="Apps" isHeaderSticky>

@@ -56,6 +56,10 @@ internal class YukiNavigator(
         navController.navigate(AuthorRoute(author = author))
     }
 
+    fun openCatalog(list: String) {
+        navController.navigate(CatalogRoute(list = list))
+    }
+
     fun openScreenshots(slug: String, selection: ScreenshotSelection) {
         navController.navigate(
             ScreenshotRoute(

@@ -48,9 +48,11 @@ internal class FakeListingRepository : ListingRepository {
     var featuredResult: Result<List<ListingSummary>> = Result.success(emptyList())
     var searchResult: Result<List<ListingSummary>> = Result.success(emptyList())
     var browseResult: Result<ListingPage> = Result.success(ListingPage(emptyList(), false))
+    val browseResultsBySort = mutableMapOf<String, Result<ListingPage>>()
     var sectionsResult: Result<List<CategorySection>> = Result.success(emptyList())
 
     val browsedOffsets = mutableListOf<Int>()
+    val browsedQueries = mutableListOf<BrowseQuery>()
     val sectionLimits = mutableListOf<Int>()
     val searchedQueries = mutableListOf<String>()
     val startedCalls = mutableListOf<String>()
@@ -59,7 +61,14 @@ internal class FakeListingRepository : ListingRepository {
 
     override suspend fun browse(query: BrowseQuery): Result<ListingPage> {
         browsedOffsets += query.offset
-        return browseResult
+        browsedQueries += query
+        return browseResultsBySort[query.sort] ?: browseResult
+    }
+
+    fun failEverySource(reason: FailureReason) {
+        featuredResult = Result.failure(TypedFailure(reason))
+        sectionsResult = Result.failure(TypedFailure(reason))
+        browseResult = Result.failure(TypedFailure(reason))
     }
 
     override suspend fun featured(): Result<List<ListingSummary>> {

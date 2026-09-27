@@ -2,7 +2,8 @@ import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
 import { collectRepositoryEvidence } from './detection/reverify.ts';
 import { scoreConfidence } from './detection/evidence.ts';
-import { listListingsForReverify, replaceEvidence } from './persistence/listings.ts';
+import { listListingsForReverify } from './persistence/listings.ts';
+import { replaceEvidence } from './persistence/publication.ts';
 import { readListFlag } from './run/args.ts';
 
 const DEFAULT_LIMIT = 5000;

@@ -36,6 +36,7 @@ fun ExploreRoute(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     onAuthorSelected: ((String) -> Unit)? = null,
+    onSeeAllSelected: ((String) -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
@@ -53,6 +54,7 @@ fun ExploreRoute(
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onCategorySelected = onCategorySelected,
             onAuthorSelected = onAuthorSelected,
+            onSeeAllSelected = onSeeAllSelected,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -65,6 +67,7 @@ data class ExploreCallbacks(
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
     val onAuthorSelected: ((String) -> Unit)? = null,
+    val onSeeAllSelected: ((String) -> Unit)? = null,
 )
 
 data class ExploreRefresh(
@@ -133,6 +136,7 @@ private fun ExploreContentBody(
     contentPadding: PaddingValues,
 ) {
     val labels = categoryLabels()
+    val rowTitles = rowTitles()
 
     LazyColumn(
         contentPadding = contentPadding,
@@ -141,6 +145,8 @@ private fun ExploreContentBody(
             .testTag(CATEGORY_SECTIONS_TAG),
     ) {
         featuredSection(content = content, callbacks = callbacks)
+
+        recencyRows(content = content, titles = rowTitles, callbacks = callbacks)
 
         categorySections(
             content = CategorySectionsContent(

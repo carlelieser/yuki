@@ -72,6 +72,8 @@ export const listings = pgTable(
 		isArchived: boolean('is_archived').notNull().default(false),
 		isPublished: boolean('is_published').notNull().default(false),
 		repoPushedAt: timestamp('repo_pushed_at', { withTimezone: true }),
+		publishedAt: timestamp('published_at', { withTimezone: true }),
+		latestReleaseAt: timestamp('latest_release_at', { withTimezone: true }),
 		lastScrapedAt: timestamp('last_scraped_at', { withTimezone: true }),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -95,7 +97,8 @@ export const listings = pgTable(
 			sql`lower(${table.author})`,
 			table.stars
 		),
-		index('listings_published_created_idx').on(table.isPublished, table.createdAt),
+		index('listings_published_published_at_idx').on(table.isPublished, table.publishedAt),
+		index('listings_published_release_idx').on(table.isPublished, table.latestReleaseAt),
 		index('listings_published_pushed_idx').on(table.isPublished, table.repoPushedAt),
 		index('listings_published_title_idx').on(table.isPublished, sql`lower(${table.title})`),
 		index('listings_search_vector_idx').using('gin', table.searchVector),

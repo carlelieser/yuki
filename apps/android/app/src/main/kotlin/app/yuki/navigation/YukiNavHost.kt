@@ -22,6 +22,7 @@ import app.yuki.feature.listing.ListingNavigation
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
 import app.yuki.feature.listing.ScreenshotViewerRoute
 import app.yuki.feature.search.AuthorRoute as AuthorScreenRoute
+import app.yuki.feature.search.CatalogRoute as CatalogScreenRoute
 import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
 import app.yuki.feature.search.SearchRoute as SearchScreenRoute
 import app.yuki.feature.updates.UpdatesScreen
@@ -92,6 +93,7 @@ private fun YukiRoutedContent(
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         authorDestination(navigator, bottomBarPadding)
+        catalogDestination(navigator, bottomBarPadding)
         settingsDestination(navigator, bottomBarPadding)
         signInDestination(navigator)
         signUpDestination(navigator)
@@ -113,6 +115,7 @@ private fun NavGraphBuilder.exploreDestination(
             onCategorySelected = navigator::openCategory,
             contentPadding = bottomBarPadding,
             onAuthorSelected = navigator::openAuthor,
+            onSeeAllSelected = navigator::openCatalog,
             trailing = { AccountButton(onClick = navigator::openSettings) },
         )
     }
@@ -227,6 +230,20 @@ private fun NavGraphBuilder.authorDestination(
 ) {
     composable<AuthorRoute> {
         AuthorScreenRoute(
+            onListingSelected = navigator::openListing,
+            onBackClick = navigator::navigateUp,
+            contentPadding = bottomBarPadding,
+            onAuthorSelected = navigator::openAuthor,
+        )
+    }
+}
+
+private fun NavGraphBuilder.catalogDestination(
+    navigator: YukiNavigator,
+    bottomBarPadding: PaddingValues,
+) {
+    composable<CatalogRoute> {
+        CatalogScreenRoute(
             onListingSelected = navigator::openListing,
             onBackClick = navigator::navigateUp,
             contentPadding = bottomBarPadding,

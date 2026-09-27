@@ -83,15 +83,6 @@ export async function getFeaturedListings(db: Database, limit: number): Promise<
 		.limit(limit);
 }
 
-export async function getRecentListings(db: Database, limit: number): Promise<ListingSummary[]> {
-	return db
-		.select(summaryColumns)
-		.from(schema.listings)
-		.where(eq(schema.listings.isPublished, true))
-		.orderBy(desc(schema.listings.createdAt))
-		.limit(limit);
-}
-
 export async function getListingBySlug(db: Database, slug: string): Promise<ListingDetail | null> {
 	const listing = await db.query.listings.findFirst({
 		where: and(eq(schema.listings.slug, slug), eq(schema.listings.isPublished, true)),
@@ -183,12 +174,12 @@ export function groupIntoSections(rows: RankedRow[], limit: number): CategorySec
 
 const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
 	stars: schema.listings.stars,
-	newest: schema.listings.createdAt,
-	updated: schema.listings.repoPushedAt,
+	newest: schema.listings.publishedAt,
+	updated: schema.listings.latestReleaseAt,
 	name: sql`lower(${schema.listings.title})`
 };
 
-const NULLABLE_SORTS = new Set<BrowseSort>(['updated']);
+const NULLABLE_SORTS = new Set<BrowseSort>(['newest', 'updated']);
 
 export function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
 	const column = SORT_COLUMNS[sort];

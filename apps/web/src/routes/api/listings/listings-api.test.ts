@@ -101,6 +101,17 @@ describe('GET /api/listings', () => {
 		await expect(response.json()).resolves.toEqual({ results: [summary()], hasMore: true });
 	});
 
+	it('passes a requested limit through to the query', async () => {
+		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
+
+		await listings(listingsEvent('?sort=updated&limit=10'));
+
+		expect(getListingsPage).toHaveBeenCalledWith(
+			db,
+			expect.objectContaining({ sort: 'updated', limit: 10 })
+		);
+	});
+
 	it('passes an author through to the query', async () => {
 		getListingsPage.mockResolvedValue({ results: [], hasMore: false });
 
