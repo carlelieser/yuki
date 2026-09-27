@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="search_title">Search</string>
-    <string name="search_catalog_title">All apps</string>
+    <string name="search_catalog_newest_title">New</string>
+    <string name="search_catalog_updated_title">Recently updated</string>
     <string name="search_sort_description">Sort by %1$s</string>
     <string name="search_sort_most_stars">Most stars</string>
     <string name="search_sort_fewest_stars">Fewest stars</string>

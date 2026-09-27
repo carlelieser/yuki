@@ -28,16 +28,13 @@ fun CatalogRoute(
     onAuthorSelected: ((String) -> Unit)? = null,
     viewModel: CatalogViewModel = hiltViewModel(),
 ) {
-    val sort by viewModel.sort.collectAsStateWithLifecycle()
     val installs by viewModel.installs.collectAsStateWithLifecycle()
     val listings = viewModel.listings.collectAsLazyPagingItems()
 
     CatalogScreen(
-        installs = installs,
+        browsed = BrowsedCatalog(list = viewModel.list, installs = installs),
         listings = listings,
         callbacks = CatalogCallbacks(
-            sort = sort,
-            onSortSelected = viewModel::onSortChange,
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onBackClick = onBackClick,
             onAuthorSelected = onAuthorSelected,
@@ -47,9 +44,12 @@ fun CatalogRoute(
     )
 }
 
+internal data class BrowsedCatalog(
+    val list: CatalogList,
+    val installs: ListingInstalls,
+)
+
 data class CatalogCallbacks(
-    val sort: BrowseSortOption,
-    val onSortSelected: (BrowseSortOption) -> Unit,
     val onListingSelected: (ListingSummary) -> Unit,
     val onBackClick: () -> Unit,
     val onAuthorSelected: ((String) -> Unit)? = null,
@@ -57,22 +57,16 @@ data class CatalogCallbacks(
 
 @Composable
 internal fun CatalogScreen(
-    installs: ListingInstalls,
+    browsed: BrowsedCatalog,
     listings: LazyPagingItems<ListingSummary>,
     callbacks: CatalogCallbacks,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     YukiDetailScreen(
-        title = stringResource(R.string.search_catalog_title),
+        title = stringResource(browsed.list.title),
         onBackClick = callbacks.onBackClick,
         modifier = modifier.testTag(CATALOG_SCREEN_TAG),
-        trailing = {
-            SortSelector(
-                selected = callbacks.sort,
-                onSortSelected = callbacks.onSortSelected,
-            )
-        },
     ) {
         YukiPullToRefresh(
             isRefreshing = listings.isRefreshing,
@@ -87,7 +81,7 @@ internal fun CatalogScreen(
                 browseRefreshState(listings = listings)
                 browseList(
                     listings = listings,
-                    installs = installs,
+                    installs = browsed.installs,
                     onSelect = callbacks.onListingSelected,
                     onAuthorSelected = callbacks.onAuthorSelected,
                 )

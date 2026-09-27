@@ -23,6 +23,7 @@ class CatalogViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(StandardTestDispatcher())
+        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
     }
 
     @After
@@ -30,39 +31,33 @@ class CatalogViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(sort: String) = CatalogViewModel(
-        savedStateHandle = SavedStateHandle(mapOf(CATALOG_SORT_KEY to sort)),
+    private fun viewModel(list: String) = CatalogViewModel(
+        savedStateHandle = SavedStateHandle(mapOf(CATALOG_LIST_KEY to list)),
         repository = repository,
         installedListings = FakeInstalledListings(),
         installProgress = FakeSearchProgressStore(),
     )
 
     @Test
-    fun `opens newest listings first when entered from the new row`() = runTest {
-        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
-
+    fun `the new list is titled New and ordered newest first`() = runTest {
         val model = viewModel("newest")
         model.listings.asSnapshot()
 
-        assertEquals(BrowseSortOption.NewestFirst, model.sort.value)
+        assertEquals(R.string.search_catalog_newest_title, model.list.title)
         assertEquals(listOf("newest-desc"), repository.browsedSorts)
     }
 
     @Test
-    fun `opens recently updated listings first when entered from the updated row`() = runTest {
-        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
-
+    fun `the updated list is titled Recently updated and ordered by latest release`() = runTest {
         val model = viewModel("updated")
         model.listings.asSnapshot()
 
-        assertEquals(BrowseSortOption.RecentlyUpdated, model.sort.value)
+        assertEquals(R.string.search_catalog_updated_title, model.list.title)
         assertEquals(listOf("updated-desc"), repository.browsedSorts)
     }
 
     @Test
     fun `browses the whole catalog rather than one category or author`() = runTest {
-        repository.browseResult = Result.success(ListingPage(listOf(listing("alpha")), false))
-
         viewModel("newest").listings.asSnapshot()
 
         assertEquals(listOf(null), repository.browsedCategories)
@@ -70,7 +65,7 @@ class CatalogViewModelTest {
     }
 
     @Test
-    fun `an unknown sort is rejected instead of silently reordering`() {
+    fun `an unknown list is rejected instead of silently reordering`() {
         val failure = assertThrows(IllegalStateException::class.java) { viewModel("loudest") }
 
         assertTrue(failure.message.orEmpty().contains("loudest"))
