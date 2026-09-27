@@ -183,12 +183,12 @@ export function groupIntoSections(rows: RankedRow[], limit: number): CategorySec
 
 const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
 	stars: schema.listings.stars,
-	newest: schema.listings.createdAt,
-	updated: schema.listings.repoPushedAt,
+	newest: schema.listings.publishedAt,
+	updated: schema.listings.latestReleaseAt,
 	name: sql`lower(${schema.listings.title})`
 };
 
-const NULLABLE_SORTS = new Set<BrowseSort>(['updated']);
+const NULLABLE_SORTS = new Set<BrowseSort>(['newest', 'updated']);
 
 export function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
 	const column = SORT_COLUMNS[sort];

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	BROWSE_PAGE_SIZE,
 	BROWSE_SORT_OPTIONS,
 	DEFAULT_BROWSE_SORT,
 	defaultOrderFor,
@@ -8,6 +9,7 @@ import {
 	MAX_BROWSE_OFFSET,
 	MAX_SECTION_PAGE_SIZE,
 	readAuthor,
+	readBrowseLimit,
 	readBrowseOffset,
 	readBrowseOrder,
 	readBrowseSort,
@@ -181,6 +183,24 @@ describe('isFeaturedRequested', () => {
 		expect(isFeaturedRequested('1')).toBe(false);
 		expect(isFeaturedRequested('TRUE')).toBe(false);
 		expect(isFeaturedRequested('yes')).toBe(false);
+	});
+});
+
+describe('readBrowseLimit', () => {
+	it('defaults to a full browse page for missing and unparseable values', () => {
+		expect(readBrowseLimit(null)).toBe(BROWSE_PAGE_SIZE);
+		expect(readBrowseLimit('abc')).toBe(BROWSE_PAGE_SIZE);
+		expect(readBrowseLimit('0')).toBe(BROWSE_PAGE_SIZE);
+		expect(readBrowseLimit('-5')).toBe(BROWSE_PAGE_SIZE);
+	});
+
+	it('reads a smaller limit for rows of listings', () => {
+		expect(readBrowseLimit('10')).toBe(10);
+		expect(readBrowseLimit('7.9')).toBe(7);
+	});
+
+	it('never exceeds a full browse page', () => {
+		expect(readBrowseLimit('999')).toBe(BROWSE_PAGE_SIZE);
 	});
 });
 

@@ -3,10 +3,10 @@ import type { RequestHandler } from './$types';
 import type { Database } from '@yuki/db';
 import { getFeaturedListings, getListingsPage, type ListingPage } from '$lib/server/listings.ts';
 import {
-	BROWSE_PAGE_SIZE,
 	FEATURED_PAGE_SIZE,
 	isFeaturedRequested,
 	readAuthor,
+	readBrowseLimit,
 	readBrowseOffset,
 	readBrowseSorting
 } from '$lib/browse.ts';
@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const category = readCategory(url.searchParams.get('category'));
 	const author = readAuthor(url.searchParams.get('author'));
 	const page = await getListingsPage(locals.db, {
-		limit: BROWSE_PAGE_SIZE,
+		limit: readBrowseLimit(url.searchParams.get('limit')),
 		offset,
 		sort,
 		order,
