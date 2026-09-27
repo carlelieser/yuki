@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MockLanguageModelV4 } from 'ai/test';
-import { createCategorizer, fingerprintCategoryInput } from './category.ts';
+import { createCategorizer } from './category.ts';
 
 function modelAnswering(text: string) {
 	return new MockLanguageModelV4({
@@ -78,22 +78,27 @@ describe('createCategorizer', () => {
 		expect(await categorizer.categorize({ description: ' ', topics: [], readme: null })).toBeNull();
 		expect(model.doGenerateCalls).toHaveLength(0);
 	});
-
-	it('reports the model it categorizes with', () => {
-		expect(createCategorizer(modelAnswering('{}')).modelId).toBe('mock-model');
-	});
 });
 
-describe('fingerprintCategoryInput', () => {
+describe('fingerprint', () => {
 	const input = { description: 'Manga reader', topics: ['manga'], readme: '# Reader' };
 
 	it('is stable for the same model and input', () => {
-		expect(fingerprintCategoryInput('m', input)).toBe(fingerprintCategoryInput('m', input));
+		const categorizer = createCategorizer(modelAnswering('{}'));
+		expect(categorizer.fingerprint(input)).toBe(categorizer.fingerprint(input));
 	});
 
 	it('changes when the input or the model changes', () => {
-		const base = fingerprintCategoryInput('m', input);
-		expect(fingerprintCategoryInput('m', { ...input, readme: '# Reader 2' })).not.toBe(base);
-		expect(fingerprintCategoryInput('other', input)).not.toBe(base);
+		const categorizer = createCategorizer(modelAnswering('{}'));
+		const base = categorizer.fingerprint(input);
+		const other = createCategorizer(
+			new MockLanguageModelV4({
+				modelId: 'other-model',
+				doGenerate: modelAnswering('{}').doGenerate
+			})
+		);
+
+		expect(categorizer.fingerprint({ ...input, readme: '# Reader 2' })).not.toBe(base);
+		expect(other.fingerprint(input)).not.toBe(base);
 	});
 });

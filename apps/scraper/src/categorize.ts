@@ -1,10 +1,6 @@
 import { createDatabase } from '@yuki/db';
 import { createGithubClient, GithubSkip, requireGithubToken } from '@yuki/github';
-import {
-	createCategorizer,
-	fingerprintCategoryInput,
-	type CategoryInput
-} from './detection/category.ts';
+import { createCategorizer, type CategoryInput } from './detection/category.ts';
 import { localCategoryModel } from './detection/category-model.ts';
 import { listListingsForCategorize, setListingCategory } from './persistence/listings.ts';
 
@@ -69,7 +65,7 @@ for (const target of targets) {
 			continue;
 		}
 
-		const fingerprint = fingerprintCategoryInput(categorizer.modelId, input);
+		const fingerprint = categorizer.fingerprint(input);
 		if (fingerprint === target.categoryFingerprint) {
 			unchanged += 1;
 			continue;

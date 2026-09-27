@@ -10,7 +10,7 @@ export type CategoryInput = {
 };
 
 export type Categorizer = {
-	modelId: string;
+	fingerprint: (input: CategoryInput) => string;
 	categorize: (input: CategoryInput) => Promise<ListingCategory | null>;
 };
 
@@ -21,29 +21,31 @@ const categorySchema = z.object({
 	category: z.enum(listingCategory.enumValues).nullable()
 });
 
-const INSTRUCTIONS = `You categorize open-source Android apps for a catalog of apps that use Shizuku.
-Pick the single category that best describes what the app is for, based on its description, topics and README.
-Shizuku, ADB, root, shell access and Material You describe how an app works or looks, not what it is for. Only pick developer_tools when running commands or developing software is the app's purpose.
-Return null when the repository is not an Android app or there is not enough information to tell.
+const INSTRUCTIONS = `You categorize open-source Android apps for an app catalog.
+Read the app's description, topics and README, then pick the one category that matches the app's main purpose.
+Return null when the repository is not an Android app or there is not enough information to tell what it does.
 
 Categories:
-- system_tweaks: changes system settings or behaviour (status bar, quick settings, display, locale, multi-window, power and battery settings)
-- app_management: installs, updates, freezes, disables, uninstalls or controls other apps
-- file_management: file managers, file transfer and sharing, storage cleaners
-- media: video, music, photo, reading, recording and downloading media
-- gaming: games and tools for games (mods, save editors, controllers, overlays, boosters)
-- automation: automates actions on the phone, including AI agents that operate the device
-- networking: VPN, proxy, DNS, Wi-Fi, cellular, SIM, carrier and data usage
-- privacy_security: privacy, security, firewalls, ad blocking, work profiles, device policy, authentication
-- developer_tools: terminals, shells, ADB tools, logcat, IDEs, libraries and SDKs for developers, Shizuku itself and its forks
-- device_specific: only works on one vendor, model or OS skin
-- customization: themes, launchers, icons, wallpapers, fonts, widgets, lock screen and always-on display
-- connectivity: Bluetooth, watches, cars, casting, remote control of or input sharing with another device
-- utilities: general tools that fit no other category (monitors, timers, notes, calculators)`;
+- system_tweaks: Changes how Android itself works: its settings, system features and built-in behaviour.
+- app_management: Manages the other apps on the phone: installing, updating, removing, freezing, restricting or cloning them.
+- file_management: Works with the files on the phone: browsing, organising, cleaning up or transferring them.
+- media: Lets the user watch, listen to, read, capture or download content such as video, music, images, books and comics.
+- gaming: Exists to play games or to get more out of them.
+- automation: Carries out actions on the phone for the user, from scheduled tasks to AI agents that operate the phone.
+- networking: Controls how the phone connects to and uses networks: mobile network and carrier settings, Wi-Fi, VPNs, proxies, DNS and data usage.
+- privacy_security: Protects the user's privacy or the phone's security, for example by blocking trackers and ads, isolating apps or restricting permissions.
+- developer_tools: Serves people who build, debug or inspect software.
+- device_specific: Only works on particular phone brands, models or manufacturer versions of Android, such as One UI or HyperOS. Choose this over every other category when it applies.
+- customization: Changes how the phone looks.
+- connectivity: Connects the phone to other devices, such as Bluetooth accessories, watches, cars, TVs and computers.
+- utilities: A standalone everyday tool that none of the other categories describe.`;
 
 export function createCategorizer(model: LanguageModel): Categorizer {
 	return {
-		modelId: typeof model === 'string' ? model : model.modelId,
+		fingerprint: (input) =>
+			createHash('sha256')
+				.update(JSON.stringify({ model: modelId(model), instructions: INSTRUCTIONS, input }))
+				.digest('hex'),
 		categorize: async (input) => {
 			if (!hasEvidence(input)) return null;
 
@@ -66,8 +68,8 @@ export function createCategorizer(model: LanguageModel): Categorizer {
 	};
 }
 
-export function fingerprintCategoryInput(modelId: string, input: CategoryInput): string {
-	return createHash('sha256').update(JSON.stringify({ modelId, input })).digest('hex');
+function modelId(model: LanguageModel): string {
+	return typeof model === 'string' ? model : model.modelId;
 }
 
 function hasEvidence(input: CategoryInput): boolean {
