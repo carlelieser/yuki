@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.ListingSectionActions
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -133,6 +134,7 @@ private fun ExploreContentBody(
     contentPadding: PaddingValues,
 ) {
     val labels = categoryLabels()
+    val rowTitles = rowTitles()
 
     LazyColumn(
         contentPadding = contentPadding,
@@ -141,6 +143,15 @@ private fun ExploreContentBody(
             .testTag(CATEGORY_SECTIONS_TAG),
     ) {
         featuredSection(content = content, callbacks = callbacks)
+
+        recencyRows(
+            content = content,
+            titles = rowTitles,
+            actions = ListingSectionActions(
+                onListingSelected = callbacks.onListingSelected,
+                onAuthorSelected = callbacks.onAuthorSelected,
+            ),
+        )
 
         categorySections(
             content = CategorySectionsContent(

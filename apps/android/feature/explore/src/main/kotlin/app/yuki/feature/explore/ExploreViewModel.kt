@@ -9,6 +9,7 @@ import app.yuki.core.model.CategorySection
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 import app.yuki.core.model.toUiState
+import app.yuki.core.network.BrowseQuery
 import app.yuki.core.network.ListingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -23,6 +24,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 const val SECTION_ITEM_COUNT = 3
+const val ROW_ITEM_COUNT = 5
+
+private const val NEWEST_SORT = "newest"
+private const val UPDATED_SORT = "updated"
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -31,6 +36,8 @@ class ExploreViewModel @Inject constructor(
     installProgress: InstallProgressStore,
 ) : ViewModel() {
     private val featured = MutableStateFlow<UiState<List<ListingSummary>>>(UiState.Loading)
+    private val newest = MutableStateFlow<UiState<List<ListingSummary>>>(UiState.Loading)
+    private val updated = MutableStateFlow<UiState<List<ListingSummary>>>(UiState.Loading)
     private val sections = MutableStateFlow<UiState<List<CategorySection>>>(UiState.Loading)
     private val refreshing = MutableStateFlow(false)
 
@@ -38,7 +45,7 @@ class ExploreViewModel @Inject constructor(
 
     val state: StateFlow<UiState<ExploreContent>> =
         combine(
-            featured,
+            combine(featured, newest, updated, ::ExploreRows),
             sections,
             installedListings.observeInstalledIds(),
             installProgress.observeActive(),
@@ -57,6 +64,7 @@ class ExploreViewModel @Inject constructor(
     fun refresh() {
         refreshFeatured()
         refreshSections()
+        refreshRows()
     }
 
     fun refreshFeatured() {
@@ -73,6 +81,17 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
+    fun refreshRows() {
+        viewModelScope.launch {
+            newest.value = UiState.Loading
+            updated.value = UiState.Loading
+            awaitAll(
+                async { loadRow(newest, NEWEST_SORT) },
+                async { loadRow(updated, UPDATED_SORT) },
+            )
+        }
+    }
+
     fun onPullToRefresh() {
         if (refreshing.value) return
 
@@ -82,6 +101,8 @@ class ExploreViewModel @Inject constructor(
                 awaitAll(
                     async { loadFeatured(keepsContentOnFailure = true) },
                     async { loadSections(keepsContentOnFailure = true) },
+                    async { loadRow(newest, NEWEST_SORT, keepsContentOnFailure = true) },
+                    async { loadRow(updated, UPDATED_SORT, keepsContentOnFailure = true) },
                 )
             } finally {
                 refreshing.value = false
@@ -97,6 +118,16 @@ class ExploreViewModel @Inject constructor(
     private suspend fun loadSections(keepsContentOnFailure: Boolean = false) {
         val outcome = repository.sections(SECTION_ITEM_COUNT).toUiState()
         sections.value = sections.value.replacedBy(outcome, keepsContentOnFailure)
+    }
+
+    private suspend fun loadRow(
+        row: MutableStateFlow<UiState<List<ListingSummary>>>,
+        sort: String,
+        keepsContentOnFailure: Boolean = false,
+    ) {
+        val query = BrowseQuery(sort = sort, limit = ROW_ITEM_COUNT)
+        val outcome = repository.browse(query).map { page -> page.results }.toUiState()
+        row.value = row.value.replacedBy(outcome, keepsContentOnFailure)
     }
 }
 
@@ -114,33 +145,24 @@ private fun <T> UiState<T>.replacedBy(
 private const val STOP_TIMEOUT_MILLIS = 5_000L
 
 private fun content(
-    featured: UiState<List<ListingSummary>>,
+    rows: ExploreRows,
     sections: UiState<List<CategorySection>>,
     installedIds: Set<Long>,
     active: List<InstallProgress>,
 ): UiState<ExploreContent> {
     val loaded = ExploreContent(
-        featured = featured,
+        featured = rows.featured,
+        newest = rows.newest,
+        updated = rows.updated,
         sections = sections,
         installedIds = installedIds,
         installStates = active.associate { progress -> progress.githubRepoId to progress.state },
     )
 
-    val hasContent = featured is UiState.Success || sections is UiState.Success
-    if (hasContent) return UiState.Success(loaded)
+    val sources = listOf(rows.featured, rows.newest, rows.updated, sections)
+    if (sources.any { source -> source is UiState.Success }) return UiState.Success(loaded)
+    if (sources.any { source -> source is UiState.Loading }) return UiState.Loading
 
-    val blockingFailure = firstFailure(featured, sections)
-    if (blockingFailure != null) return UiState.Failure(blockingFailure.reason)
-
-    return UiState.Loading
-}
-
-private fun firstFailure(
-    featured: UiState<List<ListingSummary>>,
-    sections: UiState<List<CategorySection>>,
-): UiState.Failure? {
-    val isEitherLoading = featured is UiState.Loading || sections is UiState.Loading
-    if (isEitherLoading) return null
-
-    return featured as? UiState.Failure ?: sections as? UiState.Failure
+    val failure = sources.firstNotNullOf { source -> source as? UiState.Failure }
+    return UiState.Failure(failure.reason)
 }

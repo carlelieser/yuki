@@ -3,6 +3,8 @@
     <string name="explore_title">Explore</string>
     <string name="explore_missing">There are no apps to show right now.</string>
     <string name="explore_featured_title">Featured</string>
+    <string name="explore_new_title">New</string>
+    <string name="explore_updated_title">Recently updated</string>
     <string name="explore_empty_title">No apps yet</string>
     <string name="explore_empty_description">There is nothing to explore right now. Pull to refresh shortly.</string>
     <string name="explore_featured_next">Next featured app</string>

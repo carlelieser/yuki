@@ -93,8 +93,7 @@ class ExploreViewModelTest {
 
     @Test
     fun `emits loading then failure when every source fails`() = runTest {
-        repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
-        repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+        repository.failEverySource(FailureReason.Offline)
 
         viewModel().state.test {
             assertEquals(UiState.Loading, awaitItem())
@@ -182,9 +181,8 @@ class ExploreViewModelTest {
     }
 
     @Test
-    fun `the screen fails only when featured and sections both fail`() = runTest {
-        repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
-        repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+    fun `the screen fails only when every source fails`() = runTest {
+        repository.failEverySource(FailureReason.Offline)
 
         viewModel().state.test {
             assertEquals(UiState.Loading, awaitItem())
@@ -209,8 +207,7 @@ class ExploreViewModelTest {
 
     @Test
     fun `refresh reloads both featured and sections`() = runTest {
-        repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
-        repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+        repository.failEverySource(FailureReason.Offline)
 
         val model = viewModel()
         model.state.test {
@@ -289,8 +286,7 @@ class ExploreViewModelTest {
             assertEquals(UiState.Loading, awaitItem())
             awaitSettledContent()
 
-            repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
-            repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+            repository.failEverySource(FailureReason.Offline)
             model.onPullToRefresh()
             advanceUntilIdle()
 
@@ -339,8 +335,7 @@ class ExploreViewModelTest {
 
     @Test
     fun `retrying featured recovers from a failure`() = runTest {
-        repository.featuredResult = Result.failure(TypedFailure(FailureReason.Offline))
-        repository.sectionsResult = Result.failure(TypedFailure(FailureReason.Offline))
+        repository.failEverySource(FailureReason.Offline)
 
         val model = viewModel()
         model.state.test {
