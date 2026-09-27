@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 const val SECTION_ITEM_COUNT = 3
-const val ROW_ITEM_COUNT = 5
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -122,7 +121,7 @@ class ExploreViewModel @Inject constructor(
         sort: String,
         keepsContentOnFailure: Boolean = false,
     ) {
-        val query = BrowseQuery(sort = sort, limit = ROW_ITEM_COUNT)
+        val query = BrowseQuery(sort = sort, limit = SECTION_ITEM_COUNT)
         val outcome = repository.browse(query).map { page -> page.results }.toUiState()
         row.value = row.value.replacedBy(outcome, keepsContentOnFailure)
     }

@@ -39,13 +39,13 @@ class ExploreRowsTest {
         Result.success(ListingPage(slugs.map(::listing), hasMore = false))
 
     @Test
-    fun `asks the server for a short row of newest and recently updated listings`() = runTest {
+    fun `asks the server for three newest and recently updated listings like a category row`() = runTest {
         viewModel()
         advanceUntilIdle()
 
         val requested = repository.browsedQueries.map { query -> query.sort to query.limit }
         assertEquals(
-            listOf("newest" to ROW_ITEM_COUNT, "updated" to ROW_ITEM_COUNT),
+            listOf("newest" to 3, "updated" to 3),
             requested,
         )
     }
