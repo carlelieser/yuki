@@ -127,6 +127,105 @@ describe('categorize', () => {
 		).toBe('gaming');
 	});
 
+	it('reads an adb shell app as a developer tool despite its design language', () => {
+		expect(
+			categorize({
+				description: 'A material you designed app for your ADB needs',
+				topics: ['adb', 'debugging', 'material-design', 'shell', 'shizuku', 'wireless-debugging'],
+				readme:
+					'<img alt="GitHub stars" src="https://img.shields.io/github/stars/x/y?style=for-the-badge" />\n' +
+					'> **aShell You** is a shell utility app with **Material Design 3 UI**, letting you run **ADB**, **root** and **shell** commands'
+			})
+		).toBe('developer_tools');
+	});
+
+	it('ignores image paths and badge links in the readme', () => {
+		expect(
+			categorize({
+				description: 'A high-performance app management powered by Shizuku',
+				topics: ['apps', 'debloating', 'shizuku'],
+				readme:
+					'![AppVaultX](app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp?raw=true)\n' +
+					'[![](https://img.shields.io/badge/F--Droid-blue?style=flat)](https://f-droid.org)'
+			})
+		).toBe('app_management');
+	});
+
+	it('reads a library from its gradle dependency snippet', () => {
+		expect(
+			categorize({
+				description: null,
+				topics: [],
+				readme:
+					'With this API your app can call Android APIs as the shell user.\n' +
+					'```groovy\nimplementation "dev.rikka.shizuku:api:13.1.5"\n```'
+			})
+		).toBe('developer_tools');
+	});
+
+	it('matches a hyphenated topic against a spaced phrase', () => {
+		expect(
+			categorize({
+				description: 'Modern Android system monitoring app',
+				topics: ['material-design', 'system-monitor'],
+				readme: null
+			})
+		).toBe('utilities');
+	});
+
+	it('matches precedence conditions at word starts only', () => {
+		expect(
+			categorize({
+				description: 'Playing around with reading cell stuff on Android',
+				topics: [],
+				readme:
+					'View information about your cellular connection and other available connections. ' +
+					'See nearby towers reported by the modem. There is also a Wear OS companion app.'
+			})
+		).toBe('networking');
+	});
+
+	it('prefers file transfer over the network channels it uses', () => {
+		expect(
+			categorize({
+				description: '多轨快传，同时使用USB和5G与2.4GWIFI等通道传输文件到电脑',
+				topics: [],
+				readme: '一个可以同时使用USB和WIFI等多张网卡传输文件到电脑的软件。'
+			})
+		).toBe('file_management');
+	});
+
+	it('locks to device_specific for an app limited to supported Pixel phones', () => {
+		expect(
+			categorize({
+				description: 'Jailbreak supported Google Pixel phones with CVE-2026-43499',
+				topics: ['exploit', 'pixel', 'root'],
+				readme: 'An application designed to automate root access on Google Pixel devices.'
+			})
+		).toBe('device_specific');
+	});
+
+	it('does not lock to device_specific on an OEM named as an example', () => {
+		expect(
+			categorize({
+				description:
+					'A simple app that enables you to add unsupported languages to your locale settings, if the OEM (ahem Xiaomi) does not let you.',
+				topics: [],
+				readme: null
+			})
+		).toBe('system_tweaks');
+	});
+
+	it('treats a named game in the readme as decisive', () => {
+		expect(
+			categorize({
+				description: 'An Android app that allows you to sync your saves across multiple devices.',
+				topics: ['cloud-sync'],
+				readme: 'Sync your Stardew Valley saves using cloud storage services like Dropbox.'
+			})
+		).toBe('gaming');
+	});
+
 	it('is deterministic across repeated calls', () => {
 		const input = {
 			description: 'Android file manager with dual pane browsing',

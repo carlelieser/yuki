@@ -15,7 +15,11 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'gaming booster',
 				'game performance',
 				'game controller',
-				'gamepad keymapper'
+				'gamepad keymapper',
+				'gacha',
+				'keyboard and mouse',
+				'mouse and keyboard',
+				'input mapper'
 			]
 		},
 		{
@@ -43,6 +47,8 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'video player',
 				'music player',
 				'screen recorder',
+				'call recorder',
+				'voice recorder',
 				'equalizer',
 				'漫画',
 				'media player',
@@ -64,7 +70,13 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'audio',
 				'video',
 				'photo',
-				'yt-dlp'
+				'yt-dlp',
+				'photos',
+				'videos',
+				'gallery',
+				'bilibili',
+				'哔哩哔哩',
+				'视频'
 			]
 		},
 		{ weight: 1, terms: ['library', 'stream', 'playback', 'fork'] }
@@ -84,12 +96,23 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'自动打卡',
 				'gui automation',
 				'device agent',
-				'语音自动化'
+				'语音自动化',
+				'全自动',
+				'自动签到'
 			]
 		},
 		{
 			weight: 2,
-			terms: ['llm', 'accessibility service', 'rule', 'workflow', '智能体', '自然语言', '无障碍']
+			terms: [
+				'llm',
+				'accessibility service',
+				'rule',
+				'workflow',
+				'automatically',
+				'智能体',
+				'自然语言',
+				'无障碍'
+			]
 		},
 		{ weight: 1, terms: ['schedule', 'trigger', 'macro'] }
 	],
@@ -105,8 +128,15 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'hibernation',
 				'freeze',
 				'app manager',
+				'app management',
 				'应用管理',
-				'app catalog'
+				'app catalog',
+				'package installer',
+				'silent install',
+				'静默安装',
+				'packageinstaller',
+				'debloater',
+				'debloating'
 			]
 		},
 		{
@@ -120,7 +150,9 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'f-droid',
 				'aurora store',
 				'disable apps',
-				'magisk module'
+				'unused apps',
+				'magisk module',
+				'magisk modules'
 			]
 		},
 		{ weight: 1, terms: ['store', 'catalog', 'version'] }
@@ -135,7 +167,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'file sharing',
 				'filemanager',
 				'webdav',
-				'文件共享'
+				'文件共享',
+				'file transfer',
+				'文件传输',
+				'传输文件'
 			]
 		},
 		{
@@ -161,10 +196,20 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'lte',
 				'hotspot',
 				'wifi',
+				'wifi password',
+				'wifi passwords',
+				'volte',
+				'ims',
+				'apn',
+				'data usage',
+				'network usage',
 				'代理'
 			]
 		},
-		{ weight: 2, terms: ['dns', 'traffic', 'telephony', 'cellular', 'sim', 'carrier', '网络'] },
+		{
+			weight: 2,
+			terms: ['dns', 'traffic', 'telephony', 'cellular', 'cell', 'modem', 'sim', 'carrier', '网络']
+		},
 		{ weight: 1, terms: ['connection', 'server'] }
 	],
 	privacy_security: [
@@ -175,14 +220,20 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'tracker blocker',
 				'isolation',
 				'work profile',
+				'device owner',
+				'device policy',
 				'anti-theft',
 				'permission audit',
 				'shoulder surfing',
 				'隐私',
-				'sandbox'
+				'sandbox',
+				'firewall',
+				'exploit',
+				'privilege escalation',
+				'cve'
 			]
 		},
-		{ weight: 2, terms: ['secure', 'security', 'encrypt', 'block ads', 'spoof', 'audit', '权限'] },
+		{ weight: 2, terms: ['secure', 'security', 'encrypt', 'block ads', 'spoof', 'audit'] },
 		{ weight: 1, terms: ['protect', 'private'] }
 	],
 	developer_tools: [
@@ -196,7 +247,15 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'logcat',
 				'开发者',
 				'adb manager',
-				'debugger'
+				'debugger',
+				'adb shell',
+				'shell commands',
+				'adb commands',
+				'执行命令',
+				'system apis',
+				'app_process',
+				'developer guide',
+				'shizuku fork'
 			]
 		},
 		{
@@ -209,10 +268,12 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'emulator',
 				'scripting',
 				'javascript engine',
-				'linux terminal'
+				'linux terminal',
+				'commands',
+				'debugging'
 			]
 		},
-		{ weight: 1, terms: ['sdk', 'toolchain'] }
+		{ weight: 1, terms: ['sdk', 'toolchain', 'adb'] }
 	],
 	device_specific: [
 		{
@@ -228,10 +289,11 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'galaxy',
 				'inmo',
 				'nothing os',
-				'quest'
+				'quest',
+				'ayn thor'
 			]
 		},
-		{ weight: 2, terms: ['oem', 'one ui', 'coloros', 'realme', 'oppo', 'vivo', 'honor'] },
+		{ weight: 2, terms: ['one ui', 'coloros', 'realme', 'oppo', 'vivo', 'honor', 'foldable'] },
 		{ weight: 1, terms: [] }
 	],
 	customization: [
@@ -248,11 +310,13 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'主题',
 				'美化',
 				'force dark',
-				'dark mode'
+				'dark mode',
+				'customization',
+				'customize'
 			]
 		},
-		{ weight: 2, terms: ['material you', 'widget', 'font', 'skin', 'style', '外观'] },
-		{ weight: 1, terms: ['design', 'appearance'] }
+		{ weight: 2, terms: ['widget', 'font', 'skin', 'style', 'indicator', '外观'] },
+		{ weight: 1, terms: ['material you', 'design', 'appearance'] }
 	],
 	connectivity: [
 		{
@@ -265,7 +329,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'cast',
 				'device-to-device',
 				'bluetooth bridge',
-				'投屏'
+				'投屏',
+				'wear os',
+				'wearos',
+				'smartwatch'
 			]
 		},
 		{ weight: 2, terms: ['ble', 'bluetooth', 'sync', 'remote control', 'companion', 'nearby'] },
@@ -284,7 +351,22 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'window manager',
 				'system ui',
 				'系统设置',
-				'link handling'
+				'link handling',
+				'locale',
+				'app languages',
+				'multi window',
+				'floating window',
+				'multitasking',
+				'desktop mode',
+				'screen off',
+				'息屏',
+				'volume control',
+				'folding state',
+				'folding states',
+				'power optimization',
+				'gsi',
+				'gsis',
+				'background limit'
 			]
 		},
 		{
@@ -296,9 +378,21 @@ const RULES: Record<ListingCategory, Tier[]> = {
 	utilities: [
 		{
 			weight: 3,
-			terms: ['toolbox', '工具箱', 'alarm', 'calculator', 'clock', 'notes', 'converter']
+			terms: [
+				'toolbox',
+				'工具箱',
+				'alarm',
+				'calculator',
+				'clock',
+				'notes',
+				'converter',
+				'system monitor',
+				'task manager',
+				'process manager',
+				'running services'
+			]
 		},
-		{ weight: 2, terms: ['utility', 'tool', 'helper'] },
+		{ weight: 2, terms: ['utility', 'tool', 'helper', 'monitor'] },
 		{ weight: 1, terms: ['simple', 'lightweight'] }
 	]
 };
@@ -338,10 +432,14 @@ const BOILERPLATE: RegExp[] = [
 ];
 
 const NAMED_GAME =
-	/(mobile legends|mlbb|codm|call of duty|umamusume|polyfield|genshin|pubg|minecraft|roblox|maimai|chunithm|retroarch|arcaea)/i;
+	/(mobile legends|mlbb|codm|call of duty|umamusume|polyfield|genshin|mihoyo|hoyoverse|honkai|pubg|minecraft|roblox|maimai|chunithm|retroarch|arcaea|stardew[ -]valley|fate[/ -]grand[ -]order|last origin)/i;
 
 const DEVICE_LOCK =
-	/(only (works|for|on) [^.]{0,40}(samsung|xiaomi|quest|nothing|pixel|galaxy)|no other devices|for (samsung|xiaomi|quest|nothing) (phones|devices)|(quest|nothing os|hyperos|miui|inmo)[- ]native|supported samsung model)/i;
+	/(only (works|for|on) [^.]{0,40}(samsung|xiaomi|quest|nothing|pixel|galaxy)|no other devices|for (samsung|xiaomi|quest|nothing) (phones|devices)|(quest|nothing os|hyperos|miui|inmo)[- ]native|supported samsung model|supported (google |samsung )?(pixel|galaxy|samsung)( galaxy)? (phones|devices|models?|firmware))/i;
+
+const LIBRARY_DEPENDENCY =
+	/(implementation|compileonly|api)\s*\(?\s*["'][a-z0-9_.-]+:[a-z0-9_.$-]+/;
+const LIBRARY_WEIGHT = 6;
 
 const PRECEDENCE: { winner: ListingCategory; rival: ListingCategory; conditions: string[] }[] = [
 	{ winner: 'gaming', rival: 'media', conditions: ['game', 'games', 'visual novel', '游戏'] },
@@ -351,6 +449,12 @@ const PRECEDENCE: { winner: ListingCategory; rival: ListingCategory; conditions:
 		conditions: ['skin', 'map', 'game asset', 'mod']
 	},
 	{ winner: 'automation', rival: 'utilities', conditions: ['agent', 'automation', '自动'] },
+	{
+		winner: 'file_management',
+		rival: 'networking',
+		conditions: ['file transfer', '传输文件', '文件传输']
+	},
+	{ winner: 'app_management', rival: 'customization', conditions: ['disable', 'freeze'] },
 	{ winner: 'networking', rival: 'privacy_security', conditions: ['vpn', 'proxy', 'tunnel'] },
 	{
 		winner: 'app_management',
@@ -387,12 +491,30 @@ export type CategoryInput = {
 	readme: string | null;
 };
 
+const MARKUP: RegExp[] = [
+	/<!--[\s\S]*?-->/g,
+	/<[^>]+>/g,
+	/!\[[^\]]*\]\([^)]*\)/g,
+	/\]\([^)]*\)/g,
+	/^\s*\[[^\]]+\]:\s*\S+.*$/gm,
+	/https?:\/\/\S+/g,
+	/[*`]+/g
+];
+
+function stripMarkup(text: string): string {
+	return MARKUP.reduce((current, pattern) => current.replace(pattern, ' '), text);
+}
+
 function stripBoilerplate(text: string): string {
 	return BOILERPLATE.reduce((current, pattern) => current.replace(pattern, ' '), text);
 }
 
+function termSource(term: string): string {
+	return term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/[ -]/g, '[\\s-]');
+}
+
 function countTerm(term: string, text: string): number {
-	const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const escaped = termSource(term);
 	const pattern = /[a-z0-9]/.test(term)
 		? new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'g')
 		: new RegExp(escaped, 'g');
@@ -403,14 +525,25 @@ function countTerm(term: string, text: string): number {
 function hasTerm(term: string, text: string): boolean {
 	if (!/[a-z0-9]/.test(term)) return text.includes(term);
 
-	const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const escaped = termSource(term);
 	return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(text);
+}
+
+function startsWord(prefix: string, text: string): boolean {
+	if (!/[a-z0-9]/.test(prefix)) return text.includes(prefix);
+
+	return new RegExp(`(?<![a-z0-9])${termSource(prefix)}`).test(text);
 }
 
 function zones(input: CategoryInput): { purpose: string; readme: string } {
 	const description = (input.description ?? '').toLowerCase();
 	const topics = input.topics.join(' ').toLowerCase();
-	const readme = stripBoilerplate((input.readme ?? '').slice(0, README_BUDGET).toLowerCase());
+	const readme = stripBoilerplate(
+		stripMarkup(input.readme ?? '')
+			.replace(/\s+/g, ' ')
+			.slice(0, README_BUDGET)
+			.toLowerCase()
+	);
 
 	return { purpose: `${description} ${topics}`, readme };
 }
@@ -452,7 +585,9 @@ function scoreCategories(input: CategoryInput): Map<ListingCategory, number> {
 		scores.set(category, total);
 	}
 
-	if (scores.has('developer_tools')) {
+	if (LIBRARY_DEPENDENCY.test((input.readme ?? '').toLowerCase())) {
+		scores.set('developer_tools', (scores.get('developer_tools') ?? 0) + LIBRARY_WEIGHT);
+	} else if (scores.has('developer_tools')) {
 		const named = RULES.developer_tools.some((tier) =>
 			tier.terms.some((term) => hasTerm(term, purpose))
 		);
@@ -490,7 +625,7 @@ export function categorize(input: CategoryInput): ListingCategory | null {
 		for (const rule of PRECEDENCE) {
 			const pair = new Set([top[0], runner[0]]);
 			if (pair.size !== 2 || !pair.has(rule.winner) || !pair.has(rule.rival)) continue;
-			if (!rule.conditions.some((condition) => text.includes(condition))) continue;
+			if (!rule.conditions.some((condition) => startsWord(condition, text))) continue;
 			return rule.winner;
 		}
 	}
