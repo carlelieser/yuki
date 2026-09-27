@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
 import { settleConfidence, shouldPublish, type Transaction } from './publication.ts';
+import { settleLatestRelease } from './releases.ts';
 import type { MappedListing } from '../mapping/listing.ts';
 import type { MappedVersion } from '@yuki/github';
 import type { ListingCategory } from '@yuki/db/schema';
@@ -85,6 +86,8 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 				});
 		}
 
+		if (input.versions !== null) await settleLatestRelease(tx, listingId);
+
 		for (const entry of input.evidence) {
 			await tx
 				.insert(schema.listingEvidence)
@@ -107,6 +110,12 @@ async function insertOrUpdate(
 	listing: MappedListing
 ): Promise<string> {
 	const slug = await resolveSlug(tx, listing.slug, listing.githubRepoId);
+	const isPublished = shouldPublish({
+		owner: listing.owner,
+		name: listing.name,
+		confidence: scoreConfidence(input.evidence),
+		hasDownloadableAsset: input.hasApk === true
+	});
 
 	const [row] = await tx
 		.insert(schema.listings)
@@ -116,12 +125,8 @@ async function insertOrUpdate(
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
 			packageName: input.packageName,
-			isPublished: shouldPublish({
-				owner: listing.owner,
-				name: listing.name,
-				confidence: scoreConfidence(input.evidence),
-				hasDownloadableAsset: input.hasApk === true
-			}),
+			isPublished,
+			publishedAt: isPublished ? new Date() : null,
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})

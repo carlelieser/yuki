@@ -1,4 +1,4 @@
-import { and, eq, isNotNull } from 'drizzle-orm';
+import { and, eq, isNotNull, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { ListingConfidence } from '@yuki/db/schema';
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
@@ -35,6 +35,13 @@ export function shouldPublish(input: {
 }): boolean {
 	if (isCatalogueExcluded(input.owner, input.name)) return false;
 	return input.hasDownloadableAsset && input.confidence === 'strong';
+}
+
+export type Publication = { isPublished: boolean; publishedAt?: SQL };
+
+export function publicationOf(isPublished: boolean): Publication {
+	if (!isPublished) return { isPublished };
+	return { isPublished, publishedAt: sql`coalesce(${schema.listings.publishedAt}, now())` };
 }
 
 export type ReverifyOutcome = {
@@ -93,7 +100,7 @@ export async function replaceEvidence(
 		if (wasPublished !== isPublished) {
 			await tx
 				.update(schema.listings)
-				.set({ isPublished, updatedAt: new Date() })
+				.set({ ...publicationOf(isPublished), updatedAt: new Date() })
 				.where(eq(schema.listings.id, listingId));
 		}
 

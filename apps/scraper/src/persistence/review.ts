@@ -1,6 +1,7 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { EvidenceKind, ListingConfidence } from '@yuki/db/schema';
+import { publicationOf } from './publication.ts';
 
 export type ReviewCandidate = {
 	slug: string;
@@ -70,7 +71,7 @@ export async function setPublished(
 ): Promise<boolean> {
 	const updated = await db
 		.update(schema.listings)
-		.set({ isPublished, updatedAt: new Date() })
+		.set({ ...publicationOf(isPublished), updatedAt: new Date() })
 		.where(eq(schema.listings.slug, slug))
 		.returning({ slug: schema.listings.slug });
 
