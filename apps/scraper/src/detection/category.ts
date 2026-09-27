@@ -17,9 +17,18 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'game controller',
 				'gamepad keymapper',
 				'gacha',
-				'keyboard and mouse',
-				'mouse and keyboard',
-				'input mapper'
+				'input mapper',
+				'game booster',
+				'game launcher',
+				'game overlay',
+				'gaming overlay',
+				'game telemetry',
+				'cloud gaming',
+				'gaming tool',
+				'gaming utility',
+				'aimbot',
+				'aim assistant',
+				'虚拟手柄'
 			]
 		},
 		{
@@ -33,6 +42,9 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'retroarch',
 				'handheld',
 				'emulator',
+				'keyboard and mouse',
+				'mouse and keyboard',
+				'手柄',
 				'游戏'
 			]
 		},
@@ -98,7 +110,9 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'device agent',
 				'语音自动化',
 				'全自动',
-				'自动签到'
+				'自动签到',
+				'自动点击',
+				'点击助手'
 			]
 		},
 		{
@@ -109,6 +123,7 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'rule',
 				'workflow',
 				'automatically',
+				'automated',
 				'智能体',
 				'自然语言',
 				'无障碍'
@@ -222,6 +237,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'work profile',
 				'device owner',
 				'device policy',
+				'forensic',
+				'forensics',
+				'key attestation',
+				'parental control',
 				'anti-theft',
 				'permission audit',
 				'shoulder surfing',
@@ -255,7 +274,16 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'system apis',
 				'app_process',
 				'developer guide',
-				'shizuku fork'
+				'shizuku fork',
+				'fork of shizuku',
+				'adb toolkit',
+				'adb toolbox',
+				'adb工具箱',
+				'remote shell',
+				'devtools',
+				'coding agent',
+				'android library',
+				'logger'
 			]
 		},
 		{
@@ -290,7 +318,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'inmo',
 				'nothing os',
 				'quest',
-				'ayn thor'
+				'ayn thor',
+				'anbernic',
+				'retroid',
+				'ayaneo'
 			]
 		},
 		{ weight: 2, terms: ['one ui', 'coloros', 'realme', 'oppo', 'vivo', 'honor', 'foldable'] },
@@ -332,7 +363,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'投屏',
 				'wear os',
 				'wearos',
-				'smartwatch'
+				'smartwatch',
+				'scrcpy',
+				'screen mirroring',
+				'input sharing'
 			]
 		},
 		{ weight: 2, terms: ['ble', 'bluetooth', 'sync', 'remote control', 'companion', 'nearby'] },
@@ -364,6 +398,15 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'folding state',
 				'folding states',
 				'power optimization',
+				'battery optimization',
+				'battery optimizations',
+				'battery optimizer',
+				'virtual display',
+				'virtual screen',
+				'虚拟屏幕',
+				'setedit',
+				'settings editor',
+				'settings explorer',
 				'gsi',
 				'gsis',
 				'background limit'
@@ -389,7 +432,10 @@ const RULES: Record<ListingCategory, Tier[]> = {
 				'system monitor',
 				'task manager',
 				'process manager',
-				'running services'
+				'running services',
+				'battery monitor',
+				'timetable',
+				'课程表'
 			]
 		},
 		{ weight: 2, terms: ['utility', 'tool', 'helper', 'monitor'] },
@@ -432,10 +478,14 @@ const BOILERPLATE: RegExp[] = [
 ];
 
 const NAMED_GAME =
-	/(mobile legends|mlbb|codm|call of duty|umamusume|polyfield|genshin|mihoyo|hoyoverse|honkai|pubg|minecraft|roblox|maimai|chunithm|retroarch|arcaea|stardew[ -]valley|fate[/ -]grand[ -]order|last origin)/i;
+	/(mobile legends|mlbb|codm|call of duty|umamusume|polyfield|genshin|mihoyo|hoyoverse|honkai|pubg|minecraft|roblox|maimai|chunithm|retroarch|arcaea|subway surfers|arena of valor|传说对决|wuthering waves|鸣潮|free fire|stardew[ -]valley|fate[/ -]grand[ -]order|last origin)/i;
 
 const DEVICE_LOCK =
-	/(only (works|for|on) [^.]{0,40}(samsung|xiaomi|quest|nothing|pixel|galaxy)|no other devices|for (samsung|xiaomi|quest|nothing) (phones|devices)|(quest|nothing os|hyperos|miui|inmo)[- ]native|supported samsung model|supported (google |samsung )?(pixel|galaxy|samsung)( galaxy)? (phones|devices|models?|firmware))/i;
+	/(only (works|for|on) [^.]{0,40}(samsung|xiaomi|quest|nothing|pixel|galaxy)|no other devices|for (samsung|xiaomi|quest|nothing) (phones|devices)|(quest|nothing os|hyperos|miui|inmo)[- ]native|supported samsung model|(only|specifically|primarily|exclusively) (designed|made|built) for [^.]{0,40}(samsung|galaxy|xiaomi|hyperos|miui|oppo|coloros|vivo|iqoo|originos|oneplus|pixel)|supported (google |samsung )?(pixel|galaxy|samsung)( galaxy)? (phones|devices|models?|firmware))/i;
+
+const DEVICE_MODEL =
+	/(?<![a-z0-9])(galaxy (s|a|m|note ?|tab ?s?)\d{1,2}|galaxy z ?(fold|flip) ?\d|z (fold|flip) ?\d|s\d{2} (ultra|series|\+)|sm-[a-z]\d{3}|pixel \d{1,2}( pro| a)?|pixel watch ?\d|(vivo|iqoo) [a-z]{0,2} ?\d{1,3}|oneplus (pad ?)?\d{1,2}|nothing phone ?\(?\d|redmi (note ?)?\d{1,2}|xiaomi \d{1,2}|poco [a-z]\d)(?![a-z0-9])/;
+const DEVICE_MODEL_WEIGHT = 6;
 
 const LIBRARY_DEPENDENCY =
 	/(implementation|compileonly|api)\s*\(?\s*["'][a-z0-9_.-]+:[a-z0-9_.$-]+/;
@@ -455,13 +505,18 @@ const PRECEDENCE: { winner: ListingCategory; rival: ListingCategory; conditions:
 		conditions: ['file transfer', '传输文件', '文件传输']
 	},
 	{ winner: 'app_management', rival: 'customization', conditions: ['disable', 'freeze'] },
+	{ winner: 'privacy_security', rival: 'networking', conditions: ['firewall', 'device policy'] },
 	{ winner: 'networking', rival: 'privacy_security', conditions: ['vpn', 'proxy', 'tunnel'] },
 	{
 		winner: 'app_management',
 		rival: 'system_tweaks',
 		conditions: ['debloat', 'uninstall', 'freeze', 'hibernat']
 	},
-	{ winner: 'file_management', rival: 'connectivity', conditions: ['file', '文件'] },
+	{
+		winner: 'file_management',
+		rival: 'connectivity',
+		conditions: ['file manager', 'file transfer', '文件管理', '文件传输', '传输文件']
+	},
 	{
 		winner: 'developer_tools',
 		rival: 'system_tweaks',
@@ -592,6 +647,10 @@ function scoreCategories(input: CategoryInput): Map<ListingCategory, number> {
 			tier.terms.some((term) => hasTerm(term, purpose))
 		);
 		if (!named) scores.delete('developer_tools');
+	}
+
+	if (DEVICE_MODEL.test(purpose)) {
+		scores.set('device_specific', (scores.get('device_specific') ?? 0) + DEVICE_MODEL_WEIGHT);
 	}
 
 	return scores;

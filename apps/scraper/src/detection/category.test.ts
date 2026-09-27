@@ -151,6 +151,26 @@ describe('categorize', () => {
 		).toBe('app_management');
 	});
 
+	it('reads an adb toolkit as a developer tool', () => {
+		expect(
+			categorize({
+				description: 'A powerful ADB toolkit running on the watch!',
+				topics: ['adb', 'wearos'],
+				readme: null
+			})
+		).toBe('developer_tools');
+	});
+
+	it('reads an on-device coding agent as a developer tool', () => {
+		expect(
+			categorize({
+				description: 'A native AI coding agent harness app for Android',
+				topics: ['ai-agent', 'coding-agent'],
+				readme: 'Runs shell commands on the device through Shizuku.'
+			})
+		).toBe('developer_tools');
+	});
+
 	it('reads a library from its gradle dependency snippet', () => {
 		expect(
 			categorize({
@@ -205,6 +225,26 @@ describe('categorize', () => {
 		).toBe('device_specific');
 	});
 
+	it('reads an exploit built for one named model as device_specific', () => {
+		expect(
+			categorize({
+				description: 'GhostLock CVE-2026-43499 port for Galaxy Z Fold 8 (h8q)',
+				topics: [],
+				readme: 'Temporary root exploit payloads for the h8q firmware.'
+			})
+		).toBe('device_specific');
+	});
+
+	it('ignores a model named only as a test device in the readme', () => {
+		expect(
+			categorize({
+				description: 'Virtual touchpad for Android desktop mode on external displays',
+				topics: [],
+				readme: 'Tested on a Pixel 8 running Android 16.'
+			})
+		).toBe('system_tweaks');
+	});
+
 	it('does not lock to device_specific on an OEM named as an example', () => {
 		expect(
 			categorize({
@@ -224,6 +264,48 @@ describe('categorize', () => {
 				readme: 'Sync your Stardew Valley saves using cloud storage services like Dropbox.'
 			})
 		).toBe('gaming');
+	});
+
+	it('reads a gaming overlay as gaming rather than a floating window tweak', () => {
+		expect(
+			categorize({
+				description: 'Android gaming overlay, performance monitor and per-game profile manager',
+				topics: ['floating-window', 'game-overlay', 'performance-monitor'],
+				readme: null
+			})
+		).toBe('gaming');
+	});
+
+	it('prefers privacy for a firewall that runs through the vpn slot', () => {
+		expect(
+			categorize({
+				description: 'Privacy is not default. Take it back with a firewall and package control',
+				topics: [],
+				readme:
+					'Blocks network access per app using a local VPN or iptables, over Wi-Fi and mobile data.'
+			})
+		).toBe('privacy_security');
+	});
+
+	it('locks to device_specific when the readme says it was made only for one vendor', () => {
+		expect(
+			categorize({
+				description: null,
+				topics: [],
+				readme:
+					'An Android utility for triggering Circle to Search. It is only designed for Chinese OriginOS.'
+			})
+		).toBe('device_specific');
+	});
+
+	it('reads a screen mirroring client as connectivity', () => {
+		expect(
+			categorize({
+				description: 'Better screen mirroring for Android devices',
+				topics: [],
+				readme: 'Control the other device with keyboard and mouse.'
+			})
+		).toBe('connectivity');
 	});
 
 	it('is deterministic across repeated calls', () => {
