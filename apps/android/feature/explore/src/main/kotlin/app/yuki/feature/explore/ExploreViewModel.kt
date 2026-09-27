@@ -26,9 +26,6 @@ import kotlinx.coroutines.launch
 const val SECTION_ITEM_COUNT = 3
 const val ROW_ITEM_COUNT = 5
 
-private const val NEWEST_SORT = "newest"
-private const val UPDATED_SORT = "updated"
-
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
     private val repository: ListingRepository,

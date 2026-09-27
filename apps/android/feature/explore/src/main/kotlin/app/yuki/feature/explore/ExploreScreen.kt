@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.FailureState
-import app.yuki.core.designsystem.component.ListingSectionActions
 import app.yuki.core.designsystem.component.SectionHeader
 import app.yuki.core.designsystem.component.YukiAnimatedState
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -37,6 +36,7 @@ fun ExploreRoute(
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     onAuthorSelected: ((String) -> Unit)? = null,
+    onSeeAllSelected: ((String) -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     viewModel: ExploreViewModel = hiltViewModel(),
 ) {
@@ -54,6 +54,7 @@ fun ExploreRoute(
             onListingSelected = { listing -> onListingSelected(listing.slug) },
             onCategorySelected = onCategorySelected,
             onAuthorSelected = onAuthorSelected,
+            onSeeAllSelected = onSeeAllSelected,
         ),
         contentPadding = contentPadding,
         modifier = modifier,
@@ -66,6 +67,7 @@ data class ExploreCallbacks(
     val onListingSelected: (ListingSummary) -> Unit,
     val onCategorySelected: (ListingCategory) -> Unit,
     val onAuthorSelected: ((String) -> Unit)? = null,
+    val onSeeAllSelected: ((String) -> Unit)? = null,
 )
 
 data class ExploreRefresh(
@@ -144,14 +146,7 @@ private fun ExploreContentBody(
     ) {
         featuredSection(content = content, callbacks = callbacks)
 
-        recencyRows(
-            content = content,
-            titles = rowTitles,
-            actions = ListingSectionActions(
-                onListingSelected = callbacks.onListingSelected,
-                onAuthorSelected = callbacks.onAuthorSelected,
-            ),
-        )
+        recencyRows(content = content, titles = rowTitles, callbacks = callbacks)
 
         categorySections(
             content = CategorySectionsContent(

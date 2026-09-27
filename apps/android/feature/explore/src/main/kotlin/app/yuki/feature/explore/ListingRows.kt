@@ -10,6 +10,9 @@ import app.yuki.core.designsystem.component.listingSection
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.UiState
 
+internal const val NEWEST_SORT = "newest"
+internal const val UPDATED_SORT = "updated"
+
 private const val NEWEST_ROW_KEY = "newestRow"
 private const val UPDATED_ROW_KEY = "updatedRow"
 
@@ -27,6 +30,7 @@ internal fun rowTitles(): RowTitles = RowTitles(
 private data class ListingRowContent(
     val title: String,
     val keyPrefix: String,
+    val sort: String,
     val listings: UiState<List<ListingSummary>>,
     val installs: ListingInstalls,
 )
@@ -34,32 +38,34 @@ private data class ListingRowContent(
 internal fun LazyListScope.recencyRows(
     content: ExploreContent,
     titles: RowTitles,
-    actions: ListingSectionActions,
+    callbacks: ExploreCallbacks,
 ) {
     listingRow(
         content = ListingRowContent(
             title = titles.newest,
             keyPrefix = NEWEST_ROW_KEY,
+            sort = NEWEST_SORT,
             listings = content.newest,
             installs = content.installs,
         ),
-        actions = actions,
+        callbacks = callbacks,
     )
 
     listingRow(
         content = ListingRowContent(
             title = titles.updated,
             keyPrefix = UPDATED_ROW_KEY,
+            sort = UPDATED_SORT,
             listings = content.updated,
             installs = content.installs,
         ),
-        actions = actions,
+        callbacks = callbacks,
     )
 }
 
 private fun LazyListScope.listingRow(
     content: ListingRowContent,
-    actions: ListingSectionActions,
+    callbacks: ExploreCallbacks,
 ) {
     val listings = content.listings
     if (listings !is UiState.Success) return
@@ -72,6 +78,10 @@ private fun LazyListScope.listingRow(
             listings = listings.data,
             installs = content.installs,
         ),
-        actions = actions,
+        actions = ListingSectionActions(
+            onListingSelected = callbacks.onListingSelected,
+            onSeeAll = callbacks.onSeeAllSelected?.let { onSeeAll -> { onSeeAll(content.sort) } },
+            onAuthorSelected = callbacks.onAuthorSelected,
+        ),
     )
 }
