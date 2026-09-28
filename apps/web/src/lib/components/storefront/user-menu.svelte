@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { LogOutIcon } from '@lucide/svelte';
+	import { LogOutIcon, UserIcon } from '@lucide/svelte';
 	import {
 		Button,
 		DropdownMenu,
@@ -36,6 +36,19 @@
 		</DropdownMenuLabel>
 
 		<DropdownMenuSeparator />
+
+		<DropdownMenuItem>
+			{#snippet child({ props })}
+				<a
+					{...props}
+					href={resolve('/account')}
+					class="w-full flex items-center justify-between text-sm p-2"
+				>
+					Account
+					<UserIcon class="size-4 text-muted-foreground" />
+				</a>
+			{/snippet}
+		</DropdownMenuItem>
 
 		<form method="POST" action={resolve('/signout')}>
 			<DropdownMenuItem>
