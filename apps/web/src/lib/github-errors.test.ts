@@ -7,7 +7,7 @@ describe('githubErrorMessage', () => {
 	});
 
 	it('tells an existing user how to connect GitHub instead', () => {
-		expect(githubErrorMessage('account_not_linked')).toContain('Sign in with your password');
+		expect(githubErrorMessage('account_not_linked')).toContain('sign in with your password');
 	});
 
 	it('asks the user to verify their GitHub email', () => {

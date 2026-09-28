@@ -29,6 +29,18 @@ describe('fetchGithubIdentity', () => {
 		expect(await fetchGithubIdentity('token')).toBeNull();
 	});
 
+	it('gives up on GitHub instead of holding the sign-in open', async () => {
+		const fetch = vi.fn(async () => Response.json({ login: 'octocat', html_url: 'x' }));
+		vi.stubGlobal('fetch', fetch);
+
+		await fetchGithubIdentity('token');
+
+		expect(fetch).toHaveBeenCalledWith(
+			'https://api.github.com/user',
+			expect.objectContaining({ signal: expect.any(AbortSignal) })
+		);
+	});
+
 	it('returns null when GitHub is unreachable', async () => {
 		vi.stubGlobal('fetch', async () => {
 			throw new TypeError('fetch failed');

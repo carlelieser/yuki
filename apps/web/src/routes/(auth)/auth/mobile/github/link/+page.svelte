@@ -26,6 +26,9 @@
 			<CardDescription>
 				Connect a GitHub account to the Yuki account {data.email}.
 			</CardDescription>
+			<CardDescription class="font-medium text-foreground">
+				Only continue if you started this from the Yuki app on this device and {data.email} is your account.
+			</CardDescription>
 		</CardHeader>
 
 		<form method="POST">

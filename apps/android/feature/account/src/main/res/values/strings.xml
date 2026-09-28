@@ -24,7 +24,7 @@
     <string name="account_message_session_expired">Your session has expired. Sign in again.</string>
     <string name="account_message_avatar_unreadable">That image could not be read. Try a different one.</string>
     <string name="account_message_github_cancelled">GitHub sign-in was cancelled.</string>
-    <string name="account_message_github_account_exists">An account with this email already exists. Sign in with your password, then connect GitHub in Settings.</string>
+    <string name="account_message_github_account_exists">An account with this email already exists. Make sure the email is verified on Yuki and on GitHub, then sign in with your password and connect GitHub in Settings.</string>
     <string name="account_message_github_email_unverified">Verify your email address on GitHub, then try again.</string>
     <string name="account_message_github_linked_elsewhere">This GitHub account is already connected to another Yuki account.</string>
     <string name="account_message_github_link_expired">That link expired. Try connecting GitHub again.</string>

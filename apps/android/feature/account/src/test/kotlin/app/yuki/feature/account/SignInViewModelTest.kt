@@ -207,6 +207,20 @@ class SignInViewModelTest {
     }
 
     @Test
+    fun `a double tap starts only one GitHub sign-in`() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.onGithubClick()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            "https://yuki.test/auth/mobile/github/start?state=state-1",
+            viewModel.state.value.browserUrl,
+        )
+    }
+
+    @Test
     fun `returning from GitHub signs in with the ticket`() = runTest {
         val viewModel = viewModel()
         viewModel.onGithubClick()
@@ -238,6 +252,7 @@ class SignInViewModelTest {
         val viewModel = viewModel()
         viewModel.onGithubClick()
         advanceUntilIdle()
+        viewModel.onBrowserLaunched()
         viewModel.onGithubClick()
         advanceUntilIdle()
 
@@ -252,6 +267,7 @@ class SignInViewModelTest {
         val viewModel = viewModel()
         viewModel.onGithubClick()
         advanceUntilIdle()
+        viewModel.onBrowserLaunched()
         viewModel.onGithubClick()
         advanceUntilIdle()
 

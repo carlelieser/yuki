@@ -10,6 +10,7 @@ import app.yuki.core.network.AuthRepository
 import app.yuki.core.network.SignedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +37,8 @@ class SignInViewModel @Inject internal constructor(
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(SignInState())
 
+    private var githubStart: Job? = null
+
     val state: StateFlow<SignInState> = mutableState.asStateFlow()
 
     init {
@@ -45,7 +48,11 @@ class SignInViewModel @Inject internal constructor(
     }
 
     fun onGithubClick() {
-        viewModelScope.launch {
+        val current = mutableState.value
+        if (current.isSubmitting || current.browserUrl != null) return
+        if (githubStart?.isActive == true) return
+
+        githubStart = viewModelScope.launch {
             val url = githubSignIn.start()
             mutableState.update { state -> state.copy(browserUrl = url, message = null) }
         }

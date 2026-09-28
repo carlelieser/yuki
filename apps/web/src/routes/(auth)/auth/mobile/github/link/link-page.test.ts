@@ -32,11 +32,18 @@ function verified(token = 'session-1') {
 function event(query: string, body?: Record<string, string>) {
 	const url = new URL(`https://yukistore.org/auth/mobile/github/link${query}`);
 	const cookies = { set: vi.fn() };
+	const setHeaders = vi.fn();
 	const request = new Request(url, {
 		method: body ? 'POST' : 'GET',
 		body: body ? new URLSearchParams(body) : undefined
 	});
-	return { url, request, cookies, getClientAddress: () => '203.0.113.9' } as unknown as Event;
+	return {
+		url,
+		request,
+		cookies,
+		setHeaders,
+		getClientAddress: () => '203.0.113.9'
+	} as unknown as Event;
 }
 
 async function redirectOf(run: () => unknown): Promise<URL> {
@@ -64,6 +71,21 @@ describe('link confirmation page', () => {
 		const data = await load(event(`?ticket=ticket-1&state=${STATE}`));
 
 		expect(data).toMatchObject({ email: 'ada@yuki.test', confirmTicket: 'confirm-1' });
+	});
+
+	it('keeps the confirmation ticket out of caches and referrers', async () => {
+		routeCalls({
+			'/one-time-token/verify': verified(),
+			'/one-time-token/generate': () => Response.json({ token: 'confirm-1' })
+		});
+		const request = event(`?ticket=ticket-1&state=${STATE}`);
+
+		await load(request);
+
+		expect(request.setHeaders).toHaveBeenCalledWith({
+			'cache-control': 'no-store',
+			'referrer-policy': 'no-referrer'
+		});
 	});
 
 	it('sends the app an error when the ticket has expired', async () => {

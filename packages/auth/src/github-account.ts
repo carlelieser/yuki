@@ -5,6 +5,7 @@ export type FetchGithubIdentity = (accessToken: string) => Promise<GithubIdentit
 type AccountWrite = { providerId?: string; accessToken?: string | null };
 
 const GITHUB_USER_URL = 'https://api.github.com/user';
+const GITHUB_TIMEOUT_MILLIS = 5000;
 
 export async function fetchGithubIdentity(accessToken: string): Promise<GithubIdentity | null> {
 	let response: Response;
@@ -14,7 +15,8 @@ export async function fetchGithubIdentity(accessToken: string): Promise<GithubId
 				Accept: 'application/vnd.github+json',
 				Authorization: `Bearer ${accessToken}`,
 				'User-Agent': 'yuki'
-			}
+			},
+			signal: AbortSignal.timeout(GITHUB_TIMEOUT_MILLIS)
 		});
 	} catch {
 		return null;

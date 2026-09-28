@@ -15,6 +15,8 @@ function appState(value: unknown): string {
 }
 
 export const load = (async (event) => {
+	event.setHeaders({ 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' });
+
 	const state = appState(event.url.searchParams.get('state'));
 	if (!state) redirect(303, appCallbackUrl(event, { flow: LINK_FLOW, error: 'invalid_request' }));
 

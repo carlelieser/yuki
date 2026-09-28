@@ -1,7 +1,7 @@
 const messages: Record<string, string> = {
 	access_denied: 'GitHub sign-in was cancelled.',
 	account_not_linked:
-		'An account with this email already exists. Sign in with your password, then connect GitHub from your account page.',
+		'An account with this email already exists. Make sure the email is verified on Yuki and on GitHub, then sign in with your password and connect GitHub from your account page.',
 	github_email_unverified: 'Verify your email address on GitHub, then try again.',
 	unable_to_link_account: 'Verify your email address on GitHub, then try again.',
 	account_already_linked_to_different_user:
