@@ -21,11 +21,16 @@ const MAX_CENTRAL_DIRECTORY = 4 * 1024 * 1024;
 const STORED = 0;
 const DEFLATED = 8;
 
-export async function findEntry(
-	size: number,
-	read: RangeReader,
-	wanted: string
-): Promise<ZipEntry | null> {
+export type ZipArchive = {
+	size: number;
+	read: RangeReader;
+	tail: Buffer;
+	tailStart: number;
+	directoryOffset: number;
+	entries: Map<string, ZipEntry | null>;
+};
+
+export async function openArchive(size: number, read: RangeReader): Promise<ZipArchive | null> {
 	if (size < EOCD_SIZE) return null;
 
 	const tailSize = Math.min(EOCD_SIZE + MAX_COMMENT, size);
@@ -42,8 +47,20 @@ export async function findEntry(
 	if (directoryOffset + directorySize > size) return null;
 
 	const directory = await readDirectory(read, tail, tailStart, directoryOffset, directorySize);
+	const entries = scanDirectory(directory, size);
+	if (entries === null) return null;
 
-	return scanDirectory(directory, wanted, size);
+	return { size, read, tail, tailStart, directoryOffset, entries };
+}
+
+export async function findEntry(
+	size: number,
+	read: RangeReader,
+	wanted: string
+): Promise<ZipEntry | null> {
+	const archive = await openArchive(size, read);
+
+	return archive?.entries.get(wanted) ?? null;
 }
 
 function locateEocd(tail: Buffer): number | null {
@@ -69,7 +86,8 @@ async function readDirectory(
 	return read(offset, offset + length - 1);
 }
 
-function scanDirectory(directory: Buffer, wanted: string, size: number): ZipEntry | null {
+function scanDirectory(directory: Buffer, size: number): Map<string, ZipEntry | null> | null {
+	const entries = new Map<string, ZipEntry | null>();
 	let cursor = 0;
 
 	while (cursor + CENTRAL_HEADER_SIZE <= directory.length) {
@@ -86,23 +104,34 @@ function scanDirectory(directory: Buffer, wanted: string, size: number): ZipEntr
 		const nameStart = cursor + CENTRAL_HEADER_SIZE;
 		const name = directory.toString('utf8', nameStart, nameStart + nameLength);
 
-		if (name === wanted) {
-			if (method !== STORED && method !== DEFLATED) return null;
-			if (compressedSize === 0 || compressedSize === ZIP64_SENTINEL) return null;
-			if (offset === ZIP64_SENTINEL || offset + compressedSize > size) return null;
-
-			return {
-				offset,
-				compressedSize,
-				uncompressedSize,
-				isDeflated: method === DEFLATED
-			};
+		if (!entries.has(name)) {
+			entries.set(name, usableEntry({ method, compressedSize, uncompressedSize, offset }, size));
 		}
 
 		cursor = nameStart + nameLength + extraLength + commentLength;
 	}
 
-	return null;
+	return entries;
+}
+
+type RawEntry = {
+	method: number;
+	compressedSize: number;
+	uncompressedSize: number;
+	offset: number;
+};
+
+function usableEntry(raw: RawEntry, size: number): ZipEntry | null {
+	if (raw.method !== STORED && raw.method !== DEFLATED) return null;
+	if (raw.compressedSize === 0 || raw.compressedSize === ZIP64_SENTINEL) return null;
+	if (raw.offset === ZIP64_SENTINEL || raw.offset + raw.compressedSize > size) return null;
+
+	return {
+		offset: raw.offset,
+		compressedSize: raw.compressedSize,
+		uncompressedSize: raw.uncompressedSize,
+		isDeflated: raw.method === DEFLATED
+	};
 }
 
 export async function readEntry(entry: ZipEntry, size: number, read: RangeReader): Promise<Buffer> {
