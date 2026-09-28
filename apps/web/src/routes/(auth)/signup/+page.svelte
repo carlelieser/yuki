@@ -22,6 +22,7 @@
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { signUpSchema } from '$lib/schemas/auth.ts';
 	import { authCardClass } from '$lib/auth-card.ts';
+	import GithubSignIn from '$lib/components/auth/github-sign-in.svelte';
 
 	let { data, form: actionData } = $props();
 
@@ -51,6 +52,10 @@
 			<CardHeader class="px-0">
 				<CardTitle class="text-2xl">Sign up for Yuki</CardTitle>
 			</CardHeader>
+
+			{#if data.isGithubEnabled}
+				<GithubSignIn error={data.githubError} />
+			{/if}
 
 			<form method="POST" use:enhance>
 				<CardContent class="grid gap-4 px-0">

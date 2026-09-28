@@ -3,7 +3,9 @@ import { APIError } from 'better-auth/api';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
+import { getGithubCredentials } from '@yuki/auth';
 import { getAuth } from '$lib/server/auth.ts';
+import { githubErrorMessage } from '$lib/github-errors.ts';
 import { safeRedirectTo } from '$lib/safe-redirect.ts';
 import { signInSchema } from '$lib/schemas/auth.ts';
 
@@ -14,7 +16,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		redirect(303, redirectTo as '/');
 	}
 
-	return { form: await superValidate({ redirectTo }, zod4(signInSchema), { errors: false }) };
+	return {
+		form: await superValidate({ redirectTo }, zod4(signInSchema), { errors: false }),
+		isGithubEnabled: getGithubCredentials() !== undefined,
+		githubError: githubErrorMessage(url.searchParams.get('error'))
+	};
 };
 
 export const actions: Actions = {

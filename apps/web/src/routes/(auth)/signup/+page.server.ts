@@ -3,15 +3,21 @@ import { APIError } from 'better-auth/api';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types';
+import { getGithubCredentials } from '@yuki/auth';
 import { getAuth } from '$lib/server/auth.ts';
+import { githubErrorMessage } from '$lib/github-errors.ts';
 import { signUpSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (locals.user) {
 		redirect(303, '/');
 	}
 
-	return { form: await superValidate(zod4(signUpSchema)) };
+	return {
+		form: await superValidate(zod4(signUpSchema)),
+		isGithubEnabled: getGithubCredentials() !== undefined,
+		githubError: githubErrorMessage(url.searchParams.get('error'))
+	};
 };
 
 export const actions: Actions = {

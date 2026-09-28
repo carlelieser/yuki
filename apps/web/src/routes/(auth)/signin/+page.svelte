@@ -21,6 +21,7 @@
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { signInSchema } from '$lib/schemas/auth.ts';
 	import { authCardClass } from '$lib/auth-card.ts';
+	import GithubSignIn from '$lib/components/auth/github-sign-in.svelte';
 
 	let { data } = $props();
 
@@ -36,6 +37,10 @@
 		<CardHeader class="px-0">
 			<CardTitle class="text-2xl">Sign in to Yuki</CardTitle>
 		</CardHeader>
+
+		{#if data.isGithubEnabled}
+			<GithubSignIn error={data.githubError} redirectTo={$formData.redirectTo} />
+		{/if}
 
 		<form method="POST" use:enhance>
 			<input type="hidden" name="redirectTo" bind:value={$formData.redirectTo} />
