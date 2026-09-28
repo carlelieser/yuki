@@ -1,6 +1,7 @@
-import { betterAuth } from 'better-auth';
+import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { bearer } from 'better-auth/plugins';
+import { oneTimeToken } from 'better-auth/plugins/one-time-token';
 import { sveltekitCookies } from 'better-auth/svelte-kit';
 import type { Database } from '@yuki/db';
 import { schema } from '@yuki/db';
@@ -12,6 +13,8 @@ import {
 	requireAuthSecret,
 	requireAuthUrl
 } from './env.ts';
+import { githubAccountHooks } from './github-account.ts';
+import { rejectUnverifiedGithubSignUp } from './github-policy.ts';
 import { sendMail } from './mailer.ts';
 
 type GetRequestEvent = Parameters<typeof sveltekitCookies>[0];
@@ -21,12 +24,26 @@ async function sendTemplatedMail(to: string, subject: string, content: EmailCont
 	await sendMail({ to, subject, text, html });
 }
 
+function accountOptions() {
+	return {
+		accountLinking: {
+			enabled: true,
+			trustedProviders: ['google'],
+			allowDifferentEmails: true
+		},
+		additionalFields: {
+			providerUsername: { type: 'string', required: false, input: false },
+			providerProfileUrl: { type: 'string', required: false, input: false }
+		}
+	} satisfies BetterAuthOptions['account'];
+}
+
 function socialProviders() {
 	const github = getGithubCredentials();
 	const google = getGoogleCredentials();
 
 	return {
-		...(github ? { github: { ...github, scope: ['user:email'] } } : {}),
+		...(github ? { github } : {}),
 		...(google ? { google } : {})
 	};
 }
@@ -64,9 +81,8 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			}
 		},
 		socialProviders: socialProviders(),
-		account: {
-			accountLinking: { enabled: true, trustedProviders: ['github', 'google'] }
-		},
+		account: accountOptions(),
+		databaseHooks: { account: githubAccountHooks() },
 		session: {
 			cookieCache: { enabled: true, maxAge: 300 }
 		},
@@ -74,6 +90,7 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			ipAddress: { ipAddressHeaders: ['x-forwarded-for'] }
 		},
 		user: {
+			validateUserInfo: rejectUnverifiedGithubSignUp,
 			additionalFields: {
 				role: {
 					type: ['user', 'developer'],
@@ -87,7 +104,11 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 				}
 			}
 		},
-		plugins: [bearer(), sveltekitCookies(getRequestEvent)]
+		plugins: [
+			bearer(),
+			oneTimeToken({ storeToken: 'hashed', expiresIn: 3 }),
+			sveltekitCookies(getRequestEvent)
+		]
 	});
 }
 
