@@ -169,6 +169,13 @@
       "when": 1790684072495,
       "tag": "0023_listing_version_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790698932322,
+      "tag": "0024_account_provider_profile",
+      "breakpoints": true
     }
   ]
 }
