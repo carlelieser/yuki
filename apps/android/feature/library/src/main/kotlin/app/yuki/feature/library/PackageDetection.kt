@@ -3,6 +3,7 @@ package app.yuki.feature.library
 import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.InstallSource
 import app.yuki.core.model.InstalledApp
+import app.yuki.core.model.SigningIdentity
 import java.time.Instant
 
 data class DevicePackage(
@@ -10,6 +11,12 @@ data class DevicePackage(
     val versionName: String,
     val versionCode: Long,
     val firstInstalledAt: Instant,
+    val signing: DeviceSigning,
+)
+
+data class DeviceSigning(
+    val signers: Set<String>,
+    val history: Set<String>,
 )
 
 data class DetectedInstall(
@@ -31,12 +38,19 @@ fun planDetection(
     val present = device.associateBy(DevicePackage::packageName)
     val recordedByRepo = recorded.associateBy(InstalledApp::githubRepoId)
 
-    val detected = index
-        .filter { entry -> entry.packageName in present }
-        .filterNot { entry -> claimedByYuki(recordedByRepo[entry.githubRepoId]) }
-        .mapNotNull { entry ->
-            present[entry.packageName]?.let { device -> detectionFor(entry, device) }
-        }
+    val matched = index.mapNotNull { entry ->
+        present[entry.packageName]
+            ?.takeIf { device -> entry.isSignedLike(device) }
+            ?.let { device -> entry to device }
+    }
+    val unambiguous = matched
+        .groupBy { (entry, _) -> entry.packageName }
+        .values
+        .mapNotNull { matches -> matches.singleOrNull() }
+
+    val detected = unambiguous
+        .filterNot { (entry, _) -> claimedByYuki(recordedByRepo[entry.githubRepoId]) }
+        .map { (entry, device) -> detectionFor(entry, device) }
 
     val matchedRepoIds = detected.mapTo(mutableSetOf()) { row -> row.app.githubRepoId }
 
@@ -46,6 +60,16 @@ fun planDetection(
         .map(InstalledApp::githubRepoId)
 
     return DetectionPlan(detected = detected, forgotten = forgotten)
+}
+
+private fun CatalogPackage.isSignedLike(device: DevicePackage): Boolean =
+    identities.any { identity -> identity.matches(device.signing) }
+
+internal fun SigningIdentity.matches(device: DeviceSigning): Boolean {
+    if (device.signers.size > 1) return signers == device.signers
+    if (signers.size != 1) return false
+
+    return (signers + lineage).any { digest -> digest in device.history }
 }
 
 private fun claimedByYuki(recorded: InstalledApp?): Boolean =

@@ -86,6 +86,13 @@ internal data class CatalogPackageDto(
     val slug: String,
     val title: String,
     val iconUrl: String? = null,
+    val identities: List<SigningIdentityDto> = emptyList(),
+)
+
+@Serializable
+internal data class SigningIdentityDto(
+    val signers: List<String> = emptyList(),
+    val lineage: List<String> = emptyList(),
 )
 
 @Serializable

@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.os.Build
 import androidx.core.content.ContextCompat
 import dagger.Module
@@ -13,6 +14,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.security.MessageDigest
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,12 +46,13 @@ internal class PackageManagerPresence @Inject constructor(
 
     override fun findAll(packageNames: List<String>): List<DevicePackage> =
         packageNames.mapNotNull { packageName ->
-            infoFor(packageName)?.let { info ->
+            infoFor(packageName, signingFlags())?.let { info ->
                 DevicePackage(
                     packageName = packageName,
                     versionName = info.versionName.orEmpty(),
                     versionCode = info.longVersionCode(),
                     firstInstalledAt = Instant.ofEpochMilli(info.firstInstallTime),
+                    signing = info.deviceSigning(),
                 )
             }
         }
@@ -73,8 +76,8 @@ internal class PackageManagerPresence @Inject constructor(
         awaitClose { context.unregisterReceiver(receiver) }
     }.onStart { emit(Unit) }.conflate()
 
-    private fun infoFor(packageName: String): PackageInfo? = try {
-        packageManager.getPackageInfo(packageName, 0)
+    private fun infoFor(packageName: String, flags: Int = 0): PackageInfo? = try {
+        packageManager.getPackageInfo(packageName, flags)
     } catch (absent: PackageManager.NameNotFoundException) {
         null
     }
@@ -86,6 +89,37 @@ private fun packageChanges(): IntentFilter = IntentFilter().apply {
     addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)
     addDataScheme("package")
 }
+
+private fun signingFlags(): Int =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        PackageManager.GET_SIGNING_CERTIFICATES
+    } else {
+        @Suppress("DEPRECATION")
+        PackageManager.GET_SIGNATURES
+    }
+
+private fun PackageInfo.deviceSigning(): DeviceSigning {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        @Suppress("DEPRECATION")
+        val signers = signatures.orEmpty().digests()
+        return DeviceSigning(signers = signers, history = signers)
+    }
+
+    val info = signingInfo ?: return DeviceSigning(signers = emptySet(), history = emptySet())
+    val signers = info.apkContentsSigners.orEmpty().digests()
+    if (info.hasMultipleSigners()) return DeviceSigning(signers = signers, history = signers)
+
+    return DeviceSigning(
+        signers = signers,
+        history = signers + info.signingCertificateHistory.orEmpty().digests(),
+    )
+}
+
+private fun Array<out Signature?>.digests(): Set<String> =
+    filterNotNull().mapTo(mutableSetOf()) { signature -> sha256Hex(signature.toByteArray()) }
+
+internal fun sha256Hex(bytes: ByteArray): String =
+    MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { byte -> "%02x".format(byte) }
 
 private fun PackageInfo.longVersionCode(): Long =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

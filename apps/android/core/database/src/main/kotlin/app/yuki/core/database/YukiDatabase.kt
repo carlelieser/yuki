@@ -12,7 +12,7 @@ import androidx.room.TypeConverters
         PackageIndexEntity::class,
         PendingUpdateEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = [AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7)],
 )
