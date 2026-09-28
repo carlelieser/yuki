@@ -22,17 +22,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 private const val GITHUB = "github"
+private const val PASSWORD = "credential"
 
-data class GithubConnectionState(
+data class SignInMethodsState(
     val isLoaded: Boolean = false,
     val github: LinkedAccount? = null,
+    val hasPassword: Boolean = false,
     val canDisconnect: Boolean = false,
     val isBusy: Boolean = false,
     val browserUrl: String? = null,
     val message: AccountMessage? = null,
 )
 
-internal class GithubLinking @Inject constructor(
+internal class SignInMethodsServices @Inject constructor(
     val accounts: LinkedAccountsRepository,
     val auth: AuthRepository,
     val browserAuth: BrowserAuth,
@@ -40,21 +42,21 @@ internal class GithubLinking @Inject constructor(
 )
 
 @HiltViewModel
-class GithubConnectionViewModel @Inject internal constructor(
-    private val linking: GithubLinking,
-    store: SessionStore,
+class SignInMethodsViewModel @Inject internal constructor(
+    private val services: SignInMethodsServices,
+    private val store: SessionStore,
 ) : ViewModel() {
-    private val mutableState = MutableStateFlow(GithubConnectionState())
+    private val mutableState = MutableStateFlow(SignInMethodsState())
 
-    val state: StateFlow<GithubConnectionState> = mutableState.asStateFlow()
+    val state: StateFlow<SignInMethodsState> = mutableState.asStateFlow()
 
     init {
         viewModelScope.launch {
             store.session.map { session -> session?.account?.id }.distinctUntilChanged()
-                .collect { userId -> if (userId != null) refresh() }
+                .collect { userId -> if (userId != null) reload() }
         }
         viewModelScope.launch {
-            linking.browserAuth.outcomes(BrowserAuthPurpose.Link).collect(::onLinkResult)
+            services.browserAuth.outcomes(BrowserAuthPurpose.Link).collect(::onLinkResult)
         }
     }
 
@@ -63,11 +65,11 @@ class GithubConnectionViewModel @Inject internal constructor(
         mutableState.update { state -> state.copy(isBusy = true, message = null) }
 
         viewModelScope.launch {
-            val ticket = linking.auth.createTicket().getOrElse { error ->
-                fail(githubFailureMessage(error.failureReason()))
+            val ticket = services.auth.createTicket().getOrElse { error ->
+                settle(githubFailureMessage(error.failureReason()))
                 return@launch
             }
-            val url = linking.urls.link(ticket, linking.browserAuth.begin(BrowserAuthPurpose.Link))
+            val url = services.urls.link(ticket, services.browserAuth.begin(BrowserAuthPurpose.Link))
             mutableState.update { state -> state.copy(isBusy = false, browserUrl = url) }
         }
     }
@@ -80,15 +82,31 @@ class GithubConnectionViewModel @Inject internal constructor(
         val current = mutableState.value
         val github = current.github ?: return
         if (current.isBusy) return
-        if (!current.canDisconnect) return fail(AccountMessage.GithubLastSignInMethod)
+        if (!current.canDisconnect) return settle(AccountMessage.GithubLastSignInMethod)
 
         mutableState.update { state -> state.copy(isBusy = true, message = null) }
 
         viewModelScope.launch {
-            linking.accounts.unlink(github.id)
-                .onSuccess { refresh() }
-                .onFailure { error -> fail(githubFailureMessage(error.failureReason())) }
+            services.accounts.unlink(github.id)
+                .onSuccess { reload() }
+                .onFailure { error -> settle(githubFailureMessage(error.failureReason())) }
         }
+    }
+
+    fun onSetPassword() {
+        if (mutableState.value.isBusy) return
+        mutableState.update { state -> state.copy(isBusy = true, message = null) }
+
+        viewModelScope.launch {
+            val email = store.read()?.account?.email ?: return@launch settle(AccountMessage.SessionExpired)
+            services.auth.requestPasswordSetup(email)
+                .onSuccess { settle(AccountMessage.PasswordEmailSent) }
+                .onFailure { error -> settle(githubFailureMessage(error.failureReason())) }
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch { if (store.read() != null) reload() }
     }
 
     fun onMessageShown() {
@@ -97,25 +115,26 @@ class GithubConnectionViewModel @Inject internal constructor(
 
     private fun onLinkResult(result: BrowserAuthResult) {
         when (result) {
-            is BrowserAuthResult.Failed -> fail(githubErrorMessage(result.code))
-            else -> viewModelScope.launch { refresh() }
+            is BrowserAuthResult.Failed -> settle(githubErrorMessage(result.code))
+            else -> refresh()
         }
     }
 
-    private suspend fun refresh() {
-        linking.accounts.list()
+    private suspend fun reload() {
+        services.accounts.list()
             .onSuccess { accounts -> mutableState.update { state -> state.showing(accounts) } }
             .onFailure { mutableState.update { state -> state.copy(isBusy = false) } }
     }
 
-    private fun fail(message: AccountMessage) {
+    private fun settle(message: AccountMessage) {
         mutableState.update { state -> state.copy(isBusy = false, message = message) }
     }
 }
 
-private fun GithubConnectionState.showing(accounts: List<LinkedAccount>) = copy(
+private fun SignInMethodsState.showing(accounts: List<LinkedAccount>) = copy(
     isLoaded = true,
     github = accounts.firstOrNull { account -> account.providerId == GITHUB },
+    hasPassword = accounts.any { account -> account.providerId == PASSWORD },
     canDisconnect = accounts.size > 1,
     isBusy = false,
 )

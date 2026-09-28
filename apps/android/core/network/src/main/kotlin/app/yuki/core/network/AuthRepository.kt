@@ -28,6 +28,8 @@ interface AuthRepository {
 
     suspend fun createTicket(): Result<String>
 
+    suspend fun requestPasswordSetup(email: String): Result<Unit>
+
     suspend fun signOut(): Result<Unit>
 
     suspend fun sendVerificationEmail(email: String): Result<Unit>
@@ -58,6 +60,9 @@ internal class NetworkAuthRepository @Inject constructor(
 
     override suspend fun createTicket(): Result<String> =
         runRemote("Create a browser ticket") { remote.createTicket() }
+
+    override suspend fun requestPasswordSetup(email: String): Result<Unit> =
+        runRemote("Email a set-password link to $email") { remote.requestPasswordSetup(email) }
 
     override suspend fun signOut(): Result<Unit> = runRemote("Sign out") { remote.signOut() }
 

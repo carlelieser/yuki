@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.Avatar
 import app.yuki.core.designsystem.component.AvatarContent
@@ -66,14 +67,14 @@ class AccountSettingsContributor @Inject constructor(
         }
 
         val picker = rememberAvatarPicker(onPicked = viewModel::onAvatarPicked)
-        val github = githubConnection()
+        val methods = signInMethods()
 
         SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
 
         AccountCard(
             account = account,
             isUploadingAvatar = state.isUploadingAvatar,
-            github = github,
+            methods = methods,
             actions = AccountCardActions(
                 onEditAvatarClick = picker::launch,
                 onSignOutClick = viewModel::onSignOut,
@@ -82,9 +83,10 @@ class AccountSettingsContributor @Inject constructor(
     }
 }
 
-private data class GithubConnection(
-    val state: GithubConnectionState,
-    val actions: GithubRowActions,
+private data class SignInMethods(
+    val state: SignInMethodsState,
+    val github: GithubRowActions,
+    val onSetPassword: () -> Unit,
 )
 
 private data class AccountCardActions(
@@ -93,19 +95,24 @@ private data class AccountCardActions(
 )
 
 @Composable
-private fun githubConnection(): GithubConnection {
-    val viewModel: GithubConnectionViewModel = hiltViewModel()
+private fun signInMethods(): SignInMethods {
+    val viewModel: SignInMethodsViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
     LaunchBrowser(url = state.browserUrl, onLaunched = viewModel::onBrowserLaunched)
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose {}
+    }
 
-    return GithubConnection(
+    return SignInMethods(
         state = state,
-        actions = GithubRowActions(
+        github = GithubRowActions(
             onConnect = viewModel::onConnect,
             onDisconnect = viewModel::onDisconnect,
         ),
+        onSetPassword = viewModel::onSetPassword,
     )
 }
 
@@ -129,12 +136,12 @@ private fun SignedOutCard(onSignInClick: () -> Unit, modifier: Modifier = Modifi
 private fun AccountCard(
     account: AuthAccount,
     isUploadingAvatar: Boolean,
-    github: GithubConnection,
+    methods: SignInMethods,
     actions: AccountCardActions,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val hasGithubRow = github.state.isLoaded
-    val expandedCount = if (hasGithubRow) 3 else 2
+    val hasMethodRows = methods.state.isLoaded
+    val expandedCount = if (hasMethodRows) 4 else 2
     val rowCount = if (isExpanded) expandedCount else 1
 
     SettingsGroup(
@@ -154,11 +161,19 @@ private fun AccountCard(
             )
         }
 
-        AnimatedVisibility(visible = isExpanded && hasGithubRow) {
-            GithubAccountRow(
-                state = github.state,
+        AnimatedVisibility(visible = isExpanded && hasMethodRows) {
+            PasswordMethodRow(
+                state = methods.state,
                 position = SettingsRowPosition(index = 1, count = expandedCount),
-                actions = github.actions,
+                onSetPassword = methods.onSetPassword,
+            )
+        }
+
+        AnimatedVisibility(visible = isExpanded && hasMethodRows) {
+            GithubAccountRow(
+                state = methods.state,
+                position = SettingsRowPosition(index = 2, count = expandedCount),
+                actions = methods.github,
             )
         }
 

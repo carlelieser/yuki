@@ -197,6 +197,27 @@ class AuthRepositoryTest {
         assertEquals("ticket-1", ticket)
     }
 
+    @Test
+    fun `a set-password link returns to the set-password page`() = runTest {
+        var sent = ""
+        val engine = MockEngine { request ->
+            sent = (request.body as TextContent).text
+            respond(
+                content = ByteReadChannel("""{"status":true}"""),
+                headers = headersOf("Content-Type", ContentType.Application.Json.toString()),
+            )
+        }
+        val repository =
+            NetworkAuthRepository(AuthRemoteDataSource(YukiHttpClient.create(BASE_URL, engine)))
+
+        repository.requestPasswordSetup("ada@yuki.test").getOrThrow()
+
+        assertEquals(
+            """{"email":"ada@yuki.test","redirectTo":"/reset-password?mode=set"}""",
+            sent,
+        )
+    }
+
     private fun repository(
         body: String,
         status: HttpStatusCode = HttpStatusCode.OK,

@@ -62,7 +62,10 @@ internal class FakeAuthRepository : AuthRepository {
         Result.success(SignedIn(ADA, token = "github.token"))
     var ticketResult: Result<String> = Result.success("ticket-1")
 
+    var passwordSetupResult: Result<Unit> = Result.success(Unit)
+
     val exchangedTickets = mutableListOf<String>()
+    val passwordSetupsSentTo = mutableListOf<String>()
 
     var signOutGate: CompletableDeferred<Unit> = CompletableDeferred<Unit>().apply { complete(Unit) }
 
@@ -84,6 +87,11 @@ internal class FakeAuthRepository : AuthRepository {
     }
 
     override suspend fun createTicket(): Result<String> = ticketResult
+
+    override suspend fun requestPasswordSetup(email: String): Result<Unit> {
+        passwordSetupsSentTo.add(email)
+        return passwordSetupResult
+    }
 
     override suspend fun signOut(): Result<Unit> {
         signOutGate.await()

@@ -30,8 +30,12 @@
     <string name="account_message_github_link_expired">That link expired. Try connecting GitHub again.</string>
     <string name="account_message_github_expired">That GitHub sign-in expired. Try again.</string>
     <string name="account_message_github_failed">Something went wrong with GitHub. Try again.</string>
-    <string name="account_message_github_last_sign_in_method">GitHub is your only way to sign in. Set a password on the website first.</string>
+    <string name="account_message_github_last_sign_in_method">GitHub is your only way to sign in. Set a password first.</string>
     <string name="account_message_github_reauthenticate">For your security, sign in again before disconnecting GitHub.</string>
+    <string name="account_message_password_email_sent">Check your email for a link to set your password.</string>
+    <string name="account_password_title">Password</string>
+    <string name="account_password_set">Set</string>
+    <string name="account_password_not_set">Not set · Tap to get a link by email</string>
     <string name="account_github_continue">Continue with GitHub</string>
     <string name="account_github_title">GitHub</string>
     <string name="account_github_not_connected">Not connected</string>

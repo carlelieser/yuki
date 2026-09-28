@@ -22,6 +22,7 @@ private const val USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
 private const val FAILED_TO_UNLINK_LAST_ACCOUNT = "FAILED_TO_UNLINK_LAST_ACCOUNT"
 private const val SESSION_NOT_FRESH = "SESSION_NOT_FRESH"
 private const val EMPTY_BODY = "{}"
+private const val PASSWORD_SETUP_PATH = "/reset-password?mode=set"
 private val CLIENT_ERROR_RANGE = 400..499
 
 internal data class SignedInResponse(
@@ -74,6 +75,15 @@ internal class AuthRemoteDataSource @Inject constructor(
         response.requireSuccess("Create a browser ticket")
 
         return response.decode<TicketDto>("Create a browser ticket").token
+    }
+
+    suspend fun requestPasswordSetup(email: String) {
+        val response = client.post("api/auth/request-password-reset") {
+            contentType(ContentType.Application.Json)
+            setBody(PasswordSetupRequestDto(email = email, redirectTo = PASSWORD_SETUP_PATH))
+        }
+
+        response.requireSuccess("Email a set-password link to $email")
     }
 
     suspend fun signOut() {

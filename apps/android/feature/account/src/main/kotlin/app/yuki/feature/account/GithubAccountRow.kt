@@ -25,7 +25,7 @@ data class GithubRowActions(
 
 @Composable
 internal fun GithubAccountRow(
-    state: GithubConnectionState,
+    state: SignInMethodsState,
     position: SettingsRowPosition,
     actions: GithubRowActions,
 ) {
@@ -58,7 +58,7 @@ internal fun GithubAccountRow(
 }
 
 @Composable
-private fun GithubConnectionState.supporting(): String {
+private fun SignInMethodsState.supporting(): String {
     val username = github?.username
 
     return when {

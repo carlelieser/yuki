@@ -18,7 +18,7 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class GithubConnectionViewModelTest {
+class SignInMethodsViewModelTest {
     private val auth = FakeAuthRepository()
     private val accounts = FakeLinkedAccountsRepository()
     private val store = FakeSessionStore(AuthSession(token = "signed.token", account = ADA))
@@ -34,8 +34,8 @@ class GithubConnectionViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = GithubConnectionViewModel(
-        GithubLinking(accounts, auth, browser.browserAuth, browser.urls),
+    private fun viewModel() = SignInMethodsViewModel(
+        SignInMethodsServices(accounts, auth, browser.browserAuth, browser.urls),
         store,
     )
 
@@ -128,5 +128,63 @@ class GithubConnectionViewModelTest {
 
         assertEquals(AccountMessage.GithubReauthenticate, viewModel.state.value.message)
         assertFalse(viewModel.state.value.isBusy)
+    }
+
+    @Test
+    fun `a GitHub-only account has no password`() = runTest {
+        accounts.accounts = listOf(GITHUB_ACCOUNT)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.state.value.hasPassword)
+    }
+
+    @Test
+    fun `an email account has a password`() = runTest {
+        accounts.accounts = listOf(PASSWORD_ACCOUNT, GITHUB_ACCOUNT)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.hasPassword)
+    }
+
+    @Test
+    fun `setting a password emails a link to the account address`() = runTest {
+        accounts.accounts = listOf(GITHUB_ACCOUNT)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onSetPassword()
+        advanceUntilIdle()
+
+        assertEquals(listOf("ada@yuki.test"), auth.passwordSetupsSentTo)
+        assertEquals(AccountMessage.PasswordEmailSent, viewModel.state.value.message)
+        assertFalse(viewModel.state.value.isBusy)
+    }
+
+    @Test
+    fun `the password shows up after returning from the email link`() = runTest {
+        accounts.accounts = listOf(GITHUB_ACCOUNT)
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        accounts.accounts = listOf(PASSWORD_ACCOUNT, GITHUB_ACCOUNT)
+        viewModel.refresh()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.state.value.hasPassword)
+        assertTrue(viewModel.state.value.canDisconnect)
+    }
+
+    @Test
+    fun `a failed email is reported`() = runTest {
+        auth.passwordSetupResult = Result.failure(TypedFailure(FailureReason.Offline))
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        viewModel.onSetPassword()
+        advanceUntilIdle()
+
+        assertEquals(AccountMessage.Offline, viewModel.state.value.message)
     }
 }

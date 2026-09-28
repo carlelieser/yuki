@@ -42,6 +42,8 @@ sealed interface AccountMessage {
 
     data object GithubReauthenticate : AccountMessage
 
+    data object PasswordEmailSent : AccountMessage
+
     data class Explanation(val text: String) : AccountMessage
 }
 
@@ -65,6 +67,7 @@ private val messageText: Map<AccountMessage, Int> = mapOf(
     AccountMessage.GithubFailed to R.string.account_message_github_failed,
     AccountMessage.GithubLastSignInMethod to R.string.account_message_github_last_sign_in_method,
     AccountMessage.GithubReauthenticate to R.string.account_message_github_reauthenticate,
+    AccountMessage.PasswordEmailSent to R.string.account_message_password_email_sent,
 )
 
 @Composable
