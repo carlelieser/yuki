@@ -7,9 +7,13 @@ import {
 	type EtagStore,
 	type RefreshTarget
 } from './refresh.ts';
+import { identifyVersions, type IdentityPorts } from './identities.ts';
 import type { GithubClient } from '@yuki/github';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
 import type { RunTotals } from '../persistence/runs.ts';
+
+const DEFAULT_MAX_IDENTITIES = 3000;
+const IDENTITY_CONCURRENCY = 8;
 
 export type RunPorts = {
 	client: GithubClient;
@@ -20,6 +24,7 @@ export type RunPorts = {
 	persist: (input: PersistInput) => Promise<string>;
 	touch: (listingId: string) => Promise<void>;
 	services?: RefreshServices;
+	identities?: IdentityPorts;
 	log?: (message: string) => void;
 };
 
@@ -28,6 +33,7 @@ export type RunOptions = {
 	maxRepos: number;
 	maxRefresh?: number;
 	discoveryRange?: DateRange;
+	maxIdentities?: number;
 };
 
 export type RunSummary = RunTotals & { warnings: string[] };
@@ -73,8 +79,7 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		targets.push({
 			owner: listing.owner,
 			name: listing.name,
-			githubRepoId: listing.githubRepoId,
-			packageName: listing.packageName
+			githubRepoId: listing.githubRepoId
 		});
 	}
 
@@ -115,6 +120,8 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		}
 	}
 
+	warnings.push(...(await identifyReleases(ports, options)));
+
 	return {
 		discoveredCount,
 		updatedCount,
@@ -123,6 +130,21 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 		notModifiedCount: ports.client.stats.notModifiedCount,
 		warnings
 	};
+}
+
+async function identifyReleases(ports: RunPorts, options: RunOptions): Promise<string[]> {
+	if (ports.identities === undefined) return [];
+
+	const summary = await identifyVersions(ports.identities, {
+		limit: options.maxIdentities ?? DEFAULT_MAX_IDENTITIES,
+		concurrency: IDENTITY_CONCURRENCY
+	});
+	ports.log?.(
+		`Identified ${summary.identifiedCount} release apks, ${summary.unsignedCount} unsigned, ` +
+			`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred`
+	);
+
+	return summary.warnings;
 }
 
 function isUnprovenCandidate(input: PersistInput, discovered: Set<number>): boolean {

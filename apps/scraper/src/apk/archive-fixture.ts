@@ -96,7 +96,10 @@ function buildStartElement(input: ElementInput): Buffer {
 
 export type ArchiveEntry = { name: string; body: Buffer; deflate: boolean };
 
-export function buildZip(entries: ArchiveEntry[], comment = ''): Buffer {
+export type ZipOptions = { comment?: string; beforeDirectory?: Buffer };
+
+export function buildZip(entries: ArchiveEntry[], options: string | ZipOptions = {}): Buffer {
+	const { comment = '', beforeDirectory = Buffer.alloc(0) } = zipOptions(options);
 	const locals: Buffer[] = [];
 	const centrals: Buffer[] = [];
 	let offset = 0;
@@ -136,9 +139,151 @@ export function buildZip(entries: ArchiveEntry[], comment = ''): Buffer {
 	eocd.writeUInt16LE(entries.length, 8);
 	eocd.writeUInt16LE(entries.length, 10);
 	eocd.writeUInt32LE(directory.length, 12);
-	eocd.writeUInt32LE(offset, 16);
+	eocd.writeUInt32LE(offset + beforeDirectory.length, 16);
 	eocd.writeUInt16LE(trailer.length, 20);
 	trailer.copy(eocd, 22);
 
-	return Buffer.concat([...locals, directory, eocd]);
+	return Buffer.concat([...locals, beforeDirectory, directory, eocd]);
+}
+
+function zipOptions(options: string | ZipOptions): ZipOptions {
+	return typeof options === 'string' ? { comment: options } : options;
+}
+
+export const V2_ID = 0x7109871a;
+export const V3_ID = 0xf05368c0;
+export const V31_ID = 0x1b93ad61;
+
+export function buildSigningBlock(pairs: { id: number; value: Buffer }[]): Buffer {
+	const body = Buffer.concat(
+		pairs.map((pair) => Buffer.concat([uint64(4 + pair.value.length), uint32(pair.id), pair.value]))
+	);
+	const size = uint64(body.length + 24);
+
+	return Buffer.concat([size, body, size, Buffer.from('APK Sig Block 42', 'latin1')]);
+}
+
+export function v2Signers(certificates: Buffer[][]): Buffer {
+	return sequence(
+		certificates.map((chain) =>
+			Buffer.concat([
+				prefixed(Buffer.concat([sequence([]), sequence(chain), sequence([])])),
+				sequence([]),
+				prefixed(Buffer.from('public-key'))
+			])
+		)
+	);
+}
+
+export type V3Fixture = {
+	certificate: Buffer;
+	minSdk?: number;
+	maxSdk?: number;
+	lineage?: Buffer[];
+};
+
+export function v3Signers(signers: V3Fixture[]): Buffer {
+	return sequence(
+		signers.map((signer) => {
+			const bounds = Buffer.concat([
+				uint32(signer.minSdk ?? 24),
+				uint32(signer.maxSdk ?? 0x7fffffff)
+			]);
+			const attributes = signer.lineage === undefined ? [] : [rotationAttribute(signer.lineage)];
+			const signedData = Buffer.concat([
+				sequence([]),
+				sequence([signer.certificate]),
+				bounds,
+				sequence(attributes)
+			]);
+
+			return Buffer.concat([
+				prefixed(signedData),
+				bounds,
+				sequence([]),
+				prefixed(Buffer.from('public-key'))
+			]);
+		})
+	);
+}
+
+function rotationAttribute(certificates: Buffer[]): Buffer {
+	const nodes = certificates.map((certificate) =>
+		prefixed(
+			Buffer.concat([
+				prefixed(Buffer.concat([prefixed(certificate), uint32(0x0103)])),
+				uint32(0),
+				uint32(0x0103),
+				prefixed(Buffer.from('signature'))
+			])
+		)
+	);
+
+	return Buffer.concat([uint32(0x3ba06f8c), uint32(1), ...nodes]);
+}
+
+function sequence(items: Buffer[]): Buffer {
+	return prefixed(Buffer.concat(items.map(prefixed)));
+}
+
+function prefixed(value: Buffer): Buffer {
+	return Buffer.concat([uint32(value.length), value]);
+}
+
+function uint32(value: number): Buffer {
+	const buffer = Buffer.alloc(4);
+	buffer.writeUInt32LE(value, 0);
+	return buffer;
+}
+
+function uint64(value: number): Buffer {
+	const buffer = Buffer.alloc(8);
+	buffer.writeBigUInt64LE(BigInt(value), 0);
+	return buffer;
+}
+
+export type CertificateFixture = { encoded: Buffer; issuer: Buffer; serial: Buffer };
+
+export function buildCertificate(subject: string, serial: number): CertificateFixture {
+	const issuer = der(0x30, der(0x0c, Buffer.from(subject, 'utf8')));
+	const serialNumber = der(0x02, Buffer.from([serial]));
+	const tbs = der(
+		0x30,
+		der(0xa0, der(0x02, Buffer.from([2]))),
+		serialNumber,
+		der(0x30, der(0x06, Buffer.from([0x2a, 0x86, 0x48]))),
+		issuer
+	);
+
+	return { encoded: der(0x30, tbs, der(0x03, Buffer.from([0]))), issuer, serial: serialNumber };
+}
+
+export function buildPkcs7(certificates: CertificateFixture[], signer: CertificateFixture): Buffer {
+	const signerInfo = der(
+		0x30,
+		der(0x02, Buffer.from([1])),
+		der(0x30, signer.issuer, signer.serial)
+	);
+	const signedData = der(
+		0x30,
+		der(0x02, Buffer.from([1])),
+		der(0x31),
+		der(0x30, der(0x06, Buffer.from([0x2a, 0x86, 0x48]))),
+		der(0xa0, ...certificates.map((certificate) => certificate.encoded)),
+		der(0x31, signerInfo)
+	);
+
+	return der(0x30, der(0x06, Buffer.from([0x2a, 0x86, 0x48])), der(0xa0, signedData));
+}
+
+function der(tag: number, ...content: Buffer[]): Buffer {
+	const body = Buffer.concat(content);
+	const length =
+		body.length < 0x80
+			? Buffer.from([body.length])
+			: body.length < 0x100
+				? Buffer.from([0x81, body.length])
+				: Buffer.from([0x82, body.length >> 8, body.length & 0xff]);
+
+	return Buffer.concat([Buffer.from([tag]), length, body]);
 }

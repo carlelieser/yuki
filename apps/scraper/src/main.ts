@@ -1,7 +1,7 @@
 import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
 import { httpApkSource } from './apk/http-source.ts';
-import { readApkPackageName } from './apk/package-name.ts';
+import { readApkIdentity } from './apk/identity.ts';
 import { readIconAsset } from './icon/asset.ts';
 import { requireIconConfig } from './icon/env.ts';
 import { createR2Bucket } from './icon/r2-bucket.ts';
@@ -20,6 +20,11 @@ import {
 	readPartitionCursor,
 	writePartitionCursor
 } from './persistence/partitions.ts';
+import {
+	listPendingIdentities,
+	saveIdentity,
+	settleListingPackageNames
+} from './persistence/identities.ts';
 import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts';
 import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
@@ -61,6 +66,7 @@ const maxRepos = readNumberFlag(
 	shouldSeed ? DEFAULT_SEED_MAX_REPOS : DEFAULT_MAX_REPOS
 );
 const maxRefresh = readOptionalNumberFlag('--max-refresh');
+const maxIdentities = readOptionalNumberFlag('--max-identities');
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());
@@ -113,12 +119,22 @@ try {
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),
 			services: {
-				readApkPackage: (downloadUrl) => readApkPackageName(httpApkSource(downloadUrl)),
 				publishIcon: async (source) => icons.publish(await readIconAsset(source))
+			},
+			identities: {
+				listPending: async (limit) =>
+					listPendingIdentities(
+						db,
+						limit,
+						slugs.length > 0 ? (await resolveSlugTargets()).map((target) => target.id) : undefined
+					),
+				read: (downloadUrl) => readApkIdentity(httpApkSource(downloadUrl)),
+				save: (versionId, identity) => saveIdentity(db, versionId, identity),
+				settlePackageNames: (listingIds) => settleListingPackageNames(db, listingIds)
 			},
 			log: (message) => console.log(message)
 		},
-		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange }
+		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange, maxIdentities }
 	);
 
 	const { warnings, ...totals } = summary;

@@ -1,3 +1,5 @@
+import { ApkFormatError } from './format-error.ts';
+
 export type RangeReader = (start: number, end: number) => Promise<Buffer>;
 
 export type ZipEntry = {
@@ -138,14 +140,18 @@ export async function readEntry(entry: ZipEntry, size: number, read: RangeReader
 	const headerEnd = Math.min(entry.offset + LOCAL_HEADER_SIZE - 1, size - 1);
 	const header = await read(entry.offset, headerEnd);
 	if (header.length < LOCAL_HEADER_SIZE) {
-		throw new Error('truncated local header');
+		throw new ApkFormatError(`reading the local header at ${entry.offset} found it truncated`);
 	}
 
 	const nameLength = header.readUInt16LE(26);
 	const extraLength = header.readUInt16LE(28);
 	const dataStart = entry.offset + LOCAL_HEADER_SIZE + nameLength + extraLength;
 	const dataEnd = dataStart + entry.compressedSize - 1;
-	if (dataEnd >= size) throw new Error('entry runs past the end of the archive');
+	if (dataEnd >= size) {
+		throw new ApkFormatError(
+			`reading the entry at ${entry.offset} ran past the end of the archive`
+		);
+	}
 
 	return read(dataStart, dataEnd);
 }

@@ -2,7 +2,7 @@ import { createServer, type Server } from 'node:http';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildManifest, buildZip } from './archive-fixture.ts';
 import { httpApkSource } from './http-source.ts';
-import { readApkPackageName } from './package-name.ts';
+import { readApkIdentity } from './identity.ts';
 
 const ARCHIVE = buildZip([
 	{ name: 'AndroidManifest.xml', body: buildManifest('com.termux'), deflate: true }
@@ -61,7 +61,9 @@ afterAll(async () => {
 
 describe('httpApkSource', () => {
 	it('reads a package name from a host that rejects suffix ranges', async () => {
-		expect(await readApkPackageName(httpApkSource(`${origin}/app.apk`))).toBe('com.termux');
+		expect((await readApkIdentity(httpApkSource(`${origin}/app.apk`)))?.packageName).toBe(
+			'com.termux'
+		);
 	});
 
 	it('takes the size from a head request rather than a suffix range', async () => {

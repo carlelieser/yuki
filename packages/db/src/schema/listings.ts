@@ -139,12 +139,20 @@ export const listingVersions = pgTable(
 		downloadCount: integer('download_count').notNull().default(0),
 		isPrerelease: boolean('is_prerelease').notNull().default(false),
 		publishedAt: timestamp('published_at', { withTimezone: true }),
+		packageName: text('package_name'),
+		signerDigests: text('signer_digests').array(),
+		lineageDigests: text('lineage_digests').array(),
+		identityReadAt: timestamp('identity_read_at', { withTimezone: true }),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => [
 		uniqueIndex('listing_versions_listing_tag_key').on(table.listingId, table.tag),
-		index('listing_versions_listing_published_idx').on(table.listingId, table.publishedAt)
+		index('listing_versions_listing_published_idx').on(table.listingId, table.publishedAt),
+		index('listing_versions_package_name_idx').on(table.packageName),
+		index('listing_versions_identity_pending_idx')
+			.on(table.publishedAt)
+			.where(sql`${table.identityReadAt} is null and ${table.downloadUrl} is not null`)
 	]
 );
 
