@@ -24,16 +24,36 @@ data class SignUpState(
     val message: AccountMessage? = null,
     val isSubmitting: Boolean = false,
     val verificationSentTo: String? = null,
+    val isSignedIn: Boolean = false,
+    val browserUrl: String? = null,
 )
 
 @HiltViewModel
 class SignUpViewModel @Inject internal constructor(
     private val repository: AuthRepository,
     @param:YukiBaseUrl val baseUrl: String,
+    private val githubSignIn: GithubSignIn,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(SignUpState())
 
     val state: StateFlow<SignUpState> = mutableState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            githubSignIn.outcomes().collect { outcome -> mutableState.update(outcome::applyTo) }
+        }
+    }
+
+    fun onGithubClick() {
+        viewModelScope.launch {
+            val url = githubSignIn.start()
+            mutableState.update { state -> state.copy(browserUrl = url, message = null) }
+        }
+    }
+
+    fun onBrowserLaunched() {
+        mutableState.update { state -> state.copy(browserUrl = null) }
+    }
 
     fun onNameChange(name: String) {
         mutableState.update { state -> state.copy(name = name, nameError = null) }
@@ -99,4 +119,9 @@ private fun messageFor(reason: FailureReason): AccountMessage = when (reason) {
     FailureReason.AccountExists -> AccountMessage.EmailTaken
     FailureReason.Offline -> AccountMessage.Offline
     else -> AccountMessage.Unavailable
+}
+
+private fun GithubSignInOutcome.applyTo(state: SignUpState): SignUpState = when (this) {
+    GithubSignInOutcome.SignedIn -> state.copy(isSignedIn = true)
+    is GithubSignInOutcome.Failed -> state.copy(message = message)
 }

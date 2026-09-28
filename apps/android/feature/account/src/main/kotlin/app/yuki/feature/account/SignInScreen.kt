@@ -30,6 +30,8 @@ fun SignInRoute(
         if (state.isSignedIn) navigation.onSignedIn()
     }
 
+    LaunchBrowser(url = state.browserUrl, onLaunched = viewModel::onBrowserLaunched)
+
     SignInScreen(
         state = state,
         actions = SignInActions(
@@ -39,6 +41,7 @@ fun SignInRoute(
             onCreateAccountClick = navigation.onCreateAccountClick,
             onMessageShown = viewModel::onMessageShown,
             onResendVerification = viewModel::onResendVerification,
+            onGithubClick = viewModel::onGithubClick,
         ),
         modifier = modifier,
     )
@@ -51,6 +54,7 @@ data class SignInActions(
     val onCreateAccountClick: () -> Unit,
     val onMessageShown: () -> Unit,
     val onResendVerification: () -> Unit,
+    val onGithubClick: () -> Unit,
 )
 
 @Composable
@@ -90,6 +94,8 @@ internal fun SignInScreen(
             modifier = Modifier.fillMaxWidth(),
             isEnabled = !state.isSubmitting,
         )
+
+        GithubAuthButton(onClick = actions.onGithubClick, isEnabled = !state.isSubmitting)
 
         AuthFooterPrompt(
             prompt = stringResource(R.string.account_sign_in_prompt),

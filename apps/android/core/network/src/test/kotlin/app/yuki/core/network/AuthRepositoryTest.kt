@@ -165,6 +165,38 @@ class AuthRepositoryTest {
         assertTrue(failure.message!!.contains("ada@yuki.test"))
     }
 
+    @Test
+    fun `a browser ticket is exchanged for the app's own session`() = runTest {
+        val repository = repository(
+            body = ACCOUNT_BODY,
+            responseHeaders = headersOf(AUTH_TOKEN_HEADER, "github.token"),
+        )
+
+        val signedIn = repository.exchangeTicket("ticket-1").getOrThrow()
+
+        assertEquals(ADA, signedIn.account)
+        assertEquals("github.token", signedIn.token)
+    }
+
+    @Test
+    fun `an expired ticket is rejected`() = runTest {
+        val repository = repository(
+            body = """{"message":"Invalid token"}""",
+            status = HttpStatusCode.BadRequest,
+        )
+
+        val failure = repository.exchangeTicket("old").exceptionOrNull()!!
+
+        assertEquals(FailureReason.Rejected("Invalid token"), failure.failureReason())
+    }
+
+    @Test
+    fun `a ticket is created for the signed-in account`() = runTest {
+        val ticket = repository("""{"token":"ticket-1"}""").createTicket().getOrThrow()
+
+        assertEquals("ticket-1", ticket)
+    }
+
     private fun repository(
         body: String,
         status: HttpStatusCode = HttpStatusCode.OK,

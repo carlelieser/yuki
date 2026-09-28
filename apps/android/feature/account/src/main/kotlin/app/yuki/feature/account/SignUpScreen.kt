@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -21,10 +22,17 @@ const val VERIFICATION_SENT_TAG = "verificationSent"
 @Composable
 fun SignUpRoute(
     onSignInClick: () -> Unit,
+    onSignedIn: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SignUpViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.isSignedIn) {
+        if (state.isSignedIn) onSignedIn()
+    }
+
+    LaunchBrowser(url = state.browserUrl, onLaunched = viewModel::onBrowserLaunched)
 
     SignUpScreen(
         state = state,
@@ -36,6 +44,7 @@ fun SignUpRoute(
             onSubmit = viewModel::onSubmit,
             onSignInClick = onSignInClick,
             onMessageShown = viewModel::onMessageShown,
+            onGithubClick = viewModel::onGithubClick,
         ),
         modifier = modifier,
     )
@@ -48,6 +57,7 @@ data class SignUpActions(
     val onSubmit: () -> Unit,
     val onSignInClick: () -> Unit,
     val onMessageShown: () -> Unit,
+    val onGithubClick: () -> Unit,
 )
 
 @Composable
@@ -87,6 +97,8 @@ private fun SignUpForm(
             modifier = Modifier.fillMaxWidth(),
             isEnabled = !state.isSubmitting,
         )
+
+        GithubAuthButton(onClick = actions.onGithubClick, isEnabled = !state.isSubmitting)
 
         AuthFooterPrompt(
             prompt = stringResource(R.string.account_sign_up_prompt),

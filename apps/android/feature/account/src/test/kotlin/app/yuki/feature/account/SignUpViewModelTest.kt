@@ -6,12 +6,14 @@ import app.yuki.core.model.FailureReason
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -29,7 +31,14 @@ class SignUpViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = SignUpViewModel(repository, baseUrl = "https://yuki.test/")
+    private val store = FakeSessionStore()
+    private val browser = BrowserAuthFixture()
+
+    private fun viewModel() = SignUpViewModel(
+        repository,
+        baseUrl = TEST_BASE_URL,
+        githubSignIn = browser.signIn(repository, store),
+    )
 
     private fun SignUpViewModel.fillIn(
         name: String = "Ada Lovelace",
@@ -123,6 +132,32 @@ class SignUpViewModelTest {
 
         assertNull(viewModel.state.value.verificationSentTo)
     }
+
+    @Test
+    fun `signing up with GitHub signs in straight away`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("token=ticket-9&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals("github.token", store.current?.token)
+        assertTrue(viewModel.state.value.isSignedIn)
+    }
+
+    @Test
+    fun `an unverified GitHub email is explained`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("error=github_email_unverified&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals(AccountMessage.GithubEmailUnverified, viewModel.state.value.message)
+    }
+
 }
 
 private suspend fun ReceiveTurbine<SignUpState>.awaitVerificationSent(): String? {

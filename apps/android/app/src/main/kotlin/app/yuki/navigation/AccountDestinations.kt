@@ -31,7 +31,10 @@ internal fun NavGraphBuilder.signUpDestination(navigator: YukiNavigator) {
             title = stringResource(R.string.app_sign_up_title),
             onBackClick = navigator::navigateUp,
         ) {
-            SignUpScreenRoute(onSignInClick = navigator::swapToSignIn)
+            SignUpScreenRoute(
+                onSignInClick = navigator::swapToSignIn,
+                onSignedIn = navigator::navigateUp,
+            )
         }
     }
 }

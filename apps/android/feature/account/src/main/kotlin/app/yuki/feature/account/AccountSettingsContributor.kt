@@ -66,16 +66,47 @@ class AccountSettingsContributor @Inject constructor(
         }
 
         val picker = rememberAvatarPicker(onPicked = viewModel::onAvatarPicked)
+        val github = githubConnection()
 
         SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
 
         AccountCard(
             account = account,
             isUploadingAvatar = state.isUploadingAvatar,
-            onEditAvatarClick = picker::launch,
-            onSignOutClick = viewModel::onSignOut,
+            github = github,
+            actions = AccountCardActions(
+                onEditAvatarClick = picker::launch,
+                onSignOutClick = viewModel::onSignOut,
+            ),
         )
     }
+}
+
+private data class GithubConnection(
+    val state: GithubConnectionState,
+    val actions: GithubRowActions,
+)
+
+private data class AccountCardActions(
+    val onEditAvatarClick: () -> Unit,
+    val onSignOutClick: () -> Unit,
+)
+
+@Composable
+private fun githubConnection(): GithubConnection {
+    val viewModel: GithubConnectionViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
+    LaunchBrowser(url = state.browserUrl, onLaunched = viewModel::onBrowserLaunched)
+
+    return GithubConnection(
+        state = state,
+        actions = GithubRowActions(
+            onConnect = viewModel::onConnect,
+            onDisconnect = viewModel::onDisconnect,
+        ),
+    )
 }
 
 @Composable
@@ -98,15 +129,16 @@ private fun SignedOutCard(onSignInClick: () -> Unit, modifier: Modifier = Modifi
 private fun AccountCard(
     account: AuthAccount,
     isUploadingAvatar: Boolean,
-    onEditAvatarClick: () -> Unit,
-    onSignOutClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    github: GithubConnection,
+    actions: AccountCardActions,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val rowCount = if (isExpanded) 2 else 1
+    val hasGithubRow = github.state.isLoaded
+    val expandedCount = if (hasGithubRow) 3 else 2
+    val rowCount = if (isExpanded) expandedCount else 1
 
     SettingsGroup(
-        modifier = modifier.testTag(ACCOUNT_CARD_TAG),
+        modifier = Modifier.testTag(ACCOUNT_CARD_TAG),
         label = stringResource(R.string.account_section),
     ) {
         SettingsSlotRow(
@@ -118,16 +150,24 @@ private fun AccountCard(
                 account = account,
                 isUploadingAvatar = isUploadingAvatar,
                 isExpanded = isExpanded,
-                onEditAvatarClick = onEditAvatarClick,
+                onEditAvatarClick = actions.onEditAvatarClick,
+            )
+        }
+
+        AnimatedVisibility(visible = isExpanded && hasGithubRow) {
+            GithubAccountRow(
+                state = github.state,
+                position = SettingsRowPosition(index = 1, count = expandedCount),
+                actions = github.actions,
             )
         }
 
         AnimatedVisibility(visible = isExpanded) {
             SettingsRow(
-                position = SettingsRowPosition(index = 1, count = 2),
+                position = SettingsRowPosition(index = expandedCount - 1, count = expandedCount),
                 title = stringResource(R.string.account_sign_out),
                 icon = YukiIcons.Logout,
-                onClick = onSignOutClick,
+                onClick = actions.onSignOutClick,
                 modifier = Modifier.testTag(SIGN_OUT_ROW_TAG),
             )
         }

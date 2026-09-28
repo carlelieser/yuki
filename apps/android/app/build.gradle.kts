@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     id("yuki.android.application")
     id("yuki.android.compose")
@@ -7,6 +9,7 @@ plugins {
 
 val YUKI_STOREFRONT_URL =
     providers.gradleProperty("yukiBaseUrl").orNull ?: "https://yukistore.org/"
+val YUKI_STOREFRONT = URI(YUKI_STOREFRONT_URL)
 val YUKI_LISTING_SLUG = "carlelieser-yuki"
 val YUKI_LISTING_REPO_ID = 1359590051L
 val YUKI_LISTING_TITLE = "Yuki"
@@ -27,6 +30,9 @@ android {
         versionCode = YUKI_VERSION_CODE
         versionName = YUKI_VERSION_NAME
         testInstrumentationRunner = "app.yuki.YukiTestRunner"
+
+        manifestPlaceholders["yukiScheme"] = YUKI_STOREFRONT.scheme
+        manifestPlaceholders["yukiHost"] = YUKI_STOREFRONT.host
 
         buildConfigField("String", "YUKI_BASE_URL", "\"$YUKI_STOREFRONT_URL\"")
         buildConfigField("String", "YUKI_LISTING_SLUG", "\"$YUKI_LISTING_SLUG\"")

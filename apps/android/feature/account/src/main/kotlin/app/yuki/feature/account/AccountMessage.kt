@@ -24,6 +24,22 @@ sealed interface AccountMessage {
 
     data object AvatarUnreadable : AccountMessage
 
+    data object GithubCancelled : AccountMessage
+
+    data object GithubAccountExists : AccountMessage
+
+    data object GithubEmailUnverified : AccountMessage
+
+    data object GithubLinkedElsewhere : AccountMessage
+
+    data object GithubLinkExpired : AccountMessage
+
+    data object GithubFailed : AccountMessage
+
+    data object GithubLastSignInMethod : AccountMessage
+
+    data object GithubReauthenticate : AccountMessage
+
     data class Explanation(val text: String) : AccountMessage
 }
 
@@ -38,6 +54,14 @@ private val messageText: Map<AccountMessage, Int> = mapOf(
     AccountMessage.AvatarUploadFailed to R.string.account_message_avatar_upload_failed,
     AccountMessage.SessionExpired to R.string.account_message_session_expired,
     AccountMessage.AvatarUnreadable to R.string.account_message_avatar_unreadable,
+    AccountMessage.GithubCancelled to R.string.account_message_github_cancelled,
+    AccountMessage.GithubAccountExists to R.string.account_message_github_account_exists,
+    AccountMessage.GithubEmailUnverified to R.string.account_message_github_email_unverified,
+    AccountMessage.GithubLinkedElsewhere to R.string.account_message_github_linked_elsewhere,
+    AccountMessage.GithubLinkExpired to R.string.account_message_github_link_expired,
+    AccountMessage.GithubFailed to R.string.account_message_github_failed,
+    AccountMessage.GithubLastSignInMethod to R.string.account_message_github_last_sign_in_method,
+    AccountMessage.GithubReauthenticate to R.string.account_message_github_reauthenticate,
 )
 
 @Composable

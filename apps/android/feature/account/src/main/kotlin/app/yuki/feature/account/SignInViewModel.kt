@@ -25,16 +25,35 @@ data class SignInState(
     val canResendVerification: Boolean = false,
     val isSubmitting: Boolean = false,
     val isSignedIn: Boolean = false,
+    val browserUrl: String? = null,
 )
 
 @HiltViewModel
 class SignInViewModel @Inject internal constructor(
     private val repository: AuthRepository,
     private val store: SessionStore,
+    private val githubSignIn: GithubSignIn,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(SignInState())
 
     val state: StateFlow<SignInState> = mutableState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            githubSignIn.outcomes().collect { outcome -> mutableState.update(outcome::applyTo) }
+        }
+    }
+
+    fun onGithubClick() {
+        viewModelScope.launch {
+            val url = githubSignIn.start()
+            mutableState.update { state -> state.copy(browserUrl = url, message = null) }
+        }
+    }
+
+    fun onBrowserLaunched() {
+        mutableState.update { state -> state.copy(browserUrl = null) }
+    }
 
     fun onEmailChange(email: String) {
         mutableState.update { state -> state.copy(email = email, emailError = null) }
@@ -113,6 +132,11 @@ class SignInViewModel @Inject internal constructor(
     }
 }
 
+private fun GithubSignInOutcome.applyTo(state: SignInState): SignInState = when (this) {
+    GithubSignInOutcome.SignedIn -> state.copy(isSignedIn = true)
+    is GithubSignInOutcome.Failed -> state.copy(message = message, canResendVerification = false)
+}
+
 private fun SignInState.validated(): SignInState = copy(
     emailError = emailError(email),
     passwordError = passwordError(password),
@@ -124,6 +148,8 @@ private fun messageFor(reason: FailureReason): AccountMessage = when (reason) {
     FailureReason.Offline -> AccountMessage.Offline
     FailureReason.NotFound -> AccountMessage.InvalidCredentials
     FailureReason.AccountExists -> AccountMessage.InvalidCredentials
+    FailureReason.LastSignInMethod -> AccountMessage.Unavailable
+    FailureReason.ReauthenticationRequired -> AccountMessage.Unavailable
     is FailureReason.Rejected -> AccountMessage.Explanation(reason.explanation)
     is FailureReason.Server -> AccountMessage.Unavailable
     is FailureReason.Unexpected -> AccountMessage.Unavailable

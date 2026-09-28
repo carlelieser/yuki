@@ -45,5 +45,11 @@ internal abstract class NetworkBindings {
 
     @Binds
     @Singleton
+    abstract fun linkedAccountsRepository(
+        implementation: NetworkLinkedAccountsRepository,
+    ): LinkedAccountsRepository
+
+    @Binds
+    @Singleton
     abstract fun libraryRepository(implementation: NetworkLibraryRepository): LibraryRepository
 }
