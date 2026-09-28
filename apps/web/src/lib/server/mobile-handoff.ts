@@ -9,6 +9,9 @@ export const APP_CALLBACK_PATH = '/auth/mobile/callback';
 
 const APP_STATE = /^[A-Za-z0-9_-]{32,128}$/;
 
+export const SIGN_IN_FLOW = 'signin';
+export const LINK_FLOW = 'link';
+
 export function isAppState(value: unknown): value is string {
 	return typeof value === 'string' && APP_STATE.test(value);
 }
@@ -40,7 +43,9 @@ async function signedInParams(
 	const sessionToken = cookies.get(authCookies.sessionToken.name)?.value;
 	const ticket = sessionToken ? await mintTicket(event, sessionToken) : null;
 
-	return ticket ? { token: ticket, state } : { error: 'sign_in_failed', state };
+	return ticket
+		? { flow: SIGN_IN_FLOW, token: ticket, state }
+		: { flow: SIGN_IN_FLOW, error: 'sign_in_failed', state };
 }
 
 export async function handOffGithubCallback(
@@ -54,12 +59,13 @@ export async function handOffGithubCallback(
 	const isSignIn = target.pathname === MOBILE_SIGNED_IN_PATH;
 	if (!isSignIn && target.pathname !== MOBILE_LINKED_PATH) return null;
 
+	const flow = isSignIn ? SIGN_IN_FLOW : LINK_FLOW;
 	const state = target.searchParams.get('state');
-	if (!isAppState(state)) return redirectToApp(event, { error: 'invalid_request' });
+	if (!isAppState(state)) return redirectToApp(event, { flow, error: 'invalid_request' });
 
 	const error = target.searchParams.get('error');
-	if (error) return redirectToApp(event, { error, state });
-	if (!isSignIn) return redirectToApp(event, { result: 'linked', state });
+	if (error) return redirectToApp(event, { flow, error, state });
+	if (!isSignIn) return redirectToApp(event, { flow, result: 'linked', state });
 
 	return redirectToApp(event, await signedInParams(event, response, state));
 }

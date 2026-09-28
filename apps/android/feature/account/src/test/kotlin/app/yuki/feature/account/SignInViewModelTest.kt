@@ -212,7 +212,7 @@ class SignInViewModelTest {
         viewModel.onGithubClick()
         advanceUntilIdle()
 
-        browser.returnToApp("token=ticket-9&state=state-1")
+        browser.returnToApp("flow=signin&token=ticket-9&state=state-1")
         advanceUntilIdle()
 
         assertEquals(listOf("ticket-9"), repository.exchangedTickets)
@@ -221,15 +221,57 @@ class SignInViewModelTest {
     }
 
     @Test
-    fun `a ticket for a sign-in this app did not start is ignored`() = runTest {
+    fun `a ticket for a sign-in this app did not start is never used`() = runTest {
         val viewModel = viewModel()
         advanceUntilIdle()
 
-        browser.returnToApp("token=ticket-9&state=forged")
+        browser.returnToApp("flow=signin&token=ticket-9&state=forged")
         advanceUntilIdle()
 
         assertTrue(repository.exchangedTickets.isEmpty())
         assertNull(store.current)
+        assertFalse(viewModel.state.value.isSignedIn)
+    }
+
+    @Test
+    fun `a sign-in that finishes after a newer attempt says it expired`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&error=state_security_mismatch&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals(AccountMessage.GithubExpired, viewModel.state.value.message)
+    }
+
+    @Test
+    fun `a stale ticket says the sign-in expired instead of doing nothing`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&token=ticket-9&state=state-1")
+        advanceUntilIdle()
+
+        assertTrue(repository.exchangedTickets.isEmpty())
+        assertEquals(AccountMessage.GithubExpired, viewModel.state.value.message)
+    }
+
+    @Test
+    fun `a link result is left for the settings screen`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=link&result=linked&state=state-1")
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.message)
         assertFalse(viewModel.state.value.isSignedIn)
     }
 
@@ -239,7 +281,7 @@ class SignInViewModelTest {
         viewModel.onGithubClick()
         advanceUntilIdle()
 
-        browser.returnToApp("error=account_not_linked&state=state-1")
+        browser.returnToApp("flow=signin&error=account_not_linked&state=state-1")
         advanceUntilIdle()
 
         assertEquals(AccountMessage.GithubAccountExists, viewModel.state.value.message)

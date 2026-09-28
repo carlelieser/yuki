@@ -52,7 +52,7 @@ describe('handOffGithubCallback', () => {
 
 		const handoff = await handOffGithubCallback(event, response);
 
-		expect(appParams(handoff)).toEqual({ token: 'ticket-1', state: STATE });
+		expect(appParams(handoff)).toEqual({ flow: 'signin', token: 'ticket-1', state: STATE });
 		const [minted] = handler.mock.calls[0] as [Request];
 		expect(minted.url).toBe('https://yukistore.org/api/auth/one-time-token/generate');
 		expect(minted.headers.get('authorization')).toBe('Bearer session-1.sig');
@@ -75,6 +75,7 @@ describe('handOffGithubCallback', () => {
 		);
 
 		expect(appParams(await handOffGithubCallback(event, response))).toEqual({
+			flow: 'signin',
 			error: 'account_not_linked',
 			state: STATE
 		});
@@ -85,6 +86,7 @@ describe('handOffGithubCallback', () => {
 		const response = callback(`/auth/mobile/github/linked?state=${STATE}`);
 
 		expect(appParams(await handOffGithubCallback(event, response))).toEqual({
+			flow: 'link',
 			result: 'linked',
 			state: STATE
 		});
@@ -94,6 +96,7 @@ describe('handOffGithubCallback', () => {
 		const response = callback('/auth/mobile/github/signed-in?state=short');
 
 		expect(appParams(await handOffGithubCallback(event, response))).toEqual({
+			flow: 'signin',
 			error: 'invalid_request'
 		});
 	});

@@ -1,5 +1,6 @@
 package app.yuki.feature.account
 
+import app.yuki.core.auth.BROWSER_AUTH_EXPIRED
 import app.yuki.core.model.FailureReason
 
 private val githubErrors: Map<String, AccountMessage> = mapOf(
@@ -10,6 +11,9 @@ private val githubErrors: Map<String, AccountMessage> = mapOf(
     "email_not_verified" to AccountMessage.GithubEmailUnverified,
     "account_already_linked_to_different_user" to AccountMessage.GithubLinkedElsewhere,
     "link_expired" to AccountMessage.GithubLinkExpired,
+    BROWSER_AUTH_EXPIRED to AccountMessage.GithubExpired,
+    "state_mismatch" to AccountMessage.GithubExpired,
+    "state_security_mismatch" to AccountMessage.GithubExpired,
 )
 
 internal fun githubErrorMessage(code: String): AccountMessage =

@@ -111,17 +111,17 @@ internal class FakeAuthRepository : AuthRepository {
 internal const val TEST_BASE_URL = "https://yuki.test/"
 
 internal class FakePendingBrowserAuth : PendingBrowserAuth {
-    private val pending = mutableMapOf<String, BrowserAuthPurpose>()
+    private var pending: Pair<String, BrowserAuthPurpose>? = null
     private var started = 0
 
     override suspend fun begin(purpose: BrowserAuthPurpose): String {
         started += 1
-        return "state-$started".also { state -> pending[state] = purpose }
+        return "state-$started".also { state -> pending = state to purpose }
     }
 
     override suspend fun claim(state: String, purpose: BrowserAuthPurpose): Boolean {
-        if (pending[state] != purpose) return false
-        pending.remove(state)
+        if (pending != (state to purpose)) return false
+        pending = null
         return true
     }
 }

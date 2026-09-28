@@ -70,7 +70,7 @@ class GithubConnectionViewModelTest {
         advanceUntilIdle()
 
         accounts.accounts = listOf(PASSWORD_ACCOUNT, GITHUB_ACCOUNT)
-        browser.returnToApp("result=linked&state=state-1")
+        browser.returnToApp("flow=link&result=linked&state=state-1")
         advanceUntilIdle()
 
         assertEquals("ada", viewModel.state.value.github?.username)
@@ -84,7 +84,7 @@ class GithubConnectionViewModelTest {
         viewModel.onConnect()
         advanceUntilIdle()
 
-        browser.returnToApp("error=account_already_linked_to_different_user&state=state-1")
+        browser.returnToApp("flow=link&error=account_already_linked_to_different_user&state=state-1")
         advanceUntilIdle()
 
         assertEquals(AccountMessage.GithubLinkedElsewhere, viewModel.state.value.message)

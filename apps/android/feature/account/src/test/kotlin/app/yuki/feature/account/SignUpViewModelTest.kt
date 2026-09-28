@@ -139,7 +139,7 @@ class SignUpViewModelTest {
         viewModel.onGithubClick()
         advanceUntilIdle()
 
-        browser.returnToApp("token=ticket-9&state=state-1")
+        browser.returnToApp("flow=signin&token=ticket-9&state=state-1")
         advanceUntilIdle()
 
         assertEquals("github.token", store.current?.token)
@@ -152,7 +152,7 @@ class SignUpViewModelTest {
         viewModel.onGithubClick()
         advanceUntilIdle()
 
-        browser.returnToApp("error=github_email_unverified&state=state-1")
+        browser.returnToApp("flow=signin&error=github_email_unverified&state=state-1")
         advanceUntilIdle()
 
         assertEquals(AccountMessage.GithubEmailUnverified, viewModel.state.value.message)

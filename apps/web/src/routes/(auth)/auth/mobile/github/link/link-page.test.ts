@@ -72,6 +72,7 @@ describe('link confirmation page', () => {
 		const target = await redirectOf(() => load(event(`?ticket=old&state=${STATE}`)));
 
 		expect(Object.fromEntries(target.searchParams)).toEqual({
+			flow: 'link',
 			error: 'link_expired',
 			state: STATE
 		});

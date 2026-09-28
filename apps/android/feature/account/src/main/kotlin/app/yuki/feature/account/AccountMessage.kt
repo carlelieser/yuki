@@ -34,6 +34,8 @@ sealed interface AccountMessage {
 
     data object GithubLinkExpired : AccountMessage
 
+    data object GithubExpired : AccountMessage
+
     data object GithubFailed : AccountMessage
 
     data object GithubLastSignInMethod : AccountMessage
@@ -59,6 +61,7 @@ private val messageText: Map<AccountMessage, Int> = mapOf(
     AccountMessage.GithubEmailUnverified to R.string.account_message_github_email_unverified,
     AccountMessage.GithubLinkedElsewhere to R.string.account_message_github_linked_elsewhere,
     AccountMessage.GithubLinkExpired to R.string.account_message_github_link_expired,
+    AccountMessage.GithubExpired to R.string.account_message_github_expired,
     AccountMessage.GithubFailed to R.string.account_message_github_failed,
     AccountMessage.GithubLastSignInMethod to R.string.account_message_github_last_sign_in_method,
     AccountMessage.GithubReauthenticate to R.string.account_message_github_reauthenticate,

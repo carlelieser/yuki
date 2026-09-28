@@ -6,20 +6,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 @Singleton
 class BrowserAuthResults @Inject constructor() {
-    private val latest = MutableStateFlow<BrowserAuthResult?>(null)
+    private val latest = MutableStateFlow<BrowserAuthReturn?>(null)
 
     fun deliver(url: String?) {
-        parseBrowserAuthResult(url)?.let { result -> latest.value = result }
+        parseBrowserAuthReturn(url)?.let { returned -> latest.value = returned }
     }
 
-    internal fun results(): Flow<BrowserAuthResult> = latest.filterNotNull()
+    internal fun returns(): Flow<BrowserAuthReturn> = latest.filterNotNull()
 
-    internal fun consume(result: BrowserAuthResult) {
-        latest.compareAndSet(result, null)
+    internal fun consume(returned: BrowserAuthReturn) {
+        latest.compareAndSet(returned, null)
     }
 }
 
@@ -29,7 +30,15 @@ class BrowserAuth @Inject constructor(
 ) {
     suspend fun begin(purpose: BrowserAuthPurpose): String = pending.begin(purpose)
 
-    fun outcomes(purpose: BrowserAuthPurpose): Flow<BrowserAuthResult> = results.results()
-        .filter { result -> pending.claim(result.state, purpose) }
+    fun outcomes(purpose: BrowserAuthPurpose): Flow<BrowserAuthResult> = results.returns()
+        .filter { returned -> returned.purpose == purpose }
         .onEach(results::consume)
+        .map { returned -> claimed(returned.result, purpose) }
+
+    private suspend fun claimed(result: BrowserAuthResult, purpose: BrowserAuthPurpose) =
+        if (pending.claim(result.state, purpose)) {
+            result
+        } else {
+            BrowserAuthResult.Failed(BROWSER_AUTH_EXPIRED, result.state)
+        }
 }

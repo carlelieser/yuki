@@ -13,11 +13,30 @@ sealed interface BrowserAuthResult {
     data class Failed(val code: String, override val state: String) : BrowserAuthResult
 }
 
+data class BrowserAuthReturn(
+    val purpose: BrowserAuthPurpose,
+    val result: BrowserAuthResult,
+)
+
+const val BROWSER_AUTH_EXPIRED = "expired"
+
 private const val LINKED = "linked"
 
-fun parseBrowserAuthResult(url: String?): BrowserAuthResult? {
+private val flows = mapOf(
+    "signin" to BrowserAuthPurpose.SignIn,
+    "link" to BrowserAuthPurpose.Link,
+)
+
+fun parseBrowserAuthReturn(url: String?): BrowserAuthReturn? {
     val query = url?.let { runCatching { URI(it).rawQuery }.getOrNull() } ?: return null
     val params = queryParams(query)
+    val purpose = flows[params["flow"]] ?: return null
+    val result = resultOf(params) ?: return null
+
+    return BrowserAuthReturn(purpose, result)
+}
+
+private fun resultOf(params: Map<String, String>): BrowserAuthResult? {
     val state = params["state"] ?: return null
     val ticket = params["token"]
     val error = params["error"]
