@@ -83,6 +83,11 @@ access:
 bun run scrape --slug=<listing>
 ```
 
+Signing in with GitHub needs a GitHub OAuth app whose callback URL is
+`http://localhost:5173/api/auth/callback/github`, with its credentials set as
+`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`. Production uses a separate OAuth app
+with the callback `https://yukistore.org/api/auth/callback/github`.
+
 Locally, assets such as icons and avatars are stored in SeaweedFS instead of R2 and served from
 http://localhost:8333/yuki-assets. `docker compose --profile scrape up scraper` runs the
 scraper against them.

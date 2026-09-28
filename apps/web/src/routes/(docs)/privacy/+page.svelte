@@ -42,14 +42,16 @@
 	<li>
 		your profile image and provider account identifier, if you register through GitHub or Google;
 	</li>
+	<li>your GitHub username and profile link, if you sign in with or connect a GitHub account;</li>
 	<li>whether your email address has been verified; and</li>
 	<li>the dates your account was created and last updated.</li>
 </ul>
 
 <p>
-	We never store your password in readable form. If you sign in with GitHub, we request access to
-	your email address only. If you sign in with Google, we receive your basic profile and email. We
-	do not receive your password from either provider.
+	We never store your password in readable form. If you sign in with GitHub, we request read access
+	to your public profile and email addresses, and we do not keep the access token GitHub issues. If
+	you sign in with Google, we receive your basic profile and email. We do not receive your password
+	from either provider.
 </p>
 
 <h3>Content you submit</h3>
