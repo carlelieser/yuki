@@ -22,6 +22,7 @@
 	import { signInSchema } from '$lib/schemas/auth.ts';
 	import { authCardClass } from '$lib/auth-card.ts';
 	import GithubSignIn from '$lib/components/auth/github-sign-in.svelte';
+	import GithubSignInForm from '$lib/components/auth/github-sign-in-form.svelte';
 
 	let { data } = $props();
 
@@ -37,10 +38,6 @@
 		<CardHeader class="px-0">
 			<CardTitle class="text-2xl">Sign in to Yuki</CardTitle>
 		</CardHeader>
-
-		{#if data.isGithubEnabled}
-			<GithubSignIn error={data.githubError} redirectTo={$formData.redirectTo} />
-		{/if}
 
 		<form method="POST" use:enhance>
 			<input type="hidden" name="redirectTo" bind:value={$formData.redirectTo} />
@@ -97,11 +94,18 @@
 
 			<CardFooter class="mt-4 flex flex-col items-stretch gap-3 px-0">
 				<Button type="submit" class="w-full">Sign in</Button>
+				{#if data.isGithubEnabled}
+					<GithubSignIn error={data.githubError} formId="github-sign-in" />
+				{/if}
 				<p class="text-center text-sm text-muted-foreground">
 					New to Yuki?
 					<Link href={resolve('/signup')}>Create an account</Link>
 				</p>
 			</CardFooter>
 		</form>
+
+		{#if data.isGithubEnabled}
+			<GithubSignInForm id="github-sign-in" redirectTo={$formData.redirectTo} />
+		{/if}
 	</Card>
 </main>

@@ -23,6 +23,7 @@
 	import { signUpSchema } from '$lib/schemas/auth.ts';
 	import { authCardClass } from '$lib/auth-card.ts';
 	import GithubSignIn from '$lib/components/auth/github-sign-in.svelte';
+	import GithubSignInForm from '$lib/components/auth/github-sign-in-form.svelte';
 
 	let { data, form: actionData } = $props();
 
@@ -52,10 +53,6 @@
 			<CardHeader class="px-0">
 				<CardTitle class="text-2xl">Sign up for Yuki</CardTitle>
 			</CardHeader>
-
-			{#if data.isGithubEnabled}
-				<GithubSignIn error={data.githubError} />
-			{/if}
 
 			<form method="POST" use:enhance>
 				<CardContent class="grid gap-4 px-0">
@@ -122,12 +119,19 @@
 
 				<CardFooter class="mt-4 flex flex-col items-stretch gap-3 px-0">
 					<Button type="submit" class="w-full">Create account</Button>
+					{#if data.isGithubEnabled}
+						<GithubSignIn error={data.githubError} formId="github-sign-in" />
+					{/if}
 					<p class="text-center text-sm text-muted-foreground">
 						Already have an account?
 						<Link href={resolve('/signin')}>Sign in</Link>
 					</p>
 				</CardFooter>
 			</form>
+
+			{#if data.isGithubEnabled}
+				<GithubSignInForm id="github-sign-in" />
+			{/if}
 		</Card>
 
 		<p class="text-center text-sm text-muted-foreground mt-12">

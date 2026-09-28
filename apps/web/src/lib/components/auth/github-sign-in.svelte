@@ -1,29 +1,25 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { Alert, AlertDescription, AlertTitle, Button, GithubIcon, Separator } from '@yuki/ui';
 
-	type Props = { error: string | null; redirectTo?: string };
+	type Props = { error: string | null; formId: string };
 
-	let { error, redirectTo = '/' }: Props = $props();
+	let { error, formId }: Props = $props();
 </script>
 
-<form method="POST" action={resolve('/auth/github')} class="mb-4 grid gap-4">
-	{#if error}
-		<Alert variant="destructive" role="alert">
-			<AlertTitle>GitHub sign-in failed</AlertTitle>
-			<AlertDescription>{error}</AlertDescription>
-		</Alert>
-	{/if}
+<div class="flex items-center gap-3 text-xs text-muted-foreground">
+	<Separator class="flex-1" />
+	or
+	<Separator class="flex-1" />
+</div>
 
-	<input type="hidden" name="redirectTo" value={redirectTo} />
-	<Button type="submit" variant="outline" class="w-full">
-		<GithubIcon class="size-4" />
-		Continue with GitHub
-	</Button>
+{#if error}
+	<Alert variant="destructive" role="alert">
+		<AlertTitle>GitHub sign-in failed</AlertTitle>
+		<AlertDescription>{error}</AlertDescription>
+	</Alert>
+{/if}
 
-	<div class="flex items-center gap-3 text-xs text-muted-foreground">
-		<Separator class="flex-1" />
-		or
-		<Separator class="flex-1" />
-	</div>
-</form>
+<Button type="submit" form={formId} variant="outline" class="w-full">
+	<GithubIcon class="size-4" />
+	Continue with GitHub
+</Button>
