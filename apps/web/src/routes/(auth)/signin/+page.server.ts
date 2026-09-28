@@ -6,10 +6,11 @@ import type { Actions, PageServerLoad } from './$types';
 import { getGithubCredentials } from '@yuki/auth';
 import { getAuth } from '$lib/server/auth.ts';
 import { githubErrorMessage } from '$lib/github-errors.ts';
+import { takeQueryFlash } from '$lib/server/flash.ts';
 import { safeRedirectTo } from '$lib/safe-redirect.ts';
 import { signInSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 	const redirectTo = safeRedirectTo(url.searchParams.get('redirectTo'));
 
 	if (locals.user) {
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		form: await superValidate({ redirectTo }, zod4(signInSchema), { errors: false }),
 		isGithubEnabled: getGithubCredentials() !== undefined,
-		githubError: githubErrorMessage(url.searchParams.get('error'))
+		githubError: githubErrorMessage(takeQueryFlash({ url, cookies }, 'error'))
 	};
 };
 

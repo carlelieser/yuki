@@ -5,6 +5,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
 import { requireUser } from '$lib/server/auth-guard.ts';
 import { githubErrorMessage } from '$lib/github-errors.ts';
+import { takeQueryFlash } from '$lib/server/flash.ts';
 
 type LinkedAccount = {
 	id: string;
@@ -33,6 +34,8 @@ function githubAccount(accounts: LinkedAccount[]) {
 export const load = (async (event) => {
 	requireUser(event);
 
+	const githubError = githubErrorMessage(takeQueryFlash(event, 'error'));
+	const isLinked = takeQueryFlash(event, 'linked') === 'github';
 	const accounts: LinkedAccount[] = await getAuth().api.listUserAccounts({
 		headers: event.request.headers
 	});
@@ -41,8 +44,8 @@ export const load = (async (event) => {
 		github: githubAccount(accounts),
 		canUnlink: accounts.length > 1,
 		isGithubEnabled: getGithubCredentials() !== undefined,
-		isLinked: event.url.searchParams.get('linked') === 'github',
-		githubError: githubErrorMessage(event.url.searchParams.get('error'))
+		isLinked,
+		githubError
 	};
 }) satisfies PageServerLoad;
 

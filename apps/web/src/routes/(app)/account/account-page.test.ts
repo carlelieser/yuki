@@ -23,13 +23,29 @@ const github = {
 	providerProfileUrl: 'https://github.com/ada'
 };
 
+function cookieJar() {
+	const values = new Map<string, string>();
+	return {
+		get: (name: string) => values.get(name),
+		set: (name: string, value: string) => void values.set(name, value),
+		delete: (name: string) => void values.delete(name)
+	};
+}
+
+let cookies = cookieJar();
+
 function event(path: string, init?: { body?: Record<string, string>; signedIn?: boolean }) {
 	const url = new URL(`http://yuki.test${path}`);
 	const request = new Request(url, {
 		method: init?.body ? 'POST' : 'GET',
 		body: init?.body ? new URLSearchParams(init.body) : undefined
 	});
-	return { url, request, locals: { user: init?.signedIn === false ? null : user } } as Event;
+	return {
+		url,
+		request,
+		cookies,
+		locals: { user: init?.signedIn === false ? null : user }
+	} as unknown as Event;
 }
 
 async function thrown(run: () => unknown) {
@@ -43,6 +59,7 @@ async function thrown(run: () => unknown) {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	cookies = cookieJar();
 	process.env.GITHUB_CLIENT_ID = 'client-id';
 	process.env.GITHUB_CLIENT_SECRET = 'client-secret';
 });
@@ -78,12 +95,19 @@ describe('account page', () => {
 		expect((await load(event('/account'))).github).toBeNull();
 	});
 
-	it('explains why GitHub could not be connected', async () => {
+	it('moves a GitHub error out of the address and shows it once', async () => {
 		api.listUserAccounts.mockResolvedValue([credential]);
 
-		const data = await load(event('/account?error=account_already_linked_to_different_user'));
+		const cleaned = await thrown(() =>
+			load(event('/account?error=account_already_linked_to_different_user'))
+		);
+		expect(isRedirect(cleaned) && cleaned.location).toBe('/account');
 
-		expect(data.githubError).toContain('already connected to another Yuki account');
+		const shown = await load(event('/account'));
+		expect(shown.githubError).toContain('already connected to another Yuki account');
+
+		const refreshed = await load(event('/account'));
+		expect(refreshed.githubError).toBeNull();
 	});
 });
 

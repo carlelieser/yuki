@@ -6,9 +6,10 @@ import type { Actions, PageServerLoad } from './$types';
 import { getGithubCredentials } from '@yuki/auth';
 import { getAuth } from '$lib/server/auth.ts';
 import { githubErrorMessage } from '$lib/github-errors.ts';
+import { takeQueryFlash } from '$lib/server/flash.ts';
 import { signUpSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, cookies }) => {
 	if (locals.user) {
 		redirect(303, '/');
 	}
@@ -16,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		form: await superValidate(zod4(signUpSchema)),
 		isGithubEnabled: getGithubCredentials() !== undefined,
-		githubError: githubErrorMessage(url.searchParams.get('error'))
+		githubError: githubErrorMessage(takeQueryFlash({ url, cookies }, 'error'))
 	};
 };
 

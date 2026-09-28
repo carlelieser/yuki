@@ -1,5 +1,7 @@
 <script lang="ts">
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 	import {
 		Button,
 		GithubIcon,
@@ -17,6 +19,20 @@
 	type Props = { github: GithubAccount | null; canUnlink: boolean };
 
 	let { github, canUnlink }: Props = $props();
+
+	const announceUnlink: SubmitFunction = () => {
+		return async ({ result, update }) => {
+			if (result.type === 'failure') {
+				toast.error('Could not disconnect GitHub', {
+					description: String(result.data?.unlinkError ?? '')
+				});
+			} else if (result.type === 'success') {
+				toast.success('GitHub disconnected');
+			}
+
+			await update();
+		};
+	};
 </script>
 
 <Item variant="outline">
@@ -46,7 +62,7 @@
 
 	<ItemActions>
 		{#if github}
-			<form method="POST" action="?/unlink" use:enhance>
+			<form method="POST" action="?/unlink" use:enhance={announceUnlink}>
 				<input type="hidden" name="accountId" value={github.id} />
 				<Button type="submit" variant="outline" size="sm" disabled={!canUnlink}>Disconnect</Button>
 			</form>

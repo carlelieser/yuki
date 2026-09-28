@@ -24,6 +24,7 @@
 	import { authCardClass } from '$lib/auth-card.ts';
 	import GithubSignIn from '$lib/components/auth/github-sign-in.svelte';
 	import GithubSignInForm from '$lib/components/auth/github-sign-in-form.svelte';
+	import FlashToast from '$lib/components/flash-toast.svelte';
 
 	let { data, form: actionData } = $props();
 
@@ -33,6 +34,8 @@
 </script>
 
 <svelte:head><title>Create an account · Yuki</title></svelte:head>
+
+<FlashToast title="GitHub sign-in failed" description={data.githubError} variant="error" />
 
 <main class="w-full">
 	{#if actionData?.verificationSent}
@@ -120,7 +123,7 @@
 				<CardFooter class="mt-4 flex flex-col items-stretch gap-3 px-0">
 					<Button type="submit" class="w-full">Create account</Button>
 					{#if data.isGithubEnabled}
-						<GithubSignIn error={data.githubError} formId="github-sign-in" />
+						<GithubSignIn formId="github-sign-in" />
 					{/if}
 					<p class="text-center text-sm text-muted-foreground">
 						Already have an account?
