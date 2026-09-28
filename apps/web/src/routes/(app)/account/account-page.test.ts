@@ -4,7 +4,12 @@ import { APIError } from 'better-auth/api';
 import type { SessionUser } from '@yuki/auth';
 
 const { getAuth, api } = vi.hoisted(() => {
-	const api = { listUserAccounts: vi.fn(), linkSocialAccount: vi.fn(), unlinkAccount: vi.fn() };
+	const api = {
+		listUserAccounts: vi.fn(),
+		linkSocialAccount: vi.fn(),
+		unlinkAccount: vi.fn(),
+		requestPasswordReset: vi.fn()
+	};
 	return { getAuth: vi.fn(() => ({ api })), api };
 });
 
@@ -89,6 +94,18 @@ describe('account page', () => {
 		expect((await load(event('/account'))).canUnlink).toBe(false);
 	});
 
+	it('shows that a GitHub-only account has no password', async () => {
+		api.listUserAccounts.mockResolvedValue([github]);
+
+		expect((await load(event('/account'))).hasPassword).toBe(false);
+	});
+
+	it('shows that an email account has a password', async () => {
+		api.listUserAccounts.mockResolvedValue([credential, github]);
+
+		expect((await load(event('/account'))).hasPassword).toBe(true);
+	});
+
 	it('shows no GitHub account for email-only users', async () => {
 		api.listUserAccounts.mockResolvedValue([credential]);
 
@@ -125,6 +142,21 @@ describe('connecting GitHub', () => {
 					callbackURL: '/account?linked=github',
 					errorCallbackURL: '/account'
 				})
+			})
+		);
+	});
+});
+
+describe('setting a password', () => {
+	it('emails a set-password link to the signed-in address', async () => {
+		api.requestPasswordReset.mockResolvedValue({ status: true });
+
+		const result = await actions.setPassword(event('/account?/setPassword', { body: {} }));
+
+		expect(result).toEqual({ isPasswordEmailSent: true });
+		expect(api.requestPasswordReset).toHaveBeenCalledWith(
+			expect.objectContaining({
+				body: { email: 'ada@yuki.test', redirectTo: '/reset-password?mode=set' }
 			})
 		);
 	});

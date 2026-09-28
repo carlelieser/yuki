@@ -28,14 +28,16 @@
 	// svelte-ignore state_referenced_locally
 	const form = superForm(data.form, { validators: zod4Client(resetPasswordSchema) });
 	const { form: formData, enhance, message } = form;
+
+	const title = $derived(data.isSettingPassword ? 'Set a password' : 'Choose a new password');
 </script>
 
-<svelte:head><title>Choose a new password · Yuki</title></svelte:head>
+<svelte:head><title>{title} · Yuki</title></svelte:head>
 
 <main class="w-full">
 	<Card class={authCardClass}>
 		<CardHeader class="px-0">
-			<CardTitle class="text-2xl">Choose a new password</CardTitle>
+			<CardTitle class="text-2xl">{title}</CardTitle>
 			<CardDescription>Pick a password you don't use anywhere else.</CardDescription>
 		</CardHeader>
 
@@ -45,7 +47,7 @@
 			<CardContent class="grid gap-4 px-0">
 				{#if $message}
 					<Alert variant="destructive" role="alert">
-						<AlertTitle>Could not reset your password</AlertTitle>
+						<AlertTitle>Could not save your password</AlertTitle>
 						<AlertDescription>{$message}</AlertDescription>
 					</Alert>
 				{/if}
@@ -88,7 +90,9 @@
 			</CardContent>
 
 			<CardFooter class="flex flex-col items-stretch gap-3 px-0">
-				<Button type="submit" class="w-full">Update password</Button>
+				<Button type="submit" class="w-full">
+					{data.isSettingPassword ? 'Set password' : 'Update password'}
+				</Button>
 				<p class="text-center text-sm text-muted-foreground">
 					<Link href={resolve('/signin')}>Back to sign in</Link>
 				</p>

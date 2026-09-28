@@ -15,8 +15,7 @@ type LinkedAccount = {
 };
 
 const unlinkMessages: Record<string, string> = {
-	FAILED_TO_UNLINK_LAST_ACCOUNT:
-		'GitHub is your only way to sign in. Set a password with “Forgot password” first.',
+	FAILED_TO_UNLINK_LAST_ACCOUNT: 'GitHub is your only way to sign in. Set a password first.',
 	SESSION_NOT_FRESH: 'For your security, sign in again before disconnecting GitHub.'
 };
 
@@ -32,15 +31,19 @@ function githubAccount(accounts: LinkedAccount[]) {
 }
 
 export const load = (async (event) => {
-	requireUser(event);
+	const user = requireUser(event);
 
 	const githubError = githubErrorMessage(takeQueryFlash(event, 'error'));
 	const isLinked = takeQueryFlash(event, 'linked') === 'github';
+	const isPasswordSet = takeQueryFlash(event, 'password') === 'set';
 	const accounts: LinkedAccount[] = await getAuth().api.listUserAccounts({
 		headers: event.request.headers
 	});
 
 	return {
+		email: user.email,
+		hasPassword: accounts.some((account) => account.providerId === 'credential'),
+		isPasswordSet,
 		github: githubAccount(accounts),
 		canUnlink: accounts.length > 1,
 		isGithubEnabled: getGithubCredentials() !== undefined,
@@ -64,6 +67,17 @@ export const actions = {
 		});
 
 		redirect(303, url);
+	},
+
+	setPassword: async (event) => {
+		const user = requireUser(event);
+
+		await getAuth().api.requestPasswordReset({
+			body: { email: user.email, redirectTo: '/reset-password?mode=set' },
+			headers: event.request.headers
+		});
+
+		return { isPasswordEmailSent: true };
 	},
 
 	unlink: async (event) => {

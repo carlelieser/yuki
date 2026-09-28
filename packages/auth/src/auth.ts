@@ -14,6 +14,7 @@ import {
 	requireAuthUrl
 } from './env.ts';
 import { githubAccountHooks } from './github-account.ts';
+import { hasPassword, passwordEmail } from './password-email.ts';
 import { rejectUnverifiedGithubSignUp } from './github-policy.ts';
 import { sendMail } from './mailer.ts';
 
@@ -58,13 +59,8 @@ export function createAuth(db: Database, getRequestEvent: GetRequestEvent) {
 			enabled: true,
 			requireEmailVerification: true,
 			sendResetPassword: async ({ user, url }) => {
-				await sendTemplatedMail(user.email, 'Reset your Yuki password', {
-					previewText: 'Choose a new password using the link inside.',
-					heading: 'Reset your password',
-					body: 'Choose a new password for your Yuki account using the link below.',
-					action: { label: 'Reset password', url },
-					footnote: 'If you did not request this, you can ignore this email.'
-				});
+				const { subject, content } = passwordEmail(await hasPassword(db, user.id), url);
+				await sendTemplatedMail(user.email, subject, content);
 			}
 		},
 		emailVerification: {
