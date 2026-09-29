@@ -69,7 +69,7 @@ internal class ListingRemoteDataSource @Inject constructor(
     }
 
     suspend fun packages(): PackageIndexDto {
-        val response = client.get("api/packages")
+        val response = client.get("api/package-identities")
         return response.decode("Load the package index")
     }
 }

@@ -1,7 +1,5 @@
 import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
-import { httpApkSource } from './apk/http-source.ts';
-import { readApkPackageName } from './apk/package-name.ts';
 import { readIconAsset } from './icon/asset.ts';
 import { requireIconConfig } from './icon/env.ts';
 import { createR2Bucket } from './icon/r2-bucket.ts';
@@ -23,6 +21,7 @@ import {
 import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts';
 import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
+import { createIdentityPorts } from './run/identity-ports.ts';
 import { runNightly } from './run/nightly.ts';
 import { findMissingSlugs, readListFlag } from './run/args.ts';
 
@@ -61,6 +60,7 @@ const maxRepos = readNumberFlag(
 	shouldSeed ? DEFAULT_SEED_MAX_REPOS : DEFAULT_MAX_REPOS
 );
 const maxRefresh = readOptionalNumberFlag('--max-refresh');
+const maxIdentities = readOptionalNumberFlag('--max-identities');
 
 const db = createDatabase();
 const client = createGithubClient(requireGithubToken());
@@ -113,12 +113,14 @@ try {
 			persist: (input) => upsertListing(db, input),
 			touch: (listingId) => touchListing(db, listingId),
 			services: {
-				readApkPackage: (downloadUrl) => readApkPackageName(httpApkSource(downloadUrl)),
 				publishIcon: async (source) => icons.publish(await readIconAsset(source))
 			},
+			identities: createIdentityPorts(db, async () =>
+				slugs.length > 0 ? (await resolveSlugTargets()).map((target) => target.id) : undefined
+			),
 			log: (message) => console.log(message)
 		},
-		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange }
+		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange, maxIdentities }
 	);
 
 	const { warnings, ...totals } = summary;

@@ -1,6 +1,5 @@
 package app.yuki.feature.library
 
-import app.yuki.core.model.CatalogPackage
 import app.yuki.core.model.InstallSource
 import app.yuki.core.model.InstalledApp
 import java.time.Instant
@@ -123,7 +122,13 @@ class PackageDetectionTest {
 
         val plan = planDetection(
             device = listOf(
-                DevicePackage(OBTAINIUM.packageName, "1.6.17", 1L, installedAt),
+                DevicePackage(
+                    packageName = OBTAINIUM.packageName,
+                    versionName = "1.6.17",
+                    versionCode = 1L,
+                    firstInstalledAt = installedAt,
+                    signing = singleSigner(OBTAINIUM_KEY),
+                ),
             ),
             index = listOf(OBTAINIUM),
             recorded = emptyList(),
@@ -144,40 +149,3 @@ class PackageDetectionTest {
         assertTrue(plan.forgotten.isEmpty())
     }
 }
-
-private fun devicePackage(
-    packageName: String,
-    versionName: String = "1.0.0",
-    versionCode: Long = 1L,
-): DevicePackage = DevicePackage(
-    packageName = packageName,
-    versionName = versionName,
-    versionCode = versionCode,
-    firstInstalledAt = Instant.ofEpochMilli(1_700_000_000_000),
-)
-
-private fun detectedApp(entry: CatalogPackage): InstalledApp = InstalledApp(
-    githubRepoId = entry.githubRepoId,
-    packageName = entry.packageName,
-    slug = entry.slug,
-    title = entry.title,
-    iconUrl = entry.iconUrl,
-    versionTag = "1.6.17",
-    source = InstallSource.DETECTED,
-)
-
-private val OBTAINIUM = CatalogPackage(
-    packageName = "dev.imranr.obtainium.fdroid",
-    githubRepoId = 4_242L,
-    slug = "imranr98-obtainium",
-    title = "Obtainium",
-    iconUrl = null,
-)
-
-private val TERMUX_PACKAGE = CatalogPackage(
-    packageName = "com.termux",
-    githubRepoId = 1_234L,
-    slug = "termux",
-    title = "Termux",
-    iconUrl = null,
-)

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
+import { identityUnlessAssetChanged } from './identities.ts';
 import { settleConfidence, shouldPublish, type Transaction } from './publication.ts';
 import { settleLatestRelease } from './releases.ts';
 import type { MappedListing } from '../mapping/listing.ts';
@@ -13,7 +14,6 @@ export type ListingRecord = {
 	owner: string;
 	name: string;
 	githubRepoId: number;
-	packageName: string | null;
 };
 
 export type PersistInput = {
@@ -23,7 +23,6 @@ export type PersistInput = {
 	githubRepoId?: number;
 	iconUrl: string | null;
 	bannerUrl: string | null;
-	packageName: string | null;
 	screenshots: ReadmeImage[] | null;
 	versions: MappedVersion[] | null;
 	hasApk: boolean | null;
@@ -81,6 +80,7 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 						downloadCount: version.downloadCount,
 						isPrerelease: version.isPrerelease,
 						publishedAt: version.publishedAt,
+						...identityUnlessAssetChanged(),
 						updatedAt: new Date()
 					}
 				});
@@ -124,7 +124,6 @@ async function insertOrUpdate(
 			slug,
 			iconUrl: input.iconUrl,
 			bannerUrl: input.bannerUrl,
-			packageName: input.packageName,
 			isPublished,
 			publishedAt: isPublished ? new Date() : null,
 			lastScrapedAt: new Date(),
@@ -142,7 +141,6 @@ async function insertOrUpdate(
 				description: listing.description,
 				...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 				...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
-				...(input.packageName === null ? {} : { packageName: input.packageName }),
 				repositoryUrl: listing.repositoryUrl,
 				homepageUrl: listing.homepageUrl,
 				license: listing.license,
@@ -166,7 +164,6 @@ async function updateExisting(tx: Transaction, input: PersistInput): Promise<str
 		.set({
 			...(input.iconUrl === null ? {} : { iconUrl: input.iconUrl }),
 			...(input.bannerUrl === null ? {} : { bannerUrl: input.bannerUrl }),
-			...(input.packageName === null ? {} : { packageName: input.packageName }),
 			lastScrapedAt: new Date(),
 			updatedAt: new Date()
 		})
@@ -190,8 +187,7 @@ export async function listListingsForRefresh(
 			id: schema.listings.id,
 			owner: schema.listings.owner,
 			name: schema.listings.name,
-			githubRepoId: schema.listings.githubRepoId,
-			packageName: schema.listings.packageName
+			githubRepoId: schema.listings.githubRepoId
 		})
 		.from(schema.listings)
 		.orderBy(sql`${schema.listings.lastScrapedAt} asc nulls first`, asc(schema.listings.id));
@@ -211,8 +207,7 @@ export async function listListingsBySlug(
 			slug: schema.listings.slug,
 			owner: schema.listings.owner,
 			name: schema.listings.name,
-			githubRepoId: schema.listings.githubRepoId,
-			packageName: schema.listings.packageName
+			githubRepoId: schema.listings.githubRepoId
 		})
 		.from(schema.listings)
 		.where(inArray(schema.listings.slug, slugs));
@@ -230,7 +225,6 @@ export async function listListingsForReverify(
 			owner: schema.listings.owner,
 			name: schema.listings.name,
 			githubRepoId: schema.listings.githubRepoId,
-			packageName: schema.listings.packageName,
 			stars: schema.listings.stars
 		})
 		.from(schema.listings);

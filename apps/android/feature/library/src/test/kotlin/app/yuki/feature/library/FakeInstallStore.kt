@@ -57,6 +57,7 @@ internal class FakeInstalledPackages(
 ) : InstalledPackages {
     private val launchable = mutableSetOf<String>()
     private val versions = mutableMapOf<String, String>()
+    private val signers = mutableMapOf<String, Set<String>>()
     private val changes = MutableStateFlow(0)
 
     override fun isPresent(packageName: String): Boolean = packageName in present
@@ -72,12 +73,19 @@ internal class FakeInstalledPackages(
                 versionName = versions[name] ?: "1.0.0",
                 versionCode = 1L,
                 firstInstalledAt = Instant.EPOCH,
+                signing = (signers[name] ?: setOf(FAKE_SIGNER)).let { set -> DeviceSigning(set, set) },
             )
         }
 
-    fun install(packageName: String, isLaunchable: Boolean = true, versionName: String = "1.0.0") {
+    fun install(
+        packageName: String,
+        isLaunchable: Boolean = true,
+        versionName: String = "1.0.0",
+        signedBy: Set<String> = setOf(FAKE_SIGNER),
+    ) {
         present += packageName
         versions[packageName] = versionName
+        signers[packageName] = signedBy
         if (isLaunchable) launchable += packageName
         changes.value += 1
     }
@@ -86,6 +94,7 @@ internal class FakeInstalledPackages(
         present -= packageName
         launchable -= packageName
         versions -= packageName
+        signers -= packageName
         changes.value += 1
     }
 }
@@ -194,3 +203,5 @@ internal class FakeLibraryProgressStore : InstallProgressStore {
     }
 
 }
+
+internal const val FAKE_SIGNER = "f00d"

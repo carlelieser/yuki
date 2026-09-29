@@ -10,7 +10,7 @@ import { mapRepository } from '../mapping/listing.ts';
 import { extractReadmeImages, findBannerUrl } from '../mapping/readme-images.ts';
 import { collectLfsPaths } from '../mapping/icon.ts';
 import { hasDistributableApk, mapReleases } from '@yuki/github';
-import type { GithubRepository, GithubTree, MappedVersion } from '@yuki/github';
+import type { GithubRepository, GithubTree } from '@yuki/github';
 import type { PersistInput } from '../persistence/listings.ts';
 
 export type EtagStore = {
@@ -28,15 +28,11 @@ export type RefreshTarget = {
 	githubRepoId?: number;
 	evidence?: DetectedEvidence[];
 	repo?: GithubRepository;
-	packageName?: string | null;
 };
-
-export type ApkPackageReader = (downloadUrl: string) => Promise<string | null>;
 
 export type IconPublisher = (source: string) => Promise<string>;
 
 export type RefreshServices = {
-	readApkPackage?: ApkPackageReader;
 	publishIcon?: IconPublisher;
 };
 
@@ -121,7 +117,6 @@ export async function refreshListing(
 						: null,
 				iconUrl: icon.iconUrl,
 				bannerUrl: readme.state === 'unchanged' ? null : bannerUrl,
-				packageName: await packageNameFrom(target, versions, services.readApkPackage),
 				screenshots:
 					readme.state === 'unchanged'
 						? null
@@ -170,38 +165,6 @@ async function publishedIcon(
 		const reason = cause instanceof Error ? cause.message : String(cause);
 		return { iconUrl: null, warnings: [`publishing the icon failed: ${reason}`] };
 	}
-}
-
-async function packageNameFrom(
-	target: RefreshTarget,
-	versions: MappedVersion[] | null,
-	read: ApkPackageReader | undefined
-): Promise<string | null> {
-	if (read === undefined) return null;
-	if (target.packageName != null) return null;
-	if (versions === null) return null;
-
-	const downloadUrl = newestDownloadUrl(versions);
-	if (downloadUrl === null) return null;
-
-	try {
-		return await read(downloadUrl);
-	} catch {
-		return null;
-	}
-}
-
-function newestDownloadUrl(versions: MappedVersion[]): string | null {
-	const published = versions.filter(
-		(version) => version.downloadUrl !== null && !version.isPrerelease
-	);
-	const pool = published.length > 0 ? published : versions;
-
-	for (const version of pool) {
-		if (version.downloadUrl !== null) return version.downloadUrl;
-	}
-
-	return null;
 }
 
 function androidVerdict(tree: Resource<GithubTree>): boolean | null {

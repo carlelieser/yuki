@@ -10,7 +10,7 @@ export type PackageIndexEntry = {
 	iconUrl: string | null;
 };
 
-type Builder = Pick<Database, 'select'>;
+type Builder = Pick<Database, 'select' | 'selectDistinct'>;
 
 const indexColumns = {
 	packageName: schema.listings.packageName,
@@ -45,4 +45,106 @@ export async function getPackageIndex(db: Database): Promise<PackageIndexEntry[]
 	const rows = await selectIndex(db);
 
 	return rows.filter((row): row is PackageIndexEntry => row.packageName !== null);
+}
+
+export type SigningIdentity = {
+	signers: string[];
+	lineage: string[];
+};
+
+export type PackageIdentityEntry = PackageIndexEntry & {
+	identities: SigningIdentity[];
+};
+
+export type IdentityRow = PackageIndexEntry & {
+	signers: string[];
+	lineage: string[] | null;
+};
+
+function selectIdentityRows(builder: Builder) {
+	const versions = schema.listingVersions;
+
+	return builder
+		.selectDistinct({
+			...indexColumns,
+			packageName: versions.packageName,
+			signers: versions.signerDigests,
+			lineage: versions.lineageDigests
+		})
+		.from(versions)
+		.innerJoin(schema.listings, eq(schema.listings.id, versions.listingId))
+		.where(
+			and(
+				eq(schema.listings.isPublished, true),
+				isNotNull(versions.packageName),
+				sql`cardinality(${versions.signerDigests}) > 0`
+			)
+		);
+}
+
+export function packageIdentityQuery(): { sql: string } {
+	return selectIdentityRows(new QueryBuilder() as unknown as Builder).toSQL();
+}
+
+export async function getPackageIdentities(db: Database): Promise<PackageIdentityEntry[]> {
+	const rows = await selectIdentityRows(db);
+
+	return buildIdentityIndex(
+		rows.filter((row): row is IdentityRow => row.packageName !== null && row.signers !== null)
+	);
+}
+
+export function buildIdentityIndex(rows: IdentityRow[]): PackageIdentityEntry[] {
+	const listings = groupBy(soleClaims(rows), (row) => `${row.githubRepoId}:${row.packageName}`);
+
+	return [...listings.values()]
+		.map(toIdentityEntry)
+		.sort(
+			(left, right) =>
+				left.packageName.localeCompare(right.packageName) || left.githubRepoId - right.githubRepoId
+		);
+}
+
+function soleClaims(rows: IdentityRow[]): IdentityRow[] {
+	const claimants = groupBy(rows, identityKey);
+
+	return rows.filter((row) => {
+		const claims = claimants.get(identityKey(row)) ?? [];
+		return new Set(claims.map((claim) => claim.githubRepoId)).size === 1;
+	});
+}
+
+function toIdentityEntry(rows: IdentityRow[]): PackageIdentityEntry {
+	const [first] = rows as [IdentityRow, ...IdentityRow[]];
+	const identities = [...groupBy(rows, identityKey).values()].map(mergeIdentity);
+
+	return {
+		packageName: first.packageName,
+		githubRepoId: first.githubRepoId,
+		slug: first.slug,
+		title: first.title,
+		iconUrl: first.iconUrl,
+		identities
+	};
+}
+
+function mergeIdentity(rows: IdentityRow[]): SigningIdentity {
+	const signers = [...new Set(rows[0]?.signers ?? [])].sort();
+	const lineage = new Set(rows.flatMap((row) => row.lineage ?? []));
+
+	return { signers, lineage: [...lineage].filter((digest) => !signers.includes(digest)).sort() };
+}
+
+function identityKey(row: IdentityRow): string {
+	return `${row.packageName}|${[...row.signers].sort().join(',')}`;
+}
+
+function groupBy<Item>(items: Item[], keyOf: (item: Item) => string): Map<string, Item[]> {
+	const groups = new Map<string, Item[]>();
+	for (const item of items) {
+		const key = keyOf(item);
+		groups.set(key, [...(groups.get(key) ?? []), item]);
+	}
+
+	return groups;
 }

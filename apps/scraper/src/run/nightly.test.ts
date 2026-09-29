@@ -68,8 +68,7 @@ const knownListing: ListingRecord = {
 	id: 'listing-1',
 	owner: 'acme',
 	name: 'app',
-	githubRepoId: 1,
-	packageName: null
+	githubRepoId: 1
 };
 
 describe('runNightly', () => {
@@ -130,7 +129,7 @@ describe('runNightly', () => {
 			}),
 			listTargets: async () => [
 				knownListing,
-				{ id: 'listing-2', owner: 'acme', name: 'other', githubRepoId: 2, packageName: null }
+				{ id: 'listing-2', owner: 'acme', name: 'other', githubRepoId: 2 }
 			]
 		});
 

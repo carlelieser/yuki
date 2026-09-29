@@ -162,6 +162,13 @@
       "when": 1790504350500,
       "tag": "0022_listing_recency",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790684072495,
+      "tag": "0023_listing_version_identity",
+      "breakpoints": true
     }
   ]
 }

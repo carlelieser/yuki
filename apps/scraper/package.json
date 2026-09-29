@@ -8,6 +8,7 @@
 		"review": "bun run src/review.ts",
 		"backfill": "bun run src/backfill.ts",
 		"categorize": "bun run src/categorize.ts",
+		"identify": "bun run src/identify.ts",
 		"reverify": "bun run src/reverify.ts",
 		"prune-icons": "bun run src/prune-icons.ts",
 		"check": "tsc --noEmit",

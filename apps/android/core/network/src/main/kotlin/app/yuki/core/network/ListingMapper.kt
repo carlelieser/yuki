@@ -8,6 +8,7 @@ import app.yuki.core.model.ListingPage
 import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ListingVersion
 import app.yuki.core.model.Screenshot
+import app.yuki.core.model.SigningIdentity
 import app.yuki.core.model.readListingCategory
 import java.time.Instant
 import java.time.format.DateTimeParseException
@@ -76,6 +77,12 @@ internal fun CatalogPackageDto.toDomain(): CatalogPackage = CatalogPackage(
     slug = slug,
     title = title,
     iconUrl = iconUrl,
+    identities = identities.map(SigningIdentityDto::toDomain),
+)
+
+internal fun SigningIdentityDto.toDomain(): SigningIdentity = SigningIdentity(
+    signers = signers.mapTo(mutableSetOf(), String::lowercase),
+    lineage = lineage.mapTo(mutableSetOf(), String::lowercase),
 )
 
 internal fun ListingVersionDto.toDomain(): ListingVersion = ListingVersion(
