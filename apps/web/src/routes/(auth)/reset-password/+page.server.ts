@@ -6,14 +6,19 @@ import type { Actions, PageServerLoad } from './$types';
 import { getAuth } from '$lib/server/auth.ts';
 import { resetPasswordSchema } from '$lib/schemas/auth.ts';
 
-export const load: PageServerLoad = async ({ url }) => {
+const SET_MODE = 'set';
+
+export const load = (async ({ url }) => {
 	const token = url.searchParams.get('token') ?? '';
 
-	return { form: await superValidate({ token }, zod4(resetPasswordSchema), { errors: false }) };
-};
+	return {
+		form: await superValidate({ token }, zod4(resetPasswordSchema), { errors: false }),
+		isSettingPassword: url.searchParams.get('mode') === SET_MODE
+	};
+}) satisfies PageServerLoad;
 
-export const actions: Actions = {
-	default: async ({ request }) => {
+export const actions = {
+	default: async ({ request, url }) => {
 		const form = await superValidate(request, zod4(resetPasswordSchema));
 		const { token, password } = form.data;
 
@@ -36,6 +41,6 @@ export const actions: Actions = {
 			throw cause;
 		}
 
-		redirect(303, '/signin');
+		redirect(303, url.searchParams.get('mode') === SET_MODE ? '/account?password=set' : '/signin');
 	}
-};
+} satisfies Actions;

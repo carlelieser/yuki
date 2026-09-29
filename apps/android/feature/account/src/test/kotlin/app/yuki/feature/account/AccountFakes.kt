@@ -2,12 +2,19 @@ package app.yuki.feature.account
 
 import kotlinx.coroutines.CompletableDeferred
 import app.yuki.core.auth.AuthSession
+import app.yuki.core.auth.BrowserAuth
+import app.yuki.core.auth.BrowserAuthPurpose
+import app.yuki.core.auth.BrowserAuthResults
+import app.yuki.core.auth.PendingBrowserAuth
 import app.yuki.core.auth.SessionStore
 import app.yuki.core.model.AuthAccount
 import app.yuki.core.model.FailureAware
 import app.yuki.core.model.FailureReason
+import app.yuki.core.model.LinkedAccount
 import app.yuki.core.network.AuthRepository
 import app.yuki.core.network.AvatarUpload
+import app.yuki.core.network.GithubBrowserUrls
+import app.yuki.core.network.LinkedAccountsRepository
 import app.yuki.core.network.SignedIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +58,14 @@ internal class FakeAuthRepository : AuthRepository {
     var avatarResult: Result<AuthAccount> = Result.success(ADA)
 
     var verificationResult: Result<Unit> = Result.success(Unit)
+    var ticketExchangeResult: Result<SignedIn> =
+        Result.success(SignedIn(ADA, token = "github.token"))
+    var ticketResult: Result<String> = Result.success("ticket-1")
+
+    var passwordSetupResult: Result<Unit> = Result.success(Unit)
+
+    val exchangedTickets = mutableListOf<String>()
+    val passwordSetupsSentTo = mutableListOf<String>()
 
     var signOutGate: CompletableDeferred<Unit> = CompletableDeferred<Unit>().apply { complete(Unit) }
 
@@ -65,6 +80,18 @@ internal class FakeAuthRepository : AuthRepository {
         email: String,
         password: String,
     ): Result<SignedIn> = signUpResult
+
+    override suspend fun exchangeTicket(ticket: String): Result<SignedIn> {
+        exchangedTickets.add(ticket)
+        return ticketExchangeResult
+    }
+
+    override suspend fun createTicket(): Result<String> = ticketResult
+
+    override suspend fun requestPasswordSetup(email: String): Result<Unit> {
+        passwordSetupsSentTo.add(email)
+        return passwordSetupResult
+    }
 
     override suspend fun signOut(): Result<Unit> {
         signOutGate.await()
@@ -88,3 +115,65 @@ internal class FakeAuthRepository : AuthRepository {
         return avatarResult
     }
 }
+
+internal const val TEST_BASE_URL = "https://yuki.test/"
+
+internal class FakePendingBrowserAuth : PendingBrowserAuth {
+    private var pending: Pair<String, BrowserAuthPurpose>? = null
+    private var started = 0
+
+    override suspend fun begin(purpose: BrowserAuthPurpose): String {
+        started += 1
+        return "state-$started".also { state -> pending = state to purpose }
+    }
+
+    override suspend fun claim(state: String, purpose: BrowserAuthPurpose): Boolean {
+        if (pending != (state to purpose)) return false
+        pending = null
+        return true
+    }
+}
+
+internal class BrowserAuthFixture {
+    val pending = FakePendingBrowserAuth()
+    val results = BrowserAuthResults()
+    val browserAuth = BrowserAuth(pending, results)
+    val urls = GithubBrowserUrls(TEST_BASE_URL)
+
+    fun returnToApp(query: String) {
+        results.deliver("${TEST_BASE_URL}auth/mobile/callback?$query")
+    }
+
+    fun signIn(repository: AuthRepository, store: SessionStore) =
+        GithubSignIn(browserAuth, repository, store, urls)
+}
+
+internal val GITHUB_ACCOUNT = LinkedAccount(
+    id = "acc-2",
+    providerId = "github",
+    username = "ada",
+    profileUrl = "https://github.com/ada",
+)
+
+internal val PASSWORD_ACCOUNT = LinkedAccount(
+    id = "acc-1",
+    providerId = "credential",
+    username = null,
+    profileUrl = null,
+)
+
+internal class FakeLinkedAccountsRepository(
+    var accounts: List<LinkedAccount> = listOf(PASSWORD_ACCOUNT),
+) : LinkedAccountsRepository {
+    var unlinkResult: Result<Unit> = Result.success(Unit)
+    val unlinked = mutableListOf<String>()
+
+    override suspend fun list(): Result<List<LinkedAccount>> = Result.success(accounts)
+
+    override suspend fun unlink(accountId: String): Result<Unit> {
+        unlinked.add(accountId)
+        if (unlinkResult.isSuccess) accounts = accounts.filterNot { account -> account.id == accountId }
+        return unlinkResult
+    }
+}
+

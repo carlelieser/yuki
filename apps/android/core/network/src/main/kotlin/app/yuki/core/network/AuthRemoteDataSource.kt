@@ -19,7 +19,10 @@ internal const val AUTH_TOKEN_HEADER = "set-auth-token"
 
 private const val EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
 private const val USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
+private const val FAILED_TO_UNLINK_LAST_ACCOUNT = "FAILED_TO_UNLINK_LAST_ACCOUNT"
+private const val SESSION_NOT_FRESH = "SESSION_NOT_FRESH"
 private const val EMPTY_BODY = "{}"
+private const val PASSWORD_SETUP_PATH = "/reset-password?mode=set"
 private val CLIENT_ERROR_RANGE = 400..499
 
 internal data class SignedInResponse(
@@ -56,6 +59,31 @@ internal class AuthRemoteDataSource @Inject constructor(
         }
 
         response.requireSuccess("Resend the verification email to $email")
+    }
+
+    suspend fun exchangeTicket(ticket: String): SignedInResponse {
+        val response = client.post("api/auth/one-time-token/verify") {
+            contentType(ContentType.Application.Json)
+            setBody(TicketRequestDto(token = ticket))
+        }
+
+        return response.toSignedIn("Finish browser sign-in")
+    }
+
+    suspend fun createTicket(): String {
+        val response = client.get("api/auth/one-time-token/generate")
+        response.requireSuccess("Create a browser ticket")
+
+        return response.decode<TicketDto>("Create a browser ticket").token
+    }
+
+    suspend fun requestPasswordSetup(email: String) {
+        val response = client.post("api/auth/request-password-reset") {
+            contentType(ContentType.Application.Json)
+            setBody(PasswordSetupRequestDto(email = email, redirectTo = PASSWORD_SETUP_PATH))
+        }
+
+        response.requireSuccess("Email a set-password link to $email")
     }
 
     suspend fun signOut() {
@@ -118,7 +146,7 @@ private suspend fun HttpResponse.toSignedIn(operation: String): SignedInResponse
     return SignedInResponse(account = account, token = headers[AUTH_TOKEN_HEADER])
 }
 
-private suspend fun HttpResponse.requireSuccess(operation: String) {
+internal suspend fun HttpResponse.requireSuccess(operation: String) {
     if (status.isSuccess()) return
 
     throw RemoteRequestException(authFailure(), operation)
@@ -130,6 +158,8 @@ private suspend fun HttpResponse.authFailure(): FailureReason {
     return when (error?.code) {
         EMAIL_NOT_VERIFIED -> FailureReason.EmailNotVerified
         USER_ALREADY_EXISTS -> FailureReason.AccountExists
+        FAILED_TO_UNLINK_LAST_ACCOUNT -> FailureReason.LastSignInMethod
+        SESSION_NOT_FRESH -> FailureReason.ReauthenticationRequired
         else -> rejection(error?.message) ?: statusFailure(this)
     }
 }

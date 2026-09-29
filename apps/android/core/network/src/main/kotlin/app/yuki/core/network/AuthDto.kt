@@ -51,6 +51,22 @@ internal data class AvatarUploadRequestDto(
 )
 
 @Serializable
+internal data class PasswordSetupRequestDto(
+    val email: String,
+    val redirectTo: String,
+)
+
+@Serializable
+internal data class TicketRequestDto(
+    val token: String,
+)
+
+@Serializable
+internal data class TicketDto(
+    val token: String,
+)
+
+@Serializable
 internal data class AuthErrorDto(
     val code: String? = null,
     val message: String? = null,

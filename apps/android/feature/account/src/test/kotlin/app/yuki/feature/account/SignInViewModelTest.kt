@@ -23,6 +23,7 @@ import org.junit.Test
 class SignInViewModelTest {
     private val repository = FakeAuthRepository()
     private val store = FakeSessionStore()
+    private val browser = BrowserAuthFixture()
 
     @Before
     fun setUp() {
@@ -34,7 +35,7 @@ class SignInViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = SignInViewModel(repository, store)
+    private fun viewModel() = SignInViewModel(repository, store, browser.signIn(repository, store))
 
     private fun SignInViewModel.fillIn(
         email: String = "ada@yuki.test",
@@ -191,6 +192,118 @@ class SignInViewModelTest {
 
         return settled
     }
+
+    @Test
+    fun `continuing with GitHub opens the browser with a fresh state`() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            "https://yuki.test/auth/mobile/github/start?state=state-1",
+            viewModel.state.value.browserUrl,
+        )
+    }
+
+    @Test
+    fun `a double tap starts only one GitHub sign-in`() = runTest {
+        val viewModel = viewModel()
+
+        viewModel.onGithubClick()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        assertEquals(
+            "https://yuki.test/auth/mobile/github/start?state=state-1",
+            viewModel.state.value.browserUrl,
+        )
+    }
+
+    @Test
+    fun `returning from GitHub signs in with the ticket`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&token=ticket-9&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals(listOf("ticket-9"), repository.exchangedTickets)
+        assertEquals("github.token", store.current?.token)
+        assertTrue(viewModel.state.value.isSignedIn)
+    }
+
+    @Test
+    fun `a ticket for a sign-in this app did not start is never used`() = runTest {
+        val viewModel = viewModel()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&token=ticket-9&state=forged")
+        advanceUntilIdle()
+
+        assertTrue(repository.exchangedTickets.isEmpty())
+        assertNull(store.current)
+        assertFalse(viewModel.state.value.isSignedIn)
+    }
+
+    @Test
+    fun `a sign-in that finishes after a newer attempt says it expired`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+        viewModel.onBrowserLaunched()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&error=state_security_mismatch&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals(AccountMessage.GithubExpired, viewModel.state.value.message)
+    }
+
+    @Test
+    fun `a stale ticket says the sign-in expired instead of doing nothing`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+        viewModel.onBrowserLaunched()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&token=ticket-9&state=state-1")
+        advanceUntilIdle()
+
+        assertTrue(repository.exchangedTickets.isEmpty())
+        assertEquals(AccountMessage.GithubExpired, viewModel.state.value.message)
+    }
+
+    @Test
+    fun `a link result is left for the settings screen`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=link&result=linked&state=state-1")
+        advanceUntilIdle()
+
+        assertNull(viewModel.state.value.message)
+        assertFalse(viewModel.state.value.isSignedIn)
+    }
+
+    @Test
+    fun `an existing email account is told to connect GitHub after signing in`() = runTest {
+        val viewModel = viewModel()
+        viewModel.onGithubClick()
+        advanceUntilIdle()
+
+        browser.returnToApp("flow=signin&error=account_not_linked&state=state-1")
+        advanceUntilIdle()
+
+        assertEquals(AccountMessage.GithubAccountExists, viewModel.state.value.message)
+        assertFalse(viewModel.state.value.isSignedIn)
+    }
+
 }
 
 private suspend fun ReceiveTurbine<SignInState>.awaitSignedIn(): Boolean {

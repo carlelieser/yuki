@@ -19,6 +19,10 @@ sealed interface FailureReason {
 
     data object AccountExists : FailureReason
 
+    data object LastSignInMethod : FailureReason
+
+    data object ReauthenticationRequired : FailureReason
+
     data class Rejected(val explanation: String) : FailureReason
 
     data class Server(val status: Int) : FailureReason

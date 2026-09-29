@@ -81,6 +81,12 @@ object YukiIcons {
     val Repository: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_github)
 
+    val Key: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_key)
+
+    val Github: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_github)
+
     val Homepage: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_home)
 

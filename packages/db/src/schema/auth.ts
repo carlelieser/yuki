@@ -39,6 +39,8 @@ export const account = pgTable('account', {
 	refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
 	scope: text('scope'),
 	password: text('password'),
+	providerUsername: text('provider_username'),
+	providerProfileUrl: text('provider_profile_url'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 });

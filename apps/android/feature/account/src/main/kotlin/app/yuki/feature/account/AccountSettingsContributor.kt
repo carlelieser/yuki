@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.yuki.core.designsystem.component.Avatar
 import app.yuki.core.designsystem.component.AvatarContent
@@ -66,16 +67,53 @@ class AccountSettingsContributor @Inject constructor(
         }
 
         val picker = rememberAvatarPicker(onPicked = viewModel::onAvatarPicked)
+        val methods = signInMethods()
 
         SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
 
         AccountCard(
             account = account,
             isUploadingAvatar = state.isUploadingAvatar,
-            onEditAvatarClick = picker::launch,
-            onSignOutClick = viewModel::onSignOut,
+            methods = methods,
+            actions = AccountCardActions(
+                onEditAvatarClick = picker::launch,
+                onSignOutClick = viewModel::onSignOut,
+            ),
         )
     }
+}
+
+private data class SignInMethods(
+    val state: SignInMethodsState,
+    val github: GithubRowActions,
+    val onSetPassword: () -> Unit,
+)
+
+private data class AccountCardActions(
+    val onEditAvatarClick: () -> Unit,
+    val onSignOutClick: () -> Unit,
+)
+
+@Composable
+private fun signInMethods(): SignInMethods {
+    val viewModel: SignInMethodsViewModel = hiltViewModel()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SettingsMessage(message = state.message?.text(), onShown = viewModel::onMessageShown)
+    LaunchBrowser(url = state.browserUrl, onLaunched = viewModel::onBrowserLaunched)
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose {}
+    }
+
+    return SignInMethods(
+        state = state,
+        github = GithubRowActions(
+            onConnect = viewModel::onConnect,
+            onDisconnect = viewModel::onDisconnect,
+        ),
+        onSetPassword = viewModel::onSetPassword,
+    )
 }
 
 @Composable
@@ -98,15 +136,16 @@ private fun SignedOutCard(onSignInClick: () -> Unit, modifier: Modifier = Modifi
 private fun AccountCard(
     account: AuthAccount,
     isUploadingAvatar: Boolean,
-    onEditAvatarClick: () -> Unit,
-    onSignOutClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    methods: SignInMethods,
+    actions: AccountCardActions,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    val rowCount = if (isExpanded) 2 else 1
+    val hasMethodRows = methods.state.isLoaded
+    val expandedCount = if (hasMethodRows) 4 else 2
+    val rowCount = if (isExpanded) expandedCount else 1
 
     SettingsGroup(
-        modifier = modifier.testTag(ACCOUNT_CARD_TAG),
+        modifier = Modifier.testTag(ACCOUNT_CARD_TAG),
         label = stringResource(R.string.account_section),
     ) {
         SettingsSlotRow(
@@ -118,16 +157,32 @@ private fun AccountCard(
                 account = account,
                 isUploadingAvatar = isUploadingAvatar,
                 isExpanded = isExpanded,
-                onEditAvatarClick = onEditAvatarClick,
+                onEditAvatarClick = actions.onEditAvatarClick,
+            )
+        }
+
+        AnimatedVisibility(visible = isExpanded && hasMethodRows) {
+            PasswordMethodRow(
+                state = methods.state,
+                position = SettingsRowPosition(index = 1, count = expandedCount),
+                onSetPassword = methods.onSetPassword,
+            )
+        }
+
+        AnimatedVisibility(visible = isExpanded && hasMethodRows) {
+            GithubAccountRow(
+                state = methods.state,
+                position = SettingsRowPosition(index = 2, count = expandedCount),
+                actions = methods.github,
             )
         }
 
         AnimatedVisibility(visible = isExpanded) {
             SettingsRow(
-                position = SettingsRowPosition(index = 1, count = 2),
+                position = SettingsRowPosition(index = expandedCount - 1, count = expandedCount),
                 title = stringResource(R.string.account_sign_out),
                 icon = YukiIcons.Logout,
-                onClick = onSignOutClick,
+                onClick = actions.onSignOutClick,
                 modifier = Modifier.testTag(SIGN_OUT_ROW_TAG),
             )
         }
