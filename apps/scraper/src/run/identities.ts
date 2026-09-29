@@ -3,6 +3,9 @@ import { ApkFormatError } from '../apk/format-error.ts';
 import type { ApkIdentity } from '../apk/identity.ts';
 import type { PendingVersion } from '../persistence/identities.ts';
 
+export const DEFAULT_MAX_IDENTITIES = 3000;
+export const IDENTITY_CONCURRENCY = 8;
+
 export type IdentityPorts = {
 	listPending: (limit: number) => Promise<PendingVersion[]>;
 	read: (downloadUrl: string) => Promise<ApkIdentity | null>;

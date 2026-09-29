@@ -7,13 +7,15 @@ import {
 	type EtagStore,
 	type RefreshTarget
 } from './refresh.ts';
-import { identifyVersions, type IdentityPorts } from './identities.ts';
+import {
+	DEFAULT_MAX_IDENTITIES,
+	IDENTITY_CONCURRENCY,
+	identifyVersions,
+	type IdentityPorts
+} from './identities.ts';
 import type { GithubClient } from '@yuki/github';
 import type { ListingRecord, PersistInput } from '../persistence/listings.ts';
 import type { RunTotals } from '../persistence/runs.ts';
-
-const DEFAULT_MAX_IDENTITIES = 3000;
-const IDENTITY_CONCURRENCY = 8;
 
 export type RunPorts = {
 	client: GithubClient;

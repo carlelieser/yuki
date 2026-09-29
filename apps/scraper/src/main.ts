@@ -1,7 +1,5 @@
 import { createDatabase } from '@yuki/db';
 import { createGithubClient, requireGithubToken } from '@yuki/github';
-import { httpApkSource } from './apk/http-source.ts';
-import { readApkIdentity } from './apk/identity.ts';
 import { readIconAsset } from './icon/asset.ts';
 import { requireIconConfig } from './icon/env.ts';
 import { createR2Bucket } from './icon/r2-bucket.ts';
@@ -20,14 +18,10 @@ import {
 	readPartitionCursor,
 	writePartitionCursor
 } from './persistence/partitions.ts';
-import {
-	listPendingIdentities,
-	saveIdentity,
-	settleListingPackageNames
-} from './persistence/identities.ts';
 import { finishRun, lastSuccessfulRunAt, startRun } from './persistence/runs.ts';
 import { GITHUB_EPOCH } from './detection/queries.ts';
 import { readEtag, writeEtag } from './persistence/sources.ts';
+import { createIdentityPorts } from './run/identity-ports.ts';
 import { runNightly } from './run/nightly.ts';
 import { findMissingSlugs, readListFlag } from './run/args.ts';
 
@@ -121,17 +115,9 @@ try {
 			services: {
 				publishIcon: async (source) => icons.publish(await readIconAsset(source))
 			},
-			identities: {
-				listPending: async (limit) =>
-					listPendingIdentities(
-						db,
-						limit,
-						slugs.length > 0 ? (await resolveSlugTargets()).map((target) => target.id) : undefined
-					),
-				read: (downloadUrl) => readApkIdentity(httpApkSource(downloadUrl)),
-				save: (versionId, identity) => saveIdentity(db, versionId, identity),
-				settlePackageNames: (listingIds) => settleListingPackageNames(db, listingIds)
-			},
+			identities: createIdentityPorts(db, async () =>
+				slugs.length > 0 ? (await resolveSlugTargets()).map((target) => target.id) : undefined
+			),
 			log: (message) => console.log(message)
 		},
 		{ shouldDiscover, maxRepos, maxRefresh, discoveryRange, maxIdentities }
