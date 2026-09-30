@@ -52,4 +52,8 @@ internal abstract class NetworkBindings {
     @Binds
     @Singleton
     abstract fun libraryRepository(implementation: NetworkLibraryRepository): LibraryRepository
+
+    @Binds
+    @Singleton
+    abstract fun reviewRepository(implementation: NetworkReviewRepository): ReviewRepository
 }

@@ -28,26 +28,6 @@ private val ADA = AuthAccount(
     imageUrl = null,
 )
 
-private class FakeSessionStore(initial: AuthSession? = null) : SessionStore {
-    private val stored = MutableStateFlow(initial)
-
-    override val session: Flow<AuthSession?> = stored.asStateFlow()
-
-    override suspend fun read(): AuthSession? = stored.value
-
-    override suspend fun store(session: AuthSession) {
-        stored.value = session
-    }
-
-    override suspend fun updateAccount(account: AuthAccount) {
-        stored.value = stored.value?.copy(account = account)
-    }
-
-    override suspend fun clear() {
-        stored.value = null
-    }
-}
-
 private class RecordingRefresh : DetectedInstallRefresh {
     var count = 0
 

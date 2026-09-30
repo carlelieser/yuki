@@ -51,6 +51,9 @@ object YukiIcons {
     val Star: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_star)
 
+    val StarFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_star_filled)
+
     val ThumbUp: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_thumb_up)
 

@@ -36,6 +36,13 @@ data class ListingCallbacks(
     val onVersionInstallAction: VersionInstallHandler,
     val onAuthorSelected: ((String) -> Unit)? = null,
     val onListingSelected: (ListingSummary) -> Unit = {},
+    val onVersionsSelected: (() -> Unit)? = null,
+    val reviews: ReviewCallbacks = ReviewCallbacks(),
+)
+
+data class ListingExtras(
+    val authored: AuthoredListings = AuthoredListings(),
+    val reviews: ReviewSectionState = ReviewSectionState(),
 )
 
 data class AuthoredListings(
@@ -168,26 +175,20 @@ private fun LazyListScope.linkSection(model: ListingUiModel, onOpenLink: LinkOpe
 private fun LazyListScope.versionSection(
     model: ListingUiModel,
     status: ListingInstallStatus?,
-    onVersionInstallAction: VersionInstallHandler,
+    callbacks: ListingCallbacks,
 ) {
     val versions = model.detail.versions
     if (versions.isEmpty() || status == null) return
 
-    item { SectionHeader(title = stringResource(R.string.listing_section_versions)) }
-    items(items = versions, key = { it.tag }) { version ->
-        ListingVersionItem(
-            version = version,
-            install = version.toInstallable()?.let { installable ->
-                VersionInstallPresentation(
-                    state = versionInstallState(version = version, status = status),
-                    onAction = InstallActionHandler { action ->
-                        onVersionInstallAction.onAction(action, installable)
-                    },
-                )
-            },
-            modifier = Modifier.animateItem(),
-        )
-    }
+    val hasMore = versions.size > VISIBLE_VERSION_COUNT
+    val onSeeAll = callbacks.onVersionsSelected?.takeIf { hasMore }
+
+    item { VersionSectionHeader(onSeeAll = onSeeAll) }
+    versionItems(
+        versions = versions.take(VISIBLE_VERSION_COUNT),
+        status = status,
+        onVersionInstallAction = callbacks.onVersionInstallAction,
+    )
 }
 
 @Composable
@@ -195,7 +196,7 @@ internal fun ListingDetailBody(
     model: ListingUiModel,
     status: ListingUninstallStatus,
     callbacks: ListingCallbacks,
-    authored: AuthoredListings = AuthoredListings(),
+    extras: ListingExtras = ListingExtras(),
 ) {
     val author = model.detail.summary.author
     val authorSection = AuthorSection(
@@ -216,8 +217,9 @@ internal fun ListingDetailBody(
         warningSection(model)
         descriptionSection(model)
         screenshotSection(model, callbacks.onScreenshotSelected)
-        moreFromAuthorSection(authorSection, authored, callbacks)
+        moreFromAuthorSection(authorSection, extras.authored, callbacks)
         linkSection(model, callbacks.onOpenLink)
-        versionSection(model, status.install, callbacks.onVersionInstallAction)
+        versionSection(model, status.install, callbacks)
+        reviewSection(extras.reviews, callbacks.reviews)
     }
 }

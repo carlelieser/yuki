@@ -42,6 +42,8 @@ class ListingViewModel @Inject constructor(
         "ListingViewModel requires a '$LISTING_SLUG_KEY' argument"
     }
 
+    private val installDispatch = VersionInstallDispatch(installGateway)
+
     val shareUrl: String get() = listingShareUrl(baseUrl, slug)
 
     private val mutableListing = MutableStateFlow<UiState<ListingUiModel>>(UiState.Loading)
@@ -110,27 +112,18 @@ class ListingViewModel @Inject constructor(
     fun onInstallAction(action: InstallAction, version: InstallableVersion) {
         val model = successOrNull() ?: return
 
-        when (action) {
-            InstallAction.Install, InstallAction.Update, InstallAction.Retry ->
-                startInstall(model, version)
-            InstallAction.Cancel ->
-                viewModelScope.launch { installGateway.cancel(model.repoId) }
-            InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
-            InstallAction.Uninstall -> requestUninstall(model)
+        if (action == InstallAction.Uninstall) {
+            requestUninstall(model)
+            return
         }
+
+        dispatch(action, model, version)
     }
 
     fun onVersionInstallAction(action: InstallAction, version: InstallableVersion) {
         val model = successOrNull() ?: return
 
-        when (action) {
-            InstallAction.Install, InstallAction.Update, InstallAction.Retry ->
-                startInstall(model, version)
-            InstallAction.Cancel ->
-                viewModelScope.launch { installGateway.cancel(model.repoId) }
-            InstallAction.Open -> viewModelScope.launch { installGateway.open(model.repoId) }
-            InstallAction.Uninstall -> Unit
-        }
+        dispatch(action, model, version)
     }
 
     fun onUninstallConfirmed() {
@@ -165,10 +158,14 @@ class ListingViewModel @Inject constructor(
             }
     }
 
-    private fun startInstall(model: ListingUiModel, version: InstallableVersion) {
+    private fun dispatch(
+        action: InstallAction,
+        model: ListingUiModel,
+        version: InstallableVersion,
+    ) {
         val request = ListingInstallRequest(detail = model.detail, version = version)
 
-        viewModelScope.launch { installGateway.install(request) }
+        viewModelScope.launch { installDispatch.dispatch(action, request) }
     }
 
     private fun installStatusFor(

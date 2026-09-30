@@ -24,6 +24,15 @@ data object SignUpRoute
 data class ListingRoute(val slug: String)
 
 @Serializable
+data class VersionsRoute(val slug: String)
+
+@Serializable
+data class ReviewsRoute(val slug: String, val title: String, val iconUrl: String? = null)
+
+@Serializable
+data class ReviewComposerRoute(val slug: String, val versionTag: String? = null)
+
+@Serializable
 data object SearchRoute
 
 @Serializable

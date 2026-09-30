@@ -12,15 +12,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import app.yuki.core.designsystem.component.ScreenshotFocus
 import app.yuki.core.designsystem.component.ScreenshotFocusScope
-import app.yuki.core.designsystem.component.ScreenshotTransitionScope
 import app.yuki.feature.explore.ExploreRoute as ExploreScreenRoute
 import app.yuki.feature.library.LibraryScreen
-import app.yuki.feature.listing.ListingNavigation
-import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
-import app.yuki.feature.listing.ScreenshotViewerRoute
 import app.yuki.feature.search.AuthorRoute as AuthorScreenRoute
 import app.yuki.feature.search.CatalogRoute as CatalogScreenRoute
 import app.yuki.feature.search.CategoryRoute as CategoryScreenRoute
@@ -90,6 +85,9 @@ private fun YukiRoutedContent(
         updatesDestination(navigator, bottomBarPadding)
         listingDestination(navigator, destinations.sharedScope)
         screenshotDestination(navigator, destinations.sharedScope)
+        versionsDestination(navigator)
+        reviewsDestination(navigator)
+        reviewComposerDestination(navigator)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         authorDestination(navigator, bottomBarPadding)
@@ -153,42 +151,6 @@ private fun NavGraphBuilder.updatesDestination(
             onListingClick = navigator::openListing,
             contentPadding = bottomBarPadding,
         )
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-private fun NavGraphBuilder.listingDestination(
-    navigator: YukiNavigator,
-    sharedScope: SharedTransitionScope,
-) {
-    composable<ListingRoute>(deepLinks = listingDeepLinks()) { entry ->
-        val slug = entry.toRoute<ListingRoute>().slug
-
-        ScreenshotTransitionScope(sharedScope = sharedScope, contentScope = this) {
-            ListingScreenRoute(
-                slug = slug,
-                navigation = ListingNavigation(
-                    onBackClick = navigator::navigateUp,
-                    onScreenshotSelected = { selection ->
-                        navigator.openScreenshots(slug, selection)
-                    },
-                    onAuthorSelected = navigator::openAuthor,
-                    onListingSelected = navigator::openListing,
-                ),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-private fun NavGraphBuilder.screenshotDestination(
-    navigator: YukiNavigator,
-    sharedScope: SharedTransitionScope,
-) {
-    composable<ScreenshotRoute> {
-        ScreenshotTransitionScope(sharedScope = sharedScope, contentScope = this) {
-            ScreenshotViewerRoute(onBackClick = navigator::navigateUp)
-        }
     }
 }
 

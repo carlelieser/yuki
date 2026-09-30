@@ -94,7 +94,7 @@ internal fun ListingVersionDto.toDomain(): ListingVersion = ListingVersion(
     publishedAt = publishedAt?.let(::parseTimestamp),
 )
 
-private fun parseTimestamp(raw: String): Instant? = try {
+internal fun parseTimestamp(raw: String): Instant? = try {
     Instant.parse(raw)
 } catch (_: DateTimeParseException) {
     null

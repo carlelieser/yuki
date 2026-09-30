@@ -47,7 +47,7 @@ private val descriptions: Map<KClass<out FailureReason>, Int> = mapOf(
 )
 
 @Composable
-private fun descriptionFor(reason: FailureReason, missingMessage: String?): String = when {
+fun failureDescription(reason: FailureReason, missingMessage: String? = null): String = when {
     reason is FailureReason.Rejected -> reason.explanation
     reason == FailureReason.NotFound && missingMessage != null -> missingMessage
     else -> stringResource(descriptions.getValue(reason::class))
@@ -107,7 +107,7 @@ fun FailureState(
             textAlign = TextAlign.Center,
         )
         Text(
-            text = descriptionFor(reason, missingMessage),
+            text = failureDescription(reason, missingMessage),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

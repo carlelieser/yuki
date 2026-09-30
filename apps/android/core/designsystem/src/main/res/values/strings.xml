@@ -63,6 +63,11 @@
 
     <string name="designsystem_screenshot_position">Screenshot %1$d of %2$d</string>
     <string name="designsystem_section_see_all">See all %1$s</string>
+    <plurals name="designsystem_rating_stars">
+        <item quantity="one">%1$d star</item>
+        <item quantity="other">%1$d stars</item>
+    </plurals>
+    <string name="designsystem_text_length">%1$d/%2$d</string>
     <string name="designsystem_overflow">More options</string>
     <string name="designsystem_search_clear">Clear search</string>
     <string name="designsystem_search_placeholder">Search apps</string>

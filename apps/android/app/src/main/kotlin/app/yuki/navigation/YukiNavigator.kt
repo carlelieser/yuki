@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import app.yuki.core.model.ListingCategory
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ScreenshotSelection
 
 internal class YukiNavigator(
@@ -68,6 +69,20 @@ internal class YukiNavigator(
                 urls = selection.urls,
             ),
         )
+    }
+
+    fun openVersions(slug: String) {
+        navController.navigate(VersionsRoute(slug = slug))
+    }
+
+    fun openReviews(listing: ListingSummary) {
+        navController.navigate(
+            ReviewsRoute(slug = listing.slug, title = listing.title, iconUrl = listing.iconUrl),
+        )
+    }
+
+    fun openReviewComposer(slug: String, versionTag: String?) {
+        navController.navigate(ReviewComposerRoute(slug = slug, versionTag = versionTag))
     }
 
     fun navigateUp() {

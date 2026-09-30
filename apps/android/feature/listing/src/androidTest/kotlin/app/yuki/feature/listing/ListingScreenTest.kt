@@ -426,9 +426,6 @@ class ListingScreenTest {
     }
 }
 
-private fun idleStatus(): ListingInstallStatus =
-    ListingInstallStatus(state = InstallState.NotInstalled, versionTag = null)
-
 private fun ComposeContentTestRule.scrollToText(text: String) {
     onNode(hasTestTag(LISTING_DETAIL_TAG)).performScrollToNode(hasText(text))
 }
@@ -457,16 +454,6 @@ private fun otherApp(
     slug: String = "borealis",
     title: String = "Borealis",
 ) = summary(id = id, githubRepoId = githubRepoId, slug = slug, title = title)
-
-private fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
-    callbacks = ListingCallbacks(
-        onInstallAction = VersionInstallHandler { _, _ -> },
-        onOpenLink = LinkOpener { },
-        onScreenshotSelected = { },
-        onVersionInstallAction = VersionInstallHandler { _, _ -> },
-    ),
-    onRetry = { },
-)
 
 private fun withInstallHandler(
     onAction: (app.yuki.core.designsystem.component.InstallAction) -> Unit,

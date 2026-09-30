@@ -1,5 +1,7 @@
 package app.yuki.feature.listing
 
+import app.yuki.core.designsystem.component.LinkOpener
+import app.yuki.core.model.InstallState
 import app.yuki.core.model.ListingDetail
 import app.yuki.core.model.ListingLinks
 import app.yuki.core.model.ListingSummary
@@ -60,4 +62,17 @@ internal fun detail(
     isArchived = isArchived,
     screenshots = screenshots,
     versions = versions,
+)
+
+internal fun idleStatus(): ListingInstallStatus =
+    ListingInstallStatus(state = InstallState.NotInstalled, versionTag = null)
+
+internal fun noopCallbacks(): ListingScreenCallbacks = ListingScreenCallbacks(
+    callbacks = ListingCallbacks(
+        onInstallAction = VersionInstallHandler { _, _ -> },
+        onOpenLink = LinkOpener { },
+        onScreenshotSelected = { },
+        onVersionInstallAction = VersionInstallHandler { _, _ -> },
+    ),
+    onRetry = { },
 )
