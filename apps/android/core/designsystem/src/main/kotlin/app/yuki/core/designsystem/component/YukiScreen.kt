@@ -1,5 +1,6 @@
 package app.yuki.core.designsystem.component
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,12 +28,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import app.yuki.core.designsystem.R
 import app.yuki.core.designsystem.theme.YukiSize
 import app.yuki.core.designsystem.theme.YukiSpacing
 
 const val SCREEN_ACTION_TAG = "screenAction"
 const val BACK_ACTION_TAG = "backAction"
+const val DETAIL_HEADING_ICON_TAG = "detailHeadingIcon"
 
 
 data class ScreenAction(
@@ -99,9 +102,33 @@ private fun ScreenActionButton(action: ScreenAction?) {
     }
 }
 
+data class DetailHeading(
+    val title: String,
+    val description: String? = null,
+    val iconUrl: String? = null,
+    val hasIcon: Boolean = iconUrl != null,
+)
+
 @Composable
 fun YukiDetailScreen(
     title: String,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    YukiDetailScreen(
+        heading = DetailHeading(title = title),
+        onBackClick = onBackClick,
+        modifier = modifier,
+        trailing = trailing,
+        content = content,
+    )
+}
+
+@Composable
+fun YukiDetailScreen(
+    heading: DetailHeading,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
@@ -112,7 +139,7 @@ fun YukiDetailScreen(
         modifier = modifier.fillMaxSize(),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            YukiDetailHeader(title = title, onBackClick = onBackClick, trailing = trailing)
+            YukiDetailHeader(heading = heading, onBackClick = onBackClick, trailing = trailing)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -126,7 +153,7 @@ fun YukiDetailScreen(
 
 @Composable
 private fun YukiDetailHeader(
-    title: String,
+    heading: DetailHeading,
     onBackClick: () -> Unit,
     trailing: (@Composable () -> Unit)?,
 ) {
@@ -144,15 +171,36 @@ private fun YukiDetailHeader(
         ) {
             Icon(imageVector = YukiIcons.Back, contentDescription = stringResource(R.string.designsystem_back))
         }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier
-                .weight(1f)
-                .semantics { heading() },
-        )
+        DetailHeadingText(heading = heading, modifier = Modifier.weight(1f))
         trailing?.invoke()
+    }
+}
+
+@Composable
+private fun DetailHeadingText(heading: DetailHeading, modifier: Modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (heading.hasIcon) {
+            AppIcon(
+                iconUrl = heading.iconUrl,
+                size = YukiSize.IconMedium,
+                modifier = Modifier.testTag(DETAIL_HEADING_ICON_TAG),
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = heading.title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics { heading() },
+            )
+            ProductDescription(description = heading.description, maxLines = 1)
+        }
     }
 }
 
