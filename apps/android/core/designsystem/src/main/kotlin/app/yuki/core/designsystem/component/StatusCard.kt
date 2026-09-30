@@ -29,6 +29,13 @@ enum class StatusTone {
     Attention,
 }
 
+@Composable
+fun statusIconFor(tone: StatusTone): ImageVector = when (tone) {
+    StatusTone.Positive -> YukiIcons.Check
+    StatusTone.Attention -> YukiIcons.Error
+    StatusTone.Informative, StatusTone.Neutral -> YukiIcons.Info
+}
+
 data class StatusAction(
     val label: String,
     val onClick: () -> Unit,
