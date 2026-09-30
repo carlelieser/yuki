@@ -78,8 +78,8 @@ internal class YukiNavigator(
         navController.navigate(ReviewsRoute(slug = slug))
     }
 
-    fun openReviewComposer(slug: String) {
-        navController.navigate(ReviewComposerRoute(slug = slug))
+    fun openReviewComposer(slug: String, versionTag: String?) {
+        navController.navigate(ReviewComposerRoute(slug = slug, versionTag = versionTag))
     }
 
     fun navigateUp() {

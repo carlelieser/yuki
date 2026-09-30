@@ -28,10 +28,15 @@ class ReviewComposerViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val library = RecordingLibraryRepository()
+
     private fun viewModelWith(repository: FakeReviewRepository): ReviewComposerViewModel {
         val viewModel = ReviewComposerViewModel(
-            savedStateHandle = SavedStateHandle(mapOf(LISTING_SLUG_KEY to SLUG)),
+            savedStateHandle = SavedStateHandle(
+                mapOf(LISTING_SLUG_KEY to SLUG, REVIEW_VERSION_TAG_KEY to "v1.2.0"),
+            ),
             repository = repository,
+            library = library,
         )
         dispatcher.scheduler.advanceUntilIdle()
         return viewModel
@@ -109,6 +114,48 @@ class ReviewComposerViewModelTest {
         assertEquals(refusal, state.failure)
         assertFalse(state.isDone)
         assertFalse(state.isSubmitting)
+    }
+
+    @Test
+    fun `records the install before a first review the server has not seen`() = runTest {
+        val unrecorded = OwnReview(review = null, canReview = false)
+        val repository = FakeReviewRepository(ownResult = Result.success(unrecorded))
+        val viewModel = viewModelWith(repository)
+
+        viewModel.onRatingChange(5)
+        viewModel.submit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf(SLUG to "v1.2.0"), library.recorded)
+        assertEquals(1, repository.saved.size)
+        assertTrue(viewModel.state.value.isDone)
+    }
+
+    @Test
+    fun `does not record an install the server already knows`() = runTest {
+        val viewModel = viewModelWith(FakeReviewRepository())
+
+        viewModel.onRatingChange(5)
+        viewModel.submit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(emptyList<Pair<String, String>>(), library.recorded)
+    }
+
+    @Test
+    fun `a failed install record stops the post and reports why`() = runTest {
+        val unrecorded = OwnReview(review = null, canReview = false)
+        val repository = FakeReviewRepository(ownResult = Result.success(unrecorded))
+        library.recordResult = Result.failure(TypedFailure(FailureReason.Offline))
+        val viewModel = viewModelWith(repository)
+
+        viewModel.onRatingChange(5)
+        viewModel.submit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(emptyList<ReviewDraft>(), repository.saved)
+        assertEquals(FailureReason.Offline, viewModel.state.value.failure)
+        assertFalse(viewModel.state.value.isDone)
     }
 
     @Test

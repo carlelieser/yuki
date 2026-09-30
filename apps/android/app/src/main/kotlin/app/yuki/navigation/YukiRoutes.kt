@@ -30,7 +30,7 @@ data class VersionsRoute(val slug: String)
 data class ReviewsRoute(val slug: String)
 
 @Serializable
-data class ReviewComposerRoute(val slug: String)
+data class ReviewComposerRoute(val slug: String, val versionTag: String? = null)
 
 @Serializable
 data object SearchRoute

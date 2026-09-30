@@ -3,6 +3,7 @@ package app.yuki.feature.listing
 import app.yuki.core.auth.AuthSession
 import app.yuki.core.auth.SessionStore
 import app.yuki.core.model.AuthAccount
+import app.yuki.core.model.LibraryEntry
 import app.yuki.core.model.OwnReview
 import app.yuki.core.model.RatingBucket
 import app.yuki.core.model.RatingSummary
@@ -10,6 +11,7 @@ import app.yuki.core.model.Review
 import app.yuki.core.model.ReviewAuthor
 import app.yuki.core.model.ReviewDraft
 import app.yuki.core.model.ReviewPage
+import app.yuki.core.network.LibraryRepository
 import app.yuki.core.network.ReviewRepository
 import java.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -106,5 +108,19 @@ internal class FakeReviewRepository(
     override suspend fun delete(slug: String): Result<Unit> {
         deleteCount += 1
         return deleteResult
+    }
+}
+
+internal class RecordingLibraryRepository(
+    var recordResult: Result<Unit> = Result.success(Unit),
+) : LibraryRepository {
+    val recorded: MutableList<Pair<String, String>> = mutableListOf()
+
+    override suspend fun library(): Result<List<LibraryEntry>> =
+        error("library is not used by the review composer")
+
+    override suspend fun record(slug: String, versionTag: String): Result<Unit> {
+        recorded.add(slug to versionTag)
+        return recordResult
     }
 }

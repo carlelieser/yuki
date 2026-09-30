@@ -6,8 +6,10 @@ import androidx.lifecycle.viewModelScope
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.MAX_REVIEW_BODY
 import app.yuki.core.model.OwnReview
+import app.yuki.core.model.Review
 import app.yuki.core.model.ReviewDraft
 import app.yuki.core.model.failureReason
+import app.yuki.core.network.LibraryRepository
 import app.yuki.core.network.ReviewRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -25,18 +27,24 @@ data class ReviewComposerState(
     val isSubmitting: Boolean = false,
     val isRatingMissing: Boolean = false,
     val isConfirmingDelete: Boolean = false,
+    val isDownloadRecorded: Boolean = false,
     val isDone: Boolean = false,
     val failure: FailureReason? = null,
 )
+
+const val REVIEW_VERSION_TAG_KEY = "versionTag"
 
 @HiltViewModel
 class ReviewComposerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: ReviewRepository,
+    private val library: LibraryRepository,
 ) : ViewModel() {
     private val slug: String = requireNotNull(savedStateHandle[LISTING_SLUG_KEY]) {
         "ReviewComposerViewModel requires a '$LISTING_SLUG_KEY' argument"
     }
+
+    private val versionTag: String = savedStateHandle[REVIEW_VERSION_TAG_KEY] ?: ""
 
     private val mutableState = MutableStateFlow(ReviewComposerState())
 
@@ -71,7 +79,7 @@ class ReviewComposerViewModel @Inject constructor(
         }
 
         val draft = ReviewDraft(rating = current.rating, body = current.body.trim())
-        send { repository.save(slug, draft) }
+        send { save(draft) }
     }
 
     fun onFailureShown() {
@@ -91,6 +99,15 @@ class ReviewComposerViewModel @Inject constructor(
         send { repository.delete(slug) }
     }
 
+    private suspend fun save(draft: ReviewDraft): Result<Review> {
+        if (!mutableState.value.isDownloadRecorded) {
+            library.record(slug, versionTag).onFailure { error -> return Result.failure(error) }
+            mutableState.update { current -> current.copy(isDownloadRecorded = true) }
+        }
+
+        return repository.save(slug, draft)
+    }
+
     private fun send(request: suspend () -> Result<*>) {
         mutableState.update { current -> current.copy(isSubmitting = true, failure = null) }
         viewModelScope.launch {
@@ -107,12 +124,12 @@ class ReviewComposerViewModel @Inject constructor(
 }
 
 private fun ReviewComposerState.prefilledFrom(own: OwnReview): ReviewComposerState {
-    val review = own.review ?: return copy(isLoading = false)
+    val loaded = copy(isLoading = false, isDownloadRecorded = own.canReview)
+    val review = own.review ?: return loaded
 
-    return copy(
+    return loaded.copy(
         rating = review.rating,
         body = review.body.orEmpty(),
         isEditing = true,
-        isLoading = false,
     )
 }

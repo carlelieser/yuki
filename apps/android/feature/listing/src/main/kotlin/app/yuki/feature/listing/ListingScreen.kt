@@ -30,7 +30,7 @@ data class ListingNavigation(
     val onListingSelected: (String) -> Unit = {},
     val onVersionsSelected: (() -> Unit)? = null,
     val onReviewsSelected: () -> Unit = {},
-    val onWriteReview: () -> Unit = {},
+    val onWriteReview: (String?) -> Unit = {},
     val onSignIn: () -> Unit = {},
 )
 
@@ -108,7 +108,7 @@ private fun rememberListingCallbacks(
             onVersionsSelected = navigation.onVersionsSelected,
             reviews = ReviewCallbacks(
                 onSeeAll = navigation.onReviewsSelected,
-                onWrite = navigation.onWriteReview,
+                onWrite = { navigation.onWriteReview(viewModel.installStatus.value?.versionTag) },
                 onSignIn = navigation.onSignIn,
                 onRetry = viewModels.reviews::refresh,
             ),

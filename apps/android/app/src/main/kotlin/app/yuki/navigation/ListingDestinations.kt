@@ -33,7 +33,7 @@ internal fun NavGraphBuilder.listingDestination(
                     onListingSelected = navigator::openListing,
                     onVersionsSelected = { navigator.openVersions(slug) },
                     onReviewsSelected = { navigator.openReviews(slug) },
-                    onWriteReview = { navigator.openReviewComposer(slug) },
+                    onWriteReview = { versionTag -> navigator.openReviewComposer(slug, versionTag) },
                     onSignIn = navigator::openSignIn,
                 ),
             )
