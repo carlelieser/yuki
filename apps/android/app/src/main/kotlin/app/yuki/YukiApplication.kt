@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import app.yuki.core.designsystem.image.yukiImageLoader
 import app.yuki.core.installer.StuckInstallReclaimer
+import app.yuki.feature.library.SignInLibrarySync
 import app.yuki.feature.updates.SelfInstallReconciler
 import app.yuki.feature.updates.SelfUpdateSettler
 import app.yuki.feature.updates.UpdateCheckScheduler
@@ -46,6 +47,9 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
     @Inject
     internal lateinit var libraryRefresh: LibraryRefreshObserver
 
+    @Inject
+    lateinit var signInLibrarySync: SignInLibrarySync
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val workManagerConfiguration: Configuration
@@ -74,6 +78,12 @@ class YukiApplication : Application(), Configuration.Provider, SingletonImageLoa
         }
 
         scope.launch { updateNotifications.follow() }
+
+        scope.launch {
+            runCatching { signInLibrarySync.follow() }.onFailure { error ->
+                Log.w(TAG, "Stopped syncing the library after sign-in", error)
+            }
+        }
 
         scope.launch {
             runCatching { selfInstalls.reconcile() }.onFailure { error ->
