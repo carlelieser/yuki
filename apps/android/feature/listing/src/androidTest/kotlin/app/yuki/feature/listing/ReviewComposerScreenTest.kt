@@ -7,11 +7,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -53,23 +54,39 @@ class ReviewComposerScreenTest {
         }
     }
 
+    private fun inForm() = hasAnyAncestor(hasTestTag(REVIEW_COMPOSER_TAG))
+
     @Test
-    fun aNewReviewOffersPostWithoutDelete() {
+    fun aNewReviewOffersPostInTheHeaderWithoutDelete() {
         setScreen(ReviewComposerState(isLoading = false))
 
         composeRule.onNodeWithText(text(R.string.listing_composer_title_write)).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.listing_composer_post)).assertIsDisplayed()
-        composeRule.onAllNodesWithText(text(R.string.listing_composer_delete)).assertCountEquals(0)
+        composeRule.onNode(hasText(text(R.string.listing_composer_post)) and !inForm()).assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription(text(R.string.listing_composer_delete)).assertCountEquals(0)
     }
 
     @Test
-    fun anExistingReviewOffersUpdateAndDelete() {
+    fun anExistingReviewOffersUpdateAndDeleteInTheHeader() {
         setScreen(ReviewComposerState(isLoading = false, isEditing = true, rating = 3, body = "Okay"))
 
         composeRule.onNodeWithText(text(R.string.listing_composer_title_edit)).assertIsDisplayed()
         composeRule.onNodeWithText("Okay").assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.listing_composer_update)).assertIsDisplayed()
-        composeRule.onNodeWithText(text(R.string.listing_composer_delete)).assertIsDisplayed()
+        composeRule.onNode(hasText(text(R.string.listing_composer_update)) and !inForm()).assertIsDisplayed()
+        composeRule.onNode(hasContentDescription(text(R.string.listing_composer_delete)) and !inForm())
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun deletingFromTheHeaderAsksForConfirmation() {
+        var deleteCount = 0
+        setScreen(
+            state = ReviewComposerState(isLoading = false, isEditing = true, rating = 3),
+            callbacks = ReviewComposerCallbacks(onDelete = { deleteCount += 1 }),
+        )
+
+        composeRule.onNodeWithContentDescription(text(R.string.listing_composer_delete)).performClick()
+
+        assertEquals(1, deleteCount)
     }
 
     @Test
