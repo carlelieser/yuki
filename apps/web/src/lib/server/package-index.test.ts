@@ -94,10 +94,14 @@ describe('packageIdentityQuery', () => {
 		expect(packageIdentityQuery().sql).toContain('"listings"."is_published"');
 	});
 
-	it('skips versions whose signers were never read', () => {
+	it('skips assets whose signers were never read', () => {
 		expect(packageIdentityQuery().sql).toContain(
-			'cardinality("listing_versions"."signer_digests") > 0'
+			'cardinality("listing_version_assets"."signer_digests") > 0'
 		);
+	});
+
+	it('never advertises the signer of a foreign apk', () => {
+		expect(packageIdentityQuery().sql).toContain('not "listing_version_assets"."is_foreign"');
 	});
 });
 

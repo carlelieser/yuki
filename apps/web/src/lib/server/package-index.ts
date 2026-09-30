@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, not, sql } from 'drizzle-orm';
 import { QueryBuilder } from 'drizzle-orm/pg-core';
 import { schema, type Database } from '@yuki/db';
 
@@ -62,22 +62,25 @@ export type IdentityRow = PackageIndexEntry & {
 };
 
 function selectIdentityRows(builder: Builder) {
+	const assets = schema.listingVersionAssets;
 	const versions = schema.listingVersions;
 
 	return builder
 		.selectDistinct({
 			...indexColumns,
-			packageName: versions.packageName,
-			signers: versions.signerDigests,
-			lineage: versions.lineageDigests
+			packageName: assets.packageName,
+			signers: assets.signerDigests,
+			lineage: assets.lineageDigests
 		})
-		.from(versions)
+		.from(assets)
+		.innerJoin(versions, eq(versions.id, assets.versionId))
 		.innerJoin(schema.listings, eq(schema.listings.id, versions.listingId))
 		.where(
 			and(
 				eq(schema.listings.isPublished, true),
-				isNotNull(versions.packageName),
-				sql`cardinality(${versions.signerDigests}) > 0`
+				not(assets.isForeign),
+				isNotNull(assets.packageName),
+				sql`cardinality(${assets.signerDigests}) > 0`
 			)
 		);
 }

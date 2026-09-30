@@ -44,6 +44,49 @@ export function publicationOf(isPublished: boolean): Publication {
 	return { isPublished, publishedAt: sql`coalesce(${schema.listings.publishedAt}, now())` };
 }
 
+export async function hasDistributableRelease(
+	tx: Transaction,
+	listingId: string
+): Promise<boolean> {
+	const [release] = await tx
+		.select({ id: schema.listingVersions.id })
+		.from(schema.listingVersions)
+		.where(
+			and(
+				eq(schema.listingVersions.listingId, listingId),
+				isNotNull(schema.listingVersions.downloadUrl)
+			)
+		)
+		.limit(1);
+
+	return release !== undefined;
+}
+
+export async function settlePublication(tx: Transaction, listingId: string): Promise<void> {
+	const [row] = await tx
+		.select({
+			isPublished: schema.listings.isPublished,
+			owner: schema.listings.owner,
+			name: schema.listings.name,
+			confidence: schema.listings.confidence
+		})
+		.from(schema.listings)
+		.where(eq(schema.listings.id, listingId))
+		.limit(1);
+	if (row === undefined) return;
+
+	const isPublished = shouldPublish({
+		...row,
+		hasDownloadableAsset: await hasDistributableRelease(tx, listingId)
+	});
+	if (isPublished === row.isPublished) return;
+
+	await tx
+		.update(schema.listings)
+		.set({ ...publicationOf(isPublished), updatedAt: new Date() })
+		.where(eq(schema.listings.id, listingId));
+}
+
 export type ReverifyOutcome = {
 	confidence: ListingConfidence;
 	wasPublished: boolean;
@@ -76,17 +119,6 @@ export async function replaceEvidence(
 			.where(eq(schema.listings.id, listingId))
 			.limit(1);
 
-		const [asset] = await tx
-			.select({ id: schema.listingVersions.id })
-			.from(schema.listingVersions)
-			.where(
-				and(
-					eq(schema.listingVersions.listingId, listingId),
-					isNotNull(schema.listingVersions.downloadUrl)
-				)
-			)
-			.limit(1);
-
 		const wasPublished = row?.isPublished === true;
 		const isPublished =
 			row !== undefined &&
@@ -94,7 +126,7 @@ export async function replaceEvidence(
 				owner: row.owner,
 				name: row.name,
 				confidence,
-				hasDownloadableAsset: asset !== undefined
+				hasDownloadableAsset: await hasDistributableRelease(tx, listingId)
 			});
 
 		if (wasPublished !== isPublished) {

@@ -139,20 +139,41 @@ export const listingVersions = pgTable(
 		downloadCount: integer('download_count').notNull().default(0),
 		isPrerelease: boolean('is_prerelease').notNull().default(false),
 		publishedAt: timestamp('published_at', { withTimezone: true }),
-		packageName: text('package_name'),
-		signerDigests: text('signer_digests').array(),
-		lineageDigests: text('lineage_digests').array(),
-		identityReadAt: timestamp('identity_read_at', { withTimezone: true }),
+		isIgnored: boolean('is_ignored').notNull().default(false),
 		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
 	},
 	(table) => [
 		uniqueIndex('listing_versions_listing_tag_key').on(table.listingId, table.tag),
-		index('listing_versions_listing_published_idx').on(table.listingId, table.publishedAt),
-		index('listing_versions_package_name_idx').on(table.packageName),
-		index('listing_versions_identity_pending_idx')
-			.on(table.publishedAt)
-			.where(sql`${table.identityReadAt} is null and ${table.downloadUrl} is not null`)
+		index('listing_versions_listing_published_idx').on(table.listingId, table.publishedAt)
+	]
+);
+
+export const listingVersionAssets = pgTable(
+	'listing_version_assets',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		versionId: uuid('version_id')
+			.notNull()
+			.references(() => listingVersions.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		downloadUrl: text('download_url').notNull(),
+		size: integer('size').notNull(),
+		downloadCount: integer('download_count').notNull().default(0),
+		packageName: text('package_name'),
+		signerDigests: text('signer_digests').array(),
+		lineageDigests: text('lineage_digests').array(),
+		isForeign: boolean('is_foreign').notNull().default(false),
+		identityReadAt: timestamp('identity_read_at', { withTimezone: true }),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [
+		uniqueIndex('listing_version_assets_version_name_key').on(table.versionId, table.name),
+		index('listing_version_assets_package_name_idx').on(table.packageName),
+		index('listing_version_assets_identity_pending_idx')
+			.on(table.versionId)
+			.where(sql`${table.identityReadAt} is null`)
 	]
 );
 
@@ -180,8 +201,16 @@ export const listingScreenshotsRelations = relations(listingScreenshots, ({ one 
 	listing: one(listings, { fields: [listingScreenshots.listingId], references: [listings.id] })
 }));
 
-export const listingVersionsRelations = relations(listingVersions, ({ one }) => ({
-	listing: one(listings, { fields: [listingVersions.listingId], references: [listings.id] })
+export const listingVersionsRelations = relations(listingVersions, ({ one, many }) => ({
+	listing: one(listings, { fields: [listingVersions.listingId], references: [listings.id] }),
+	assets: many(listingVersionAssets)
+}));
+
+export const listingVersionAssetsRelations = relations(listingVersionAssets, ({ one }) => ({
+	version: one(listingVersions, {
+		fields: [listingVersionAssets.versionId],
+		references: [listingVersions.id]
+	})
 }));
 
 export const listingEvidenceRelations = relations(listingEvidence, ({ one }) => ({
@@ -194,6 +223,7 @@ export type ListingScreenshot = typeof listingScreenshots.$inferSelect;
 export type NewListingScreenshot = typeof listingScreenshots.$inferInsert;
 export type ListingVersion = typeof listingVersions.$inferSelect;
 export type NewListingVersion = typeof listingVersions.$inferInsert;
+export type ListingVersionAsset = typeof listingVersionAssets.$inferSelect;
 export type ListingEvidence = typeof listingEvidence.$inferSelect;
 export type NewListingEvidence = typeof listingEvidence.$inferInsert;
 export type ListingConfidence = (typeof listingConfidence.enumValues)[number];

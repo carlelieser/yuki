@@ -16,7 +16,9 @@ export {
 	mapReleases,
 	parseArchitecture,
 	pickApkAsset,
+	type ApkAsset,
 	type Architecture,
+	type MappedAsset,
 	type MappedVersion
 } from './versions.ts';
 export type {

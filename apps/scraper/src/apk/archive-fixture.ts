@@ -1,4 +1,6 @@
 import { deflateRawSync } from 'node:zlib';
+import { certificate, type CertificateName } from './certificate-fixtures.ts';
+import { bytesOf, children, CONTEXT_0, readTlv } from './der.ts';
 
 type PoolEncoding = 'utf8' | 'utf16';
 
@@ -244,18 +246,17 @@ function uint64(value: number): Buffer {
 
 export type CertificateFixture = { encoded: Buffer; issuer: Buffer; serial: Buffer };
 
-export function buildCertificate(subject: string, serial: number): CertificateFixture {
-	const issuer = der(0x30, der(0x0c, Buffer.from(subject, 'utf8')));
-	const serialNumber = der(0x02, Buffer.from([serial]));
-	const tbs = der(
-		0x30,
-		der(0xa0, der(0x02, Buffer.from([2]))),
-		serialNumber,
-		der(0x30, der(0x06, Buffer.from([0x2a, 0x86, 0x48]))),
-		issuer
-	);
+export function certificateFixture(name: CertificateName): CertificateFixture {
+	const encoded = certificate(name);
+	const [tbs] = children(encoded, readTlv(encoded, 0)!) ?? [];
+	const fields = children(encoded, tbs!) ?? [];
+	const offset = fields[0]?.tag === CONTEXT_0 ? 1 : 0;
 
-	return { encoded: der(0x30, tbs, der(0x03, Buffer.from([0]))), issuer, serial: serialNumber };
+	return {
+		encoded,
+		serial: bytesOf(encoded, fields[offset]!),
+		issuer: bytesOf(encoded, fields[offset + 2]!)
+	};
 }
 
 export function buildPkcs7(certificates: CertificateFixture[], signer: CertificateFixture): Buffer {

@@ -1,11 +1,7 @@
 import { createDatabase } from '@yuki/db';
 import { listListingsBySlug } from './persistence/listings.ts';
 import { findMissingSlugs, readListFlag } from './run/args.ts';
-import {
-	DEFAULT_MAX_IDENTITIES,
-	IDENTITY_CONCURRENCY,
-	identifyVersions
-} from './run/identities.ts';
+import { DEFAULT_MAX_IDENTITIES, IDENTITY_CONCURRENCY, identifyAssets } from './run/identities.ts';
 import { createIdentityPorts } from './run/identity-ports.ts';
 
 function readNumberFlag(flag: string, fallback: number): number {
@@ -34,7 +30,7 @@ async function resolveListingIds(): Promise<string[] | undefined> {
 	return listings.map((listing) => listing.id);
 }
 
-const summary = await identifyVersions(createIdentityPorts(db, resolveListingIds), {
+const summary = await identifyAssets(createIdentityPorts(db, resolveListingIds), {
 	limit,
 	concurrency: IDENTITY_CONCURRENCY
 });
@@ -44,7 +40,7 @@ for (const warning of summary.warnings) {
 }
 
 console.log(
-	`Identified ${summary.identifiedCount} release apks, ${summary.unsignedCount} unsigned, ` +
+	`Identified ${summary.identifiedCount} release apks, ${summary.foreignCount} foreign, ${summary.unsignedCount} unsigned, ` +
 		`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred`
 );
 process.exit(0);
