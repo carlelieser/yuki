@@ -88,7 +88,11 @@ describe('GET /api/listings/[slug]/architectures/[tag]', () => {
 
 		const response = await architectures(event('acme-tools', 'v1.2.0'));
 
-		expect(getReleaseArchitectures).toHaveBeenCalledWith(expect.anything(), 'v1.2.0');
+		expect(getReleaseArchitectures).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.anything(),
+			'v1.2.0'
+		);
 		await expect(response.json()).resolves.toEqual({
 			architectures: ['arm64-v8a', 'x86_64']
 		});

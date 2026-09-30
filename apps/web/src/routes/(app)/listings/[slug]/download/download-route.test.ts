@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import type { RequestEvent } from './[tag]/$types';
 import type { Database } from '@yuki/db';
-import type { GithubReleaseAsset } from '@yuki/github';
 import type { ListingDetail } from '$lib/server/listings.ts';
 
 const { getListingBySlug, fetchReleaseAssets, recordDownload, ReleaseLookupFailed } = vi.hoisted(
@@ -57,8 +56,8 @@ function detail(assetName: string): ListingDetail {
 	};
 }
 
-function asset(name: string, url: string): GithubReleaseAsset {
-	return { name, browser_download_url: url, size: 100 } as GithubReleaseAsset;
+function asset(name: string, url: string) {
+	return { name, downloadUrl: url, size: 100 };
 }
 
 function event(arch: string | null, user: { id: string } | null = null) {
