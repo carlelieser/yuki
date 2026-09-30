@@ -28,6 +28,7 @@ data class ListingNavigation(
     val onScreenshotSelected: (ScreenshotSelection) -> Unit,
     val onAuthorSelected: (String) -> Unit = {},
     val onListingSelected: (String) -> Unit = {},
+    val onVersionsSelected: (() -> Unit)? = null,
 )
 
 @Composable
@@ -76,6 +77,7 @@ private fun rememberListingCallbacks(
             onVersionInstallAction = VersionInstallHandler(viewModel::onVersionInstallAction),
             onAuthorSelected = navigation.onAuthorSelected,
             onListingSelected = { listing -> navigation.onListingSelected(listing.slug) },
+            onVersionsSelected = navigation.onVersionsSelected,
         ),
         onRetry = viewModel::refresh,
         onUninstallConfirmed = viewModel::onUninstallConfirmed,

@@ -9,6 +9,7 @@ import app.yuki.core.designsystem.component.ScreenshotTransitionScope
 import app.yuki.feature.listing.ListingNavigation
 import app.yuki.feature.listing.ListingRoute as ListingScreenRoute
 import app.yuki.feature.listing.ScreenshotViewerRoute
+import app.yuki.feature.listing.VersionsRoute as VersionsScreenRoute
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 internal fun NavGraphBuilder.listingDestination(
@@ -28,6 +29,7 @@ internal fun NavGraphBuilder.listingDestination(
                     },
                     onAuthorSelected = navigator::openAuthor,
                     onListingSelected = navigator::openListing,
+                    onVersionsSelected = { navigator.openVersions(slug) },
                 ),
             )
         }
@@ -43,5 +45,11 @@ internal fun NavGraphBuilder.screenshotDestination(
         ScreenshotTransitionScope(sharedScope = sharedScope, contentScope = this) {
             ScreenshotViewerRoute(onBackClick = navigator::navigateUp)
         }
+    }
+}
+
+internal fun NavGraphBuilder.versionsDestination(navigator: YukiNavigator) {
+    composable<VersionsRoute> {
+        VersionsScreenRoute(onBackClick = navigator::navigateUp)
     }
 }

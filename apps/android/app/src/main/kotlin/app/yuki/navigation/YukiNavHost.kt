@@ -85,6 +85,7 @@ private fun YukiRoutedContent(
         updatesDestination(navigator, bottomBarPadding)
         listingDestination(navigator, destinations.sharedScope)
         screenshotDestination(navigator, destinations.sharedScope)
+        versionsDestination(navigator)
         searchDestination(navigator, bottomBarPadding)
         categoryDestination(navigator, bottomBarPadding)
         authorDestination(navigator, bottomBarPadding)

@@ -24,6 +24,9 @@ data object SignUpRoute
 data class ListingRoute(val slug: String)
 
 @Serializable
+data class VersionsRoute(val slug: String)
+
+@Serializable
 data object SearchRoute
 
 @Serializable

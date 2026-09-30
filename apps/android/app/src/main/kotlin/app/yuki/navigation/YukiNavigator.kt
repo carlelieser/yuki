@@ -70,6 +70,10 @@ internal class YukiNavigator(
         )
     }
 
+    fun openVersions(slug: String) {
+        navController.navigate(VersionsRoute(slug = slug))
+    }
+
     fun navigateUp() {
         navController.navigateUp()
     }
