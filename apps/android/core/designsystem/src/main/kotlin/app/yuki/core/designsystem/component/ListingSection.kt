@@ -57,14 +57,17 @@ private fun ListingSectionHeader(
     SectionHeader(
         title = title,
         action = onSeeAll?.let { seeAll ->
-            {
-                IconButton(onClick = seeAll) {
-                    Icon(
-                        imageVector = YukiIcons.Forward,
-                        contentDescription = stringResource(R.string.designsystem_section_see_all, seeAllLabel),
-                    )
-                }
-            }
+            { SeeAllButton(label = seeAllLabel, onClick = seeAll) }
         },
     )
+}
+
+@Composable
+fun SeeAllButton(label: String, onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = YukiIcons.Forward,
+            contentDescription = stringResource(R.string.designsystem_section_see_all, label),
+        )
+    }
 }
