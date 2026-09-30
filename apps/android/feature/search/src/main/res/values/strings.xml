@@ -12,6 +12,8 @@
     <string name="search_sort_least_recently_updated">Least recently updated</string>
     <string name="search_sort_name_ascending">Name A-Z</string>
     <string name="search_sort_name_descending">Name Z-A</string>
+    <string name="search_sort_highest_rated">Highest rated</string>
+    <string name="search_sort_lowest_rated">Lowest rated</string>
     <string name="search_browse_empty_title">No apps yet</string>
     <string name="search_browse_empty_description">There is nothing to browse right now. Pull down to refresh.</string>
     <string name="search_no_matches_title">No matches</string>

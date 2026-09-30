@@ -7,6 +7,7 @@ enum class BrowseSortKey(val wireValue: String) {
     Newest("newest"),
     Updated("updated"),
     Name("name"),
+    Rating("rating"),
 }
 
 enum class BrowseOrder(val wireValue: String) {
@@ -26,7 +27,9 @@ enum class BrowseSortOption(
     RecentlyUpdated(BrowseSortKey.Updated, BrowseOrder.Descending, R.string.search_sort_recently_updated),
     LeastRecentlyUpdated(BrowseSortKey.Updated, BrowseOrder.Ascending, R.string.search_sort_least_recently_updated),
     NameAscending(BrowseSortKey.Name, BrowseOrder.Ascending, R.string.search_sort_name_ascending),
-    NameDescending(BrowseSortKey.Name, BrowseOrder.Descending, R.string.search_sort_name_descending);
+    NameDescending(BrowseSortKey.Name, BrowseOrder.Descending, R.string.search_sort_name_descending),
+    HighestRated(BrowseSortKey.Rating, BrowseOrder.Descending, R.string.search_sort_highest_rated),
+    LowestRated(BrowseSortKey.Rating, BrowseOrder.Ascending, R.string.search_sort_lowest_rated);
 
     val wireValue: String get() = "${key.wireValue}-${order.wireValue}"
 

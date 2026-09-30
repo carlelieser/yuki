@@ -6,7 +6,7 @@ import org.junit.Test
 
 class BrowseSortLabelsTest {
     @Test
-    fun theEightWebSortOptionsKeepTheirLabels() {
+    fun everyWebSortOptionKeepsItsLabel() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
 
         assertEquals(
@@ -19,6 +19,8 @@ class BrowseSortLabelsTest {
                 "Least recently updated",
                 "Name A-Z",
                 "Name Z-A",
+                "Highest rated",
+                "Lowest rated",
             ),
             BrowseSortOption.entries.map { option -> context.getString(option.label) },
         )

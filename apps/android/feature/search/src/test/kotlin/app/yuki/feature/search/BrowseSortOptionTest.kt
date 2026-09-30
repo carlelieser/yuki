@@ -25,6 +25,8 @@ class BrowseSortOptionTest {
                 "updated-asc",
                 "name-asc",
                 "name-desc",
+                "rating-desc",
+                "rating-asc",
             ),
             wireValues,
         )
@@ -34,6 +36,15 @@ class BrowseSortOptionTest {
     fun `the default sort is stars descending`() {
         assertEquals(BrowseSortKey.Stars, BrowseSortOption.Default.key)
         assertEquals(BrowseOrder.Descending, BrowseSortOption.Default.order)
+    }
+
+    @Test
+    fun `rating sorts ask the server for the rating in each direction`() {
+        val highest = BrowseFilter(sort = BrowseSortOption.HighestRated).toQuery(offset = 0)
+        val lowest = BrowseFilter(sort = BrowseSortOption.LowestRated).toQuery(offset = 0)
+
+        assertEquals("rating" to "desc", highest.sort to highest.order)
+        assertEquals("rating" to "asc", lowest.sort to lowest.order)
     }
 
     @Test
