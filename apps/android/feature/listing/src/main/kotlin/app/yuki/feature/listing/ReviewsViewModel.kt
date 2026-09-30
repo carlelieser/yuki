@@ -24,6 +24,14 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+const val REVIEWED_TITLE_KEY = "title"
+const val REVIEWED_ICON_KEY = "iconUrl"
+
+data class ReviewedListing(
+    val title: String,
+    val iconUrl: String?,
+)
+
 @HiltViewModel
 class ReviewsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -32,6 +40,11 @@ class ReviewsViewModel @Inject constructor(
     private val slug: String = requireNotNull(savedStateHandle[LISTING_SLUG_KEY]) {
         "ReviewsViewModel requires a '$LISTING_SLUG_KEY' argument"
     }
+
+    val listing = ReviewedListing(
+        title = savedStateHandle[REVIEWED_TITLE_KEY] ?: "",
+        iconUrl = savedStateHandle[REVIEWED_ICON_KEY],
+    )
 
     private val mutableSummary = MutableStateFlow<UiState<RatingSummary>>(UiState.Loading)
 

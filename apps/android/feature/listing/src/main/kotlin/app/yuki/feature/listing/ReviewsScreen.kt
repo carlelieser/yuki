@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import app.yuki.core.designsystem.component.DetailHeading
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -41,7 +42,7 @@ fun ReviewsRoute(
     val reviews = viewModel.reviews.collectAsLazyPagingItems()
 
     ReviewsScreen(
-        content = ReviewsContent(summary = summary, reviews = reviews),
+        content = ReviewsContent(listing = viewModel.listing, summary = summary, reviews = reviews),
         onBackClick = onBackClick,
         onRefresh = {
             viewModel.refreshSummary()
@@ -52,6 +53,7 @@ fun ReviewsRoute(
 }
 
 internal data class ReviewsContent(
+    val listing: ReviewedListing,
     val summary: UiState<RatingSummary>,
     val reviews: LazyPagingItems<Review>,
 )
@@ -66,7 +68,12 @@ internal fun ReviewsScreen(
     val reviews = content.reviews
 
     YukiDetailScreen(
-        title = stringResource(R.string.listing_section_reviews),
+        heading = DetailHeading(
+            title = content.listing.title,
+            description = stringResource(R.string.listing_section_reviews),
+            iconUrl = content.listing.iconUrl,
+            hasIcon = true,
+        ),
         onBackClick = onBackClick,
         modifier = modifier,
     ) {

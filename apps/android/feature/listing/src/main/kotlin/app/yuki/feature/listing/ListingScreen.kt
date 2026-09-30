@@ -18,6 +18,7 @@ import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.rememberLinkOpener
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.ListingSummary
 import app.yuki.core.model.ScreenshotSelection
 import app.yuki.core.model.UiState
 
@@ -29,7 +30,7 @@ data class ListingNavigation(
     val onAuthorSelected: (String) -> Unit = {},
     val onListingSelected: (String) -> Unit = {},
     val onVersionsSelected: (() -> Unit)? = null,
-    val onReviewsSelected: () -> Unit = {},
+    val onReviewsSelected: (ListingSummary) -> Unit = {},
     val onWriteReview: (String?) -> Unit = {},
     val onSignIn: () -> Unit = {},
 )
@@ -107,7 +108,10 @@ private fun rememberListingCallbacks(
             onListingSelected = { listing -> navigation.onListingSelected(listing.slug) },
             onVersionsSelected = navigation.onVersionsSelected,
             reviews = ReviewCallbacks(
-                onSeeAll = navigation.onReviewsSelected,
+                onSeeAll = {
+                    (viewModel.listing.value as? UiState.Success)?.data?.detail?.summary
+                        ?.let(navigation.onReviewsSelected)
+                },
                 onWrite = { navigation.onWriteReview(viewModel.installStatus.value?.versionTag) },
                 onSignIn = navigation.onSignIn,
                 onRetry = viewModels.reviews::refresh,
