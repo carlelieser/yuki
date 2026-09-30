@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -39,6 +40,10 @@ enum class RatingStarsSize(val icon: Dp) {
 private val STAR_VALUES = MIN_REVIEW_RATING..MAX_REVIEW_RATING
 
 @Composable
+private fun starIcon(isFilled: Boolean): ImageVector =
+    if (isFilled) YukiIcons.StarFilled else YukiIcons.Star
+
+@Composable
 private fun starColor(isFilled: Boolean): Color {
     val color = MaterialTheme.colorScheme.primary
     if (isFilled) return color
@@ -63,10 +68,11 @@ fun RatingStars(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         STAR_VALUES.forEach { star ->
+            val isFilled = star <= filled
             Icon(
-                imageVector = YukiIcons.Star,
+                imageVector = starIcon(isFilled),
                 contentDescription = null,
-                tint = starColor(isFilled = star <= filled),
+                tint = starColor(isFilled),
                 modifier = Modifier.size(size.icon),
             )
         }
@@ -92,11 +98,12 @@ fun RatingInput(
 @Composable
 private fun RatingInputStar(star: Int, selected: Int, onSelect: (Int) -> Unit) {
     val description = pluralStringResource(R.plurals.designsystem_rating_stars, star, star)
+    val isFilled = star <= selected
 
     Icon(
-        imageVector = YukiIcons.Star,
+        imageVector = starIcon(isFilled),
         contentDescription = description,
-        tint = starColor(isFilled = star <= selected),
+        tint = starColor(isFilled),
         modifier = Modifier
             .size(YukiSize.MinimumTouchTarget)
             .selectable(
