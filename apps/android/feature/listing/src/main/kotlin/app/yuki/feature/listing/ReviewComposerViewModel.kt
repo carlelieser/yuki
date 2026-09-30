@@ -74,6 +74,10 @@ class ReviewComposerViewModel @Inject constructor(
         send { repository.save(slug, draft) }
     }
 
+    fun onFailureShown() {
+        mutableState.update { current -> current.copy(failure = null) }
+    }
+
     fun requestDelete() {
         mutableState.update { current -> current.copy(isConfirmingDelete = true) }
     }

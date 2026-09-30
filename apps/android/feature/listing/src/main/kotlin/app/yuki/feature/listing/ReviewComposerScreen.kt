@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.yuki.core.designsystem.component.FailureState
+import app.yuki.core.designsystem.component.LocalYukiSnackbarHostState
 import app.yuki.core.designsystem.component.RatingInput
 import app.yuki.core.designsystem.component.TextAreaContent
 import app.yuki.core.designsystem.component.YukiButton
@@ -29,7 +29,9 @@ import app.yuki.core.designsystem.component.YukiDetailScreen
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
 import app.yuki.core.designsystem.component.YukiTextArea
 import app.yuki.core.designsystem.component.YukiTextButton
+import app.yuki.core.designsystem.component.failureDescription
 import app.yuki.core.designsystem.theme.YukiSpacing
+import app.yuki.core.model.FailureReason
 import app.yuki.core.model.MAX_REVIEW_BODY
 
 const val REVIEW_COMPOSER_TAG = "reviewComposer"
@@ -43,6 +45,7 @@ data class ReviewComposerCallbacks(
     val onDeleteConfirmed: () -> Unit = {},
     val onDeleteDismissed: () -> Unit = {},
     val onBackClick: () -> Unit = {},
+    val onFailureShown: () -> Unit = {},
 )
 
 @Composable
@@ -67,6 +70,7 @@ fun ReviewComposerRoute(
             onDeleteConfirmed = viewModel::confirmDelete,
             onDeleteDismissed = viewModel::dismissDelete,
             onBackClick = onDone,
+            onFailureShown = viewModel::onFailureShown,
         ),
         modifier = modifier,
     )
@@ -79,6 +83,8 @@ internal fun ReviewComposerScreen(
     modifier: Modifier = Modifier,
 ) {
     val title = if (state.isEditing) R.string.listing_composer_title_edit else R.string.listing_composer_title_write
+
+    ReviewFailureSnackbar(failure = state.failure, onShown = callbacks.onFailureShown)
 
     YukiDetailScreen(
         title = stringResource(title),
@@ -125,8 +131,20 @@ private fun ReviewForm(state: ReviewComposerState, callbacks: ReviewComposerCall
             ),
             onValueChange = callbacks.onBodyChange,
         )
-        state.failure?.let { reason -> FailureState(reason = reason) }
         ReviewFormActions(state = state, callbacks = callbacks)
+    }
+}
+
+@Composable
+private fun ReviewFailureSnackbar(failure: FailureReason?, onShown: () -> Unit) {
+    val hostState = LocalYukiSnackbarHostState.current
+    val message = failure?.let { reason -> failureDescription(reason) }
+
+    LaunchedEffect(failure) {
+        val text = message ?: return@LaunchedEffect
+
+        hostState.showSnackbar(message = text, withDismissAction = true)
+        onShown()
     }
 }
 

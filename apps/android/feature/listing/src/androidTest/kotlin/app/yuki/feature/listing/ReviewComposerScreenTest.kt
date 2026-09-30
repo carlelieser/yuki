@@ -1,12 +1,16 @@
 package app.yuki.feature.listing
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -14,6 +18,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.designsystem.R as DesignR
+import app.yuki.core.designsystem.component.FAILURE_STATE_TAG
+import app.yuki.core.designsystem.component.LocalYukiSnackbarHostState
+import app.yuki.core.designsystem.component.YUKI_SNACKBAR_TAG
+import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.model.FailureReason
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -33,7 +41,16 @@ class ReviewComposerScreenTest {
         state: ReviewComposerState,
         callbacks: ReviewComposerCallbacks = ReviewComposerCallbacks(),
     ) {
-        composeRule.setContent { ReviewComposerScreen(state = state, callbacks = callbacks) }
+        val hostState = SnackbarHostState()
+
+        composeRule.setContent {
+            CompositionLocalProvider(LocalYukiSnackbarHostState provides hostState) {
+                Box {
+                    ReviewComposerScreen(state = state, callbacks = callbacks)
+                    YukiSnackbarHost(hostState = hostState)
+                }
+            }
+        }
     }
 
     @Test
@@ -82,15 +99,21 @@ class ReviewComposerScreenTest {
     }
 
     @Test
-    fun showsTheServerExplanationWhenRefused() {
+    fun reportsARefusalInTheSnackbarInsteadOfInline() {
+        var shownCount = 0
         setScreen(
-            ReviewComposerState(
+            state = ReviewComposerState(
                 isLoading = false,
                 failure = FailureReason.Rejected("Download this app before reviewing it."),
             ),
+            callbacks = ReviewComposerCallbacks(onFailureShown = { shownCount += 1 }),
         )
 
-        composeRule.onNodeWithText("Download this app before reviewing it.").assertIsDisplayed()
+        composeRule.onNode(
+            hasText("Download this app before reviewing it.") and
+                hasAnyAncestor(hasTestTag(YUKI_SNACKBAR_TAG)),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(FAILURE_STATE_TAG).assertCountEquals(0)
     }
 
     @Test

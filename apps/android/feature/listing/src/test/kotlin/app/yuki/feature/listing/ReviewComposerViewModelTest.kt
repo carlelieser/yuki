@@ -112,6 +112,21 @@ class ReviewComposerViewModelTest {
     }
 
     @Test
+    fun `a shown failure is cleared so it is reported once`() = runTest {
+        val repository = FakeReviewRepository().apply {
+            saveResult = Result.failure(TypedFailure(FailureReason.Offline))
+        }
+        val viewModel = viewModelWith(repository)
+
+        viewModel.onRatingChange(4)
+        viewModel.submit()
+        dispatcher.scheduler.advanceUntilIdle()
+        viewModel.onFailureShown()
+
+        assertEquals(null, viewModel.state.value.failure)
+    }
+
+    @Test
     fun `deletes only after confirming`() = runTest {
         val own = OwnReview(review = review("mine"), canReview = true)
         val repository = FakeReviewRepository(ownResult = Result.success(own))
