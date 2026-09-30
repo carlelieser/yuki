@@ -31,4 +31,29 @@
     <string name="listing_version_no_asset">No asset</string>
     <string name="listing_version_icon">Release</string>
     <string name="listing_version_unreleased">Unreleased</string>
+
+    <string name="listing_section_reviews">Ratings and reviews</string>
+    <plurals name="listing_reviews_count">
+        <item quantity="one">%1$d review</item>
+        <item quantity="other">%1$d reviews</item>
+    </plurals>
+    <string name="listing_reviews_empty_title">No reviews yet</string>
+    <string name="listing_reviews_empty_description">Be the first to share what you think of this app.</string>
+    <string name="listing_reviews_sign_in">Sign in to write a review</string>
+    <string name="listing_reviews_install_required">Install this app to write a review.</string>
+    <string name="listing_reviews_write">Write a review</string>
+    <string name="listing_reviews_edit">Edit your review</string>
+    <string name="listing_reviews_missing">These reviews are no longer available.</string>
+
+    <string name="listing_composer_title_write">Write a review</string>
+    <string name="listing_composer_title_edit">Edit your review</string>
+    <string name="listing_composer_placeholder">Share what worked, and what didn\'t.</string>
+    <string name="listing_composer_post">Post</string>
+    <string name="listing_composer_update">Update</string>
+    <string name="listing_composer_delete">Delete</string>
+    <string name="listing_composer_rating_required">Choose a rating.</string>
+    <string name="listing_composer_delete_title">Delete your review?</string>
+    <string name="listing_composer_delete_message">Your rating and review will be removed from this app.</string>
+    <string name="listing_composer_delete_confirm">Delete</string>
+    <string name="listing_composer_delete_cancel">Cancel</string>
 </resources>

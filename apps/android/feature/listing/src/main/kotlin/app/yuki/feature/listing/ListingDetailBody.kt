@@ -37,6 +37,12 @@ data class ListingCallbacks(
     val onAuthorSelected: ((String) -> Unit)? = null,
     val onListingSelected: (ListingSummary) -> Unit = {},
     val onVersionsSelected: (() -> Unit)? = null,
+    val reviews: ReviewCallbacks = ReviewCallbacks(),
+)
+
+data class ListingExtras(
+    val authored: AuthoredListings = AuthoredListings(),
+    val reviews: ReviewSectionState = ReviewSectionState(),
 )
 
 data class AuthoredListings(
@@ -190,7 +196,7 @@ internal fun ListingDetailBody(
     model: ListingUiModel,
     status: ListingUninstallStatus,
     callbacks: ListingCallbacks,
-    authored: AuthoredListings = AuthoredListings(),
+    extras: ListingExtras = ListingExtras(),
 ) {
     val author = model.detail.summary.author
     val authorSection = AuthorSection(
@@ -211,8 +217,9 @@ internal fun ListingDetailBody(
         warningSection(model)
         descriptionSection(model)
         screenshotSection(model, callbacks.onScreenshotSelected)
-        moreFromAuthorSection(authorSection, authored, callbacks)
+        moreFromAuthorSection(authorSection, extras.authored, callbacks)
         linkSection(model, callbacks.onOpenLink)
         versionSection(model, status.install, callbacks)
+        reviewSection(extras.reviews, callbacks.reviews)
     }
 }

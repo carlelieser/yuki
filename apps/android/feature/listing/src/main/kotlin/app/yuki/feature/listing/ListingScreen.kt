@@ -29,6 +29,9 @@ data class ListingNavigation(
     val onAuthorSelected: (String) -> Unit = {},
     val onListingSelected: (String) -> Unit = {},
     val onVersionsSelected: (() -> Unit)? = null,
+    val onReviewsSelected: () -> Unit = {},
+    val onWriteReview: () -> Unit = {},
+    val onSignIn: () -> Unit = {},
 )
 
 @Composable
@@ -45,7 +48,8 @@ fun ListingRoute(
     val authorListings by viewModel.authorListings.collectAsStateWithLifecycle()
     val installs by viewModel.installs.collectAsStateWithLifecycle()
     val actions = listingActions(listing = listing, viewModel = viewModel)
-
+    val reviewsViewModel: ListingReviewsViewModel = hiltViewModel(key = "$slug/reviews")
+    val reviews = rememberReviewSectionState(reviewsViewModel, installStatus)
 
     ListingScreen(
         state = ListingScreenState(
@@ -55,19 +59,43 @@ fun ListingRoute(
             hasUninstallFailed = hasUninstallFailed,
             actions = actions,
             authored = AuthoredListings(listings = authorListings, installs = installs),
+            reviews = reviews,
         ),
-        callbacks = rememberListingCallbacks(viewModel, navigation),
+        callbacks = rememberListingCallbacks(
+            viewModels = ListingViewModels(viewModel, reviewsViewModel),
+            navigation = navigation,
+        ),
         onBackClick = navigation.onBackClick,
         modifier = modifier,
     )
 }
 
 @Composable
+private fun rememberReviewSectionState(
+    viewModel: ListingReviewsViewModel,
+    installStatus: ListingInstallStatus?,
+): ReviewSectionState {
+    val reviews by viewModel.reviews.collectAsStateWithLifecycle()
+    val viewer by viewModel.viewer.collectAsStateWithLifecycle()
+
+    return ReviewSectionState(
+        reviews = reviews,
+        prompt = reviewPrompt(viewer = viewer, installState = installStatus?.state),
+    )
+}
+
+private data class ListingViewModels(
+    val listing: ListingViewModel,
+    val reviews: ListingReviewsViewModel,
+)
+
+@Composable
 private fun rememberListingCallbacks(
-    viewModel: ListingViewModel,
+    viewModels: ListingViewModels,
     navigation: ListingNavigation,
 ): ListingScreenCallbacks {
     val opener = rememberLinkOpener()
+    val viewModel = viewModels.listing
 
     return ListingScreenCallbacks(
         callbacks = ListingCallbacks(
@@ -78,6 +106,12 @@ private fun rememberListingCallbacks(
             onAuthorSelected = navigation.onAuthorSelected,
             onListingSelected = { listing -> navigation.onListingSelected(listing.slug) },
             onVersionsSelected = navigation.onVersionsSelected,
+            reviews = ReviewCallbacks(
+                onSeeAll = navigation.onReviewsSelected,
+                onWrite = navigation.onWriteReview,
+                onSignIn = navigation.onSignIn,
+                onRetry = viewModels.reviews::refresh,
+            ),
         ),
         onRetry = viewModel::refresh,
         onUninstallConfirmed = viewModel::onUninstallConfirmed,
@@ -99,6 +133,7 @@ data class ListingScreenState(
     val hasUninstallFailed: Boolean = false,
     val actions: List<ListingAction> = emptyList(),
     val authored: AuthoredListings = AuthoredListings(),
+    val reviews: ReviewSectionState = ReviewSectionState(),
 )
 
 @Composable
@@ -137,7 +172,7 @@ internal fun ListingScreen(
                             hasUninstallFailed = state.hasUninstallFailed,
                         ),
                         callbacks = callbacks.callbacks,
-                        authored = state.authored,
+                        extras = ListingExtras(authored = state.authored, reviews = state.reviews),
                     )
 
                     if (state.isConfirmingUninstall) {
