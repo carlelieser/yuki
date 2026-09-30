@@ -1,5 +1,10 @@
 import { parseTimestamp } from './timestamp.ts';
-import type { GithubRelease, GithubReleaseAsset } from './types.ts';
+import type { GithubRelease } from './types.ts';
+
+export type ApkAsset = {
+	name: string;
+	size: number;
+};
 
 export type MappedVersion = {
 	tag: string;
@@ -24,11 +29,11 @@ export function parseArchitecture(value: string | null): Architecture | null {
 	return found ?? null;
 }
 
-function isApk(asset: GithubReleaseAsset): boolean {
+function isApk(asset: ApkAsset): boolean {
 	return asset.name.toLowerCase().endsWith('.apk');
 }
 
-function isDeprioritised(asset: GithubReleaseAsset): boolean {
+function isDeprioritised(asset: ApkAsset): boolean {
 	const lowered = asset.name.toLowerCase();
 	return DEPRIORITISED.some((marker) => lowered.includes(marker));
 }
@@ -54,7 +59,7 @@ function isTokenCharacter(character: string | undefined): boolean {
 	return character !== undefined && /[a-z0-9]/.test(character);
 }
 
-function architectureOf(asset: GithubReleaseAsset): Architecture | null {
+function architectureOf(asset: ApkAsset): Architecture | null {
 	return architectureOfName(asset.name);
 }
 
@@ -70,17 +75,17 @@ export function architectureOfName(name: string): Architecture | null {
 	);
 }
 
-function largestOf(assets: GithubReleaseAsset[]): GithubReleaseAsset {
+function largestOf<Asset extends ApkAsset>(assets: Asset[]): Asset {
 	return assets.reduce((largest, asset) => (asset.size > largest.size ? asset : largest));
 }
 
-function distributableApks(assets: GithubReleaseAsset[]): GithubReleaseAsset[] {
+function distributableApks<Asset extends ApkAsset>(assets: Asset[]): Asset[] {
 	const apks = assets.filter(isApk);
 	const preferred = apks.filter((asset) => !isDeprioritised(asset));
 	return preferred.length > 0 ? preferred : apks;
 }
 
-export function availableArchitectures(assets: GithubReleaseAsset[]): Architecture[] {
+export function availableArchitectures(assets: ApkAsset[]): Architecture[] {
 	const found = new Set(
 		distributableApks(assets)
 			.map(architectureOf)
@@ -90,10 +95,10 @@ export function availableArchitectures(assets: GithubReleaseAsset[]): Architectu
 	return ARCHITECTURES.filter((architecture) => found.has(architecture));
 }
 
-export function pickApkAsset(
-	assets: GithubReleaseAsset[],
+export function pickApkAsset<Asset extends ApkAsset>(
+	assets: Asset[],
 	architecture: Architecture | null = null
-): GithubReleaseAsset | null {
+): Asset | null {
 	const pool = distributableApks(assets);
 	if (pool.length === 0) return null;
 
