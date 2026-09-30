@@ -40,7 +40,8 @@
     <string name="listing_reviews_empty_title">No reviews yet</string>
     <string name="listing_reviews_empty_description">Be the first to share what you think of this app.</string>
     <string name="listing_reviews_sign_in">Sign in to write a review</string>
-    <string name="listing_reviews_install_required">Install this app to write a review.</string>
+    <string name="listing_reviews_install_required_title">Install to write a review</string>
+    <string name="listing_reviews_install_required_description">Reviews come from people who have used the app. Install it to share yours.</string>
     <string name="listing_reviews_write">Write a review</string>
     <string name="listing_reviews_edit">Edit your review</string>
     <string name="listing_reviews_missing">These reviews are no longer available.</string>

@@ -3,6 +3,7 @@ package app.yuki.feature.listing
 import androidx.annotation.StringRes
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -15,6 +16,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.platform.app.InstrumentationRegistry
 import app.yuki.core.designsystem.R as DesignR
+import app.yuki.core.designsystem.component.STATUS_ICON_TAG
 import app.yuki.core.model.FailureReason
 import app.yuki.core.model.UiState
 import org.junit.Assert.assertEquals
@@ -113,10 +115,13 @@ class ListingReviewsSectionTest {
     }
 
     @Test
-    fun anUninstalledAppAsksForAnInstallFirst() {
+    fun anUninstalledAppAsksForAnInstallInAnInfoAlert() {
         setReviews(ReviewSectionState(reviews = loaded(count = 1), prompt = ReviewPrompt.InstallRequired))
 
-        scrollTo(text(R.string.listing_reviews_install_required))
+        scrollTo(text(R.string.listing_reviews_install_required_title))
+        composeRule.onNodeWithText(text(R.string.listing_reviews_install_required_description)).assertIsDisplayed()
+        composeRule.onNode(hasTestTag(STATUS_ICON_TAG) and hasAnyAncestor(hasTestTag(REVIEW_PROMPT_TAG)))
+            .assertIsDisplayed()
         composeRule.onAllNodesWithText(text(R.string.listing_reviews_write)).assertCountEquals(0)
     }
 

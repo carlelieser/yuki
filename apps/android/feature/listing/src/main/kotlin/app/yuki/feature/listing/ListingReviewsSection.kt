@@ -5,19 +5,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import app.yuki.core.designsystem.component.CollectionEmpty
 import app.yuki.core.designsystem.component.EmptyContent
 import app.yuki.core.designsystem.component.FailureState
 import app.yuki.core.designsystem.component.SeeAllButton
 import app.yuki.core.designsystem.component.SectionHeader
+import app.yuki.core.designsystem.component.StatusCard
+import app.yuki.core.designsystem.component.StatusContent
+import app.yuki.core.designsystem.component.StatusTone
 import app.yuki.core.designsystem.component.YukiButton
 import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
@@ -107,12 +107,14 @@ private fun ReviewPromptRow(prompt: ReviewPrompt, callbacks: ReviewCallbacks) {
             onClick = callbacks.onSignIn,
             modifier = modifier,
         )
-        ReviewPrompt.InstallRequired -> Text(
-            text = stringResource(R.string.listing_reviews_install_required),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = modifier.fillMaxWidth(),
+        ReviewPrompt.InstallRequired -> StatusCard(
+            content = StatusContent(
+                title = stringResource(R.string.listing_reviews_install_required_title),
+                description = stringResource(R.string.listing_reviews_install_required_description),
+                tone = StatusTone.Informative,
+                icon = YukiIcons.Info,
+            ),
+            modifier = modifier,
         )
         ReviewPrompt.Write -> YukiButton(
             label = stringResource(R.string.listing_reviews_write),
