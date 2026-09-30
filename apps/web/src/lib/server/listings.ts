@@ -176,17 +176,22 @@ const SORT_COLUMNS: Record<BrowseSort, AnyColumn | SQL> = {
 	stars: schema.listings.stars,
 	newest: schema.listings.publishedAt,
 	updated: schema.listings.latestReleaseAt,
-	name: sql`lower(${schema.listings.title})`
+	name: sql`lower(${schema.listings.title})`,
+	rating: ratingAverage
 };
 
-const NULLABLE_SORTS = new Set<BrowseSort>(['newest', 'updated']);
+const NULLABLE_SORTS = new Set<BrowseSort>(['newest', 'updated', 'rating']);
+
+const TIEBREAKERS: Partial<Record<BrowseSort, SQL[]>> = {
+	rating: [desc(ratingCount)]
+};
 
 export function orderByFor(sort: BrowseSort, order: BrowseOrder): SQL[] {
 	const column = SORT_COLUMNS[sort];
 	const direction = order === 'asc' ? asc(column) : desc(column);
 	const clause = NULLABLE_SORTS.has(sort) ? sql`${direction} nulls last` : direction;
 
-	return [clause, asc(schema.listings.id)];
+	return [clause, ...(TIEBREAKERS[sort] ?? []), asc(schema.listings.id)];
 }
 
 export async function getListingsPage(

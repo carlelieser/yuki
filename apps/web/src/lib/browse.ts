@@ -4,7 +4,7 @@ export const MAX_BROWSE_OFFSET = 2000;
 export const SECTION_PAGE_SIZE = 3;
 export const MAX_SECTION_PAGE_SIZE = 24;
 
-export const BROWSE_SORTS = ['stars', 'newest', 'updated', 'name'] as const;
+export const BROWSE_SORTS = ['stars', 'newest', 'updated', 'name', 'rating'] as const;
 export const BROWSE_ORDERS = ['asc', 'desc'] as const;
 
 export type BrowseSort = (typeof BROWSE_SORTS)[number];
@@ -18,7 +18,8 @@ const DEFAULT_ORDERS: Record<BrowseSort, BrowseOrder> = {
 	stars: 'desc',
 	newest: 'desc',
 	updated: 'desc',
-	name: 'asc'
+	name: 'asc',
+	rating: 'desc'
 };
 
 export type BrowseSortOption = BrowseSorting & { value: string; label: string };
@@ -31,7 +32,9 @@ export const BROWSE_SORT_OPTIONS: BrowseSortOption[] = [
 	{ value: 'updated-desc', label: 'Recently updated', sort: 'updated', order: 'desc' },
 	{ value: 'updated-asc', label: 'Least recently updated', sort: 'updated', order: 'asc' },
 	{ value: 'name-asc', label: 'Name A–Z', sort: 'name', order: 'asc' },
-	{ value: 'name-desc', label: 'Name Z–A', sort: 'name', order: 'desc' }
+	{ value: 'name-desc', label: 'Name Z–A', sort: 'name', order: 'desc' },
+	{ value: 'rating-desc', label: 'Highest rated', sort: 'rating', order: 'desc' },
+	{ value: 'rating-asc', label: 'Lowest rated', sort: 'rating', order: 'asc' }
 ];
 
 export function readBrowseOffset(raw: string | null): number {

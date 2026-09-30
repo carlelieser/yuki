@@ -8,7 +8,7 @@ const { getRatingSummary } = vi.hoisted(() => ({ getRatingSummary: vi.fn() }));
 
 vi.mock('./reviews.ts', () => ({ getRatingSummary }));
 
-const { getListingBySlug, getListingsPage, groupIntoSections, summaryColumns } =
+const { getListingBySlug, getListingsPage, groupIntoSections, orderByFor, summaryColumns } =
 	await import('./listings.ts');
 
 function ratingOf(average: number, total: number) {
@@ -296,5 +296,39 @@ describe('getListingsPage', () => {
 
 		expect(page.results).toHaveLength(5);
 		expect(page.hasMore).toBe(false);
+	});
+});
+
+function renderedOrder(sort: 'rating' | 'stars', order: 'asc' | 'desc'): string {
+	const rendered = new QueryBuilder()
+		.select({ id: schema.listings.id })
+		.from(schema.listings)
+		.orderBy(...orderByFor(sort, order))
+		.toSQL().sql;
+
+	return rendered.slice(rendered.indexOf(' order by '));
+}
+
+describe('orderByFor rating', () => {
+	it('orders by the average rating with unrated listings last', () => {
+		const sql = renderedOrder('rating', 'desc');
+
+		expect(sql).toMatch(/avg\("listing_reviews"\."rating"\).*desc nulls last/s);
+	});
+
+	it('keeps unrated listings last when showing the lowest rated first', () => {
+		expect(renderedOrder('rating', 'asc')).toMatch(/avg\(.*asc nulls last/s);
+	});
+
+	it('breaks rating ties by the number of reviews before the id', () => {
+		const sql = renderedOrder('rating', 'desc');
+		const countAt = sql.indexOf('count(*)');
+
+		expect(countAt).toBeGreaterThan(sql.indexOf('avg('));
+		expect(sql.indexOf('"listings"."id"', countAt)).toBeGreaterThan(countAt);
+	});
+
+	it('leaves other sorts without a review-count tiebreak', () => {
+		expect(renderedOrder('stars', 'desc')).not.toContain('count(*)');
 	});
 });

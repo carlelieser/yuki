@@ -93,7 +93,7 @@ describe('readBrowseSorting', () => {
 
 describe('sort option tokens', () => {
 	it('offers both directions for every sort', () => {
-		for (const sort of ['stars', 'newest', 'updated', 'name'] as const) {
+		for (const sort of ['stars', 'newest', 'updated', 'name', 'rating'] as const) {
 			const orders = BROWSE_SORT_OPTIONS.filter((option) => option.sort === sort).map(
 				(option) => option.order
 			);
@@ -128,6 +128,24 @@ describe('sort option tokens', () => {
 			order: defaultOrderFor(DEFAULT_BROWSE_SORT)
 		});
 		expect(BROWSE_SORT_OPTIONS.some((option) => option.value === token)).toBe(true);
+	});
+});
+
+describe('rating sort', () => {
+	it('reads rating as a supported sort that defaults to highest first', () => {
+		expect(readBrowseSort('rating')).toBe('rating');
+		expect(defaultOrderFor('rating')).toBe('desc');
+	});
+
+	it('offers highest and lowest rated options', () => {
+		expect(fromSortValue('rating-desc')).toEqual({ sort: 'rating', order: 'desc' });
+		expect(fromSortValue('rating-asc')).toEqual({ sort: 'rating', order: 'asc' });
+		expect(BROWSE_SORT_OPTIONS.find((option) => option.value === 'rating-desc')?.label).toBe(
+			'Highest rated'
+		);
+		expect(BROWSE_SORT_OPTIONS.find((option) => option.value === 'rating-asc')?.label).toBe(
+			'Lowest rated'
+		);
 	});
 });
 
