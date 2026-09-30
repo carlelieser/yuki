@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import { scoreConfidence, type DetectedEvidence } from '../detection/evidence.ts';
-import { identityUnlessAssetChanged } from './identities.ts';
+import { settleReleaseDownloads, upsertVersionAssets } from './assets.ts';
 import { settleConfidence, shouldPublish, type Transaction } from './publication.ts';
 import { settleLatestRelease } from './releases.ts';
 import type { MappedListing } from '../mapping/listing.ts';
@@ -66,27 +66,13 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 		}
 
 		for (const version of input.versions ?? []) {
-			await tx
-				.insert(schema.listingVersions)
-				.values({ listingId, ...version })
-				.onConflictDoUpdate({
-					target: [schema.listingVersions.listingId, schema.listingVersions.tag],
-					set: {
-						name: version.name,
-						notes: version.notes,
-						downloadUrl: version.downloadUrl,
-						assetName: version.assetName,
-						assetSize: version.assetSize,
-						downloadCount: version.downloadCount,
-						isPrerelease: version.isPrerelease,
-						publishedAt: version.publishedAt,
-						...identityUnlessAssetChanged(),
-						updatedAt: new Date()
-					}
-				});
+			await upsertVersion(tx, listingId, version);
 		}
 
-		if (input.versions !== null) await settleLatestRelease(tx, listingId);
+		if (input.versions !== null) {
+			await settleReleaseDownloads(tx, listingId);
+			await settleLatestRelease(tx, listingId);
+		}
 
 		for (const entry of input.evidence) {
 			await tx
@@ -102,6 +88,36 @@ export async function upsertListing(db: Database, input: PersistInput): Promise<
 
 		return listingId;
 	});
+}
+
+async function upsertVersion(
+	tx: Transaction,
+	listingId: string,
+	version: MappedVersion
+): Promise<void> {
+	const { assets, ...release } = version;
+	const [row] = await tx
+		.insert(schema.listingVersions)
+		.values({ listingId, ...release })
+		.onConflictDoUpdate({
+			target: [schema.listingVersions.listingId, schema.listingVersions.tag],
+			set: {
+				name: release.name,
+				notes: release.notes,
+				downloadUrl: release.downloadUrl,
+				assetName: release.assetName,
+				assetSize: release.assetSize,
+				downloadCount: release.downloadCount,
+				isPrerelease: release.isPrerelease,
+				publishedAt: release.publishedAt,
+				isIgnored: false,
+				updatedAt: new Date()
+			}
+		})
+		.returning({ id: schema.listingVersions.id });
+
+	if (!row) throw new Error(`Upsert returned no version for ${listingId} ${release.tag}`);
+	await upsertVersionAssets(tx, row.id, assets);
 }
 
 async function insertOrUpdate(

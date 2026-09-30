@@ -1,16 +1,16 @@
 import { ApkFetchError } from '../apk/http-source.ts';
 import { ApkFormatError } from '../apk/format-error.ts';
 import type { ApkIdentity } from '../apk/identity.ts';
-import type { PendingVersion } from '../persistence/identities.ts';
+import type { PendingAsset } from '../persistence/identities.ts';
 
 export const DEFAULT_MAX_IDENTITIES = 3000;
 export const IDENTITY_CONCURRENCY = 8;
 
 export type IdentityPorts = {
-	listPending: (limit: number) => Promise<PendingVersion[]>;
+	listPending: (limit: number) => Promise<PendingAsset[]>;
 	read: (downloadUrl: string) => Promise<ApkIdentity | null>;
-	save: (versionId: string, identity: ApkIdentity | null) => Promise<void>;
-	settlePackageNames: (listingIds: string[]) => Promise<void>;
+	save: (assetId: string, identity: ApkIdentity | null) => Promise<void>;
+	settleListings: (listingIds: string[]) => Promise<void>;
 };
 
 export type IdentityOptions = {
@@ -20,6 +20,7 @@ export type IdentityOptions = {
 
 export type IdentitySummary = {
 	identifiedCount: number;
+	foreignCount: number;
 	unsignedCount: number;
 	unreadableCount: number;
 	deferredCount: number;
@@ -27,43 +28,46 @@ export type IdentitySummary = {
 };
 
 type IdentityOutcome =
-	| { kind: 'identified' | 'unsigned' | 'unrecognised'; version: PendingVersion }
-	| { kind: 'malformed' | 'deferred'; version: PendingVersion; reason: string };
+	| { kind: 'identified' | 'foreign' | 'unsigned' | 'unrecognised'; asset: PendingAsset }
+	| { kind: 'malformed' | 'deferred'; asset: PendingAsset; reason: string };
 
-export async function identifyVersions(
+export async function identifyAssets(
 	ports: IdentityPorts,
 	options: IdentityOptions
 ): Promise<IdentitySummary> {
 	const pending = await ports.listPending(options.limit);
-	const outcomes = await mapConcurrently(pending, options.concurrency, (version) =>
-		identify(ports, version)
+	const outcomes = await mapConcurrently(pending, options.concurrency, (asset) =>
+		identify(ports, asset)
 	);
 
-	const settled = outcomes.filter(
-		(outcome) => outcome.kind === 'identified' || outcome.kind === 'unsigned'
-	);
-	await ports.settlePackageNames([...new Set(settled.map((outcome) => outcome.version.listingId))]);
+	const saved = outcomes.filter((outcome) => outcome.kind !== 'deferred');
+	await ports.settleListings([...new Set(saved.map((outcome) => outcome.asset.listingId))]);
 
 	return summarize(outcomes);
 }
 
-async function identify(ports: IdentityPorts, version: PendingVersion): Promise<IdentityOutcome> {
+async function identify(ports: IdentityPorts, asset: PendingAsset): Promise<IdentityOutcome> {
 	let identity: ApkIdentity | null;
 
 	try {
-		identity = await ports.read(version.downloadUrl);
+		identity = await ports.read(asset.downloadUrl);
 	} catch (cause) {
-		if (cause instanceof ApkFetchError) return { kind: 'deferred', version, reason: cause.message };
+		if (cause instanceof ApkFetchError) return { kind: 'deferred', asset, reason: cause.message };
 		if (!(cause instanceof ApkFormatError)) throw cause;
 
-		await ports.save(version.id, null);
-		return { kind: 'malformed', version, reason: cause.message };
+		await ports.save(asset.id, null);
+		return { kind: 'malformed', asset, reason: cause.message };
 	}
 
-	await ports.save(version.id, identity);
+	await ports.save(asset.id, identity);
 
-	if (identity === null) return { kind: 'unrecognised', version };
-	return { kind: identity.signers.length > 0 ? 'identified' : 'unsigned', version };
+	if (identity === null) return { kind: 'unrecognised', asset };
+	return { kind: identityKind(identity), asset };
+}
+
+function identityKind(identity: ApkIdentity): 'identified' | 'foreign' | 'unsigned' {
+	if (identity.signers.length === 0) return 'unsigned';
+	return identity.isForeign ? 'foreign' : 'identified';
 }
 
 function summarize(outcomes: IdentityOutcome[]): IdentitySummary {
@@ -72,11 +76,12 @@ function summarize(outcomes: IdentityOutcome[]): IdentitySummary {
 
 	return {
 		identifiedCount: count('identified'),
+		foreignCount: count('foreign'),
 		unsignedCount: count('unsigned'),
 		unreadableCount: count('unrecognised', 'malformed'),
 		deferredCount: count('deferred'),
 		warnings: outcomes.flatMap((outcome) =>
-			'reason' in outcome ? [`${outcome.version.downloadUrl}: ${outcome.reason}`] : []
+			'reason' in outcome ? [`${outcome.asset.downloadUrl}: ${outcome.reason}`] : []
 		)
 	};
 }

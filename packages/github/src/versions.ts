@@ -1,9 +1,14 @@
 import { parseTimestamp } from './timestamp.ts';
-import type { GithubRelease } from './types.ts';
+import type { GithubRelease, GithubReleaseAsset } from './types.ts';
 
 export type ApkAsset = {
 	name: string;
 	size: number;
+};
+
+export type MappedAsset = ApkAsset & {
+	downloadUrl: string;
+	downloadCount: number;
 };
 
 export type MappedVersion = {
@@ -16,6 +21,7 @@ export type MappedVersion = {
 	downloadCount: number;
 	isPrerelease: boolean;
 	publishedAt: Date | null;
+	assets: MappedAsset[];
 };
 
 const DEPRIORITISED = ['debug', 'unsigned', 'test'];
@@ -132,7 +138,17 @@ export function mapReleases(releases: GithubRelease[]): MappedVersion[] {
 				assetSize: asset?.size ?? null,
 				downloadCount: asset?.download_count ?? 0,
 				isPrerelease: release.prerelease,
-				publishedAt: parseTimestamp(release.published_at)
+				publishedAt: parseTimestamp(release.published_at),
+				assets: release.assets.filter(isApk).map(mapAsset)
 			};
 		});
+}
+
+function mapAsset(asset: GithubReleaseAsset): MappedAsset {
+	return {
+		name: asset.name,
+		downloadUrl: asset.browser_download_url,
+		size: asset.size,
+		downloadCount: asset.download_count
+	};
 }

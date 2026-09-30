@@ -176,6 +176,13 @@
       "when": 1790698932322,
       "tag": "0024_account_provider_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790784280616,
+      "tag": "0025_listing_version_assets",
+      "breakpoints": true
     }
   ]
 }

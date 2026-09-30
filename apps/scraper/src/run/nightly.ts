@@ -10,7 +10,7 @@ import {
 import {
 	DEFAULT_MAX_IDENTITIES,
 	IDENTITY_CONCURRENCY,
-	identifyVersions,
+	identifyAssets,
 	type IdentityPorts
 } from './identities.ts';
 import type { GithubClient } from '@yuki/github';
@@ -137,12 +137,12 @@ export async function runNightly(ports: RunPorts, options: RunOptions): Promise<
 async function identifyReleases(ports: RunPorts, options: RunOptions): Promise<string[]> {
 	if (ports.identities === undefined) return [];
 
-	const summary = await identifyVersions(ports.identities, {
+	const summary = await identifyAssets(ports.identities, {
 		limit: options.maxIdentities ?? DEFAULT_MAX_IDENTITIES,
 		concurrency: IDENTITY_CONCURRENCY
 	});
 	ports.log?.(
-		`Identified ${summary.identifiedCount} release apks, ${summary.unsignedCount} unsigned, ` +
+		`Identified ${summary.identifiedCount} release apks, ${summary.foreignCount} foreign, ${summary.unsignedCount} unsigned, ` +
 			`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred`
 	);
 
