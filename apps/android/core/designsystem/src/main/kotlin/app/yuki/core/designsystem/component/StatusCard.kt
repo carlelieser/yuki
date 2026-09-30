@@ -13,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import app.yuki.core.designsystem.theme.YukiShape
@@ -46,24 +45,7 @@ data class StatusContent(
     val description: String,
     val tone: StatusTone = StatusTone.Neutral,
     val action: StatusAction? = null,
-    val icon: ImageVector? = null,
 )
-
-@Composable
-private fun containerFor(tone: StatusTone): Color = when (tone) {
-    StatusTone.Positive -> MaterialTheme.colorScheme.tertiaryContainer
-    StatusTone.Neutral -> MaterialTheme.colorScheme.surfaceContainerHigh
-    StatusTone.Informative -> MaterialTheme.colorScheme.secondaryContainer
-    StatusTone.Attention -> MaterialTheme.colorScheme.errorContainer
-}
-
-@Composable
-private fun contentFor(tone: StatusTone): Color = when (tone) {
-    StatusTone.Positive -> MaterialTheme.colorScheme.onTertiaryContainer
-    StatusTone.Neutral -> MaterialTheme.colorScheme.onSurface
-    StatusTone.Informative -> MaterialTheme.colorScheme.onSecondaryContainer
-    StatusTone.Attention -> MaterialTheme.colorScheme.onErrorContainer
-}
 
 @Composable
 fun StatusCard(
@@ -73,8 +55,8 @@ fun StatusCard(
     Card(
         shape = YukiShape.Card,
         colors = CardDefaults.cardColors(
-            containerColor = containerFor(content.tone),
-            contentColor = contentFor(content.tone),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -82,7 +64,7 @@ fun StatusCard(
             modifier = Modifier.padding(YukiSpacing.Large),
             horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Medium),
         ) {
-            content.icon?.let { icon -> StatusIcon(icon = icon) }
+            StatusIcon(icon = statusIconFor(content.tone))
             StatusText(content = content, modifier = Modifier.weight(1f))
         }
     }

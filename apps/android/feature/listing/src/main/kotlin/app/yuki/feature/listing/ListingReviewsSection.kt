@@ -112,7 +112,6 @@ private fun ReviewPromptRow(prompt: ReviewPrompt, callbacks: ReviewCallbacks) {
                 title = stringResource(R.string.listing_reviews_install_required_title),
                 description = stringResource(R.string.listing_reviews_install_required_description),
                 tone = StatusTone.Informative,
-                icon = YukiIcons.Info,
             ),
             modifier = modifier,
         )
