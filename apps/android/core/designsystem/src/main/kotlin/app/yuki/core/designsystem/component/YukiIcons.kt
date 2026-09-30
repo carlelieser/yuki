@@ -75,9 +75,6 @@ object YukiIcons {
     val ChevronRight: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_chevron_right)
 
-    val Delete: ImageVector
-        @Composable get() = ImageVector.vectorResource(R.drawable.ic_delete)
-
     val Edit: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_edit)
 

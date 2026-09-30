@@ -7,12 +7,16 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -25,6 +29,7 @@ import app.yuki.core.designsystem.component.YUKI_SNACKBAR_TAG
 import app.yuki.core.designsystem.component.YukiSnackbarHost
 import app.yuki.core.model.FailureReason
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -56,35 +61,43 @@ class ReviewComposerScreenTest {
 
     private fun inForm() = hasAnyAncestor(hasTestTag(REVIEW_COMPOSER_TAG))
 
+    private fun deleteButton() = composeRule.onNode(
+        hasText(text(R.string.listing_composer_delete)) and hasClickAction(),
+    )
+
     @Test
     fun aNewReviewOffersPostInTheHeaderWithoutDelete() {
         setScreen(ReviewComposerState(isLoading = false))
 
         composeRule.onNodeWithText(text(R.string.listing_composer_title_write)).assertIsDisplayed()
         composeRule.onNode(hasText(text(R.string.listing_composer_post)) and !inForm()).assertIsDisplayed()
-        composeRule.onAllNodesWithContentDescription(text(R.string.listing_composer_delete)).assertCountEquals(0)
+        composeRule.onAllNodesWithText(text(R.string.listing_composer_delete)).assertCountEquals(0)
     }
 
     @Test
-    fun anExistingReviewOffersUpdateAndDeleteInTheHeader() {
+    fun anExistingReviewOffersUpdateInTheHeaderAndDeleteAtTheBottomLeft() {
         setScreen(ReviewComposerState(isLoading = false, isEditing = true, rating = 3, body = "Okay"))
 
         composeRule.onNodeWithText(text(R.string.listing_composer_title_edit)).assertIsDisplayed()
-        composeRule.onNodeWithText("Okay").assertIsDisplayed()
         composeRule.onNode(hasText(text(R.string.listing_composer_update)) and !inForm()).assertIsDisplayed()
-        composeRule.onNode(hasContentDescription(text(R.string.listing_composer_delete)) and !inForm())
-            .assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription(text(R.string.listing_composer_delete)).assertCountEquals(0)
+
+        val screen = composeRule.onRoot().getUnclippedBoundsInRoot()
+        val field = composeRule.onNode(hasSetTextAction()).getUnclippedBoundsInRoot()
+        val delete = deleteButton().assertIsDisplayed().getUnclippedBoundsInRoot()
+        assertTrue(delete.top >= field.bottom)
+        assertTrue(delete.right < screen.right / 2)
     }
 
     @Test
-    fun deletingFromTheHeaderAsksForConfirmation() {
+    fun deletingAsksForConfirmation() {
         var deleteCount = 0
         setScreen(
             state = ReviewComposerState(isLoading = false, isEditing = true, rating = 3),
             callbacks = ReviewComposerCallbacks(onDelete = { deleteCount += 1 }),
         )
 
-        composeRule.onNodeWithContentDescription(text(R.string.listing_composer_delete)).performClick()
+        deleteButton().performClick()
 
         assertEquals(1, deleteCount)
     }

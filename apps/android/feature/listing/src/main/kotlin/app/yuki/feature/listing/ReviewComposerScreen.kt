@@ -5,12 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,8 +26,8 @@ import app.yuki.core.designsystem.component.RatingInput
 import app.yuki.core.designsystem.component.TextAreaContent
 import app.yuki.core.designsystem.component.YukiButton
 import app.yuki.core.designsystem.component.YukiDetailScreen
-import app.yuki.core.designsystem.component.YukiIcons
 import app.yuki.core.designsystem.component.YukiLoadingIndicator
+import app.yuki.core.designsystem.component.YukiSecondaryButton
 import app.yuki.core.designsystem.component.YukiTextArea
 import app.yuki.core.designsystem.component.YukiTextButton
 import app.yuki.core.designsystem.component.failureDescription
@@ -103,17 +102,24 @@ internal fun ReviewComposerScreen(
             return@YukiDetailScreen
         }
 
-        ReviewForm(state = state, callbacks = callbacks)
+        Column(modifier = Modifier.fillMaxSize()) {
+            ReviewForm(state = state, callbacks = callbacks, modifier = Modifier.weight(1f))
+            if (state.isEditing) ReviewDeleteBar(state = state, onDelete = callbacks.onDelete)
+        }
 
         if (state.isConfirmingDelete) ReviewDeleteDialog(callbacks = callbacks)
     }
 }
 
 @Composable
-private fun ReviewForm(state: ReviewComposerState, callbacks: ReviewComposerCallbacks) {
+private fun ReviewForm(
+    state: ReviewComposerState,
+    callbacks: ReviewComposerCallbacks,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(YukiSpacing.Large)
             .testTag(REVIEW_COMPOSER_TAG),
@@ -156,21 +162,23 @@ private fun ReviewFailureSnackbar(failure: FailureReason?, onShown: () -> Unit) 
 private fun ReviewHeaderActions(state: ReviewComposerState, callbacks: ReviewComposerCallbacks) {
     val submitLabel = if (state.isEditing) R.string.listing_composer_update else R.string.listing_composer_post
 
+    YukiButton(
+        label = stringResource(submitLabel),
+        onClick = callbacks.onSubmit,
+        isEnabled = !state.isSubmitting,
+    )
+}
+
+@Composable
+private fun ReviewDeleteBar(state: ReviewComposerState, onDelete: () -> Unit) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(YukiSpacing.Small),
-        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(YukiSpacing.Large),
     ) {
-        if (state.isEditing) {
-            IconButton(onClick = callbacks.onDelete, enabled = !state.isSubmitting) {
-                Icon(
-                    imageVector = YukiIcons.Delete,
-                    contentDescription = stringResource(R.string.listing_composer_delete),
-                )
-            }
-        }
-        YukiButton(
-            label = stringResource(submitLabel),
-            onClick = callbacks.onSubmit,
+        YukiSecondaryButton(
+            label = stringResource(R.string.listing_composer_delete),
+            onClick = onDelete,
             isEnabled = !state.isSubmitting,
         )
     }
