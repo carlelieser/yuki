@@ -5,7 +5,12 @@ import type { ApkIdentity } from '../apk/identity.ts';
 import type { PendingVersion } from '../persistence/identities.ts';
 import { identifyVersions, type IdentityPorts } from './identities.ts';
 
-const signed: ApkIdentity = { packageName: 'com.acme.app', signers: ['aa'], lineage: [] };
+const signed: ApkIdentity = {
+	packageName: 'com.acme.app',
+	signers: ['aa'],
+	lineage: [],
+	isForeign: false
+};
 
 function pending(id: string, listingId = 'listing-1'): PendingVersion {
 	return { id, listingId, downloadUrl: `https://example.com/${id}.apk` };

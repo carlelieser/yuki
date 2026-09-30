@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import {
-	buildCertificate,
 	buildManifest,
 	buildPkcs7,
 	buildSigningBlock,
 	buildZip,
+	certificateFixture,
 	v2Signers,
 	v3Signers,
 	V2_ID,
@@ -13,6 +13,7 @@ import {
 	V3_ID,
 	type ArchiveEntry
 } from './archive-fixture.ts';
+import { certificate } from './certificate-fixtures.ts';
 import { ApkFormatError } from './format-error.ts';
 import { readApkIdentity, type ApkSource } from './identity.ts';
 
@@ -42,9 +43,9 @@ function digest(certificate: Buffer): string {
 	return createHash('sha256').update(certificate).digest('hex');
 }
 
-const OLD_KEY = Buffer.from('certificate-old');
-const NEW_KEY = Buffer.from('certificate-new');
-const OTHER_KEY = Buffer.from('certificate-other');
+const OLD_KEY = certificate('old');
+const NEW_KEY = certificate('new');
+const OTHER_KEY = certificate('other');
 
 function signedApk(beforeDirectory: Buffer, entries: ArchiveEntry[] = []): Buffer {
 	return buildZip([manifestEntry('com.acme.app', true), ...entries], { beforeDirectory });
@@ -136,7 +137,8 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(NEW_KEY)],
-			lineage: []
+			lineage: [],
+			isForeign: false
 		});
 	});
 
@@ -156,7 +158,8 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(NEW_KEY)],
-			lineage: [digest(OLD_KEY)]
+			lineage: [digest(OLD_KEY)],
+			isForeign: false
 		});
 	});
 
@@ -172,8 +175,8 @@ describe('readApkIdentity', () => {
 	});
 
 	it('falls back to the jar signature of an apk with no signing block', async () => {
-		const signer = buildCertificate('CN=acme', 7);
-		const authority = buildCertificate('CN=authority', 9);
+		const signer = certificateFixture('new');
+		const authority = certificateFixture('authority');
 		const signature = buildPkcs7([authority, signer], signer);
 		const archive = buildZip([
 			manifestEntry('com.acme.app', true),
@@ -183,7 +186,8 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(archive))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(signer.encoded)],
-			lineage: []
+			lineage: [],
+			isForeign: false
 		});
 	});
 
@@ -218,7 +222,8 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [],
-			lineage: []
+			lineage: [],
+			isForeign: false
 		});
 	});
 
@@ -236,8 +241,8 @@ describe('readApkIdentity', () => {
 	});
 
 	it('rejects a jar signature that names no certificate it carries', async () => {
-		const signer = buildCertificate('CN=acme', 7);
-		const stranger = buildCertificate('CN=stranger', 8);
+		const signer = certificateFixture('new');
+		const stranger = certificateFixture('other');
 		const archive = buildZip([
 			manifestEntry('com.acme.app', true),
 			{ name: 'META-INF/CERT.RSA', body: buildPkcs7([stranger], signer), deflate: true }
