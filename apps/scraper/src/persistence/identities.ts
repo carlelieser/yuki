@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, isNull, not, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { ApkIdentity } from '../apk/identity.ts';
 import { PLATFORM_CERTIFICATES } from '../apk/publishers.ts';
@@ -83,36 +83,18 @@ export async function reclassifyAssets(db: Database): Promise<Reclassification> 
 export async function settleListings(db: Database, listingIds: string[]): Promise<void> {
 	for (const listingId of listingIds) {
 		await db.transaction(async (tx) => {
-			await settleReleaseDownloads(tx, listingId);
-			await settlePackageName(tx, listingId);
+			const primary = await settleReleaseDownloads(tx, listingId);
+			if (primary !== null) await settlePackageName(tx, listingId, primary);
 			await settleLatestRelease(tx, listingId);
 			await settlePublication(tx, listingId);
 		});
 	}
 }
 
-async function settlePackageName(tx: Transaction, listingId: string): Promise<void> {
-	const assets = schema.listingVersionAssets;
-	const versions = schema.listingVersions;
-
-	const [newest] = await tx
-		.select({ packageName: assets.packageName })
-		.from(assets)
-		.innerJoin(versions, eq(versions.id, assets.versionId))
-		.where(
-			and(eq(versions.listingId, listingId), not(assets.isForeign), isNotNull(assets.packageName))
-		)
-		.orderBy(
-			versions.isPrerelease,
-			sql`${versions.publishedAt} desc nulls last`,
-			desc(versions.createdAt)
-		)
-		.limit(1);
-
-	if (newest?.packageName == null) return;
-
-	await tx
-		.update(schema.listings)
-		.set({ packageName: newest.packageName })
-		.where(eq(schema.listings.id, listingId));
+async function settlePackageName(
+	tx: Transaction,
+	listingId: string,
+	packageName: string
+): Promise<void> {
+	await tx.update(schema.listings).set({ packageName }).where(eq(schema.listings.id, listingId));
 }
