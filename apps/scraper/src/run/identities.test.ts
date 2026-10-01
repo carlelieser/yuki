@@ -2,14 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ApkFetchError } from '../apk/http-source.ts';
 import { ApkFormatError } from '../apk/format-error.ts';
 import type { ApkIdentity } from '../apk/identity.ts';
-import type { PendingAsset } from '../persistence/identities.ts';
+import type { PendingAsset, Reclassification } from '../persistence/identities.ts';
 import { identifyAssets, type IdentityPorts } from './identities.ts';
 
 const signed: ApkIdentity = {
 	packageName: 'com.acme.app',
 	signers: ['aa'],
-	lineage: [],
-	isForeign: false
+	lineage: []
 };
 
 function pending(id: string, listingId = 'listing-1'): PendingAsset {
@@ -20,10 +19,17 @@ type Recorded = {
 	saved: Map<string, ApkIdentity | null>;
 	settled: string[][];
 	limits: number[];
+	events: string[];
 };
 
-function ports(assets: PendingAsset[], read: IdentityPorts['read']): IdentityPorts & Recorded {
-	const recorded: Recorded = { saved: new Map(), settled: [], limits: [] };
+const UNCHANGED: Reclassification = { listingIds: [], foreignCount: 0, ownCount: 0 };
+
+function ports(
+	assets: PendingAsset[],
+	read: IdentityPorts['read'],
+	reclassification: Reclassification = UNCHANGED
+): IdentityPorts & Recorded {
+	const recorded: Recorded = { saved: new Map(), settled: [], limits: [], events: [] };
 
 	return {
 		...recorded,
@@ -33,9 +39,15 @@ function ports(assets: PendingAsset[], read: IdentityPorts['read']): IdentityPor
 		},
 		read,
 		save: async (assetId, identity) => {
+			recorded.events.push(`save ${assetId}`);
 			recorded.saved.set(assetId, identity);
 		},
+		reclassify: async () => {
+			recorded.events.push('reclassify');
+			return reclassification;
+		},
 		settleListings: async (listingIds) => {
+			recorded.events.push('settle');
 			recorded.settled.push([...listingIds].sort());
 		}
 	};
@@ -118,14 +130,37 @@ describe('identifyAssets', () => {
 		expect(run.settled).toEqual([['listing-1']]);
 	});
 
-	it('records a foreign apk and settles its listing', async () => {
-		const run = ports([pending('v1')], async () => ({ ...signed, isForeign: true }));
+	it('classifies against the platform table only after saving new identities', async () => {
+		const run = ports([pending('v1')], async () => signed);
+
+		await identifyAssets(run, { limit: 10, concurrency: 1 });
+
+		expect(run.events).toEqual(['save v1', 'reclassify', 'settle']);
+	});
+
+	it('settles listings whose apks changed classification even with nothing pending', async () => {
+		const run = ports([], async () => signed, {
+			listingIds: ['listing-7', 'listing-9'],
+			foreignCount: 3,
+			ownCount: 70
+		});
 
 		const summary = await identifyAssets(run, { limit: 10, concurrency: 1 });
 
-		expect(run.saved.get('v1')?.isForeign).toBe(true);
-		expect(summary.foreignCount).toBe(1);
-		expect(summary.identifiedCount).toBe(0);
+		expect(run.settled).toEqual([['listing-7', 'listing-9']]);
+		expect(summary.newlyForeignCount).toBe(3);
+		expect(summary.newlyOwnCount).toBe(70);
+	});
+
+	it('settles a listing once when it was both read and reclassified', async () => {
+		const run = ports([pending('v1')], async () => signed, {
+			listingIds: ['listing-1'],
+			foreignCount: 1,
+			ownCount: 0
+		});
+
+		await identifyAssets(run, { limit: 10, concurrency: 1 });
+
 		expect(run.settled).toEqual([['listing-1']]);
 	});
 

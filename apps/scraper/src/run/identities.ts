@@ -1,7 +1,7 @@
 import { ApkFetchError } from '../apk/http-source.ts';
 import { ApkFormatError } from '../apk/format-error.ts';
 import type { ApkIdentity } from '../apk/identity.ts';
-import type { PendingAsset } from '../persistence/identities.ts';
+import type { PendingAsset, Reclassification } from '../persistence/identities.ts';
 
 export const DEFAULT_MAX_IDENTITIES = 3000;
 export const IDENTITY_CONCURRENCY = 8;
@@ -10,6 +10,7 @@ export type IdentityPorts = {
 	listPending: (limit: number) => Promise<PendingAsset[]>;
 	read: (downloadUrl: string) => Promise<ApkIdentity | null>;
 	save: (assetId: string, identity: ApkIdentity | null) => Promise<void>;
+	reclassify: () => Promise<Reclassification>;
 	settleListings: (listingIds: string[]) => Promise<void>;
 };
 
@@ -20,15 +21,16 @@ export type IdentityOptions = {
 
 export type IdentitySummary = {
 	identifiedCount: number;
-	foreignCount: number;
 	unsignedCount: number;
+	newlyForeignCount: number;
+	newlyOwnCount: number;
 	unreadableCount: number;
 	deferredCount: number;
 	warnings: string[];
 };
 
 type IdentityOutcome =
-	| { kind: 'identified' | 'foreign' | 'unsigned' | 'unrecognised'; asset: PendingAsset }
+	| { kind: 'identified' | 'unsigned' | 'unrecognised'; asset: PendingAsset }
 	| { kind: 'malformed' | 'deferred'; asset: PendingAsset; reason: string };
 
 export async function identifyAssets(
@@ -40,10 +42,16 @@ export async function identifyAssets(
 		identify(ports, asset)
 	);
 
-	const saved = outcomes.filter((outcome) => outcome.kind !== 'deferred');
-	await ports.settleListings([...new Set(saved.map((outcome) => outcome.asset.listingId))]);
+	const reclassification = await ports.reclassify();
 
-	return summarize(outcomes);
+	const saved = outcomes.filter((outcome) => outcome.kind !== 'deferred');
+	const touched = [
+		...saved.map((outcome) => outcome.asset.listingId),
+		...reclassification.listingIds
+	];
+	await ports.settleListings([...new Set(touched)]);
+
+	return summarize(outcomes, reclassification);
 }
 
 async function identify(ports: IdentityPorts, asset: PendingAsset): Promise<IdentityOutcome> {
@@ -62,22 +70,21 @@ async function identify(ports: IdentityPorts, asset: PendingAsset): Promise<Iden
 	await ports.save(asset.id, identity);
 
 	if (identity === null) return { kind: 'unrecognised', asset };
-	return { kind: identityKind(identity), asset };
+	return { kind: identity.signers.length > 0 ? 'identified' : 'unsigned', asset };
 }
 
-function identityKind(identity: ApkIdentity): 'identified' | 'foreign' | 'unsigned' {
-	if (identity.signers.length === 0) return 'unsigned';
-	return identity.isForeign ? 'foreign' : 'identified';
-}
-
-function summarize(outcomes: IdentityOutcome[]): IdentitySummary {
+function summarize(
+	outcomes: IdentityOutcome[],
+	reclassification: Reclassification
+): IdentitySummary {
 	const count = (...kinds: IdentityOutcome['kind'][]) =>
 		outcomes.filter((outcome) => kinds.includes(outcome.kind)).length;
 
 	return {
 		identifiedCount: count('identified'),
-		foreignCount: count('foreign'),
 		unsignedCount: count('unsigned'),
+		newlyForeignCount: reclassification.foreignCount,
+		newlyOwnCount: reclassification.ownCount,
 		unreadableCount: count('unrecognised', 'malformed'),
 		deferredCount: count('deferred'),
 		warnings: outcomes.flatMap((outcome) =>

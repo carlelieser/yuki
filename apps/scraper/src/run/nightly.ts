@@ -142,8 +142,9 @@ async function identifyReleases(ports: RunPorts, options: RunOptions): Promise<s
 		concurrency: IDENTITY_CONCURRENCY
 	});
 	ports.log?.(
-		`Identified ${summary.identifiedCount} release apks, ${summary.foreignCount} foreign, ${summary.unsignedCount} unsigned, ` +
-			`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred`
+		`Identified ${summary.identifiedCount} release apks, ${summary.unsignedCount} unsigned, ` +
+			`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred; ` +
+			`${summary.newlyForeignCount} newly foreign, ${summary.newlyOwnCount} newly own`
 	);
 
 	return summary.warnings;

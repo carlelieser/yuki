@@ -1,6 +1,7 @@
-import { and, desc, eq, inArray, isNotNull, isNull, not, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, not, sql, type SQL } from 'drizzle-orm';
 import { schema, type Database } from '@yuki/db';
 import type { ApkIdentity } from '../apk/identity.ts';
+import { PLATFORM_CERTIFICATES } from '../apk/publishers.ts';
 import { settleReleaseDownloads } from './assets.ts';
 import { settlePublication, type Transaction } from './publication.ts';
 import { settleLatestRelease } from './releases.ts';
@@ -42,10 +43,41 @@ export async function saveIdentity(
 			packageName: identity?.packageName ?? null,
 			signerDigests: identity?.signers ?? null,
 			lineageDigests: identity?.lineage ?? null,
-			isForeign: identity?.isForeign ?? false,
 			identityReadAt: new Date()
 		})
 		.where(eq(schema.listingVersionAssets.id, assetId));
+}
+
+export type Reclassification = {
+	listingIds: string[];
+	foreignCount: number;
+	ownCount: number;
+};
+
+export function reclassifyQuery(): SQL {
+	const assets = schema.listingVersionAssets;
+	const versions = schema.listingVersions;
+	const platformCertificates = sql`${sql.param(PLATFORM_CERTIFICATES)}::text[]`;
+	const isPlatformSigned = sql`(cardinality(${assets.signerDigests}) > 0 and ${assets.signerDigests} <@ ${platformCertificates})`;
+
+	return sql`update ${assets}
+		set ${sql.identifier(assets.isForeign.name)} = ${isPlatformSigned}
+		from ${versions}
+		where ${versions.id} = ${assets.versionId}
+			and ${assets.identityReadAt} is not null
+			and ${assets.isForeign} is distinct from ${isPlatformSigned}
+		returning ${versions.listingId} as listing_id, ${assets.isForeign} as is_foreign`;
+}
+
+export async function reclassifyAssets(db: Database): Promise<Reclassification> {
+	const result = await db.execute<{ listing_id: string; is_foreign: boolean }>(reclassifyQuery());
+	const rows = result.rows;
+
+	return {
+		listingIds: [...new Set(rows.map((row) => row.listing_id))],
+		foreignCount: rows.filter((row) => row.is_foreign).length,
+		ownCount: rows.filter((row) => !row.is_foreign).length
+	};
 }
 
 export async function settleListings(db: Database, listingIds: string[]): Promise<void> {

@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { ApkFormatError } from './format-error.ts';
-import { isPlatformCertificate } from './publishers.ts';
 import type { SigningBlock } from './signing-block.ts';
 
 export const V2_BLOCK_ID = 0x7109871a;
@@ -14,10 +13,9 @@ const V3_BLOCK_IDS = [V31_BLOCK_ID, V3_BLOCK_ID];
 export type Signers = {
 	signers: string[];
 	lineage: string[];
-	isForeign: boolean;
 };
 
-export const UNSIGNED: Signers = { signers: [], lineage: [], isForeign: false };
+export const UNSIGNED: Signers = { signers: [], lineage: [] };
 
 type V3Signer = {
 	certificate: Buffer;
@@ -35,19 +33,11 @@ export function signersFromBlock(block: SigningBlock): Signers | null {
 	const v2 = block.get(V2_BLOCK_ID);
 	if (v2 === undefined) return null;
 
-	return currentSigners(readV2Signers(v2));
+	return { signers: distinctDigests(readV2Signers(v2)), lineage: [] };
 }
 
 export function signersFromCertificates(certificates: Buffer[]): Signers {
-	return currentSigners(certificates);
-}
-
-function currentSigners(certificates: Buffer[]): Signers {
-	return {
-		signers: distinctDigests(certificates),
-		lineage: [],
-		isForeign: certificates.every(isPlatformCertificate)
-	};
+	return { signers: distinctDigests(certificates), lineage: [] };
 }
 
 export function certificateDigest(certificate: Buffer): string {
@@ -61,8 +51,7 @@ function v3Identity(signers: V3Signer[]): Signers {
 
 	return {
 		signers: [current],
-		lineage: distinctDigests(others).filter((digest) => digest !== current),
-		isForeign: isPlatformCertificate(newest.certificate)
+		lineage: distinctDigests(others).filter((digest) => digest !== current)
 	};
 }
 
