@@ -1,8 +1,9 @@
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
 import { schema } from '@yuki/db';
 import type { ListingVersionAsset } from '@yuki/db/schema';
 import { pickApkAsset, type MappedAsset } from '@yuki/github';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { primaryPackage, type PackagedAsset } from '../releases/primary-package.ts';
 import type { Transaction } from './publication.ts';
 
 export async function upsertVersionAssets(
@@ -55,27 +56,52 @@ function identityUnlessAssetChanged() {
 
 type ReleaseAsset = Pick<
 	ListingVersionAsset,
-	'versionId' | 'name' | 'downloadUrl' | 'size' | 'downloadCount' | 'isForeign'
->;
+	'versionId' | 'name' | 'downloadUrl' | 'size' | 'downloadCount' | 'isForeign' | 'packageName'
+> & { signer: string | null; publishedAt: Date | null; isPrerelease: boolean };
 
-export async function settleReleaseDownloads(tx: Transaction, listingId: string): Promise<void> {
-	const releases = groupByVersion(await releaseAssets(tx, listingId));
+export async function settleReleaseDownloads(
+	tx: Transaction,
+	listingId: string
+): Promise<string | null> {
+	const assets = await releaseAssets(tx, listingId);
+	const primary = await listingPrimaryPackage(tx, listingId, assets);
 
-	for (const [versionId, assets] of releases) {
+	for (const [versionId, releaseAssets] of groupByVersion(assets)) {
 		await tx
 			.update(schema.listingVersions)
-			.set(associatedDownload(assets))
+			.set(associatedDownload(releaseAssets, primary))
 			.where(eq(schema.listingVersions.id, versionId));
 	}
+
+	return primary;
+}
+
+async function listingPrimaryPackage(
+	tx: Transaction,
+	listingId: string,
+	assets: ReleaseAsset[]
+): Promise<string | null> {
+	const [repository] = await tx
+		.select({
+			githubRepoId: schema.listings.githubRepoId,
+			owner: schema.listings.owner,
+			name: schema.listings.name
+		})
+		.from(schema.listings)
+		.where(eq(schema.listings.id, listingId))
+		.limit(1);
+	if (repository === undefined) return null;
+
+	return primaryPackage(assets.filter(isPackagedOwnAsset), repository);
+}
+
+function isPackagedOwnAsset(asset: ReleaseAsset): asset is ReleaseAsset & PackagedAsset {
+	return !asset.isForeign && asset.packageName !== null;
 }
 
 async function releaseAssets(tx: Transaction, listingId: string): Promise<ReleaseAsset[]> {
 	const stored = schema.listingVersionAssets;
 	const versions = schema.listingVersions;
-	const versionIds = tx
-		.select({ id: versions.id })
-		.from(versions)
-		.where(eq(versions.listingId, listingId));
 
 	return tx
 		.select({
@@ -84,10 +110,15 @@ async function releaseAssets(tx: Transaction, listingId: string): Promise<Releas
 			downloadUrl: stored.downloadUrl,
 			size: stored.size,
 			downloadCount: stored.downloadCount,
-			isForeign: stored.isForeign
+			isForeign: stored.isForeign,
+			packageName: stored.packageName,
+			signer: sql<string | null>`${stored.signerDigests}[1]`,
+			publishedAt: versions.publishedAt,
+			isPrerelease: versions.isPrerelease
 		})
 		.from(stored)
-		.where(inArray(stored.versionId, versionIds));
+		.innerJoin(versions, eq(versions.id, stored.versionId))
+		.where(eq(versions.listingId, listingId));
 }
 
 function groupByVersion(assets: ReleaseAsset[]): Map<string, ReleaseAsset[]> {
@@ -99,9 +130,10 @@ function groupByVersion(assets: ReleaseAsset[]): Map<string, ReleaseAsset[]> {
 	return releases;
 }
 
-export function associatedDownload(assets: ReleaseAsset[]) {
+export function associatedDownload(assets: ReleaseAsset[], primary: string | null) {
 	const own = assets.filter((asset) => !asset.isForeign);
-	const picked = pickApkAsset(own);
+	const primaryBuilds = own.filter((asset) => asset.packageName === primary);
+	const picked = pickApkAsset(primaryBuilds.length > 0 ? primaryBuilds : own);
 
 	return {
 		downloadUrl: picked?.downloadUrl ?? null,

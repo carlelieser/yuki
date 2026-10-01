@@ -1,0 +1,17 @@
+[
+	{
+		"githubRepoId": 197253270,
+		"repository": "SimpleAppProjects/SimpleWear",
+		"package": "com.thewizrd.simplewear"
+	},
+	{
+		"githubRepoId": 1128495541,
+		"repository": "aryneal-boop/autoglm_KY",
+		"package": "com.example.autoglm"
+	},
+	{
+		"githubRepoId": 1258299774,
+		"repository": "panel-assistant/android",
+		"package": "io.panelassistant.android"
+	}
+]

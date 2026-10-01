@@ -1,5 +1,6 @@
 import { createDatabase } from '@yuki/db';
-import { listListingsBySlug } from './persistence/listings.ts';
+import { settleListings } from './persistence/identities.ts';
+import { listListingsBySlug, listListingsForRefresh } from './persistence/listings.ts';
 import { findMissingSlugs, readListFlag } from './run/args.ts';
 import { DEFAULT_MAX_IDENTITIES, IDENTITY_CONCURRENCY, identifyAssets } from './run/identities.ts';
 import { createIdentityPorts } from './run/identity-ports.ts';
@@ -16,6 +17,7 @@ function readNumberFlag(flag: string, fallback: number): number {
 const db = createDatabase();
 const slugs = readListFlag(process.argv, '--slug');
 const limit = readNumberFlag('--max-identities', DEFAULT_MAX_IDENTITIES);
+const shouldSettleAll = process.argv.includes('--settle-all');
 
 async function resolveListingIds(): Promise<string[] | undefined> {
 	if (slugs.length === 0) return undefined;
@@ -44,4 +46,11 @@ console.log(
 		`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred; ` +
 		`${summary.newlyForeignCount} newly foreign, ${summary.newlyOwnCount} newly own`
 );
+if (shouldSettleAll) {
+	const listingIds =
+		(await resolveListingIds()) ?? (await listListingsForRefresh(db)).map((listing) => listing.id);
+	await settleListings(db, listingIds);
+	console.log(`Settled ${listingIds.length} listings`);
+}
+
 process.exit(0);
