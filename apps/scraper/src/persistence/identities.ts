@@ -58,7 +58,7 @@ export function reclassifyQuery(): SQL {
 	const assets = schema.listingVersionAssets;
 	const versions = schema.listingVersions;
 	const platformCertificates = sql`${sql.param(PLATFORM_CERTIFICATES)}::text[]`;
-	const isPlatformSigned = sql`(cardinality(${assets.signerDigests}) > 0 and ${assets.signerDigests} <@ ${platformCertificates})`;
+	const isPlatformSigned = sql`coalesce(cardinality(${assets.signerDigests}) > 0 and ${assets.signerDigests} <@ ${platformCertificates}, false)`;
 
 	return sql`update ${assets}
 		set ${sql.identifier(assets.isForeign.name)} = ${isPlatformSigned}
