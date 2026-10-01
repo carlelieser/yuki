@@ -5,6 +5,7 @@ import {
 	pickApkAsset,
 	type Architecture
 } from '@yuki/github';
+import type { Database } from '@yuki/db';
 import { getListingBySlug, type ListingDetail } from './listings.ts';
 import { fetchReleaseAssets, ReleaseLookupFailed } from './release-assets.ts';
 import { recordDownload } from './reviews.ts';
@@ -41,21 +42,26 @@ function requestedArchitecture(url: URL): Architecture | null {
 	return architecture;
 }
 
+type ArchitectureRequest = {
+	listing: ListingDetail;
+	stored: StoredDownload;
+	architecture: Architecture;
+};
+
 async function resolveForArchitecture(
-	listing: ListingDetail,
-	stored: StoredDownload,
-	architecture: Architecture
+	db: Database,
+	{ listing, stored, architecture }: ArchitectureRequest
 ): Promise<string> {
 	if (storedArchitecture(stored) === architecture) return stored.downloadUrl;
 
 	try {
-		const release = await fetchReleaseAssets(listing, stored.tag);
+		const release = await fetchReleaseAssets(db, listing, stored.tag);
 		if (release.kind === 'missing') error(404, 'Release not found');
 
 		const asset = pickApkAsset(release.assets, architecture);
 		if (asset === null) error(404, 'No build for this architecture');
 
-		return asset.browser_download_url;
+		return asset.downloadUrl;
 	} catch (thrown) {
 		if (!(thrown instanceof ReleaseLookupFailed)) throw thrown;
 		return fallbackFor(stored);
@@ -76,7 +82,7 @@ export async function resolveDownload({ locals, params, url }: DownloadEvent): P
 	};
 	const architecture = requestedArchitecture(url);
 	const resolved = architecture
-		? await resolveForArchitecture(listing, stored, architecture)
+		? await resolveForArchitecture(locals.db, { listing, stored, architecture })
 		: stored.downloadUrl;
 
 	if (locals.user) {

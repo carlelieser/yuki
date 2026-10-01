@@ -88,7 +88,10 @@ export async function getListingBySlug(db: Database, slug: string): Promise<List
 		where: and(eq(schema.listings.slug, slug), eq(schema.listings.isPublished, true)),
 		with: {
 			screenshots: { orderBy: (table, { asc }) => [asc(table.position)] },
-			versions: { orderBy: (table, { desc: order }) => [order(table.publishedAt)] }
+			versions: {
+				where: (table, { not }) => not(table.isIgnored),
+				orderBy: (table, { desc: order }) => [order(table.publishedAt)]
+			}
 		}
 	});
 
