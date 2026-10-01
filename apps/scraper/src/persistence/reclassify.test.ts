@@ -15,6 +15,10 @@ describe('reclassifyQuery', () => {
 		expect(query.sql).toContain('cardinality("listing_version_assets"."signer_digests") > 0');
 	});
 
+	it('classifies an apk whose signers could not be read as its own, not unknown', () => {
+		expect(query.sql).toMatch(/= coalesce\(.+, false\)/s);
+	});
+
 	it('only touches identified apks whose classification changed', () => {
 		expect(query.sql).toContain('"listing_version_assets"."identity_read_at" is not null');
 		expect(query.sql).toContain('"listing_version_assets"."is_foreign" is distinct from');
