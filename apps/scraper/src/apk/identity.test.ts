@@ -137,8 +137,7 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(NEW_KEY)],
-			lineage: [],
-			isForeign: false
+			lineage: []
 		});
 	});
 
@@ -158,8 +157,7 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(NEW_KEY)],
-			lineage: [digest(OLD_KEY)],
-			isForeign: false
+			lineage: [digest(OLD_KEY)]
 		});
 	});
 
@@ -186,8 +184,7 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(archive))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [digest(signer.encoded)],
-			lineage: [],
-			isForeign: false
+			lineage: []
 		});
 	});
 
@@ -222,8 +219,7 @@ describe('readApkIdentity', () => {
 		expect(await readApkIdentity(sourceFor(signedApk(block)))).toEqual({
 			packageName: 'com.acme.app',
 			signers: [],
-			lineage: [],
-			isForeign: false
+			lineage: []
 		});
 	});
 

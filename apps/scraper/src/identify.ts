@@ -40,7 +40,8 @@ for (const warning of summary.warnings) {
 }
 
 console.log(
-	`Identified ${summary.identifiedCount} release apks, ${summary.foreignCount} foreign, ${summary.unsignedCount} unsigned, ` +
-		`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred`
+	`Identified ${summary.identifiedCount} release apks, ${summary.unsignedCount} unsigned, ` +
+		`${summary.unreadableCount} unreadable, ${summary.deferredCount} deferred; ` +
+		`${summary.newlyForeignCount} newly foreign, ${summary.newlyOwnCount} newly own`
 );
 process.exit(0);

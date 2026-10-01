@@ -1,0 +1,671 @@
+[
+	{
+		"publisher": "Google",
+		"certificates": [
+			{
+				"sha256": "01b20ec1f34b81bcebd97dbbda27f0aa5a2c69e7a8e9355be0386a643f22a249",
+				"verifiedIn": "com.google.android.telecomresources"
+			},
+			{
+				"sha256": "0283d22656e555a53ae543eb304cdb6669ea24d495dd93f1e8682be8095ec95a",
+				"verifiedIn": "com.google.android.apps.pixel.support"
+			},
+			{
+				"sha256": "0439c9a2ebf7bb3a3a20ffd844e2cf958bcee612194a4490fc008eec1bf594d9",
+				"verifiedIn": "com.google.android.accessibility.soundamplifier"
+			},
+			{
+				"sha256": "0459ede50547ee34c074018cded1c048bd9daa206215b38e46ab839786d5d8f3",
+				"verifiedIn": "com.google.android.apps.turbo"
+			},
+			{
+				"sha256": "050f402bfa8bc473f281041a0373ce4b56556535c2cc405e2ede17975ec046e7",
+				"verifiedIn": "com.google.android.verifier"
+			},
+			{
+				"sha256": "07184f6ee5cd6ae54bbe55745e79368ba91104b3cf49012298c77f07c1f4b2ef",
+				"verifiedIn": "com.google.android.apps.wellbeing"
+			},
+			{
+				"sha256": "071f09456bf1a8e8ad2e808ffe6a0ebc13582a7e6f9aba13e47280ad9a85d833",
+				"verifiedIn": "com.google.android.as.oss"
+			},
+			{
+				"sha256": "07dd0cba5a365fb227b16d033bfd605102dfec275ebe910b617e81acad2113fe",
+				"verifiedIn": "com.google.android.apps.tachyon"
+			},
+			{
+				"sha256": "0a99f5dc2d9cb7f4a5380b0a75c9054852631f436870d20df20b34f9c6f6bd9e",
+				"verifiedIn": "com.google.android.modem.pms"
+			},
+			{
+				"sha256": "0baf8e09438ac51c88cb336cfc80b388a36e5fad4129b1833edabf01d4fe0599",
+				"verifiedIn": "com.google.android.accessibility.reader"
+			},
+			{
+				"sha256": "0cb99d2bc38c6450d080ddc354792d6adcf285d36abacb350cc3423c7a7f345a",
+				"verifiedIn": "com.google.android.pixel.setupwizard"
+			},
+			{
+				"sha256": "0e4479fe193d01cd46215fccd0d9233dec77fea259fbcc9f092119f50a8372e5",
+				"verifiedIn": "com.google.android.apps.tips"
+			},
+			{
+				"sha256": "0fee05b073686d3ec3bef4d74a012e453fca122cf72636f3d725aee08b1584e5",
+				"verifiedIn": "com.google.android.apps.emojiwallpaper"
+			},
+			{
+				"sha256": "133e1925a9b992d327fa1f6c4ba8d57c3b2ebd1f1da4de6b0bfa0bd0411a7ca4",
+				"verifiedIn": "com.google.android.safetycore"
+			},
+			{
+				"sha256": "169c54643151c150ebae8f5e7f33b20a384182751861df4f2fe8b7f40a1ef44a",
+				"verifiedIn": "com.google.android.apps.tachyon"
+			},
+			{
+				"sha256": "184605095be6ca22d055f34efaf01344fd3ab3b5638c30627610eeae8a260b29",
+				"verifiedIn": "com.google.android.ext.services"
+			},
+			{
+				"sha256": "197f667ae126af53a8a891b5d5c81d7c0e48223b3e828e51870a4aeadd9e8d9d",
+				"verifiedIn": "com.google.android.packageinstaller"
+			},
+			{
+				"sha256": "1982160d72a012cc7bd50939b2cc824d957ba799811938eae8a2e17e4f3c0b99",
+				"verifiedIn": "com.google.android.uwb.resources"
+			},
+			{
+				"sha256": "1a178137b7b598a377faed1546d74862e8bfc7a3670ba5ccf3f7cd59c90a2d2a",
+				"verifiedIn": "com.google.android.nfc"
+			},
+			{
+				"sha256": "1c817cae3628ed5726f8020b71483511036213691f7c615c6f974a70a15674f3",
+				"verifiedIn": "com.google.android.apps.nbu.files"
+			},
+			{
+				"sha256": "1ca8dcc0bed3cbd872d2cb791200c0292ca9975768a82d676b8b424fb65b5295",
+				"verifiedIn": "com.google.android.projection.gearhead"
+			},
+			{
+				"sha256": "1d47e51f53eb11c38b699400f518bdb6d6d27a1d61cc51e2a69ea828c3a2dbe8",
+				"verifiedIn": "com.google.android.apps.walletnfcrel"
+			},
+			{
+				"sha256": "1d4f2ef662f8d086abe035e9f5c3ad34700baa831f3e7e32edab303effb8f156",
+				"verifiedIn": "com.google.android.apps.docs"
+			},
+			{
+				"sha256": "207af9a133a630c4246a06c79c09946a70840f4702ee5baa53f3791b537b0f14",
+				"verifiedIn": "com.google.android.apps.nbu.files"
+			},
+			{
+				"sha256": "210493400d1a7f34685ed6d004339f90ec3c3c9d0159818ef380025cc22ba7b8",
+				"verifiedIn": "com.google.android.virtualmachine.res"
+			},
+			{
+				"sha256": "226bb0439d6baeaa5a397c586e7031d8addfaec73c65be212f4a5dbfbf621b92",
+				"verifiedIn": "com.google.android.apps.camera.services"
+			},
+			{
+				"sha256": "23962f4b43b9857638ea66f4d419518eae282491acda4b94707bd59003c45e58",
+				"verifiedIn": "com.google.android.apps.work.clouddpc"
+			},
+			{
+				"sha256": "26ec42c1c3f78b73d29042b06c7d9b2349e0911ae510f1adce745f9c699856f9",
+				"verifiedIn": "com.google.android.apps.recorder"
+			},
+			{
+				"sha256": "2c32196df9d1d0031f375c674b7222a61be454e7a2d4681162b6af58fe002039",
+				"verifiedIn": "com.google.android.apps.walletnfcrel"
+			},
+			{
+				"sha256": "2e388e5d260ebe9fcb466116caec335906f5497d1769bdfbdd3d9b4044cf7141",
+				"verifiedIn": "com.google.android.apps.pixel.customizationbundle"
+			},
+			{
+				"sha256": "2fda62d3ec5c0fdde51f4187d32af1fbbb67b8c6c14acc067be75236e1f86a72",
+				"verifiedIn": "com.google.android.apps.stargate"
+			},
+			{
+				"sha256": "3284b53cbc699d6adf924945cc5a26dc5a0066b1d6767ffcd7bca44d0ea9fab8",
+				"verifiedIn": "com.google.android.apps.messaging"
+			},
+			{
+				"sha256": "32c19c483ad594ee5ed2ba548a5a4ff2aebc31ea32acade46535f4aef4d724ee",
+				"verifiedIn": "com.google.android.storagemanager"
+			},
+			{
+				"sha256": "351ff648f51ba80a1d8aca0eabc2eefe4ea30c45aef070815f1c22d25efb2fd8",
+				"verifiedIn": "com.google.android.odad"
+			},
+			{
+				"sha256": "383d1e1b525ec6fb8204c5bf9b8390d37fd157e78b8b7212d61487b178066d20",
+				"verifiedIn": "com.google.android.carrier"
+			},
+			{
+				"sha256": "3a4b5f383bbbe6dfada06295dc3575eb1095dee017cffce03102e23d969b9105",
+				"verifiedIn": "com.google.android.apps.pixel.aurelius"
+			},
+			{
+				"sha256": "3af39ab967aaa5d279e49b5f769cb66e40799838bc8799343ee57ae435d2455b",
+				"verifiedIn": "com.google.android.as"
+			},
+			{
+				"sha256": "3d3d818f1dc2fe3bc30778d1a3be8b1966f4d2b5a55f5b1770a051ce53c7e7f9",
+				"verifiedIn": "com.google.android.apps.docs.editors.sheets"
+			},
+			{
+				"sha256": "3d7a1223019aa39d9ea0e3436ab7c0896bfb4fb679f4de5fe7c23f326c8f994a",
+				"verifiedIn": "com.google.android.videos"
+			},
+			{
+				"sha256": "42b64a9b725104ff12575b0e4d9e2401edaa0271ead0edccfa73f0e8c68fdf0b",
+				"verifiedIn": "com.google.android.apps.carrier.log"
+			},
+			{
+				"sha256": "42e18c407031e802a349acdaebfbfc8ce93a693e5c1a8a12ce4613e57a233fbc",
+				"verifiedIn": "com.google.android.glasses.core"
+			},
+			{
+				"sha256": "44ec33984cbe5eccf282a7e499dfd98665a8fd6be503eb5a7181a5326e226b9e",
+				"verifiedIn": "com.google.ar.core"
+			},
+			{
+				"sha256": "48d1691a16196e6a6692301189c945016d6c651530c6d15236f8662528f710a1",
+				"verifiedIn": "com.google.android.compos.payload"
+			},
+			{
+				"sha256": "48dad75d430f1b6b18b55a968f0e990c1f7bf29f2c627ca947f6e2b65c724c93",
+				"verifiedIn": "com.google.android.apps.pixel.nowplaying"
+			},
+			{
+				"sha256": "48ed0058d1b6638e39a6e4c2df1c4d5fdf593f696bf31b09a88f93141eaf600f",
+				"verifiedIn": "com.google.android.apps.wear.companion"
+			},
+			{
+				"sha256": "4df8a79dcf61b91dd576f977439891e0acc704a9c9f334b2e46a1f75ad203247",
+				"verifiedIn": "com.google.android.appsearch.apk"
+			},
+			{
+				"sha256": "4ef08e4f1a83bcdc0a3cfced775a2dcaecc888c9f4fbf101e71d64a8f35e0ad6",
+				"verifiedIn": "com.google.android.wfcactivation"
+			},
+			{
+				"sha256": "50e7bbad88ac5ab91783612fd681536300f26fa5a5bc209ea0ad81518bec9a65",
+				"verifiedIn": "com.google.android.healthconnect.controller"
+			},
+			{
+				"sha256": "568c50114b56d8a167865b4afd28078f14e3fe0268ad894ee65479cd8e1f8dbf",
+				"verifiedIn": "com.google.android.apps.ai.icons"
+			},
+			{
+				"sha256": "56be132b780656fe2444cd34326eb5d7aac91d2096abf0fe673a99270622ec87",
+				"verifiedIn": "com.google.android.apps.restore"
+			},
+			{
+				"sha256": "57076dec15dcf10a5b559de3d647af43ccabf135ce3c922b4ef62c453559ed7a",
+				"verifiedIn": "com.google.android.apps.tasks"
+			},
+			{
+				"sha256": "58738f5aa5e1bd3f72439d415ff25b449e23af053d33ed3ebcd40c3e9f47a7ce",
+				"verifiedIn": "com.google.android.sdksandbox"
+			},
+			{
+				"sha256": "5a156263ee3c1dbcd1d194d1c6d00e67b1792044f23ab47519061cf32aab694f",
+				"verifiedIn": "com.google.android.apps.pixel.dcservice"
+			},
+			{
+				"sha256": "5aad2bee6db95d17e05a08d7d1e64c10a1511879154483916b6ae6c7fd9cb0c6",
+				"verifiedIn": "com.google.android.videos"
+			},
+			{
+				"sha256": "5c5d90f5d1e61f2ee291146e92c032b38b1460f764a599378dfe1e8029ab4f9b",
+				"verifiedIn": "com.google.android.apps.internal.betterbug"
+			},
+			{
+				"sha256": "5f2391277b1dbd489000467e4c2fa6af802430080457dce2f618992e9dfb5402",
+				"verifiedIn": "com.google.android.gms"
+			},
+			{
+				"sha256": "5fa42212ad403e22dd6efe75f3f31184051fef744c0b05be5c73edf60bf62c1e",
+				"verifiedIn": "com.google.android.networkstack"
+			},
+			{
+				"sha256": "609c2be652b16855743e427399d3b05ff57a82b09709bbb1dc3a9890a6dad478",
+				"verifiedIn": "com.google.android.contacts"
+			},
+			{
+				"sha256": "61083604a8ee94f58a8b4bfc3768598980feb523a71ccb2bdfa4c31dc9dc9573",
+				"verifiedIn": "com.google.android.pixelnfc"
+			},
+			{
+				"sha256": "62b1c954646001e38c287c16f7d96060e903388fdf6e54d02bd9bd412ed51958",
+				"verifiedIn": "com.google.assistant.hubui"
+			},
+			{
+				"sha256": "63ce24d1e9a00eb276bd38afec96afbb76fdce1e9063478668f23a6eb2d692ad",
+				"verifiedIn": "com.google.android.apps.carrier.carrierwifi"
+			},
+			{
+				"sha256": "6547c73dee150c103980bfdffe55cc9a011d785dd694a5f99afd8205bcaf1f80",
+				"verifiedIn": "com.google.android.retaildemo"
+			},
+			{
+				"sha256": "67f4c9337dffbd357e79a5e32f61356a8f7ef011ba3d28109bb3e093e831af18",
+				"verifiedIn": "com.google.android.apps.tips"
+			},
+			{
+				"sha256": "6c3c3c2fe8b23854fe8c2e79834fd574261a65f2df0d3e81c7a535abfad040a3",
+				"verifiedIn": "com.google.android.apps.pulse"
+			},
+			{
+				"sha256": "6c78f846a8430ad89fde1b01f671eb543b5a2dbc1b9f2c1ccb4a64f7665e6825",
+				"verifiedIn": "com.google.android.apps.safetyhub"
+			},
+			{
+				"sha256": "6caed89b0c089fc60bb53dba637bbfada1a8cd4c959760af7db1d5b088fe6f42",
+				"verifiedIn": "com.google.android.apps.pixel.familyspace"
+			},
+			{
+				"sha256": "6cb3faed8411c14a30054f14a52a6d511cae57f8a006033c9425787e942d6142",
+				"verifiedIn": "com.google.pixel.livewallpaper"
+			},
+			{
+				"sha256": "6e7e3a74a4d7c77ae4b981426ed0a07e78e11764698cdc9bda9b740ea2be2398",
+				"verifiedIn": "com.google.android.stardroid"
+			},
+			{
+				"sha256": "6e913f65ea53321ead6932ff777e1b7f94bbba7e2b0dafdd8494b100101e3797",
+				"verifiedIn": "com.google.ar.core"
+			},
+			{
+				"sha256": "6faf3c4140407473400934d117815a21af1cfefc5c0bee61c858bc3d72ba6fe5",
+				"verifiedIn": "com.google.android.webview"
+			},
+			{
+				"sha256": "7751c458da05ba9100ad73926e3e50aae3ca63183c6aaeb21d225883439f8aa1",
+				"verifiedIn": "com.google.android.apps.weather"
+			},
+			{
+				"sha256": "77897da074b80f858b8a0828c2c37bbe2c4ad734b4f9800abb593b621e8cf1dd",
+				"verifiedIn": "com.google.android.rkpdapp"
+			},
+			{
+				"sha256": "77bd897c29730203a548d591a0783e08626c2a54bc22c80ea47ed8863697380c",
+				"verifiedIn": "com.google.android.apps.walletnfcrel"
+			},
+			{
+				"sha256": "7a425040828738d0fc0b93c16f3e4e4ac2aa49026100b2d01aebbc0b557d356e",
+				"verifiedIn": "com.google.android.apps.accessibility.voiceaccess"
+			},
+			{
+				"sha256": "7b5ad55180a48a1f30f35377c0f9e5f911bf942fb4cf83eba255a0ebf580beef",
+				"verifiedIn": "com.google.android.marvin.talkback"
+			},
+			{
+				"sha256": "7b7b72cf5fa8cc5dbaa23cb4dc5081db44106f70245bbb2b65ce25ac2675f4a8",
+				"verifiedIn": "com.google.audio.hearing.visualization.accessibility.scribe"
+			},
+			{
+				"sha256": "7c652bbd9591cedb89f6252e97f603f83f6aa9ad3b872bbb45f5c2e833b2a3b8",
+				"verifiedIn": "com.google.android.apps.scone"
+			},
+			{
+				"sha256": "7c812585aa6c29159a07e739e5b32a705f20f20d45c7c8c8b1cc14c174f96854",
+				"verifiedIn": "com.google.android.apps.cbrsnetworkmonitor"
+			},
+			{
+				"sha256": "7ca66c5fca1a1760e034085945c179ea74bd7220119a08f8364f2c3ffba768d6",
+				"verifiedIn": "com.google.android.apps.aiwallpapers"
+			},
+			{
+				"sha256": "7caab6e6ba700e0ddcf75cca52b8c3b19a3c7d23308f7eb177a64eb2476197bd",
+				"verifiedIn": "com.google.android.apps.tachyon"
+			},
+			{
+				"sha256": "7ce83c1b71f3d572fed04c8d40c5cb10ff75e6d87d9df6fbd53f0468c2905053",
+				"verifiedIn": "com.android.vending"
+			},
+			{
+				"sha256": "7e162e6a48bcc60a106c8c2703bedd90e3c5e7bcad0850919d95048d0f7d9477",
+				"verifiedIn": "com.google.android.safetycenter.resources"
+			},
+			{
+				"sha256": "7e26b6d5802a16799448ad635868f0345d6730310634684c0ae44e7e9f7ea764",
+				"verifiedIn": "com.google.android.euicc"
+			},
+			{
+				"sha256": "7ef3eedb4f48ecf11e3170ce2ff42dfc0de47cdc024576133275adef34afade2",
+				"verifiedIn": "com.google.android.printservice.recommendation"
+			},
+			{
+				"sha256": "7f7ae292e87d103dde32745209bde47ba8f9b2f632d4e8c95b63e3243b31203e",
+				"verifiedIn": "com.google.android.apps.googleassistant"
+			},
+			{
+				"sha256": "8027d96fac7948a04b4cd0fd87f3abd77aed0d50c82a153cadbf6f37938ce23b",
+				"verifiedIn": "com.google.android.apps.work.clouddpc"
+			},
+			{
+				"sha256": "80f8fbb9a026807f58d98dbc28bf70724d8f66bbfcec997c6bdc0102c3230dee",
+				"verifiedIn": "com.google.android.adservices.api"
+			},
+			{
+				"sha256": "816ef5d268654b004ba7b938fed01644ffc4eb0a3449ef34591325898f449eec",
+				"verifiedIn": "com.google.pixel.livewallpaper"
+			},
+			{
+				"sha256": "82f90326951d14e08010b2a26cce329be2b09e74752158b7640e04a544676878",
+				"verifiedIn": "com.google.android.mosey"
+			},
+			{
+				"sha256": "84ce21fa4f621e838cbc8c4d2cd6010fec19afdcb4978926a3f1fd37a3ae1676",
+				"verifiedIn": "com.google.android.gms.supervision"
+			},
+			{
+				"sha256": "863aad42bf4795575e2be137828bbe28139993dbb96899d4f9ef18818b30f5db",
+				"verifiedIn": "com.google.android.apps.wearables.maestro.companion"
+			},
+			{
+				"sha256": "89dfb5047ee01929c2184d68ef4964f2a90af124c3233828b8f640d9e6c00f83",
+				"verifiedIn": "com.google.android.permissioncontroller"
+			},
+			{
+				"sha256": "8a2978953e4442cd719fc953e40ef899c965d71599a27ba973e884f014d74a2d",
+				"verifiedIn": "com.google.android.gms.location.history"
+			},
+			{
+				"sha256": "8c84d2c0c59683fb0b9bda31a1590ea14f8e915fbb3331048d2d6968a8f6f182",
+				"verifiedIn": "com.google.android.ondevicepersonalization.services"
+			},
+			{
+				"sha256": "8d1c9c4347bbccbe0f477f803fe3c83deb6272d871332c2d62c547aead7ebc96",
+				"verifiedIn": "com.google.android.accessibility.switchaccess"
+			},
+			{
+				"sha256": "90e8b84c91ae47530018af7fc35a943716fc8d2271f03548a1833be0166e2066",
+				"verifiedIn": "com.google.android.calculator"
+			},
+			{
+				"sha256": "910c19fa15058698a0bf6cdc9bb1ecdb3fa92d91d20c86721ec22a2f8052eb30",
+				"verifiedIn": "com.google.android.apps.pixel.relationships"
+			},
+			{
+				"sha256": "917f8719d4c2c892dbf26bbe2bdb179fff0e0ddbeb8ff9f31a4dd98bb4a4d25d",
+				"verifiedIn": "com.google.android.contacts"
+			},
+			{
+				"sha256": "997c9c5d63e84a5024f308a615c4e4a87773a52073b0e1547a4d3b8b1081efa7",
+				"verifiedIn": "com.google.android.apps.bard"
+			},
+			{
+				"sha256": "99f6cc5308e6f3318a3bf168bf106d5b5defe2b4b9c561e5ddd7924a7a2ba1e2",
+				"verifiedIn": "com.google.android.apps.tasks"
+			},
+			{
+				"sha256": "9a4b85344486ecf51ff805eb9d23179779beb7ec8191935aca67f0f409025297",
+				"verifiedIn": "com.google.android.documentsui"
+			},
+			{
+				"sha256": "9ccde4c2618f2cf005a8b6d8eaa28ad6108ec83c999c6bdb8651f2723ddb2e4e",
+				"verifiedIn": "com.google.mainline.adservices"
+			},
+			{
+				"sha256": "9dacccae4f495ae6dbc58a0ec233c6e52d311433ac573c4da1c739df6403515d",
+				"verifiedIn": "com.google.mainline.telemetry"
+			},
+			{
+				"sha256": "9ef68bf7af987a1d8a1643f0e189f91619ca1daca5d94e92947ab6db9e1b4def",
+				"verifiedIn": "com.google.android.soundpicker"
+			},
+			{
+				"sha256": "a0332928e61e86f1e683c29dc6e55f5181127b9f5ed8a7c4e84f9b8718f006e3",
+				"verifiedIn": "com.google.android.apps.safetyhub"
+			},
+			{
+				"sha256": "a08a4f9cd154f5f00d6505a6ea166384c71e91f4c9d468b982fc1fae2b892e31",
+				"verifiedIn": "com.google.ambient.streaming"
+			},
+			{
+				"sha256": "a17e89405d633a676008d9b1bd10ccdc0f6ef8520f1581be7fbe1e07162955c8",
+				"verifiedIn": "com.google.android.federatedcompute"
+			},
+			{
+				"sha256": "a1f7f2e8f58758603fed0159c6e710c649ae57263b2ce351c6710dc3f61361f9",
+				"verifiedIn": "com.google.android.pcs"
+			},
+			{
+				"sha256": "a4960cb7bf84511441f269979cac01378f76624d01d64f14c2829a6a5f79f33a",
+				"verifiedIn": "com.google.android.tetheringentitlement"
+			},
+			{
+				"sha256": "a83facac3815a76d85aadfc745cc6eb143a948f05acb3ec0787f883ecd83464f",
+				"verifiedIn": "com.google.android.uvexposurereporter"
+			},
+			{
+				"sha256": "a86bdb059f28f265162d64ce6c8d9772901d227e741581d1f04a5ed132a574d0",
+				"verifiedIn": "com.google.android.apps.nexuslauncher"
+			},
+			{
+				"sha256": "a95d21231695a11d2f85610c87fd5b7325084019eb8bda30e42d42b993f4d303",
+				"verifiedIn": "com.google.android.apps.dreamliner"
+			},
+			{
+				"sha256": "ad574faaeda5563e6778e74ca4a094ab7f759ab0879cb42e85215ad4eb3eb4e8",
+				"verifiedIn": "com.google.android.apps.recorder"
+			},
+			{
+				"sha256": "aec0408b9b3fbc34c11664182558f6492aff96ae01ff7ebc5055a5a4cea224ad",
+				"verifiedIn": "com.google.android.wfcactivation"
+			},
+			{
+				"sha256": "b3c0b227906c3aa5d0ee0d1ebdbe66a6e10b30f6b7ec4bb518ce57cb09e2ada1",
+				"verifiedIn": "com.google.android.telecomui"
+			},
+			{
+				"sha256": "b575c49711b77395f000df6b24a7453874c9394774297eb798d6c9c4b47d0e75",
+				"verifiedIn": "com.google.android.health.connect.backuprestore"
+			},
+			{
+				"sha256": "b7971ccc10a03932e14a3557a1b4c2a84be0ecb506777f0c72dd46cf5d7093c6",
+				"verifiedIn": "com.google.android.aicore"
+			},
+			{
+				"sha256": "ba49176908275f83be9ae1034968f0b18e65177a64e5a40b3a621f148dfb6fa2",
+				"verifiedIn": "com.google.android.apps.labs.language.tailwind"
+			},
+			{
+				"sha256": "ba835740b0898dbb0ffdcb00f53f9c90d3194b64c39a5588478f9a1aad79144f",
+				"verifiedIn": "com.google.android.markup"
+			},
+			{
+				"sha256": "bc8205a11ffefd2de6dd66538e2e329c98e529dfe30ed66171933a6e183248eb",
+				"verifiedIn": "com.google.android.apps.wellbeing"
+			},
+			{
+				"sha256": "bde65248ac8b7bf25212e619413b4b16b09d3f30db40f5f3c027a693fa9f46bd",
+				"verifiedIn": "com.google.android.wallpaper.effects"
+			},
+			{
+				"sha256": "bf62231e28f08542755cf33c9dd83c5d1d0fa3206450efbc4c3ff3d5fda0330f",
+				"verifiedIn": "com.google.android.modulemetadata"
+			},
+			{
+				"sha256": "c00409b6524658c2e8eb48975a5952959ea3707dd57bc50fd74d6249262f0e82",
+				"verifiedIn": "com.google.android.carrier"
+			},
+			{
+				"sha256": "c0f8520bc8d88db564c375b525f6feaf8277b95d53c2337427fa926a0d6c0cd5",
+				"verifiedIn": "com.google.android.apps.diagnosticstool"
+			},
+			{
+				"sha256": "c1d7199cb5eebba3f21a0768bf3ce0b3dbce478230bb8e9b3d9d8566396bf852",
+				"verifiedIn": "com.google.android.bluetooth"
+			},
+			{
+				"sha256": "c4b0c31acb32eef3b88f2e84cc407209f82508f626992284602ee37058a39bc3",
+				"verifiedIn": "com.google.android.webapp.service"
+			},
+			{
+				"sha256": "c59a2a1113ec8e306eea86f6aa11498fad7d2ab356032bad8172224ceb5e2626",
+				"verifiedIn": "com.google.android.microdroid.empty_payload"
+			},
+			{
+				"sha256": "c91e8c545ff5f8ba6371bd88ba19fc26841d9ba5f4aea47b8f381df2b4d1ea41",
+				"verifiedIn": "com.google.android.apps.turbo"
+			},
+			{
+				"sha256": "c991989af90c73275dcd5a60304e7aa8224c5070b21c52db1046cfb6878ac77e",
+				"verifiedIn": "com.google.android.apps.wallpaper"
+			},
+			{
+				"sha256": "ca8fc0570665a8291871bb0b02bca69493fbacb2e67e634ffbbd21ec88e21994",
+				"verifiedIn": "com.google.android.apps.retaildemo.preload"
+			},
+			{
+				"sha256": "cc75526d6c0f80ac3b3a84eb44838440dbbe6b124443a7c7d7bd19182ac022c9",
+				"verifiedIn": "com.google.android.apps.messaging"
+			},
+			{
+				"sha256": "cd5e68fde6b74b0b9749b22dd74a623334d0de9339bade5fa0fa239bbab7be56",
+				"verifiedIn": "com.google.android.connectivity.resources"
+			},
+			{
+				"sha256": "ce0ff265e2d7e4c685823fb03b4decb2e572695ee35e38983f830e6d49e412d3",
+				"verifiedIn": "com.google.android.wifi.resources"
+			},
+			{
+				"sha256": "cf5d00f9795691e6df5706482ce0bba327f959183baf3e83edb8195067b71f68",
+				"verifiedIn": "com.google.android.apps.docs.editors.docs"
+			},
+			{
+				"sha256": "cf9bf16382f8aee84040add3489792db844aa6e3cebf267c50fde12531f0853d",
+				"verifiedIn": "com.google.android.odad"
+			},
+			{
+				"sha256": "d14a5a7cea1e26b88a1ef0731c9bea61d0cf6cf30748af31edd22ec8762702c6",
+				"verifiedIn": "com.google.android.ext.shared"
+			},
+			{
+				"sha256": "d20fad18f8d6d2aac1c46c74b8ce8e29e7269f3677fef9ce5bb27d8e8171f2b6",
+				"verifiedIn": "com.google.android.soundpicker"
+			},
+			{
+				"sha256": "d3b3210bf9da7993e19d9c2ba6ce2ce7ae8a5b0a4cf7441d9370572ae7257f46",
+				"verifiedIn": "com.google.android.signature"
+			},
+			{
+				"sha256": "d667926216324e953d0c27d44b22ed20f09d63a4a20486fe59311af5413a0845",
+				"verifiedIn": "com.google.android.apps.tasks"
+			},
+			{
+				"sha256": "d6e317de316fb6f005d7befc70077097d0e175f2a95135ee13c371cfd0f50b71",
+				"verifiedIn": "com.google.android.devicelockcontroller"
+			},
+			{
+				"sha256": "d9882b784173aa98c32ad7848ff38bf16bddc61c636883f940d85e2f059aa249",
+				"verifiedIn": "com.google.android.settings.intelligence"
+			},
+			{
+				"sha256": "d9e1735b2a3951273a8735b7669ef19ef53af1c1275cba31393c18408b0379d0",
+				"verifiedIn": "com.google.android.contactkeys"
+			},
+			{
+				"sha256": "dd60fe57e5738f609a5265f7d667e8d1e9dfb2de591a96defcaf80bbc8ff8717",
+				"verifiedIn": "com.google.android.apps.setupwizard.searchselector"
+			},
+			{
+				"sha256": "debacca80bc71aa7df5f0ffb769f36207ea0ae36180197b61d2667e9b98b4b8e",
+				"verifiedIn": "com.google.ar.lens"
+			},
+			{
+				"sha256": "dfa57c73fa2a6f5906c07c3cf82b14f0f0abe0949dd971df5871dcb58aa032b9",
+				"verifiedIn": "com.google.audio.hearing.visualization.accessibility.scribe"
+			},
+			{
+				"sha256": "e0afeca77af15aee48a25ead314c576f8f274682a8fba3365610878f7c1ddb6b",
+				"verifiedIn": "com.google.euiccpixel"
+			},
+			{
+				"sha256": "e0c0c06c0426d5cb5d1b5bd052a2bd8c5a27a69aaa048a976b336768a03e8d0e",
+				"verifiedIn": "com.google.android.apps.turbo"
+			},
+			{
+				"sha256": "e2d049f3a01192f620b1240615fa8c13badc553c22bc6fddfca45c84d8fc545d",
+				"verifiedIn": "com.google.android.dialer"
+			},
+			{
+				"sha256": "e357f022ab8edb771e374e586808e268c914eb34dc6c7a068c0e0a05c8128953",
+				"verifiedIn": "com.google.android.apps.subscriptions.red"
+			},
+			{
+				"sha256": "e4c43ce273303895c4ebd281cc8f64af74c088b7de703cd327afd984f49d9478",
+				"verifiedIn": "com.google.android.apps.restore"
+			},
+			{
+				"sha256": "e4d6a46d54ece6ca90f4e87f67f5ec4f262fc55c2ed840adbf649de55fe49094",
+				"verifiedIn": "com.google.android.apps.wellbeing"
+			},
+			{
+				"sha256": "e5d2c6e34447716ee14dcc3b8c367807ea9dc0080af64569a3a3ae004b4d7c02",
+				"verifiedIn": "com.google.android.apps.googlevoice"
+			},
+			{
+				"sha256": "e6a1604a39f8c655231f3554870554edabd68c2b837550bdc9bb85a94b65adc5",
+				"verifiedIn": "com.google.android.keep"
+			},
+			{
+				"sha256": "ed0a72103a549f7a43003abd793463ed2053a617b5bfcd77030ce7805c0fd239",
+				"verifiedIn": "com.google.android.apps.privacy.wildlife"
+			},
+			{
+				"sha256": "ee7cdddad1e412c4aeb614a2dc74ecce03215c4e48770ef208e7145c78252e4b",
+				"verifiedIn": "com.google.android.hotspot2.osulogin"
+			},
+			{
+				"sha256": "eedadf3ec275aac62928ed8ae6300b282bc9f2e153517b90d3fe259a44e744b5",
+				"verifiedIn": "com.google.android.wifi.dialog"
+			},
+			{
+				"sha256": "f0fd6c5b410f25cb25c3b53346c8972fae30f8ee7411df910480ad6b2d60db83",
+				"verifiedIn": "com.android.chrome"
+			},
+			{
+				"sha256": "f130f9f844b4e3cc57754b1bf8f3c32e896e1441cae030b3616ab4d1efd9f263",
+				"verifiedIn": "com.google.android.calculator"
+			},
+			{
+				"sha256": "f3c7affb5fd177a18e91d414cf006d1439c1842fcc1b1df26089d4e3a6c6a3ff",
+				"verifiedIn": "com.google.android.tetheringentitlement"
+			},
+			{
+				"sha256": "f4493e046ce5528425f7ef3522fc88e30c6d9046b668a4bf58b1e7544a175dd3",
+				"verifiedIn": "com.google.android.iwlan"
+			},
+			{
+				"sha256": "f53ab353fb0042ba9905bab50e838a549ba4a8f25df9d56c8a759277a158fd7d",
+				"verifiedIn": "com.google.android.apps.pixel.creativeassistant"
+			},
+			{
+				"sha256": "f5b0b83828ddeb9170512648940ce12fb4a092fa554301ffb5541d95a1375bd6",
+				"verifiedIn": "com.google.android.accessibility.soundamplifier"
+			},
+			{
+				"sha256": "f7e73d4edc2b7f55eecd3f898d3cca7da9cbbf51694eba14f816e2eccf015035",
+				"verifiedIn": "com.google.android.apps.messaging"
+			},
+			{
+				"sha256": "f92d592e8c015d5497998c07cd44cdc4fb9902dbe7f2c2fe20dcc9ebb47fda13",
+				"verifiedIn": "com.google.android.apps.scone"
+			},
+			{
+				"sha256": "f93fabcecaf5112e17bc67c818b0b8b4ec23db860b7486abfda8ea5a52b51a79",
+				"verifiedIn": "com.google.android.apps.wallpaper.pixel"
+			},
+			{
+				"sha256": "fdb00c43dbde8b51cb312aa81d3b5fa17713adb94b28f598d77f8eb89daceedf",
+				"verifiedIn": "com.google.android.projection.gearhead"
+			}
+		]
+	}
+]
