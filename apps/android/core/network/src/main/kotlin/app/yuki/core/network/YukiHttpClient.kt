@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.NetworkStatus
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
@@ -20,6 +21,11 @@ private fun bearerPlugin(tokens: AuthTokenSource) = createClientPlugin("YukiBear
     }
 }
 
+class ClientEnvironment(
+    val tokens: AuthTokenSource = AuthTokenSource { null },
+    val network: NetworkStatus = NetworkStatus { true },
+)
+
 object YukiHttpClient {
     val json: Json = Json {
         ignoreUnknownKeys = true
@@ -29,7 +35,7 @@ object YukiHttpClient {
     fun create(
         baseUrl: String,
         engine: HttpClientEngine = OkHttp.create(),
-        tokens: AuthTokenSource = AuthTokenSource { null },
+        environment: ClientEnvironment = ClientEnvironment(),
     ): HttpClient = HttpClient(engine) {
         expectSuccess = false
 
@@ -37,7 +43,8 @@ object YukiHttpClient {
             json(json, contentType = ContentType.Application.Json)
         }
 
-        install(bearerPlugin(tokens))
+        install(bearerPlugin(environment.tokens))
+        install(connectionPlugin(environment.network))
 
         defaultRequest {
             url(baseUrl)

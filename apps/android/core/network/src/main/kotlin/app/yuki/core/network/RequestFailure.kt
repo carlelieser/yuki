@@ -6,7 +6,6 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpStatusCode
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.SerializationException
 
 class RemoteRequestException(
     override val reason: FailureReason,
@@ -35,8 +34,8 @@ internal fun statusFailure(response: HttpResponse): FailureReason = when (respon
 }
 
 internal fun thrownFailure(cause: Throwable): FailureReason = when (cause) {
+    is FailureAware -> cause.reason
     is IOException -> FailureReason.Offline
-    is SerializationException -> FailureReason.Unexpected(cause)
     else -> FailureReason.Unexpected(cause)
 }
 

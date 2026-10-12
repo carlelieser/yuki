@@ -7,6 +7,9 @@ import app.yuki.core.model.failureReason
 import app.yuki.core.model.toUiState
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpStatusCode
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -282,6 +285,37 @@ class ListingRepositoryFailureTest {
         val result = repositoryOffline().featured()
 
         assertEquals(FailureReason.Offline, result.exceptionOrNull()!!.failureReason())
+    }
+
+    @Test
+    fun `a host the dns refuses to resolve is unreachable while the device is online`() = runTest {
+        val result = repositoryUnreachable(UnknownHostException("yuki.test")).featured()
+
+        assertEquals(FailureReason.Unreachable, result.exceptionOrNull()!!.failureReason())
+    }
+
+    @Test
+    fun `a refused connection is unreachable while the device is online`() = runTest {
+        val result = repositoryUnreachable(ConnectException("Connection refused")).featured()
+
+        assertEquals(FailureReason.Unreachable, result.exceptionOrNull()!!.failureReason())
+    }
+
+    @Test
+    fun `a timed out request is unreachable while the device is online`() = runTest {
+        val result = repositoryUnreachable(SocketTimeoutException("timeout")).featured()
+
+        assertEquals(FailureReason.Unreachable, result.exceptionOrNull()!!.failureReason())
+    }
+
+    @Test
+    fun `an unreachable failure names the operation and the url`() = runTest {
+        val error = repositoryUnreachable(UnknownHostException("yuki.test"))
+            .detail("example")
+            .exceptionOrNull()!!
+
+        assertTrue(error.message!!.contains("slug=example"))
+        assertTrue(error.cause!!.message!!.contains(BASE_URL))
     }
 
     @Test
