@@ -1,6 +1,7 @@
 package app.yuki.core.installer
 
 import app.yuki.core.model.InstallFailure
+import app.yuki.core.model.NetworkStatus
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
@@ -26,7 +27,7 @@ class HttpApkDownloaderTest {
     private val server = MockWebServer()
     private val directory: File = Files.createTempDirectory("yuki-apks").toFile()
     private val client = OkHttpClient.Builder().readTimeout(300, TimeUnit.MILLISECONDS).build()
-    private val downloader = HttpApkDownloader(client, directory)
+    private val downloader = HttpApkDownloader(client, directory, NetworkStatus { true })
 
     @Before
     fun startServer() {
@@ -99,6 +100,26 @@ class HttpApkDownloaderTest {
     }
 
     @Test
+    fun `a server that cannot be reached while online is unreachable`() = runBlocking {
+        val unreachable = source()
+        server.close()
+
+        assertEquals(InstallFailure.DownloadUnreachable, failureOf(unreachable))
+    }
+
+    @Test
+    fun `a server that cannot be reached while offline fails without a status`() = runBlocking {
+        val offline = HttpApkDownloader(client, directory, NetworkStatus { false })
+        val unreachable = source()
+        server.close()
+
+        assertEquals(
+            InstallFailure.DownloadFailed(httpStatus = null),
+            failureOf(unreachable, offline),
+        )
+    }
+
+    @Test
     fun `an empty download is unreadable`() = runBlocking {
         server.enqueue(MockResponse.Builder().body("").build())
 
@@ -113,7 +134,7 @@ class HttpApkDownloaderTest {
                 .bodyDelay(10, TimeUnit.SECONDS)
                 .build(),
         )
-        val patient = HttpApkDownloader(OkHttpClient(), directory)
+        val patient = HttpApkDownloader(OkHttpClient(), directory, NetworkStatus { true })
 
         val started = CompletableDeferred<Unit>()
         val collecting = launch(Dispatchers.IO) {
@@ -140,8 +161,11 @@ class HttpApkDownloaderTest {
         assertFalse(saved.exists())
     }
 
-    private suspend fun failureOf(source: InstallSource): InstallFailure =
-        (runCatching { downloader.download(source).toList() }.exceptionOrNull() as InstallException)
+    private suspend fun failureOf(
+        source: InstallSource,
+        using: HttpApkDownloader = downloader,
+    ): InstallFailure =
+        (runCatching { using.download(source).toList() }.exceptionOrNull() as InstallException)
             .failure
 
     private fun source() = InstallSource(
