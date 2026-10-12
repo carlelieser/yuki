@@ -73,6 +73,18 @@ class EmptyVersusFailureTest {
     }
 
     @Test
+    fun unreachableAndOfflineFailuresReadDifferently() {
+        composeRule.setContent {
+            YukiTheme(isDynamicColorEnabled = false) {
+                FailureState(reason = FailureReason.Unreachable)
+            }
+        }
+
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_title_unreachable)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.designsystem_failure_title_offline)).assertDoesNotExist()
+    }
+
+    @Test
     fun failureStateRetryIsInvoked() {
         var retryCount = 0
         composeRule.setContent {

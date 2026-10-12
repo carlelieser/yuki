@@ -18,6 +18,7 @@
     <string name="account_message_verification_resent">We sent a new link to your email address.</string>
     <string name="account_message_verification_resend_failed">We could not send a new link. Try again in a moment.</string>
     <string name="account_message_offline">You\'re offline. Check your connection and try again.</string>
+    <string name="account_message_unreachable">Yuki couldn\'t be reached. A private DNS, ad blocker, or VPN may be blocking it.</string>
     <string name="account_message_unavailable">Yuki is not responding right now. Try again in a moment.</string>
     <string name="account_message_email_taken">An account with that email already exists.</string>
     <string name="account_message_avatar_upload_failed">Could not save that picture. Try again.</string>

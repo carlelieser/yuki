@@ -160,6 +160,13 @@ class SignInViewModelTest {
     }
 
     @Test
+    fun `an unreachable server is not reported as being offline`() = runTest {
+        repository.signInResult = Result.failure(TypedFailure(FailureReason.Unreachable))
+
+        assertEquals(AccountMessage.Unreachable, messageAfterSubmit())
+    }
+
+    @Test
     fun `a sign-in without a token does not claim to be signed in`() = runTest {
         repository.signInResult = Result.success(SignedIn(ADA, token = null))
 

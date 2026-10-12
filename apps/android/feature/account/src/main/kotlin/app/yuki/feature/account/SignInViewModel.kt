@@ -153,6 +153,7 @@ private fun messageFor(reason: FailureReason): AccountMessage = when (reason) {
     FailureReason.Unauthorized -> AccountMessage.InvalidCredentials
     FailureReason.EmailNotVerified -> AccountMessage.EmailUnverified
     FailureReason.Offline -> AccountMessage.Offline
+    FailureReason.Unreachable -> AccountMessage.Unreachable
     FailureReason.NotFound -> AccountMessage.InvalidCredentials
     FailureReason.AccountExists -> AccountMessage.InvalidCredentials
     FailureReason.LastSignInMethod -> AccountMessage.Unavailable

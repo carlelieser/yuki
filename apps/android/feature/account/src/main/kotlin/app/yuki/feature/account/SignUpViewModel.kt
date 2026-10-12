@@ -125,6 +125,7 @@ private fun SignUpState.validated(): SignUpState = copy(
 private fun messageFor(reason: FailureReason): AccountMessage = when (reason) {
     FailureReason.AccountExists -> AccountMessage.EmailTaken
     FailureReason.Offline -> AccountMessage.Offline
+    FailureReason.Unreachable -> AccountMessage.Unreachable
     else -> AccountMessage.Unavailable
 }
 

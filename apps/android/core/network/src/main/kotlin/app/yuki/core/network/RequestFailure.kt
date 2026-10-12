@@ -16,6 +16,7 @@ class RemoteRequestException(
 
 private fun describe(reason: FailureReason): String = when (reason) {
     FailureReason.Offline -> "the device is offline"
+    FailureReason.Unreachable -> "the server could not be reached"
     FailureReason.NotFound -> "the server returned 404"
     FailureReason.Unauthorized -> "the server returned 401"
     FailureReason.EmailNotVerified -> "the email address is not verified"

@@ -117,6 +117,21 @@ class SignUpViewModelTest {
     }
 
     @Test
+    fun `an unreachable server is not reported as being offline`() = runTest {
+        repository.signUpResult = Result.failure(TypedFailure(FailureReason.Unreachable))
+        val viewModel = viewModel()
+
+        viewModel.state.test {
+            awaitItem()
+            viewModel.fillIn()
+            viewModel.onSubmit()
+
+            assertEquals(AccountMessage.Unreachable, awaitMessage())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a failed sign-up does not claim verification was sent`() = runTest {
         repository.signUpResult = Result.failure(TypedFailure(FailureReason.Offline))
         val viewModel = viewModel()

@@ -2,6 +2,7 @@
 <resources>
     <string name="designsystem_failure_retry">Try again</string>
     <string name="designsystem_failure_title_offline">You\'re offline</string>
+    <string name="designsystem_failure_title_unreachable">Can\'t reach Yuki</string>
     <string name="designsystem_failure_title_not_found">Nothing here</string>
     <string name="designsystem_failure_title_unauthorized">Sign in to continue</string>
     <string name="designsystem_failure_title_email_not_verified">Verify your email</string>
@@ -10,6 +11,7 @@
     <string name="designsystem_failure_title_server">Yuki is having trouble</string>
     <string name="designsystem_failure_title_unexpected">Something went wrong</string>
     <string name="designsystem_failure_description_offline">Check your connection and try again.</string>
+    <string name="designsystem_failure_description_unreachable">You\'re connected, but Yuki didn\'t respond. A private DNS, ad blocker, or VPN may be blocking it.</string>
     <string name="designsystem_failure_description_not_found">We couldn\'t find what you were looking for.</string>
     <string name="designsystem_failure_description_unauthorized">Your session has expired. Sign in again to continue.</string>
     <string name="designsystem_failure_description_email_not_verified">Open the link we emailed you to finish signing in.</string>

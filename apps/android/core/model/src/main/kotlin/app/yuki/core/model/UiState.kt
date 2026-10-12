@@ -11,6 +11,8 @@ sealed interface UiState<out T> {
 sealed interface FailureReason {
     data object Offline : FailureReason
 
+    data object Unreachable : FailureReason
+
     data object NotFound : FailureReason
 
     data object Unauthorized : FailureReason
