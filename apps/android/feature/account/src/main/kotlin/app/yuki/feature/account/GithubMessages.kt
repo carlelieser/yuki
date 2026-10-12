@@ -21,6 +21,7 @@ internal fun githubErrorMessage(code: String): AccountMessage =
 
 internal fun githubFailureMessage(reason: FailureReason): AccountMessage = when (reason) {
     FailureReason.Offline -> AccountMessage.Offline
+    FailureReason.Unreachable -> AccountMessage.Unreachable
     FailureReason.Unauthorized -> AccountMessage.SessionExpired
     FailureReason.LastSignInMethod -> AccountMessage.GithubLastSignInMethod
     FailureReason.ReauthenticationRequired -> AccountMessage.GithubReauthenticate

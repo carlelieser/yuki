@@ -94,6 +94,7 @@ private fun UncheckedNote(reason: FailureReason) {
 
 private val uncheckedDetails: Map<KClass<out FailureReason>, Int> = mapOf(
     FailureReason.Offline::class to R.string.updates_unchecked_offline,
+    FailureReason.Unreachable::class to R.string.updates_unchecked_unreachable,
     FailureReason.NotFound::class to R.string.updates_unchecked_not_found,
     FailureReason.Unauthorized::class to R.string.updates_unchecked_sign_in,
     FailureReason.EmailNotVerified::class to R.string.updates_unchecked_sign_in,

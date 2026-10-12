@@ -27,6 +27,7 @@ const val FAILURE_STATE_TAG = "failureState"
 
 private val titles: Map<KClass<out FailureReason>, Int> = mapOf(
     FailureReason.Offline::class to R.string.designsystem_failure_title_offline,
+    FailureReason.Unreachable::class to R.string.designsystem_failure_title_unreachable,
     FailureReason.NotFound::class to R.string.designsystem_failure_title_not_found,
     FailureReason.Unauthorized::class to R.string.designsystem_failure_title_unauthorized,
     FailureReason.EmailNotVerified::class to R.string.designsystem_failure_title_email_not_verified,
@@ -38,6 +39,7 @@ private val titles: Map<KClass<out FailureReason>, Int> = mapOf(
 
 private val descriptions: Map<KClass<out FailureReason>, Int> = mapOf(
     FailureReason.Offline::class to R.string.designsystem_failure_description_offline,
+    FailureReason.Unreachable::class to R.string.designsystem_failure_description_unreachable,
     FailureReason.NotFound::class to R.string.designsystem_failure_description_not_found,
     FailureReason.Unauthorized::class to R.string.designsystem_failure_description_unauthorized,
     FailureReason.EmailNotVerified::class to R.string.designsystem_failure_description_email_not_verified,

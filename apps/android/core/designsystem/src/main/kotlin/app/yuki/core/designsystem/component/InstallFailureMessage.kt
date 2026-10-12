@@ -8,6 +8,8 @@ import app.yuki.core.model.InstallFailure
 import kotlin.reflect.KClass
 
 private val failureMessages: Map<KClass<out InstallFailure>, Int> = mapOf(
+    InstallFailure.DownloadUnreachable::class to
+        R.string.designsystem_install_error_download_unreachable,
     InstallFailure.Unexpected::class to R.string.designsystem_install_error_unexpected,
     InstallFailure.DownloadUnreadable::class to
         R.string.designsystem_install_error_download_unreadable,

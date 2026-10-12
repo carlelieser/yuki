@@ -14,6 +14,8 @@ sealed interface AccountMessage {
 
     data object Offline : AccountMessage
 
+    data object Unreachable : AccountMessage
+
     data object Unavailable : AccountMessage
 
     data object EmailTaken : AccountMessage
@@ -53,6 +55,7 @@ private val messageText: Map<AccountMessage, Int> = mapOf(
     AccountMessage.VerificationResent to R.string.account_message_verification_resent,
     AccountMessage.VerificationResendFailed to R.string.account_message_verification_resend_failed,
     AccountMessage.Offline to R.string.account_message_offline,
+    AccountMessage.Unreachable to R.string.account_message_unreachable,
     AccountMessage.Unavailable to R.string.account_message_unavailable,
     AccountMessage.EmailTaken to R.string.account_message_email_taken,
     AccountMessage.AvatarUploadFailed to R.string.account_message_avatar_upload_failed,

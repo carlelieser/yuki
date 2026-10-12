@@ -101,6 +101,7 @@ internal fun avatarFailureMessage(error: Throwable): AccountMessage =
     when (val reason = error.failureReason()) {
         is FailureReason.Rejected -> AccountMessage.Explanation(reason.explanation)
         FailureReason.Offline -> AccountMessage.Offline
+        FailureReason.Unreachable -> AccountMessage.Unreachable
         FailureReason.Unauthorized -> AccountMessage.SessionExpired
         else -> AccountMessage.AvatarUploadFailed
     }

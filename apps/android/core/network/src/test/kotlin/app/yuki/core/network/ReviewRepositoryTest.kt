@@ -63,7 +63,7 @@ class ReviewRepositoryTest {
                         headers = headersOf("Content-Type", ContentType.Application.Json.toString()),
                     )
                 },
-                AuthTokenSource { "token-1" },
+                ClientEnvironment(tokens = AuthTokenSource { "token-1" }),
             ),
         ),
     )

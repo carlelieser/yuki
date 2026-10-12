@@ -2,6 +2,7 @@ package app.yuki.core.installer
 
 import android.content.Context
 import app.yuki.core.model.InstallFailure
+import app.yuki.core.model.NetworkStatus
 import app.yuki.core.model.downloadSizeOf
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -32,12 +33,14 @@ private const val APK_DIRECTORY = "apks"
 internal class HttpApkDownloader(
     private val client: OkHttpClient,
     private val directory: File,
+    private val network: NetworkStatus,
 ) : ApkDownloader {
     @Inject
     constructor(
         @ApkDownloadClient client: OkHttpClient,
         @ApplicationContext context: Context,
-    ) : this(client, File(context.noBackupFilesDir, APK_DIRECTORY))
+        network: NetworkStatus,
+    ) : this(client, File(context.noBackupFilesDir, APK_DIRECTORY), network)
 
     override fun download(source: InstallSource): Flow<DownloadProgress> = flow {
         val target = File(directory, source.fileName())
@@ -66,13 +69,26 @@ internal class HttpApkDownloader(
         val watcher = launch(start = CoroutineStart.UNDISPATCHED) { cancelWhenCancelled(call) }
 
         try {
-            call.execute().use { response -> save(response, partial, source) }
+            connect(call, source).use { response -> save(response, partial, source) }
         } catch (error: IOException) {
             ensureActive()
             throw downloadFailure(error, source)
         } finally {
             watcher.cancel()
         }
+    }
+
+    private fun connect(call: Call, source: InstallSource): Response = try {
+        call.execute()
+    } catch (error: IOException) {
+        val isOffline = !network.isOnline()
+        if (call.isCanceled() || isOffline) throw error
+
+        throw InstallException(
+            InstallFailure.DownloadUnreachable,
+            "Download of ${source.downloadUrl} could not reach the server",
+            error,
+        )
     }
 
     private suspend fun FlowCollector<DownloadProgress>.save(

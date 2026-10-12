@@ -1,5 +1,6 @@
 package app.yuki.core.network
 
+import app.yuki.core.model.NetworkStatus
 import dagger.Binds
 import dagger.BindsOptionalOf
 import dagger.Module
@@ -23,9 +24,13 @@ internal object NetworkProviders {
     fun httpClient(
         @YukiBaseUrl baseUrl: String,
         tokens: Optional<AuthTokenSource>,
+        network: NetworkStatus,
     ): HttpClient = YukiHttpClient.create(
         baseUrl = baseUrl,
-        tokens = tokens.orElse(AuthTokenSource { null }),
+        environment = ClientEnvironment(
+            tokens = tokens.orElse(AuthTokenSource { null }),
+            network = network,
+        ),
     )
 }
 
@@ -34,6 +39,10 @@ internal object NetworkProviders {
 internal abstract class NetworkBindings {
     @BindsOptionalOf
     abstract fun optionalAuthTokenSource(): AuthTokenSource
+
+    @Binds
+    @Singleton
+    abstract fun networkStatus(implementation: AndroidNetworkStatus): NetworkStatus
 
     @Binds
     @Singleton

@@ -100,6 +100,21 @@ class AccountViewModelTest {
     }
 
     @Test
+    fun `an upload that cannot reach the server is not reported as being offline`() = runTest {
+        repository.avatarResult = Result.failure(TypedFailure(FailureReason.Unreachable))
+        val store = signedIn()
+        val viewModel = AccountViewModel(repository, store)
+
+        viewModel.state.test {
+            awaitSettled { state -> state.isSignedIn }
+            viewModel.onAvatarPicked(PICKED)
+
+            assertEquals(AccountMessage.Unreachable, awaitSettled { it.message != null }.message)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `a rejected upload repeats the reason the server gave`() = runTest {
         val explanation = "The image must be smaller than 524288 bytes"
         repository.avatarResult =
